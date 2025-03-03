@@ -1,9 +1,9 @@
 /*
   SERVER.js
-  Version: 20.0.3
-  AppName: Multi-Chat [v20.0.3]
+  Version: 20.0.5
+  AppName: Multi-Chat [v20.0.5]
   Created by Paul Welby
-  Updated: January 15, 2025 @11:15AM
+  Updated: February 3, 2025 @6:30AM
 */
 
 // Required dependencies
@@ -38,7 +38,7 @@ const openai = new OpenAI({
 const app = express();
 
 // Set the port
-const port = process.env.PORT || 32003;
+const port = process.env.PORT || 32005;
 
 // Configure middleware with increased limits
 app.use(cors());
@@ -49,16 +49,6 @@ app.use(express.urlencoded({limit: '50mb', extended: true}));
 app.use(express.static(path.join(__dirname, 'public')));
 
 console.log('Starting server initialization...');
-
-// Add SSL certificates for local development
-const options = {
-    key: fs.readFileSync('path/to/key.pem'),
-    cert: fs.readFileSync('path/to/cert.pem')
-};
-
-https.createServer(options, app).listen(32002, () => {
-    console.log('Secure server running on port 32002');
-});
 
 // =====================================================
 // UTILITY/HELPER FUNCTIONS
@@ -1832,43 +1822,3 @@ app.listen(port, '0.0.0.0', () => {
 // =====================================================
 // END OF Server.js FILE v20.0.0
 // =====================================================
-
-// POST /api/jokes/migrate - Migrate jokes to new format
-app.post('/api/jokes/migrate', async (req, res) => {
-    try {
-        const { sessionId, oldFormat } = req.body;
-        const collection = mongoose.connection.collection('my_jokes');
-
-        // Find jokes for this session
-        const jokes = await collection.find({
-            userId: sessionId,
-            format: oldFormat
-        }).toArray();
-
-        // Update each joke to new format
-        const updates = jokes.map(joke =>
-            collection.updateOne(
-                { _id: joke._id },
-                {
-                    $set: {
-                        format: 'v20.0.1',
-                        updatedAt: new Date()
-                    }
-                }
-            )
-        );
-
-        await Promise.all(updates);
-
-        res.json({
-            success: true,
-            migrated: updates.length
-        });
-    } catch (error) {
-        console.error('Error migrating jokes:', error);
-        res.status(500).json({
-            success: false,
-            error: error.message
-        });
-    }
-});
