@@ -1,7 +1,6 @@
 # Release Notes
 
-## Version 20.0.11 (January 29, 2025)
-
+## Version 20.1 (April 3, 2025)
 ### New Features
 
 - Added metadata display for all response types
