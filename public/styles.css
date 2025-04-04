@@ -1315,3 +1315,142 @@ button {
 .message.assistant.joke-list-message li {
     margin: 5px 0;
 }
+
+.youtube-fallback,
+.youtube-error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    text-align: center;
+    padding: 20px;
+}
+
+.youtube-direct-link {
+    display: inline-block;
+    margin-top: 15px;
+    padding: 10px 20px;
+    background: #ff0000;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    font-weight: bold;
+}
+
+.youtube-direct-link:hover {
+    background: #cc0000;
+}
+
+.video-options {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.play-here-btn {
+    padding: 8px 16px;
+    background-color: #ff0000;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.2s;
+}
+
+.play-here-btn:hover {
+    background-color: #cc0000;
+}
+
+.youtube-direct-link {
+    display: inline-block;
+    padding: 8px 16px;
+    background-color: #282828;
+    color: white !important;
+    text-decoration: none;
+    border-radius: 5px;
+    font-weight: bold;
+    transition: background-color 0.2s;
+}
+
+.youtube-direct-link:hover {
+    background-color: #1a1a1a;
+    text-decoration: none !important;
+}
+
+.video-controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-top: 5px;
+}
+
+.channel-info {
+    margin-left: auto;
+    color: #666;
+    font-size: 0.9em;
+}
+
+.youtube-loading {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 15px 25px;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+.youtube-error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    text-align: center;
+    padding: 20px;
+}
+
+.youtube-direct-link {
+    display: inline-block;
+    margin-top: 15px;
+    padding: 10px 20px;
+    background: #ff0000;
+    color: white !important;
+    text-decoration: none;
+    border-radius: 5px;
+    font-weight: bold;
+    transition: background-color 0.2s;
+}
+
+.youtube-direct-link:hover {
+    background: #cc0000;
+    text-decoration: none !important;
+}
+
+.youtube-popup-btn {
+    background-color: #ff0000;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    margin-right: 10px;
+    transition: background-color 0.2s ease;
+}
+
+.youtube-popup-btn:hover {
+    background-color: #cc0000;
+}
+
+.youtube-popup-btn:active {
+    transform: translateY(1px);
+}
