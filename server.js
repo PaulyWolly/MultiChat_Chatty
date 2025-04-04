@@ -65,7 +65,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 console.log('Starting server initialization...');
 
-
 // =====================================================
 // UTILITY/HELPER FUNCTIONS
 // =====================================================
@@ -1802,43 +1801,3 @@ app.listen(port, '0.0.0.0', () => {
 // =====================================================
 // END OF Server.js FILE v20.0.0
 // =====================================================
-
-// POST /api/jokes/migrate - Migrate jokes to new format
-app.post('/api/jokes/migrate', async (req, res) => {
-    try {
-        const { sessionId, oldFormat } = req.body;
-        const collection = mongoose.connection.collection('my_jokes');
-
-        // Find jokes for this session
-        const jokes = await collection.find({
-            userId: sessionId,
-            format: oldFormat
-        }).toArray();
-
-        // Update each joke to new format
-        const updates = jokes.map(joke =>
-            collection.updateOne(
-                { _id: joke._id },
-                {
-                    $set: {
-                        format: 'v20.0.1',
-                        updatedAt: new Date()
-                    }
-                }
-            )
-        );
-
-        await Promise.all(updates);
-
-        res.json({
-            success: true,
-            migrated: updates.length
-        });
-    } catch (error) {
-        console.error('Error migrating jokes:', error);
-        res.status(500).json({
-            success: false,
-            error: error.message
-        });
-    }
-});

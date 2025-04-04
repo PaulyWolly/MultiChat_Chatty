@@ -1,0 +1,12 @@
+version: '3.4'
+
+services:
+  multichatv2003:
+    image: multichatv2003
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    environment:
+      NODE_ENV: production
+    ports:
+      - 3000:3000
