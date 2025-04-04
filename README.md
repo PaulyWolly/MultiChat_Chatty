@@ -1,26 +1,33 @@
 # AI Chat Application with Memory and Voice Interaction
-#### v20.0.5
+
+#### v20.0.11
 
 ## Overview
+
 A sophisticated AI chat application featuring voice interaction, persistent memory storage, and multi-modal communication capabilities. Built with Node.js, Express, MongoDB, and modern web technologies.
 
 ## Core Features
 
 ### 1. Session Management
+
 #### Structured Session IDs
+
 - Structured session handling using persistent IDs
 - Format: `{type}-{id}-{version}` (e.g., `global-persistent-storage-001-v1`)
 - Session validation and verification
 - Support for multiple session types (global, user, admin)
 
 ### 2. Memory System
+
 #### Hierarchical Storage
+
 - Short-term memory (SLM) for immediate context
 - localStorage for quick client-side access
 - MongoDB for persistent long-term storage
 - Automatic data synchronization between layers
 
 #### Memory Categories
+
 - Personal Information (name, preferences)
 - Secret Words
 - Favorites
@@ -28,25 +35,30 @@ A sophisticated AI chat application featuring voice interaction, persistent memo
 - Timestamps and versioning for all stored data
 
 ### 3. Voice Interaction
+
 #### Speech Recognition
+
 - Real-time voice input processing
 - Continuous listening mode
 - Command recognition
 - Error handling and recovery
 
 #### Text-to-Speech (TTS)
+
 - Azure TTS integration
 - Multiple voice options
 - Queue-based audio playback
 - Interrupt and resume capabilities
 
 ### 4. Conversation Management
+
 - Inactivity detection and timeout
 - Conversation mode toggle
 - Context preservation
 - Exit command handling
 
 ### 5. User Interface
+
 - Clean, responsive design
 - Real-time status updates
 - Audio controls
@@ -57,6 +69,7 @@ A sophisticated AI chat application featuring voice interaction, persistent memo
 ## Technical Features
 
 ### 1. API Integration
+
 - OpenAI GPT integration
 - Azure Speech Services
 - Google Image Search
@@ -78,13 +91,16 @@ A sophisticated AI chat application featuring voice interaction, persistent memo
   updated: Date
   }
 ```
+
 ```bash
 Memory Keywords:
 Secret Word: /(?:the )?secret word (?:is|=) (.+)/i
 Favorites: /(?:my )?favorite (\w+) (?:is|=) (.+)/i
 Remember: /remember (?:that )?(.+)/i
 ```
+
 ### 4. Error Handling
+
 - Speech recognition error recovery
 - Network failure handling
 - Invalid session detection
@@ -107,7 +123,9 @@ POST /api/bing-search
 ### Search Services
 
 ## Environment Configuration
+
 Required environment variables:
+
 - `MONGODB_URI`
 - `SPEECH_API_KEY`
 - `OPENAI_API_KEY`
@@ -138,9 +156,10 @@ Required environment variables:
 "What is my favorite color?"
 ```
 
-
 ## State Management
+
 The application maintains various states:
+
 - Audio playback state
 - Speech recognition state
 - Processing state
@@ -149,6 +168,7 @@ The application maintains various states:
 - Memory state
 
 ## Security Features
+
 - Session validation
 - Input sanitization
 - API key protection
@@ -156,6 +176,7 @@ The application maintains various states:
 - Rate limiting (TODO)
 
 ## Future Enhancements (TODO)
+
 - User authentication
 - Multiple session support
 - Enhanced error recovery
@@ -165,6 +186,7 @@ The application maintains various states:
 - Enhanced security features
 
 ## Dependencies
+
 - express
 - cors
 - mongoose
@@ -183,14 +205,15 @@ npm start
 Default port: 3335
 ```
 
-
 ## Browser Support
+
 - Chrome (recommended)
 - Firefox
 - Safari
 - Edge
 
 ## Notes
+
 - Speech recognition requires HTTPS in production
 - Some features require specific browser permissions
 - Local storage must be enabled

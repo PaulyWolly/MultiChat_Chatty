@@ -1,9 +1,9 @@
 <!--
   INDEX.html
-  Version: 20.0.5
-  AppName: Multi-Chat [v20.0.5]
+  Version: 21.0
+  AppName: Multi-Chat [v21.0]
+  Updated: April 2, 2025 @5:45PM
   Created by Paul Welby
-  Updated: January 8, 2025 @10:15AM
 -->
 
 <!DOCTYPE html>
@@ -11,9 +11,9 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Multi-Chat [v20.0.5] 1-8-25 @10:15AM</title>
+    <title>Multi-Chat [v21.0] 4-2-25 @5:45PM</title>
     <link rel="stylesheet" href="styles.css" />
-    <link rel="icon" type="image/png" href="chat-1.png">
+    <link rel="icon" type="image/png" href="chat-1.png" />
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   </head>
 
@@ -25,7 +25,7 @@
           <option value="phi-3-mini-4k-instruct">Phi-3-mini-4k-instruct</option>
         </select>
 
-        <h3>Multi-Chat [v20.0.5] 1-8-25 @10:15AM</h3>
+        <h3>Multi-Chat [v21.0] 4-2-25 @5:45PM</h3>
 
         <select id="voice-select">
           <option value="">Default Voice</option>
@@ -33,7 +33,11 @@
         </select>
         <div id="mode-toggle">
           <label for="conversation-mode">Conversation Mode:</label>
-          <input type="checkbox" class="conversation-mode-checkbox" id="conversation-mode" />
+          <input
+            type="checkbox"
+            class="conversation-mode-checkbox"
+            id="conversation-mode"
+          />
         </div>
       </div>
 
@@ -51,8 +55,16 @@
           <div id="processing-indicator">Processing...</div>
 
           <button class="icon-button" id="image-upload-btn">🖼️</button>
-          <input type="file" id="image-input" accept="image/*" style="display: none;">
-          <textarea id="user-input" placeholder="Type your message..."></textarea>
+          <input
+            type="file"
+            id="image-input"
+            accept="image/*"
+            style="display: none"
+          />
+          <textarea
+            id="user-input"
+            placeholder="Type your message..."
+          ></textarea>
           <button id="send-button">Send</button>
           <button id="mic-button">🎤</button>
         </div>

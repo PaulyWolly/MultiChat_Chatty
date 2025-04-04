@@ -1,9 +1,9 @@
 /*
   STYLES.css
-  Version: 20.0.5
-  AppName: Multi-Chat [v20.0.5]
+  Version: 21.0
+  AppName: Multi-Chat [v21.0]
+  Updated: April 2, 2025 @5:45PM
   Created by Paul Welby
-  Updated: January 8, 2025 @10:15AM
 */
 
 body {
@@ -34,6 +34,8 @@ body {
     padding: 10px;
     border-bottom: 1px solid #ccc;
 }
+
+
 
 #model-select, #voice-select {
     padding: 5px;
@@ -549,7 +551,7 @@ button {
 
 .message.assistant:has(.message-content > p:nth-child(2)),
 .message.assistant .message-content:has(> p:nth-child(2)) {
-    width: 80%;
+    width: 48%;
 }
 
 .icon-button {
@@ -1248,80 +1250,68 @@ button {
 /* Status message specific styles */
 .status-default {
     color: #0451f8;
-    font-size: 2.2vh;
-    max-width: 70%;
+    font-size: 1.7vh;
+    max-width: 68%;
     font-weight: 600;
 }
 
 .status-listening {
     color: #0451f8;
-    font-size: 2.2vh;
+    font-size: 1.7vh;
     font-weight: 600;
 }
 
 .status-video-playing {
-    color: #d22f2f;
-    font-size: 2.2vh;
+    color: #d32f2f;
+    font-size: 2.3vh;
     font-weight: 600;
 }
 
 .status-processing {
     color: #f57c00;
-    font-size: 2.2vh;
+    font-size: 2.3vh;
     font-weight: 600;
 }
 
 .status-error {
     color: #c62828;
-    font-size: 2.2vh;
+    font-size: 2.3vh;
     font-weight: 600;
 }
 
 .status-initializing {
-    color: #29393a;
-    font-size: 2.2vh;
+    color: #39393a;
+    font-size: 1.7vh;
     font-weight: 600;
 }
 
 .conversation-enable-message {
     color: #666;
     font-style: italic;
-    font-size: 2.2vh;
+    font-size: 1.7vh;
     font-weight: 400;
     white-space: pre-wrap;
     max-width: 100%;
 }
 
-/* Styles for image webpage source link */
-.image-container {
-    position: relative;
-    display: inline-block;
-    margin: 5px;
-    overflow: hidden;
+/* Add specific styling for joke list messages */
+.message.assistant.joke-list-message {
+    max-width: fit-content;  /* Change from fixed 30% to fit-content */
+    width: auto;
+    margin-right: 20px;  /* Add some right margin for spacing */
 }
 
-.image-webpage-source {
-    position: absolute;
-    bottom: 8px;
-    right: 8px;
-    background: rgba(0, 0, 0, 0.6);
-    padding: 5px;
-    border-radius: 50%;
-    width: 24px;
-    height: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    text-decoration: none;
-    transition: background-color 0.2s;
+.message.assistant.joke-list-message .message-content {
+    width: 100%;
+    min-width: fit-content;  /* Ensure content doesn't get squished */
 }
 
-.source-icon {
-    color: white;
-    font-size: 14px;
+.message.assistant.joke-list-message ol {
+    margin: 10px 0;
+    padding-left: 25px;
+    white-space: nowrap;  /* Keep joke titles on single lines */
 }
 
-.image-webpage-source:hover {
-    background: rgba(0, 0, 0, 0.8);
+.message.assistant.joke-list-message li {
+    margin: 5px 0;
 }

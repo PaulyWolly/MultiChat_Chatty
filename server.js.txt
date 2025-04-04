@@ -1,9 +1,9 @@
 /*
   SERVER.js
-  Version: 20.0.2
-  AppName: Multi-Chat [v20.0.2]
+  Version: 20.0.11
+  AppName: Multi-Chat [v20.0.11]
+  Updated: January 29, 2025 @9:00AM
   Created by Paul Welby
-  Updated: January 7, 2025 @5:00AM
 */
 
 // Required dependencies
@@ -27,16 +27,33 @@ const youtube = google.youtube({
     auth: process.env.GOOGLE_API_KEY
 });
 
-// Initialize OpenAI
+// Initialize OpenAI with validation
+if (!process.env.OPENAI_API_KEY) {
+    console.error('OPENAI_API_KEY is not set in environment variables');
+    process.exit(1);
+}
+
+if (!process.env.OPENAI_API_KEY.startsWith('sk-')) {
+    console.error('Invalid OPENAI_API_KEY format. Key should start with "sk-"');
+    process.exit(1);
+}
+
 const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY
+});
+
+// Add debug logging
+console.log('OpenAI client initialized with API key:', {
+    keyLength: process.env.OPENAI_API_KEY.length,
+    keyPrefix: process.env.OPENAI_API_KEY.substring(0, 5) + '...',
+    keyValid: process.env.OPENAI_API_KEY.startsWith('sk-')
 });
 
 // Initialize Express
 const app = express();
 
 // Set the port
-const port = process.env.PORT || 32002;
+const port = process.env.PORT || 32011;
 
 // Configure middleware with increased limits
 app.use(cors());
@@ -588,15 +605,38 @@ app.get('/api/chat', (req, res) => {
 app.post('/api/chat', async (req, res) => {
     try {
         const { message, history, model, systemPrompt, timezone } = req.body;
+
+        console.log('Chat request received:', {
+            messageLength: message?.length,
+            historyLength: history?.length,
+            model: model,
+            hasSystemPrompt: !!systemPrompt,
+            timezone: timezone
+        });
+
+        // Validate required parameters
+        if (!message) {
+            throw new Error('Message is required');
+        }
+
         const startTime = Date.now();
 
-        // 1. First check for greetings, using simplified patterns for server-side checks
+        // Set headers for SSE
+        res.setHeader('Content-Type', 'text/event-stream');
+        res.setHeader('Cache-Control', 'no-cache');
+        res.setHeader('Connection', 'keep-alive');
+
+        // 1. Check for greetings
         if (chatPatterns.greetings.some(pattern => pattern.test(message.toLowerCase()))) {
-            // Handle greetings...
+            const timeOfDay = getTimeOfDay(timezone);
+            const response = `Good ${timeOfDay}! How can I help you today?`;
+            res.write(`data: ${JSON.stringify({ response })}\n\n`);
+            res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
+            res.end();
             return;
         }
 
-        // 2. Then check for time/date queries
+        // 2. Check for time/date queries
         const isTimeQuery = chatPatterns.time.some(pattern => pattern.test(message.toLowerCase()));
         const isDateQuery = chatPatterns.date.some(pattern => pattern.test(message.toLowerCase()));
         const isDateTimeQuery = chatPatterns.dateTime.some(pattern => pattern.test(message.toLowerCase()));
@@ -604,92 +644,69 @@ app.post('/api/chat', async (req, res) => {
         if (isTimeQuery || isDateQuery || isDateTimeQuery) {
             const now = new Date();
             const formattedTime = formatTimeDateStr(now, timezone);
-            const timeOfDay = getTimeOfDay(timezone);
             let response;
 
             if (isTimeQuery) {
-                const minutes = now.getMinutes();
-                response = `The current time is ${formattedTime.timeStr}. ` +
-                          `${formatMinutesPlural(minutes)} past ${now.getHours() % 12 || 12}`;
+                response = `The current time is ${formattedTime.timeStr}`;
             } else if (isDateQuery) {
                 response = `Today is ${formattedTime.dateStr}`;
             } else {
                 response = `It is ${formattedTime.timeStr} on ${formattedTime.dateStr}`;
             }
 
-            // Check for holidays
             const holiday = getHoliday(now);
             if (holiday) {
-                response += `. By the way, ${holiday.greeting}`;
+                response += `. ${holiday.greeting}`;
             }
 
-            res.json({ success: true, response });
+            res.write(`data: ${JSON.stringify({ response })}\n\n`);
+            res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
+            res.end();
             return;
         }
 
-        // 3. ONLY check for EXACT web search commands
-        const isExplicitWebSearch = /^(web search|bing search|internet search)\s/i.test(message);
-
-        if (isExplicitWebSearch) {
-            // Extract the actual search query by removing the command
-            const searchQuery = message.replace(/^(web search|bing search|internet search)\s+/i, '');
-
-            try {
-                const response = await axios.get('https://api.bing.microsoft.com/v7.0/search', {
-                    headers: {
-                        'Ocp-Apim-Subscription-Key': process.env.BING_SUBSCRIPTION_KEY
-                    },
-                    params: {
-                        q: searchQuery,
-                        count: 5,
-                        responseFilter: ['Webpages', 'News'],
-                        mkt: 'en-US'
-                    }
-                });
-
-                let formattedResults = formatBingResults(response.data);
-                res.write(`data: ${JSON.stringify({ response: formattedResults })}\n\n`);
-                res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
-                res.end();
-                return;
-            } catch (error) {
-                console.error('Bing Search error:', error);
-            }
-        }
-
-        // 4. For ALL other queries (including "tell me about"), use SLM
-        console.log(`Using ${model} model`);
-
-        if (model === 'gpt-4o-mini') {
-            console.log('Using gpt-4o-mini model');
-
-            // Set headers only once at the beginning
-            res.setHeader('Content-Type', 'text/event-stream');
-            res.setHeader('Cache-Control', 'no-cache');
-            res.setHeader('Connection', 'keep-alive');
-
+        // 3. Handle model-specific responses
+        if (model === 'gpt-4o-mini' || !model) { // Default to gpt-4o-mini if no model specified
             const completion = await openai.chat.completions.create({
                 model: "gpt-4o-mini",
                 messages: [
-                    { role: "system", content: systemPrompt },
+                    { role: "system", content: systemPrompt || "You are a helpful assistant." },
                     ...(Array.isArray(history) ? history : []),
                     { role: "user", content: message }
                 ],
                 stream: true
             });
 
-            // call the model handler for gpt-4o-mini making sure to pass startTime
             await handleGPT4oMiniResponse(completion, res, message, startTime);
-
-        } else if (model === 'phi-3-mini-4k-instruct') {
-            // call the model handler for phi-3-mini-4k-instruct making sure to pass startTime
-            await handlePhi3Mini4kInstructResponse(completion, res, message, startTime);
+        } else {
+            throw new Error(`Unsupported model: ${model}. Currently only supporting gpt-4o-mini`);
         }
 
     } catch (error) {
-        console.error('Error in chat endpoint:', error);
+        console.error('Chat endpoint error:', {
+            name: error.name,
+            message: error.message,
+            stack: error.stack,
+            time: new Date().toISOString()
+        });
+
+        // Ensure we haven't already sent headers
         if (!res.headersSent) {
-            res.status(500).json({ error: error.message });
+            res.status(500).json({
+                error: 'Chat processing failed',
+                message: error.message,
+                details: error.name,
+                timestamp: new Date().toISOString()
+            });
+        } else {
+            // If headers are already sent, send error through SSE
+            res.write(`data: ${JSON.stringify({
+                error: 'Chat processing failed',
+                message: error.message,
+                details: error.name,
+                timestamp: new Date().toISOString()
+            })}\n\n`);
+            res.end();
         }
     }
 });
@@ -1203,87 +1220,51 @@ async function handleGPT4oMiniResponse(response, res, message, startTime) {
 }
 
 // Phi-3-mini-4k-instruct model handler
-async function handlePhi3Mini4kInstructResponse(response, res) {
-    console.log('Using Phi-3-mini-4k-instruct model');
-    const startTime = Date.now();
+async function handlePhi3Mini4kInstructResponse(completion, res, message, startTime) {
+    if (!completion) {
+        throw new Error('No completion provided to Phi-3 handler');
+    }
 
     try {
-        let lastMessage = '';
-        // Get the last message from the stream
-        for await (const chunk of response) {
+        let tokenCount = 0;
+        let fullResponse = '';
+
+        for await (const chunk of completion) {
             if (chunk.choices[0]?.delta?.content) {
-                lastMessage = chunk.choices[0].delta.content;
-            }
-        }
+                const content = chunk.choices[0].delta.content;
+                fullResponse += content;
+                tokenCount += Math.ceil(content.length / 4);
 
-        let fullPrompt;
-        if (lastMessage.toLowerCase().includes('tell me a joke') ||
-            lastMessage.toLowerCase().includes('another joke')) {
-            fullPrompt = `${systemPrompt}\n\nHuman: Tell me a short, funny joke.\n\nAssistant:`;
-        } else {
-            fullPrompt = `${systemPrompt}\n\nHuman: ${lastMessage}\n\nAssistant:`;
-        }
-
-        // Rest of your existing Phi-3 handler stays EXACTLY the same
-        const fetchPhi3Response = async () => {
-            const response = await axios.post(
-                "https://api-inference.huggingface.co/models/microsoft/phi-3-mini-4k-instruct",
-                {
-                    inputs: fullPrompt,
-                    parameters: {
-                        max_new_tokens: 100,
-                        temperature: 0.9,
-                        top_p: 0.95,
-                        return_full_text: false,
-                        do_sample: true
+                // Send chunk with metrics
+                res.write(`data: ${JSON.stringify({
+                    response: content,
+                    metrics: {
+                        duration: Date.now() - startTime,
+                        promptTokens: Math.ceil(message.length / 4),
+                        completionTokens: tokenCount,
+                        totalTokens: Math.ceil(message.length / 4) + tokenCount,
+                        model: 'phi-3-mini-4k-instruct'
                     }
-                },
-                {
-                    headers: {
-                        'Authorization': `Bearer ${process.env.HUGGINGFACE_API_KEY}`,
-                        'Content-Type': 'application/json'
-                    },
-                    timeout: 30000
-                }
-            );
-            return response.data;
-        };
-
-        const data = await fetchPhi3Response();
-        console.log('Raw API response:', JSON.stringify(data, null, 2));
-
-        if (!data[0] || !data[0].generated_text) {
-            throw new Error('Unexpected response format from Hugging Face API');
-        }
-
-        let aiResponse = data[0].generated_text.trim();
-
-        // Remove everything after the first occurrence of "Human:" or "Assistant:"
-        aiResponse = aiResponse.split(/Human:|Assistant:/)[0].trim();
-
-        // For joke requests, ensure we're sending a complete joke
-        if (lastMessage.toLowerCase().includes('tell me a joke') ||
-            lastMessage.toLowerCase().includes('another joke')) {
-            const jokeLines = aiResponse.split('\n').filter(line => line.trim() !== '');
-            if (jokeLines.length >= 2) {
-                aiResponse = jokeLines[0] + '\n' + jokeLines[1];  // Keep setup and punchline
-            } else if (jokeLines.length === 1) {
-                aiResponse = jokeLines[0];  // Keep the single line joke
-            } else {
-                aiResponse = "Sorry, I couldn't come up with a joke this time.";
+                })}\n\n`);
             }
         }
 
-        console.log('Processed AI response:', aiResponse);
+        // Send completion signal
+        res.write(`data: ${JSON.stringify({
+            done: true,
+            metrics: {
+                duration: Date.now() - startTime,
+                promptTokens: Math.ceil(message.length / 4),
+                completionTokens: tokenCount,
+                totalTokens: Math.ceil(message.length / 4) + tokenCount,
+                model: 'phi-3-mini-4k-instruct'
+            }
+        })}\n\n`);
+        res.end();
 
-        // Send the processed response
-        res.write(`data: ${JSON.stringify({ response: aiResponse })}\n\n`);
-        res.write(`data: ${JSON.stringify({ done: true, duration: Date.now() - startTime, model: 'phi-3-mini-4k-instruct' })}\n\n`);
-
-        console.log(`Phi-3 response time: ${Date.now() - startTime}ms`);
     } catch (error) {
-        console.error('Error in Phi-3 response:', error);
-        res.write(`data: ${JSON.stringify({ error: 'An error occurred while fetching the Phi-3 response', details: error.message })}\n\n`);
+        console.error('Error in Phi-3 handler:', error);
+        throw error; // Let the main error handler deal with it
     }
 }
 
