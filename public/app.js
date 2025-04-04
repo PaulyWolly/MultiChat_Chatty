@@ -711,46 +711,15 @@ document.addEventListener('DOMContentLoaded', initializeApp);
 // =====================================================
 
 async function initializeApp() {
-    console.log('Starting app initialization...');
-
-    // Disable conversation mode toggle initially
-    elements.conversationModeToggle.disabled = true;
-
-    // Show startup message
-    updateStatus(MESSAGES.STATUS.INITIALIZING);
-
     try {
-        // Clear conversation state
-        state.conversationHistory = [];
-        elements.chatMessages.innerHTML = '';
+        console.log('Initializing app...');
+        updateStatus(MESSAGES.STATUS.INITIALIZING);
 
-        // Handle session management
-        const currentTime = Date.now();
-        const lastSessionTime = localStorage.getItem('sessionTimestamp');
-
-        if (!lastSessionTime || (currentTime - parseInt(lastSessionTime)) > 24 * 60 * 60 * 1000) {
-            localStorage.removeItem('sessionId');
-            localStorage.removeItem('conversationHistory');
-            localStorage.removeItem('sessionTimestamp');
-
-            window.sessionId = `session-${currentTime}-${Math.random().toString(36).substring(2, 9)}`;
-            localStorage.setItem('sessionId', window.sessionId);
-            localStorage.setItem('sessionTimestamp', currentTime.toString());
-        } else {
-            window.sessionId = localStorage.getItem('sessionId');
-        }
-
-        // Save voice preference
-        const savedVoice = localStorage.getItem('selectedVoice');
-        if (savedVoice) {
-            localStorage.setItem('selectedVoice', savedVoice);
-            elements.voiceSelect.value = savedVoice;  // Set the select element value
-        }
-
-        // Initialize core components
-        await checkMicrophonePermission();
+        // Initialize other components
+        await loadPersonalInfo();
+        setupEventListeners();
         await populateVoiceList();
-        initializeSpeechRecognition();
+        await checkMicrophonePermission();
 
         // Set up event listeners
         setupEventListeners();
@@ -1795,94 +1764,24 @@ async function getAIResponse(message, selectedModel, history, systemPrompt, sess
 
 // Add message to chat function
 function addMessageToChat(role, content, options = {}) {
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `message ${role}`;
-
-    // Initialize dataset if needed
-    if (!messageDiv.dataset) {
-        messageDiv.dataset = {};
-    }
-
-    // Add special classes for greeting and exit messages
-    if (options.type === 'greeting') {
-        messageDiv.classList.add('greeting-bubble');
-    } else if (options.type === 'exit') {
-        messageDiv.classList.add('exit-bubble');
-    }
-
-    // Set model info FIRST for all assistant messages
-    if (role === 'assistant') {
-        try {
-            if (options.type === 'image-analysis') {
-                messageDiv.dataset.model = 'gpt-4o';
-            } else {
-                const modelSelect = document.getElementById('model-select');
-                messageDiv.dataset.model = modelSelect?.value || 'gpt-4o-mini';
-            }
-        } catch (e) {
-            console.warn('Error setting model info:', e);
-            messageDiv.dataset.model = 'gpt-4o-mini';
-        }
-    }
-
-    // Determine if this is a system-type message
-    const isSystemType = options.type === 'greeting' ||
-        options.type === 'system' ||
-        options.type === 'time' ||
-        options.type === 'date' ||
-        options.type === 'dateTime' ||
-        options.type === 'exit';
-
-    // Add metadata first for all assistant messages except system types and greetings
-    if (role === 'assistant' && !isSystemType && options.type !== 'greeting') {
-        const metadataDiv = document.createElement('div');
-        metadataDiv.className = 'metadata';
-        messageDiv.appendChild(metadataDiv);
-
-        // Add separator after metadata
-        const separator = document.createElement('hr');
-        messageDiv.appendChild(separator);
-    }
-
-    // Create content container and add content
-    const contentDiv = document.createElement('div');
-    contentDiv.className = 'message-content';
+    const messageElement = document.createElement('div');
+    messageElement.className = `message ${role}`;
+    
+    const contentElement = document.createElement('div');
+    contentElement.className = 'message-content';
 
     // Handle different content types
-    switch(options.type) {
-        case 'bing-search':
-        case 'youtube-list':
-            contentDiv.innerHTML = content;
-            break;
-        case 'image-analysis':
-            contentDiv.innerHTML = `<div class="image-analysis">${content}</div>`;
-            break;
-        case 'code':
-            contentDiv.innerHTML = `<pre><code>${content}</code></pre>`;
-            break;
-        case 'joke':
-            contentDiv.innerHTML = `<div class="joke-content">${content}</div>`;
-            break;
-        default:
-            if (content.includes('# Web Results') ||
-                content.includes('# News Results') ||
-                content.includes('<div class="youtube-results">')) {
-                contentDiv.innerHTML = content;
+    if (typeof content === 'object' && content.type === 'youtube') {
+        contentElement.innerHTML = content.html;
     } else {
-        contentDiv.textContent = content;
-            }
+        contentElement.textContent = content;
     }
 
-    messageDiv.appendChild(contentDiv);
-    elements.chatMessages.appendChild(messageDiv);
+    messageElement.appendChild(contentElement);
+    elements.chatMessages.appendChild(messageElement);
     elements.chatMessages.scrollTop = elements.chatMessages.scrollHeight;
 
-    // Update metadata for assistant messages
-    if (role === 'assistant' && !isSystemType) {
-        updateMetadata(messageDiv);
-    }
-
-    return messageDiv;
+    return messageElement;
 }
 
 // Update message content function
@@ -4071,7 +3970,7 @@ const handleYoutube = {
         const patterns = getPatterns();
 
         // Add user's message first
-        addMessageToChat('user', messageText);  // Add this line
+        addMessageToChat('user', messageText);
 
         // Check for play request first
         const isPlay = patterns.youtube.playVideo.test(messageText);
@@ -4099,42 +3998,44 @@ const handleYoutube = {
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             const data = await response.json();
 
-            if (isPlay && data.success && data.video) {
-                this.showVideo(data.video.id);
-                addMessageToChat('assistant', `Playing: ${data.video.title}`);
-            } else if (data.success && data.videos) {
-                const message = `Found these videos about "${query}":`;
-                const videoList = document.createElement('div');
-                videoList.className = 'youtube-results';
-                videoList.innerHTML = `
-                    <ol class="video-list">
-                        ${data.videos.map(video => `
-                            <li class="video-item">
-                                <div class="video-title">${video.title}</div>
-                                <div class="video-controls">
-                                    <a href="#" class="youtube-playHere-link" data-video-id="${video.id}">Play Here</a> |
-                                    <a href="https://www.youtube.com/watch?v=${video.id}" target="_blank" class="youtube-link">YouTube</a>
-                                    <div class="channel-info">By: ${video.channelTitle}</div>
-                                </div>
-                            </li>
-                        `).join('')}
-                    </ol>`;
+            if (data.success && (data.video || data.videos)) {
+                const videos = data.video ? [data.video] : data.videos;
+                const messageContent = {
+                    type: 'youtube',
+                    html: `
+                        <div class="youtube-results">
+                            <p>Found ${videos.length > 1 ? 'these videos' : 'this video'} about "${query}":</p>
+                            <ol class="video-list">
+                                ${videos.map(video => `
+                                    <li class="video-item">
+                                        <div class="video-title">${video.title}</div>
+                                        <div class="video-controls">
+                                            <button class="youtube-popup-btn" data-video-id="${video.id}">
+                                                Play in Popup
+                                            </button>
+                                            <a href="https://www.youtube.com/embed/${video.id}?autoplay=1&rel=0" 
+                                            target="_blank" 
+                                            rel="noopener noreferrer" 
+                                            class="youtube-direct-link">
+                                                Watch on YouTube
+                                            </a>
+                                            <!-- <div class="channel-info">By: ${video.channelTitle || ''}</div> -->
+                                        </div>
+                                    </li>
+                                `).join('')}
+                            </ol>
+                        </div>
+                    `
+                };
 
-                // Add message with both text and video list
-                const messageElement = document.createElement('div');
-                messageElement.textContent = message;
-                addMessageToChat('assistant', messageElement.outerHTML + videoList.outerHTML, {
-                    type: 'youtube-list',
-                    messageType: 'youtube'
-                });
+                addMessageToChat('assistant', messageContent, { type: 'youtube' });
 
-                // Add click handlers
+                // Add click handlers for popup buttons
                 setTimeout(() => {
-                    document.querySelectorAll('.youtube-playHere-link').forEach(link => {
-                        link.addEventListener('click', (e) => {
-                            e.preventDefault();
-                            const videoId = e.target.closest('.youtube-playHere-link').getAttribute('data-video-id');
-                            this.showVideo(videoId);
+                    document.querySelectorAll('.youtube-popup-btn').forEach(btn => {
+                        btn.addEventListener('click', (e) => {
+                            const videoId = e.target.getAttribute('data-video-id');
+                            this.openYoutubePopup(videoId);
                         });
                     });
                 }, 100);
@@ -4144,6 +4045,26 @@ const handleYoutube = {
             console.error('Error with YouTube request:', error);
             addMessageToChat('assistant', 'Sorry, there was an error processing your YouTube request.');
             return true;
+        }
+    },
+
+    openYoutubePopup(videoId) {
+        // Calculate dimensions for a wider window (90% of screen width, 16:9 aspect ratio)
+        const width = Math.floor(window.screen.width * 0.9);  // Increased from 0.8 to 0.9
+        const height = Math.floor(width * (9/16));
+        const left = Math.floor((window.screen.width - width) / 2);
+        const top = Math.floor((window.screen.height - height) / 2);
+    
+        const popup = window.open(
+            `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`,
+            'YouTubePlayer',
+            `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=no,status=no`
+        );
+    
+        if (popup) {
+            popup.focus();
+        } else {
+            alert('Please allow popups for this site to play videos in a new window.');
         }
     },
 
@@ -4173,36 +4094,96 @@ const handleYoutube = {
     showVideo(videoId) {
         this.createVideoContainer();
         const videoWrapper = document.getElementById('youtube-video');
+        videoWrapper.innerHTML = '';
 
-        // Create iframe with event listener
+        // Create iframe with enhanced parameters
         const iframe = document.createElement('iframe');
         iframe.width = "100%";
         iframe.height = "100%";
-        iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+        
+        // Build URL with all necessary parameters
+        const params = new URLSearchParams({
+            autoplay: '1',
+            rel: '0',
+            modestbranding: '1',
+            enablejsapi: '1',
+            origin: window.location.origin,
+            widget_referrer: window.location.href,
+            hl: 'en',
+            controls: '1',
+            fs: '1',
+            playsinline: '1',
+            iv_load_policy: '3'
+        });
+        
+        // Set proper sandbox attributes to allow necessary features while maintaining security
+        iframe.sandbox = 'allow-same-origin allow-scripts allow-popups allow-presentation allow-forms';
+        
+        // Set referrer policy
+        iframe.referrerPolicy = 'strict-origin-when-cross-origin';
+        
+        // Use nocookie domain with enhanced parameters
+        iframe.src = `https://www.youtube-nocookie.com/embed/${videoId}?${params.toString()}`;
         iframe.frameBorder = "0";
-        iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture";
+        iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
         iframe.allowFullscreen = true;
 
-        // When iframe loads, update status and mic state
-        iframe.onload = () => {
-            // Force stop listening and update states
-            stopListening();
-            state.isListening = false;
-            // Store previous conversation mode state
-            this.previousConversationMode = state.isConversationMode;
-            state.isConversationMode = false;  // Temporarily disable conversation mode
+        // Add loading indicator
+        const loadingDiv = document.createElement('div');
+        loadingDiv.className = 'youtube-loading';
+        loadingDiv.innerHTML = 'Loading video...';
+        videoWrapper.appendChild(loadingDiv);
 
-            // Update status and mic visual state
-            updateStatus(MESSAGES.STATUS.VIDEO_PLAYING);
-            if (elements.microphoneButton) {
-                elements.microphoneButton.classList.remove('active');
-            }
+        // Handle iframe load event
+        iframe.onload = () => {
+            loadingDiv.remove();
+            // Check if the video is actually playing after a short delay
+            setTimeout(() => {
+                try {
+                    // If we detect the verification message, show fallback
+                    if (iframe.contentDocument && 
+                        (iframe.contentDocument.body.innerHTML.includes('Sign in') || 
+                         iframe.contentDocument.body.innerHTML.includes('confirm you\'re not a bot'))) {
+                        this.showFallbackMessage(videoId);
+                    }
+                } catch (e) {
+                    // If we can't access the iframe content (due to CORS), assume it's working
+                    console.log('Cannot check iframe content due to CORS, continuing playback');
+                }
+            }, 2000);
         };
 
-        videoWrapper.innerHTML = '';
+        // Handle load errors
+        iframe.onerror = () => {
+            this.showFallbackMessage(videoId);
+        };
+
         videoWrapper.appendChild(iframe);
         elements.videoContainer.classList.remove('hidden');
         this.isPlaying = true;
+
+        // Update app state
+        if (state.isListening) {
+            stopListening();
+            state.isListening = false;
+        }
+        updateStatus(MESSAGES.STATUS.VIDEO_PLAYING);
+    },
+
+    showFallbackMessage(videoId) {
+        const videoWrapper = document.getElementById('youtube-video');
+        videoWrapper.innerHTML = `
+            <div class="youtube-error">
+                <p>Unable to play video in embedded player.</p>
+                <p>You can watch it directly on YouTube:</p>
+                <a href="https://www.youtube.com/watch?v=${videoId}" 
+                   target="_blank" 
+                   rel="noopener noreferrer" 
+                   class="youtube-direct-link">
+                    Watch on YouTube
+                </a>
+            </div>
+        `;
     },
 
     hideVideo() {
@@ -4211,29 +4192,7 @@ const handleYoutube = {
             videoWrapper.innerHTML = '';
             elements.videoContainer.classList.add('hidden');
             this.isPlaying = false;
-
-            // Restore previous conversation mode state
-            if (this.previousConversationMode) {
-                state.isConversationMode = true;
-                state.isListening = true;
-                // Ensure recognition is restarted
-                if (state.recognition) {
-                    state.recognition.start();
-                } else {
-                    initializeSpeechRecognition();
-                    state.recognition.start();
-                }
-                updateStatus(MESSAGES.STATUS.LISTENING);
-                // Update mic visual state
-                if (elements.microphoneButton) {
-                    elements.microphoneButton.classList.add('active');
-                    elements.microphoneButton.textContent = '🔴';  // Active mic indicator
-                }
-            } else {
-                updateStatus(MESSAGES.STATUS.DEFAULT);
-            }
-            // Clear stored state
-            this.previousConversationMode = null;
+            updateStatus(MESSAGES.STATUS.DEFAULT);
         }
     }
 };
