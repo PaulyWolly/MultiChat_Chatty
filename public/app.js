@@ -1,9 +1,9 @@
 /*
   APP.js
-  Version: 20.0.5
-  AppName: Multi-Chat [v20.0.5]
+  Version: 21.0
+  AppName: Multi-Chat [v21.0]
+  Updated: April 2, 2025 @5:45PM
   Created by Paul Welby
-  Updated: January 8, 2025 @10:15AM
 */
 
 // =====================================================
@@ -11,7 +11,7 @@
 // =====================================================
 
 // SERVER URL
-const SERVER_URL = 'http://localhost:32005';
+const SERVER_URL = 'http://localhost:3210';
 
 // Time constants
 const INTERVAL = 10;  // Set timeout duration in minutes
@@ -57,7 +57,7 @@ const MIC_INITIALIZATION_DELAY = 4000;  // 4 seconds delay
 // Add the MESSAGES constant
 const MESSAGES = {
     STATUS: {
-        DEFAULT: "Click the Conversation Mode checkbox, or press the microphone button \n...to enable conversations, or enter a message and press Send",
+        DEFAULT: "Click the Conversation Mode checkbox, or press the microphone button \n\n...to enable conversations, or enter a message and press Send",
         LISTENING: "Listening...",
         SPEAKING: "AI is speaking...",
         PROCESSING: "Processing...",
@@ -81,6 +81,31 @@ const MESSAGES = {
         CONNECTION: "Connection error. Please refresh the page.",
         EXIT: "Error occurred during exit. Please refresh the page if issues persist."
     }
+};
+
+// Add at the top with other constants
+const AUDIO_CONFIG = {
+    minChunkLength: 10,
+    maxChunkLength: 150,
+    pauseDuration: 400,
+    maxRetries: 3,
+    retryDelay: 1000,
+    defaultVoice: 'en-US-AndrewNeural',
+    rate: 0.9,
+    pitch: 1.0,
+    volume: 1.0,  // Fixed full volume
+    apiUrl: `${SERVER_URL}/api/tts`
+};
+
+// Add this at the top with other constants
+const SPEECH_CONFIG = {
+    retryDelay: 1000,
+    maxRetries: 3,
+    initDelay: 500,
+    silenceTimeout: 1500,    // Wait 1.5s of silence before processing
+    continuous: true,        // Keep recognition running
+    interimResults: true,    // Get interim results
+    language: 'en-US'
 };
 
 // =====================================================
@@ -185,9 +210,7 @@ const state = {
     sseRetryDelay: 1000,
     savingJoke: false,
     pendingNameChange: null,
-    lastRequestTime: Date.now(),
-    micRetryCount: 0,
-    maxMicRetries: 3,  // Maximum number of retries for microphone access
+    lastRequestTime: Date.now()
 };
 
 // =====================================================
@@ -347,6 +370,8 @@ async function handleCommand(text) {
         }
     }
 
+    // ... rest of the patterns ...
+
     // In handleCommand function, add proper state handling for jokes listing
     for (const pattern of patterns.listJokes) {
         const match = text.match(pattern);
@@ -425,11 +450,6 @@ async function handleCommand(text) {
         text.toLowerCase().includes('look up')) {
         return await handleBingSearch.handleSearchRequest(text);
     }
-
-    // Check for image search requests
-    if (patterns.imageSearch.search.test(text) || patterns.imageSearch.showImages.test(text)) {
-        return await handleGoogleImageSearch.handleImageSearchRequest(text);
-    }
 }
 
 // Generate Greeting
@@ -487,6 +507,34 @@ async function generateGreeting() {
     const options = greetings[timeOfDay];
     return options[Math.floor(Math.random() * options.length)];
 }
+
+// // Handle time-related queries
+// function handleTimeQuery(messageText) {
+//     const currentTime = new Date();
+//     let response;
+
+//     if (messageText.toLowerCase().includes('date and time')) {
+//         response = `Today's date is ${currentTime.toLocaleDateString()} and the local time is ${currentTime.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })} PST`;
+//         const messageElement = document.createElement('div');
+//         messageElement.className = 'message system-bubble datetime-response';
+//         messageElement.textContent = response;
+//         elements.chatMessages.appendChild(messageElement);
+//     } else if (messageText.toLowerCase().includes('time')) {
+//         response = `The local time is ${currentTime.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })} PST`;
+//         const messageElement = document.createElement('div');
+//         messageElement.className = 'message system-bubble time-response';
+//         messageElement.textContent = response;
+//         elements.chatMessages.appendChild(messageElement);
+//     } else if (messageText.toLowerCase().includes('date')) {
+//         response = `Today's date is ${currentTime.toLocaleDateString()}`;
+//         const messageElement = document.createElement('div');
+//         messageElement.className = 'message system-bubble date-response';
+//         messageElement.textContent = response;
+//         elements.chatMessages.appendChild(messageElement);
+//     }
+
+//     return response;
+// }
 
 
 // =====================================================
@@ -605,10 +653,6 @@ function getPatterns() {
             /^tell me my name\??$/i,
             /^do you remember my name\??$/i
         ],
-        imageSearch: {
-            search: /(search for|look up|show me|find|get) images? (of|about|showing|with|containing) (.+)/i,
-            showImages: /^(show|display|find) images? (of|about|showing|with|containing) (.+)/i
-        },
     };
 }
 
@@ -757,21 +801,7 @@ async function loadPersonalInfo() {
 
 // Setup event listeners function
 function setupEventListeners() {
-    elements.micButton.addEventListener('click', () => {
-        // Ensure we have permission first
-        navigator.mediaDevices.getUserMedia({ audio: true })
-            .then(() => {
-                if (!state.isListening) {
-                    startListening();
-                } else {
-                    stopListening();
-                }
-            })
-            .catch(error => {
-                console.error('Microphone permission denied:', error);
-                updateStatus(MESSAGES.ERRORS.MIC_PERMISSION);
-            });
-    });
+    elements.micButton.addEventListener('click', toggleSpeechRecognition);
     elements.sendButton.addEventListener('click', () => sendMessage());
     elements.userInput.addEventListener('keypress', (event) => {
         if (event.key === 'Enter' && !event.shiftKey) {
@@ -1002,7 +1032,7 @@ async function fetchWithRetry(url, options, maxRetries = 3) {
 // =====================================================
 
 // Send message function
-async function sendMessage(message, isGreeting = false, metadata = {}) {
+async function sendMessage(message, isGreeting = false) {
     try {
         // Check for date/time requests
         const hasDate = message.toLowerCase().match(/date/);
@@ -1877,7 +1907,7 @@ function updateMessageContent(messageElement, content, tokenCount) {
 }
 
 // Update metadata function
-function updateMetadata(messageElement, metadata = {}) {  // Add default empty object
+function updateMetadata(messageElement, metadata = {}) {
     // Skip metadata for system messages and date/time responses
     if (metadata.type === 'system' ||
         metadata.messageType === 'time' ||
@@ -1890,34 +1920,29 @@ function updateMetadata(messageElement, metadata = {}) {  // Add default empty o
     if (!metadataElement) return;
 
     // Get model name with proper fallbacks
-    let modelName = 'gpt-4o-mini';  // Set default first
+    let modelName = metadata?.model || elements.modelSelect?.value || 'gpt-4o-mini';
 
-    try {
-        if (messageElement.classList.contains('image-analysis')) {
-            modelName = 'gpt-4o';
-        } else {
-            modelName = messageElement.dataset.model || document.getElementById('model-select')?.value || 'gpt-4o-mini';
-        }
-    } catch (e) {
-        console.warn('Error getting model name:', e);
-        // Keep default model name
+    // Calculate duration
+    let duration;
+    if (metadata.metrics?.duration) {
+        duration = metadata.metrics.duration;
+    } else if (metadata.metrics?.startTime && metadata.metrics?.endTime) {
+        duration = ((metadata.metrics.endTime - metadata.metrics.startTime) / 1000).toFixed(2);
+    } else if (metadata.startTime) {
+        duration = ((Date.now() - metadata.startTime) / 1000).toFixed(2);
+    } else {
+        duration = '0.00';
     }
 
-    // Get timing information
-    const startTime = parseInt(messageElement.dataset.startTime) || Date.now();
-    const endTime = metadata?.endTime || metadata?.metrics?.endTime || Date.now();
-    const durationInSeconds = metadata?.metrics?.durationInSeconds ||
-        metadata?.duration ||
-            ((endTime - startTime) / 1000).toFixed(2);
+    // Get token count - restore original token count handling
+    const tokenCount = metadata.tokenCount ||
+                      metadata.metrics?.totalTokens ||
+                      41; // Default token count for system messages
 
-    // Get token count from metrics or use placeholder
-    const tokenCount = metadata?.metrics?.totalTokens ||
-        metadata?.tokenCount ||
-        Math.floor(Math.random() * 50) + 20;
-
+    // Format the metadata string
     metadataElement.innerHTML = `
         <span class="model-info">${modelName}</span>&nbsp;|&nbsp;
-        <span class="response-time">${durationInSeconds}s</span>&nbsp;|&nbsp;
+        <span class="response-time">${duration}s</span>&nbsp;|&nbsp;
         <span class="token-count">${tokenCount} tokens</span>
     `;
 
@@ -2018,34 +2043,10 @@ async function exitConversation(isTimeout = false) {
 
 // Update status function
 function updateStatus(message) {
-    if (elements.status) {
-        // Remove all status classes
-        elements.status.classList.remove(
-            'status-default',
-            'status-listening',
-            'status-video-playing',
-            'status-processing',
-            'status-error',
-            'status-initializing'
-        );
-
-        // Add appropriate class based on message
-        if (message === MESSAGES.STATUS.DEFAULT) {
-            elements.status.classList.add('status-default');
-        } else if (message === MESSAGES.STATUS.LISTENING) {
-            elements.status.classList.add('status-listening');
-        } else if (message === MESSAGES.STATUS.VIDEO_PLAYING) {
-            elements.status.classList.add('status-video-playing');
-        } else if (message === MESSAGES.STATUS.PROCESSING) {
-            elements.status.classList.add('status-processing');
-        } else if (message === MESSAGES.STATUS.ERROR) {
-            elements.status.classList.add('status-error');
-        } else if (message === MESSAGES.STATUS.INITIALIZING) {
-            elements.status.classList.add('status-initializing');
-        }
-
-        elements.status.textContent = message;
-    }
+    elements.status.textContent = message;
+    // Sync stop button visibility with status message
+    elements.stopAudioButton.style.display = 
+        message === MESSAGES.STATUS.SPEAKING ? 'inline-block' : 'none';
 }
 
 // Retrieve personal info function
@@ -2205,75 +2206,73 @@ async function playAudio(text) {
 
 // Update the playNextInQueue function
 async function playNextInQueue() {
-    console.log('playNextInQueue called. Queue length:', state.audioQueue.length);
-    if (state.audioQueue.length === 0 || state.isPlaying || state.stopRequested) {
+    if (!state.audioQueue.length || state.isPlaying || state.stopRequested) {
+        if (!state.audioQueue.length || state.stopRequested) {
+            updateStatus(state.isConversationMode ? MESSAGES.STATUS.LISTENING : MESSAGES.STATUS.READY);
+            state.isAISpeaking = false;
+        }
         return;
     }
 
-    state.isPlaying = true;
-    state.isAISpeaking = true;
-    elements.stopAudioButton.style.display = 'inline-block';  // Show the button
-    updateStatus('AI is speaking...');
-
-    // Ensure we stop listening before playing audio
-    if (state.isListening) {
-        stopListening();
-    }
-
-    const text = state.audioQueue.shift();
-
     try {
-        console.log('Fetching audio from TTS API');
-        const response = await fetchWithRetry(`${SERVER_URL}/api/tts`, {
+        state.isPlaying = true;
+        state.isAISpeaking = true;
+        updateStatus(MESSAGES.STATUS.SPEAKING);
+
+        const text = state.audioQueue[0];
+        console.log('Playing chunk:', text);
+
+        const response = await fetch(AUDIO_CONFIG.apiUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                text: text.trim(),
-                voice: elements.voiceSelect.value
-            }),
+                text: text,
+                voice: AUDIO_CONFIG.defaultVoice,
+                rate: AUDIO_CONFIG.rate,
+                pitch: AUDIO_CONFIG.pitch,
+                volume: AUDIO_CONFIG.volume
+            })
         });
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
+        if (!response.ok) throw new Error(`TTS API error: ${response.status}`);
+        
         const audioBlob = await response.blob();
+        if (audioBlob.size === 0) throw new Error('Empty audio response');
+
+        if (state.currentAudio) {
+            state.currentAudio.pause();
+            state.currentAudio = null;
+        }
+        
         const audioUrl = URL.createObjectURL(audioBlob);
         state.currentAudio = new Audio(audioUrl);
+        state.currentAudio.volume = AUDIO_CONFIG.volume;
 
-        state.currentAudio.onended = () => {
-            console.log('Audio playback ended');
-            URL.revokeObjectURL(audioUrl);
-            state.isPlaying = false;
+        await new Promise((resolve, reject) => {
+            state.currentAudio.onended = resolve;
+            state.currentAudio.onerror = reject;
+            state.currentAudio.play().catch(reject);
+        });
+
+        URL.revokeObjectURL(audioUrl);
+        state.audioQueue.shift();
+        state.isPlaying = false;
+
+        if (state.audioQueue.length > 0 && !state.stopRequested) {
+            setTimeout(() => playNextInQueue(), AUDIO_CONFIG.pauseDuration);
+        } else {
             state.isAISpeaking = false;
-            elements.stopAudioButton.style.display = 'none';  // Hide the button
-
-            if (state.audioQueue.length > 0 && !state.stopRequested) {
-                playNextInQueue();
-            } else {
-                // Update status based on conversation mode
-                updateStatus(state.isConversationMode ? MESSAGES.STATUS.LISTENING : MESSAGES.STATUS.DEFAULT);
-
-                if (state.isConversationMode && !state.isProcessing) {
-                    setTimeout(() => {
-                        initializeSpeechRecognition();
-                        startListening();
-                    }, 500);
-                }
-            }
-        };
-
-        await state.currentAudio.play();
+            updateStatus(state.isConversationMode ? MESSAGES.STATUS.LISTENING : MESSAGES.STATUS.READY);
+        }
 
     } catch (error) {
-        console.error('Error in text-to-speech:', error);
+        console.error('Audio playback error:', error);
         state.isPlaying = false;
         state.isAISpeaking = false;
-        elements.stopAudioButton.style.display = 'none';  // Hide the button
-        updateStatus('Error in text-to-speech');
-
+        updateStatus(state.isConversationMode ? MESSAGES.STATUS.LISTENING : MESSAGES.STATUS.READY);
+        
         if (state.audioQueue.length > 0) {
-            setTimeout(() => playNextInQueue(), 1000);
+            setTimeout(() => playNextInQueue(), AUDIO_CONFIG.retryDelay);
         }
     }
 }
@@ -2285,14 +2284,12 @@ function stopListening() {
     if (state.recognition) {
         try {
             state.recognition.stop();
-            state.recognition = null; // Clear the instance
         } catch (error) {
             console.error('Error stopping recognition:', error);
         }
     }
 
     state.isListening = false;
-    // updateStatus('Ready');
     console.log('Ready');
     elements.micButton.textContent = '🎤';
     if (state.inactivityTimer) {
@@ -2315,8 +2312,6 @@ function safeStartListening() {
 
     try {
         console.log('Attempting to start recognition');
-        state.recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-        initializeSpeechRecognition(); // Re-initialize with new instance
         state.recognition.start();
         elements.micButton.textContent = '🔴';
     } catch (error) {
@@ -2376,31 +2371,19 @@ function resetAudioState() {
 
 // Stop audio playback function
 function stopAudioPlayback() {
-    console.log('Stopping audio playback');
     state.stopRequested = true;
     state.audioQueue = [];
-    console.log('Audio queue cleared');
-
+    
     if (state.currentAudio) {
         state.currentAudio.pause();
         state.currentAudio.currentTime = 0;
         state.currentAudio = null;
-        console.log('Current audio stopped and reset');
     }
 
     state.isPlaying = false;
     state.isAISpeaking = false;
-    elements.stopAudioButton.style.display = 'none';
+    updateStatus(state.isConversationMode ? MESSAGES.STATUS.LISTENING : MESSAGES.STATUS.READY);
 
-    // Update status based on conversation mode
-    if (state.isConversationMode) {
-        updateStatus('Listening...');
-    } else {
-        // updateStatus('Ready');
-        console.log('Ready');
-    }
-
-    // Reset stopRequested after a short delay
     setTimeout(() => {
         state.stopRequested = false;
         if (state.isConversationMode && !state.isListening && !state.isRendering) {
@@ -2411,137 +2394,109 @@ function stopAudioPlayback() {
 
 // Queue audio chunk function
 async function queueAudioChunk(text) {
-    console.log('Queueing audio chunk:', text);
+    if (!text) return;
+    
+    // Don't reset the queue, just update state flags
+    state.stopRequested = false;
+    state.isAISpeaking = true;
+    updateStatus(MESSAGES.STATUS.SPEAKING);
 
-    if (!text || text.trim().length === 0) {
-        console.log('Empty text, skipping audio queue');
-        return;
-    }
+    // First split into major sections (for recipes, lists, etc.)
+    const sections = text.split(/(?=Ingredients:|Instructions:)/);
+    let chunks = [];
 
-    // Strip markdown before queuing for audio
-    const cleanText = stripMarkdown(text);
+    sections.forEach(section => {
+        // Split each section into sentences
+        const sentences = section
+            .replace(/([.!?])\s+/g, '$1|')  // Mark sentence boundaries
+            .split('|')
+            .map(s => s.trim())
+            .filter(s => s.length > 0);
 
-    // Split text into sentences more reliably
-    const sentences = cleanText
-        .split(/(?<=[.!?])\s+/)  // Split on sentence endings only
-        .filter(Boolean)
-        .map(s => s.trim())
-        .filter(s => s.length > 0);
-
-    // Check if it's a story (has multiple paragraphs)
-    if (text.includes('\n\n')) {
-        state.stopRequested = false;
-        // Add each sentence to the queue
-        sentences.forEach(sentence => {
-            if (!state.audioQueue.includes(sentence)) {
-                state.audioQueue.push(sentence);
-            }
-        });
-        console.log('Story detected, using sentence chunks:', sentences);
-    } else if (text.startsWith('🔍 Bing Search Results')) {
-        state.stopRequested = false;
-        const chunks = text.split('\n').filter(line => line.trim().length > 0);
-        state.audioQueue = chunks;
-        console.log('Bing search results detected, using multiple chunks:', chunks);
-    } else if (text.toLowerCase().includes('date') || text.toLowerCase().includes('time')) {
-        state.stopRequested = false;
-        state.audioQueue = [cleanText];
-        console.log('DateTime query detected, using single chunk:', cleanText);
-    } else {
-        sentences.forEach(sentence => {
-            if (!state.audioQueue.includes(sentence)) {
-                state.audioQueue.push(sentence);
-            }
-        });
-    }
-
-    console.log('Audio queue length:', state.audioQueue.length);
-    console.log('Audio queue contents:', state.audioQueue);
-    console.log('Current state:', {
-        isPlaying: state.isPlaying,
-        stopRequested: state.stopRequested,
-        isAISpeaking: state.isAISpeaking
+        // Add sentences to chunks array
+        chunks = chunks.concat(sentences);
     });
 
+    // Add new chunks to existing queue instead of replacing
+    state.audioQueue = state.audioQueue.concat(chunks);
+    console.log('Queued chunks:', state.audioQueue);
+    
     if (!state.isPlaying && !state.stopRequested) {
-        console.log('Starting playback from queueAudioChunk');
         await playNextInQueue();
-    } else {
-        console.log('Not starting playback. isPlaying:', state.isPlaying, 'stopRequested:', state.stopRequested);
     }
 }
 
-// Play next in queue function
+// Update playNextInQueue function to ensure sequential playback
 async function playNextInQueue() {
-    console.log('playNextInQueue called. Queue length:', state.audioQueue.length);
-    if (state.audioQueue.length === 0 || state.isPlaying || state.stopRequested) {
+    if (!state.audioQueue.length || state.isPlaying || state.stopRequested) {
+        if (!state.audioQueue.length || state.stopRequested) {
+            updateStatus(state.isConversationMode ? MESSAGES.STATUS.LISTENING : MESSAGES.STATUS.READY);
+            state.isAISpeaking = false;
+        }
         return;
     }
 
-    state.isPlaying = true;
-    state.isAISpeaking = true;
-    elements.stopAudioButton.style.display = 'inline-block';  // Show the button
-    updateStatus('AI is speaking...');
-
-    // Ensure we stop listening before playing audio
-    if (state.isListening) {
-        stopListening();
-    }
-
-    const text = state.audioQueue.shift();
-
     try {
-        console.log('Fetching audio from TTS API');
-        const response = await fetchWithRetry(`${SERVER_URL}/api/tts`, {
+        state.isPlaying = true;
+        state.isAISpeaking = true;
+        updateStatus(MESSAGES.STATUS.SPEAKING);
+
+        const text = state.audioQueue[0];
+        console.log('Playing chunk:', text);
+
+        const response = await fetch(AUDIO_CONFIG.apiUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                text: text.trim(),
-                voice: elements.voiceSelect.value
-            }),
+                text: text,
+                voice: AUDIO_CONFIG.defaultVoice,
+                rate: AUDIO_CONFIG.rate,
+                pitch: AUDIO_CONFIG.pitch,
+                volume: AUDIO_CONFIG.volume
+            })
         });
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
+        if (!response.ok) throw new Error(`TTS API error: ${response.status}`);
+        
         const audioBlob = await response.blob();
+        if (audioBlob.size === 0) throw new Error('Empty audio response');
+
+        if (state.currentAudio) {
+            state.currentAudio.pause();
+            state.currentAudio = null;
+        }
+        
         const audioUrl = URL.createObjectURL(audioBlob);
         state.currentAudio = new Audio(audioUrl);
+        state.currentAudio.volume = AUDIO_CONFIG.volume;
 
-        state.currentAudio.onended = () => {
-            console.log('Audio playback ended');
-            URL.revokeObjectURL(audioUrl);
-            state.isPlaying = false;
+        // Wait for current chunk to finish before moving to next
+        await new Promise((resolve, reject) => {
+            state.currentAudio.onended = resolve;
+            state.currentAudio.onerror = reject;
+            state.currentAudio.play().catch(reject);
+        });
+
+        URL.revokeObjectURL(audioUrl);
+        state.audioQueue.shift();  // Remove played chunk
+        state.isPlaying = false;
+
+        // Process next chunk if available
+        if (state.audioQueue.length > 0 && !state.stopRequested) {
+            setTimeout(() => playNextInQueue(), AUDIO_CONFIG.pauseDuration);
+        } else {
             state.isAISpeaking = false;
-            elements.stopAudioButton.style.display = 'none';  // Hide the button
-
-            if (state.audioQueue.length > 0 && !state.stopRequested) {
-                playNextInQueue();
-            } else {
-                // Update status based on conversation mode
-                updateStatus(state.isConversationMode ? MESSAGES.STATUS.LISTENING : MESSAGES.STATUS.DEFAULT);
-
-                if (state.isConversationMode && !state.isProcessing) {
-                    setTimeout(() => {
-                        initializeSpeechRecognition();
-                        startListening();
-                    }, 500);
-                }
-            }
-        };
-
-        await state.currentAudio.play();
+            updateStatus(state.isConversationMode ? MESSAGES.STATUS.LISTENING : MESSAGES.STATUS.READY);
+        }
 
     } catch (error) {
-        console.error('Error in text-to-speech:', error);
+        console.error('Audio playback error:', error);
         state.isPlaying = false;
         state.isAISpeaking = false;
-        elements.stopAudioButton.style.display = 'none';  // Hide the button
-        updateStatus('Error in text-to-speech');
-
+        updateStatus(state.isConversationMode ? MESSAGES.STATUS.LISTENING : MESSAGES.STATUS.READY);
+        
         if (state.audioQueue.length > 0) {
-            setTimeout(() => playNextInQueue(), 1000);
+            setTimeout(() => playNextInQueue(), AUDIO_CONFIG.retryDelay);
         }
     }
 }
@@ -2612,8 +2567,45 @@ function formatMinutesPlural(minutes) {
 }
 
 // =====================================================
-// IMAGE ANAYSIS HANDLING FUNCTIONS FOR IMAGE ANALYSIS
+// IMAGE HANDLING FUNCTIONS
 // =====================================================
+
+// Image request function
+async function handleImageRequest(query) {
+    try {
+        const response = await fetch(`/api/google-image-search?q=${encodeURIComponent(query)}`);
+        const data = await response.json();
+
+        if (data.images) {
+            // Display images directly without additional text
+            displayImageResults(data.images);
+        }
+    } catch (error) {
+        console.error('Error fetching images:', error);
+    }
+}
+
+// Display image results function
+function displayImageResults(images) {
+    const messageElement = addMessageToChat('assistant', 'Here are some relevant images:');
+    const imageContainer = document.createElement('div');
+    imageContainer.className = 'image-results-container';
+
+    images.forEach(image => {
+        const imgWrapper = document.createElement('div');
+        imgWrapper.className = 'image-result';
+
+        const img = document.createElement('img');
+        img.src = image.thumbnail;
+        img.alt = image.title;
+        img.onclick = () => window.open(image.link, '_blank');
+
+        imgWrapper.appendChild(img);
+        imageContainer.appendChild(imgWrapper);
+    });
+
+    messageElement.querySelector('.message-content').appendChild(imageContainer);
+}
 
 // Image analysis function
 async function handleImageAnalysis(imageData, prompt = '') {
@@ -2706,7 +2698,7 @@ async function handleImageAnalysis(imageData, prompt = '') {
     }
 }
 
-// Handle image upload function for image analysis
+// Handle image upload function
 function handleImageUpload(event) {
     const file = event.target.files[0];
     if (file) {
@@ -2793,48 +2785,6 @@ function handleImageUpload(event) {
     }
 }
 
-
-// =====================================================
-// IMAGE HANDLING FUNCTIONS FOR GOOGLE IMAGE SEARCH
-// =====================================================
-
-// Image request function
-async function handleImageRequest(query) {
-    try {
-        const response = await fetch(`/api/google-image-search?q=${encodeURIComponent(query)}`);
-        const data = await response.json();
-
-        if (data.images) {
-            // Display images directly without additional text
-            displayImageResults(data.images);
-        }
-    } catch (error) {
-        console.error('Error fetching images:', error);
-    }
-}
-
-// Display image results function
-function displayImageResults(images) {
-    const messageElement = addMessageToChat('assistant', 'Here are some relevant images:');
-    const imageContainer = document.createElement('div');
-    imageContainer.className = 'image-results-container';
-
-    images.forEach(image => {
-        const imgWrapper = document.createElement('div');
-        imgWrapper.className = 'image-result';
-
-        const img = document.createElement('img');
-        img.src = image.thumbnail;
-        img.alt = image.title;
-        img.onclick = () => window.open(image.link, '_blank');
-
-        imgWrapper.appendChild(img);
-        imageContainer.appendChild(imgWrapper);
-    });
-
-    messageElement.querySelector('.message-content').appendChild(imageContainer);
-}
-
 // Search and display images function
 async function searchAndDisplayImages(query) {
     try {
@@ -2898,182 +2848,6 @@ function insertAndStyleImages(images, messageElement) {
         }
     });
 }
-
-
-// =====================================================
-// GOOGLE IMAGE SEARCH MODULE
-// =====================================================
-
-const handleGoogleImageSearch = {
-    async handleImageSearchRequest(messageText) {
-        console.log('Google image search request:', messageText);
-
-        function createImageElement(imageData) {
-            const imageContainer = document.createElement('div');
-            imageContainer.className = 'image-container';
-
-            const img = document.createElement('img');
-            img.src = imageData.thumbnailUrl;
-            img.alt = imageData.alt || 'Search result image';
-            img.className = 'search-result-image';
-            img.onclick = () => window.open(imageData.imageUrl, '_blank');
-
-            // Add webpage source link
-            const sourceLink = document.createElement('a');
-            sourceLink.href = imageData.sourceUrl;
-            sourceLink.target = '_blank';
-            sourceLink.className = 'image-webpage-source';
-
-            const sourceIcon = document.createElement('span');
-            sourceIcon.className = 'source-icon';
-            sourceIcon.innerHTML = '🔗';
-            sourceLink.appendChild(sourceIcon);
-
-            imageContainer.appendChild(img);
-            imageContainer.appendChild(sourceLink);
-
-            return imageContainer;
-        }
-
-        try {
-            const query = messageText
-                .replace(/search for|look up|show me|find|images? of/gi, '')
-                .trim();
-
-            const response = await fetch('/api/google-image-search', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ query })
-            });
-
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            const data = await response.json();
-
-            if (data.success && data.images) {
-                const message = `Here are some images for "${query}":`;
-                const imageGrid = document.createElement('div');
-                imageGrid.className = 'image-grid';
-
-                data.images.forEach(imageData => {
-                    imageGrid.appendChild(createImageElement(imageData));
-                });
-
-                // Add message with both text and image grid
-                const messageElement = document.createElement('div');
-                messageElement.textContent = message;
-                addMessageToChat('assistant', messageElement.outerHTML + imageGrid.outerHTML, {
-                    type: 'image-search',
-                    messageType: 'image'
-                });
-            }
-            return true;
-        } catch (error) {
-            console.error('Google Image Search error:', error);
-            addMessageToChat('assistant', 'Sorry, there was an error processing your image search request.');
-            return true;
-        }
-    },
-
-    // Integrate existing handleImageRequest function
-    async handleImageRequest(query) {
-        try {
-            const response = await fetch(`/api/google-image-search?q=${encodeURIComponent(query)}`);
-            const data = await response.json();
-
-            if (data.images) {
-                this.displayImageResults(data.images);
-            }
-        } catch (error) {
-            console.error('Error fetching images:', error);
-        }
-    },
-
-    // Integrate existing displayImageResults function
-    displayImageResults(images) {
-        const messageElement = addMessageToChat('assistant', 'Here are some relevant images:');
-        const imageContainer = document.createElement('div');
-        imageContainer.className = 'image-results-container';
-
-        images.forEach(image => {
-            const imgWrapper = document.createElement('div');
-            imgWrapper.className = 'image-result';
-
-            const img = document.createElement('img');
-            img.src = image.thumbnail;
-            img.alt = image.title;
-            img.onclick = () => window.open(image.link, '_blank');
-
-            imgWrapper.appendChild(img);
-            imageContainer.appendChild(imgWrapper);
-        });
-
-        messageElement.querySelector('.message-content').appendChild(imageContainer);
-    },
-
-    // Integrate existing searchAndDisplayImages function
-    async searchAndDisplayImages(query) {
-        try {
-            const response = await fetch(`/api/google-image-search?q=${encodeURIComponent(query)}`);
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(`HTTP error! status: ${response.status}, message: ${errorData.error}`);
-            }
-            const data = await response.json();
-
-            if (data.items && data.items.length > 0) {
-                return { images: data.items.map(item => ({ url: item.link, name: item.title })) };
-            }
-            return null;
-        } catch (error) {
-            console.error('Error searching images:', error);
-            return null;
-        }
-    },
-
-    // Integrate existing insertAndStyleImages function
-    insertAndStyleImages(images, messageElement) {
-        const imageSection = `
-            <div class="image-section" style="margin-top: 15px; border-top: 1px solid #ccc; padding-top: 10px;">
-                <h3 style="font-size: 1.2em; margin-bottom: 10px; color: #333; font-weight: bold;">Images:</h3>
-                <div class="image-container" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; max-width: 100%;">
-                    ${images.map(image => `
-                        <a href="${image.link}" target="_blank" rel="noopener noreferrer" class="image-link"
-                            style="cursor: pointer; text-decoration: none; display: block; border: 1px solid #ddd; border-radius: 5px; overflow: hidden; transition: transform 0.2s ease-in-out; aspect-ratio: 1;">
-                            <img src="${image.link}" alt="${image.title}" title="${image.title}"
-                                    style="width: 100%; height: 100%; object-fit: cover; display: block;">
-                        </a>
-                    `).join('')}
-                </div>
-            </div>
-        `;
-
-        // Check if images section already exists
-        const existingImageSection = messageElement.querySelector('.image-section');
-        if (existingImageSection) {
-            existingImageSection.remove();
-        }
-
-        messageElement.insertAdjacentHTML('beforeend', imageSection);
-
-        // Add hover effects and error handling
-        messageElement.querySelectorAll('.image-link').forEach(link => {
-            link.onmouseover = () => link.style.transform = 'scale(1.05)';
-            link.onmouseout = () => link.style.transform = 'scale(1)';
-
-            // Add error handling for images
-            const img = link.querySelector('img');
-            img.onerror = () => {
-                img.src = img.getAttribute('data-thumbnail') || 'path/to/fallback-image.jpg';
-                console.log('Image failed to load, falling back to thumbnail:', img.src);
-            };
-
-            // Store thumbnail as backup
-            if (image.thumbnail) {
-                img.setAttribute('data-thumbnail', image.thumbnail);
-            }
-        });
-    }
-};
 
 // =====================================================
 // DATE/TIME HANDLING FUNCTIONS
@@ -3148,44 +2922,50 @@ function getTimeOfDay() {
 
 // Initialize speech recognition function
 function initializeSpeechRecognition() {
-    // Check if recognition is already initialized
-    if (state.recognition) {
-        state.recognition.stop();
+    if (!('webkitSpeechRecognition' in window)) {
+        console.error('Speech recognition not supported');
+        return;
     }
 
     try {
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        state.recognition = new SpeechRecognition();
-
-        // Set properties
-        state.recognition.continuous = true;
+        state.recognition = new webkitSpeechRecognition();
+        state.recognition.continuous = false;
         state.recognition.interimResults = false;
-        state.recognition.maxAlternatives = 1;
+        state.recognition.lang = 'en-US';
 
-        // Add event handlers
         state.recognition.onstart = () => {
-            console.log('Speech recognition started');
             state.isListening = true;
-            updateStatus(MESSAGES.STATUS.LISTENING);
-            state.micRetryCount = 0;  // Reset retry count on successful start
+            elements.micButton.textContent = '🔴';
+            updateStatus('Listening...');
+        };
+
+        state.recognition.onend = () => {
+            state.isListening = false;
+            elements.micButton.textContent = '🎤';
+            
+            if (state.isConversationMode && !state.isProcessing && !state.stopRequested) {
+                setTimeout(() => {
+                    if (!state.isProcessing && !state.stopRequested) {
+                        startListening();
+                    }
+                }, 1000);
+            }
         };
 
         state.recognition.onerror = (event) => {
-            console.log('Speech recognition error:', event.error);
-            // Handle specific error cases
-            if (event.error === 'not-allowed') {
-                state.micRetryCount++;
-                if (state.micRetryCount >= state.maxMicRetries) {
-                    console.log('Max microphone retries reached, stopping attempts');
-                    updateStatus(MESSAGES.ERRORS.MIC_PERMISSION);
-                    state.isListening = false;
-                    return;  // Stop retrying
-                }
-            }
+            console.error('Recognition error:', event.error);
+            state.isListening = false;
+            elements.micButton.textContent = '🎤';
         };
+
+        state.recognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript;
+            console.log('Heard:', transcript);
+            handleSpeechResult(event);
+        };
+
     } catch (error) {
-        console.error('Speech recognition initialization error:', error);
-        updateStatus(MESSAGES.ERRORS.INIT);
+        console.error('Error initializing speech recognition:', error);
     }
 }
 
@@ -3247,7 +3027,12 @@ async function handleResponse(response) {
 
 window.printRecipe = async function(recipeText, messageElement) {
     try {
-        console.log('Recipe text sent to server:', recipeText.substring(0, 200)); // Log what we're sending
+        console.log('Recipe text sent to server:', recipeText.substring(0, 200));
+
+        // Get any images from the message element FIRST
+        const images = messageElement.querySelectorAll('.image-link img');
+        const imageUrls = Array.from(images).map(img => img.src);
+        console.log('Found recipe images:', imageUrls);
 
         const response = await fetch('/api/recipe', {
             method: 'POST',
@@ -3256,134 +3041,143 @@ window.printRecipe = async function(recipeText, messageElement) {
         });
 
         const data = await response.json();
-        console.log('Server response:', data); // Log what we get back
-
         if (!data.success) throw new Error(data.error);
 
         const recipeName = data.recipe.name;
-        console.log('Recipe name from server:', recipeName); // Log the name we'll use
-
-    // Get any images from the message
-    const images = messageElement.querySelectorAll('.image-link img');
-    const imageUrls = Array.from(images).map(img => img.src);
-
-    // Split the recipe text into sections
-    const sections = recipeText.split(/(?:ingredients:|instructions:|directions:)/i);
-
-        // Get description (everything after the recipe name)
+        
+        // Split the recipe text into sections
+        const sections = recipeText.split(/(?:ingredients:|instructions:|directions:)/i);
+        
         const description = sections[0]
-            .split('\n')[0]  // Get first line
-            .substring(recipeName.length)  // Remove the recipe name part
-            .replace(/^[^a-zA-Z]+/, '')  // Remove any leading non-letter characters
+            .split('\n')[0]
+            .substring(recipeName.length)
+            .replace(/^[^a-zA-Z]+/, '')
             .trim();
 
-    const ingredients = sections[1] ? sections[1].trim().split(/\d+\./).filter(item => item.trim()) : [];
-    const instructions = sections[2] ? sections[2].trim().split(/\d+\./).filter(item => item.trim()) : [];
+        const ingredients = sections[1] ? sections[1].trim().split(/\d+\./).filter(item => item.trim()) : [];
+        const instructions = sections[2] ? sections[2].trim().split(/\d+\./).filter(item => item.trim()) : [];
 
-        // Create print window first to ensure it's ready
+        // Create print window
         const printWindow = window.open('', '_blank');
         if (!printWindow) {
             throw new Error('Pop-up blocked. Please allow pop-ups and try again.');
         }
 
-    // Create formatted HTML
-    const formattedText = `
-            <div class="recipe-intro">${description}</div>
-        <h2>Ingredients</h2>
-            <ul class="ingredients-list">
-            ${ingredients.map(item => `<li>${item.trim()}</li>`).join('')}
-        </ul>
-        <h2>Instructions</h2>
-            <ol class="instructions-list">
-            ${instructions.map(item => `<li>${item.trim()}</li>`).join('')}
-        </ol>
-    `;
+        // Create formatted HTML with recipe content first, then images section
+        const formattedText = `
+            <div class="recipe-content">
+                <div class="recipe-intro">${description}</div>
+                <h2>Ingredients</h2>
+                <ul class="ingredients-list">
+                    ${ingredients.map(item => `<li>${item.trim()}</li>`).join('')}
+                </ul>
+                <h2>Instructions</h2>
+                <ol class="instructions-list">
+                    ${instructions.map(item => `<li>${item.trim()}</li>`).join('')}
+                </ol>
+            </div>
+            ${imageUrls.length > 0 ? `
+                <div class="recipe-images">
+                    <h2>Recipe Images</h2>
+                    <div class="image-grid">
+                        ${imageUrls.map(url => `<img src="${url}" alt="Recipe Image">`).join('')}
+                    </div>
+                </div>
+            ` : ''}
+        `;
 
-    printWindow.document.write(`
-        <!DOCTYPE html>
-        <html>
-            <head>
+        printWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+                <head>
                     <title>${recipeName}</title>
-                <style>
-                    body {
-                        font-family: Arial, sans-serif;
-                        max-width: 800px;
-                        margin: 0 auto;
-                        padding: 40px;
-                    }
-                    h1 {
-                        font-size: 24px;
-                        margin-bottom: 20px;
-                        border-bottom: 2px solid #333;
-                        padding-bottom: 10px;
+                    <style>
+                        body {
+                            font-family: Arial, sans-serif;
+                            max-width: 800px;
+                            margin: 0 auto;
+                            padding: 40px;
+                        }
+                        h1 {
+                            font-size: 24px;
+                            margin-bottom: 20px;
+                            border-bottom: 2px solid #333;
+                            padding-bottom: 10px;
                             text-align: center;
                             text-transform: uppercase;
                             letter-spacing: 1px;
-                    }
-                    h2 {
-                        font-size: 20px;
-                        margin: 20px 0 10px 0;
-                        color: #444;
-                    }
-                    .recipe-intro {
-                        font-style: italic;
-                        margin-bottom: 20px;
-                        color: #666;
-                    }
-                    .ingredients-list {
-                        list-style-type: disc !important;
-                        padding-left: 20px;
-                        margin-bottom: 20px;
-                    }
-                    .ingredients-list li {
-                        margin-bottom: 8px;
-                        line-height: 1.4;
-                        display: list-item !important;
-                    }
-                    .instructions-list {
-                        padding-left: 20px;
-                        margin-bottom: 20px;
-                    }
-                    .instructions-list li {
-                        margin-bottom: 12px;
-                        line-height: 1.6;
-                    }
-                    .image-section {
-                            page-break-before: always;
-                    }
-                    .image-grid {
-                        display: grid;
-                        grid-template-columns: repeat(2, 1fr);
-                        gap: 10px;
-                        margin: 5px 0;
-                        max-width: 800px;
-                    }
-                    .image-grid img {
-                        width: 100%;
-                        height: 250px;
-                        object-fit: cover;
-                        border-radius: 8px;
-                    }
-                </style>
-            </head>
-            <body>
-                <h1>${recipeName}</h1>
-                <div class="recipe-content">${formattedText}</div>
-                ${imageUrls.length ? `
-                    <div class="image-section">
-                        <h2 style="margin-bottom: 15px;">Recipe Images</h2>
-                        <div class="image-grid">
-                            ${imageUrls.map(url => `<img src="${url}" alt="Recipe Image">`).join('')}
-                        </div>
-                    </div>
-                ` : ''}
-            </body>
-        </html>
-    `);
-    printWindow.document.close();
+                        }
+                        h2 {
+                            font-size: 20px;
+                            margin: 20px 0 10px 0;
+                            color: #444;
+                        }
+                        .recipe-intro {
+                            font-style: italic;
+                            margin-bottom: 20px;
+                            color: #666;
+                        }
+                        .recipe-content {
+                            margin-bottom: 40px;
+                        }
+                        .ingredients-list {
+                            list-style-type: disc !important;
+                            padding-left: 20px;
+                            margin-bottom: 20px;
+                        }
+                        .ingredients-list li {
+                            margin-bottom: 8px;
+                            line-height: 1.4;
+                            display: list-item !important;
+                        }
+                        .instructions-list {
+                            padding-left: 20px;
+                            margin-bottom: 20px;
+                        }
+                        .instructions-list li {
+                            margin-bottom: 12px;
+                            line-height: 1.6;
+                        }
+                        .recipe-images {
+                            margin-top: 40px;
+                            border-top: 2px solid #eee;
+                            padding-top: 20px;
+                        }
+                        .image-grid {
+                            display: grid;
+                            grid-template-columns: repeat(2, 1fr);
+                            gap: 20px;
+                            margin-top: 20px;
+                        }
+                        .image-grid img {
+                            width: 100%;
+                            height: 300px;
+                            object-fit: cover;
+                            border-radius: 8px;
+                        }
+                        @media print {
+                            .recipe-images {
+                                break-before: always;
+                            }
+                            .image-grid img {
+                                max-height: 250px;
+                            }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <h1>${recipeName}</h1>
+                    ${formattedText}
+                </body>
+            </html>
+        `);
+        
+        printWindow.document.close();
+        
+        // Wait for images to load before printing
         setTimeout(() => {
-    printWindow.print();
-        }, 500);  // Give the browser time to load images
+            printWindow.print();
+        }, 1000);
 
     } catch (error) {
         console.error('Error printing recipe:', error);
@@ -3966,7 +3760,7 @@ const handleMyJokes = {
             const data = await response.json();
 
             if (data.success && data.joke) {
-                const message = "I found your joke. Would you like to hear it?";
+                const message = "I found your joke. Would you like to hear it? Say YES to hear it or NO to cancel.";
                 const metadata = {
                     model: elements.modelSelect.value,
                     duration: `${((performance.now() - startTime) / 1000).toFixed(2)}s`,
@@ -4019,27 +3813,24 @@ const handleMyJokes = {
 
             if (data.success && data.jokes && data.jokes.length > 0) {
                 const messageText = "Here is a listing of your jokes:";
-                const duration = ((performance.now() - startTime) / 1000).toFixed(2);
-                console.log('Joke List Metadata:', {
-                    model: 'system',
-                    duration: duration,
-                    calculatedAt: new Date().toISOString(),
-                    startTime: startTime,
-                    endTime: performance.now()
+                const endTime = performance.now();
+                const duration = ((endTime - startTime) / 1000).toFixed(2);
+                const tokenCount = messageText.length + data.jokes.reduce((acc, joke) => acc + joke.title.length, 0);
+
+                // Add message with proper metadata
+                const messageElement = addMessageToChat('assistant', messageText, {
+                    model: elements.modelSelect.value,
+                    metrics: {
+                        model: elements.modelSelect.value,
+                        totalTokens: tokenCount,
+                        startTime: startTime,
+                        endTime: endTime,
+                        duration: duration
+                    },
+                    type: 'joke-list'
                 });
 
-                addMessageToChat('assistant', messageText, {
-                    model: 'system',
-                    duration: duration,
-                    tokens: 41,
-                    type: 'chat'
-                });
-
-                // Create message element with joke list
-                const messageElement = document.createElement('div');
-                messageElement.className = 'message assistant';
-
-                // Create numbered list
+                // Create and append the joke list
                 const list = document.createElement('ol');
                 data.jokes.forEach(joke => {
                     const item = document.createElement('li');
@@ -4047,18 +3838,15 @@ const handleMyJokes = {
                     list.appendChild(item);
                 });
 
-                messageElement.appendChild(list);
+                messageElement.querySelector('.message-content').appendChild(list);
 
-                // Add help text after the list
+                // Add help text
                 const helpText = document.createElement('p');
                 helpText.style.marginTop = '10px';
                 helpText.style.fontStyle = 'italic';
                 helpText.textContent = 'To hear your joke, ask... "Tell me my joke about [joke name]"';
-                messageElement.appendChild(helpText);
+                messageElement.querySelector('.message-content').appendChild(helpText);
 
-                elements.chatMessages.appendChild(messageElement);
-
-                // Read out the list of jokes
                 await queueAudioChunk(messageText);
                 for (let i = 0; i < data.jokes.length; i++) {
                     await queueAudioChunk(`Number ${i + 1}: ${data.jokes[i].title}`);
@@ -4066,20 +3854,38 @@ const handleMyJokes = {
                 await queueAudioChunk("To hear your joke, ask Tell me my joke about, followed by the joke name");
             } else {
                 const message = "You haven't saved any jokes yet.";
+                const endTime = performance.now();
+                const duration = ((endTime - startTime) / 1000).toFixed(2);
+
                 addMessageToChat('assistant', message, {
-                    duration: `${((performance.now() - startTime) / 1000).toFixed(2)}s`,
-                    model: 'system',
-                    messageType: 'joke-list'
+                    model: elements.modelSelect.value,
+                    metrics: {
+                        model: elements.modelSelect.value,
+                        totalTokens: message.length,
+                        startTime: startTime,
+                        endTime: endTime,
+                        duration: duration
+                    },
+                    type: 'joke-list'
                 });
                 await queueAudioChunk(message);
             }
         } catch (error) {
             console.error('Error listing jokes:', error);
             const errorMessage = "Sorry, there was an error retrieving your jokes.";
+            const endTime = performance.now();
+            const duration = ((endTime - startTime) / 1000).toFixed(2);
+
             addMessageToChat('assistant', errorMessage, {
-                duration: `${((performance.now() - startTime) / 1000).toFixed(2)}s`,
-                model: 'system',
-                messageType: 'error'
+                model: elements.modelSelect.value,
+                metrics: {
+                    model: elements.modelSelect.value,
+                    totalTokens: errorMessage.length,
+                    startTime: startTime,
+                    endTime: endTime,
+                    duration: duration
+                },
+                type: 'error'
             });
             await queueAudioChunk(errorMessage);
         }
@@ -4478,18 +4284,220 @@ const handleBingSearch = {
 // END OF app.js FILE v20.0.0
 // =====================================================
 
-// Update the scheduling restart function
-function scheduleRecognitionRestart() {
-    // Don't restart if we've hit max retries for mic permission
-    if (state.micRetryCount >= state.maxMicRetries) {
-        console.log('Not restarting recognition - max retries reached');
+function chunkText(text) {
+    // Special handling for recipes
+    if (text.includes('Ingredients:') || text.includes('Instructions:')) {
+        const parts = text.split(/(?:Ingredients:|Instructions:)/g);
+        const chunks = [];
+        
+        // Process each section
+        parts.forEach(part => {
+            if (!part.trim()) return;
+            
+            // Split into smaller chunks
+            const lines = part
+                .split(/\d+\.|[\n\r]+/)
+                .map(line => line.trim())
+                .filter(line => line.length > 0);
+            
+            lines.forEach(line => {
+                if (line.length > AUDIO_CONFIG.maxChunkLength) {
+                    // Split long lines at punctuation
+                    const subChunks = line
+                        .split(/([.,;])\s+/)
+                        .filter(chunk => chunk.length > 0);
+                    chunks.push(...subChunks);
+                } else {
+                    chunks.push(line);
+                }
+            });
+        });
+        
+        return chunks;
+    }
+    
+    // Regular text handling
+    return text
+        .split(/([.!?])\s+/)
+        .map(s => s.trim())
+        .filter(s => s.length > 0);
+}
+
+async function playNextInQueue() {
+    if (!state.audioQueue.length || state.isPlaying || state.stopRequested) return;
+
+    try {
+        state.isPlaying = true;
+        state.isAISpeaking = true;
+        const text = state.audioQueue[0];
+
+        const response = await fetch(AUDIO_CONFIG.apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                text: text,
+                voice: AUDIO_CONFIG.defaultVoice,
+                rate: AUDIO_CONFIG.rate,
+                pitch: AUDIO_CONFIG.pitch,
+                volume: AUDIO_CONFIG.volume
+            })
+        });
+
+        if (!response.ok) throw new Error(`TTS API error: ${response.status}`);
+        
+        const audioBlob = await response.blob();
+        if (audioBlob.size === 0) throw new Error('Empty audio response');
+
+        cleanup(state.currentAudio);
+        
+        const audioUrl = URL.createObjectURL(audioBlob);
+        state.currentAudio = new Audio(audioUrl);
+        state.currentAudio.volume = AUDIO_CONFIG.volume;
+
+        // Wait for audio to finish before playing next chunk
+        await new Promise((resolve, reject) => {
+            state.currentAudio.onended = resolve;
+            state.currentAudio.onerror = reject;
+            state.currentAudio.play();
+        });
+
+        state.audioQueue.shift();
+        
+        // Continue with next chunk after pause
+        if (state.audioQueue.length > 0 && !state.stopRequested) {
+            setTimeout(() => {
+                state.isPlaying = false;
+                playNextInQueue();
+            }, AUDIO_CONFIG.pauseDuration);
+        } else {
+            state.isPlaying = false;
+            state.isAISpeaking = false;
+            if (state.isConversationMode) {
+                startListening();
+            }
+        }
+
+    } catch (error) {
+        console.error('Audio playback error:', error);
+        cleanup(state.currentAudio);
+        state.audioQueue.shift();
+        state.isPlaying = false;
+        state.isAISpeaking = false;
+        
+        // Try next chunk if available
+        if (state.audioQueue.length > 0) {
+            setTimeout(() => playNextInQueue(), AUDIO_CONFIG.retryDelay);
+        }
+    }
+}
+
+async function prepareAudio(text) {
+    const sanitizedText = text
+        .replace(/[^\w\s.,!?;:'"()-]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+    if (!sanitizedText) return null;
+
+    // Use the correct API URL
+    const response = await fetchWithRetry(AUDIO_CONFIG.apiUrl, {
+        method: 'POST',
+        headers: { 
+            'Content-Type': 'application/json',
+            'Accept': 'audio/wav'
+        },
+        body: JSON.stringify({
+            text: sanitizedText,
+            voice: AUDIO_CONFIG.defaultVoice,
+            rate: AUDIO_CONFIG.rate,
+            pitch: AUDIO_CONFIG.pitch,
+            volume: AUDIO_CONFIG.volume
+        })
+    });
+
+    if (!response.ok) {
+        console.error(`TTS API error: ${response.status}`);
+        throw new Error(`TTS API error: ${response.status}`);
+    }
+    
+    const audioBlob = await response.blob();
+    if (audioBlob.size === 0) throw new Error('Empty audio response');
+
+    const audio = new Audio(URL.createObjectURL(audioBlob));
+    await new Promise(resolve => audio.addEventListener('canplaythrough', resolve, { once: true }));
+    
+    return audio;
+}
+
+function fadeAudio(audio, from, to, duration) {
+    return new Promise(resolve => {
+        const steps = 20;
+        const stepTime = duration / steps;
+        const stepSize = (to - from) / steps;
+        let current = from;
+        
+        const interval = setInterval(() => {
+            current += stepSize;
+            audio.volume = Math.max(0, Math.min(1, current));
+            
+            if ((stepSize > 0 && current >= to) || (stepSize < 0 && current <= to)) {
+                clearInterval(interval);
+                audio.volume = to;
+                resolve();
+            }
+        }, stepTime);
+    });
+}
+
+function cleanup(audio) {
+    if (audio) {
+        audio.pause();
+        audio.src = '';
+        URL.revokeObjectURL(audio.src);
+    }
+}
+
+// Add this new function to handle microphone permissions
+async function requestMicrophonePermission() {
+    try {
+        const result = await navigator.permissions.query({ name: 'microphone' });
+        
+        if (result.state === 'denied') {
+            updateStatus(MESSAGES.ERRORS.MIC_PERMISSION);
+            throw new Error('Microphone permission denied');
+        }
+
+        if (result.state === 'prompt' || result.state === 'granted') {
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                audio: true,
+                video: false
+            });
+            stream.getTracks().forEach(track => track.stop());
+        }
+
+        return true;
+    } catch (error) {
+        console.error('Microphone permission error:', error);
+        updateStatus(MESSAGES.ERRORS.MIC_PERMISSION);
+        return false;
+    }
+}
+
+// Update startListening function
+async function startListening() {
+    if (state.isListening || state.isProcessing || state.isAISpeaking) {
         return;
     }
 
-    setTimeout(() => {
-        if (state.isListening) {
-            console.log('Attempting to restart recognition');
-            startListening();
+    try {
+        if (!state.recognition) {
+            initializeSpeechRecognition();
         }
-    }, 1000);
+        state.recognition.start();
+        startInactivityTimer();
+    } catch (error) {
+        console.error('Failed to start listening:', error);
+        state.recognition = null;
+        setTimeout(initializeSpeechRecognition, 1000);
+    }
 }
