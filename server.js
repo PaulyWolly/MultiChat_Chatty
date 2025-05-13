@@ -1,8 +1,8 @@
 /*
   SERVER.js
-  Version: 21.0
-  AppName: Multi-Chat [v21.0]
-  Updated: April 2, 2025 @5:45PM
+  Version: 22.0.1
+  AppName: Multi-Chat [v22.0.1]
+  Updated: May 13, 2025 @2:54PM
   Created by Paul Welby
 */
 
