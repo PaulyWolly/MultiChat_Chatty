@@ -280,171 +280,6 @@ async function handleCommand(text) {
         }
     }
 
-    // Check for greetings
-    for (const pattern of patterns.greetings) {
-        if (pattern.test(text)) {
-            const response = generateGreeting();
-            state.isAISpeaking = true;
-            elements.stopAudioButton.style.display = 'block';
-            addMessageToChat('assistant', response, { type: 'greeting' });
-            await queueAudioChunk(response);
-            state.isAISpeaking = false;
-            elements.stopAudioButton.style.display = 'none';
-            return true;
-        }
-    }
-
-    // FIRST: Check if we're waiting for a name change confirmation
-    if (state.pendingNameChange) {
-        state.isAISpeaking = true;
-        elements.stopAudioButton.style.display = 'block';
-        state.lastRequestTime = Date.now();
-
-        const response = text.trim().toLowerCase();
-        const currentName = localStorage.getItem('stored_name');
-        let message;
-
-        if (response === 'yes') {
-            message = `I've updated your name from "${currentName}" to "${state.pendingNameChange}".`;
-            localStorage.setItem('stored_name', state.pendingNameChange);
-            state.pendingNameChange = null;
-        } else if (response === 'no') {
-            message = `Okay, I'll keep your name as "${currentName}".`;
-            state.pendingNameChange = null;
-        } else {
-            message = `Please respond with "yes" or "no" - would you like to change your name from "${currentName}" to "${state.pendingNameChange}"?`;
-        }
-
-        addMessageToChat('assistant', message, { showMetadata: true });
-        await queueAudioChunk(message);
-        state.isAISpeaking = false;
-        elements.stopAudioButton.style.display = 'none';
-        return true;
-    }
-
-    // THEN: Check for name storage command
-    for (const pattern of patterns.storeName) {
-        const match = text.match(pattern);
-        if (match) {
-            const newName = match[1].trim();
-            const existingName = localStorage.getItem('stored_name');
-
-            state.isAISpeaking = true;
-            elements.stopAudioButton.style.display = 'block';
-            state.lastRequestTime = Date.now();
-
-            if (existingName) {
-                // Ask for confirmation if name exists
-                state.pendingNameChange = newName;
-                const message = `I see you want to change your name from "${existingName}" to "${newName}".\nTo protect your stored name, please respond with "yes" to confirm the change, or "no" to keep it as "${existingName}".`;
-                addMessageToChat('assistant', message, { showMetadata: true });
-                await queueAudioChunk(message);
-            } else {
-                // Only store without confirmation if no name exists
-                const message = `I'll remember that your name is ${newName}.`;
-                localStorage.setItem('stored_name', newName);
-                addMessageToChat('assistant', message, { showMetadata: true });
-                await queueAudioChunk(message);
-            }
-
-            state.isAISpeaking = false;
-            elements.stopAudioButton.style.display = 'none';
-            return true;
-        }
-    }
-
-    // Check for name query first
-    for (const pattern of patterns.getName) {
-        if (pattern.test(text)) {
-            const storedName = localStorage.getItem('stored_name');
-            state.isAISpeaking = true;
-            elements.stopAudioButton.style.display = 'block';
-            const message = storedName
-                ? `Your name is ${storedName}.`
-                : "I don't know your name yet. You can tell me by saying 'My name is [your name]'.";
-            addMessageToChat('assistant', message);
-            await queueAudioChunk(message);
-            state.isAISpeaking = false;
-            elements.stopAudioButton.style.display = 'none';
-            return true;
-        }
-    }
-
-    // ... rest of the patterns ...
-
-    // In handleCommand function, add proper state handling for jokes listing
-    for (const pattern of patterns.listJokes) {
-        const match = text.match(pattern);
-        if (match) {
-            state.isAISpeaking = true;
-            elements.stopAudioButton.style.display = 'block';
-
-            try {
-                // First check if the server is available
-                const serverCheck = await fetch(`${SERVER_URL}/api/health`).catch(() => null);
-
-                if (!serverCheck?.ok) {
-                    throw new Error('Server unavailable');
-                }
-
-                // Build URL with query parameters properly
-                const url = new URL(`${SERVER_URL}/api/jokes/list-jokes`);
-                url.searchParams.append('sessionId', window.sessionId);
-                url.searchParams.append('type', 'my_jokes');  // Changed from 'my jokes' to 'my_jokes'
-
-                // Make the jokes request
-                const response = await fetch(url, {
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json'
-                    }
-                });
-
-                if (!response.ok) {
-                    console.error('Jokes API Error:', {
-                        status: response.status,
-                        statusText: response.statusText,
-                        url: url.toString()
-                    });
-
-                    const errorText = await response.text();
-                    console.error('Error response:', errorText);
-
-                    throw new Error(`Server error: ${response.status}`);
-                }
-
-                const data = await response.json();
-
-                if (data.success && data.jokes?.length > 0) {
-                    const jokeList = data.jokes
-                        .map((joke, index) => `${index + 1}. ${joke.content}`)
-                        .join('\n\n');
-
-                    const message = `Here are your saved jokes:\n\n${jokeList}`;
-                    addMessageToChat('assistant', message);
-                    await queueAudioChunk(message);
-                } else {
-                    const message = "You haven't saved any jokes yet. Would you like me to tell you a joke that you can save?";
-                    addMessageToChat('assistant', message);
-                    await queueAudioChunk(message);
-                }
-            } catch (error) {
-                console.error('Error listing jokes:', error);
-                const errorMessage = error.message === 'Server unavailable'
-                    ? "Sorry, the jokes service is currently unavailable. Please try again later."
-                    : "Sorry, there was an error retrieving your jokes. Would you like me to tell you a new joke instead?";
-
-                addMessageToChat('assistant', errorMessage);
-                await queueAudioChunk(errorMessage);
-            } finally {
-                state.isAISpeaking = false;
-                elements.stopAudioButton.style.display = 'none';
-            }
-            return true;
-        }
-    }
-
     // Check for Bing search requests
     if (text.toLowerCase().includes('search for') ||
         text.toLowerCase().includes('look up')) {
@@ -872,10 +707,13 @@ function setupSSEConnection() {
                     // Check for special message types
                     if (data.messageType === 'greeting') {  // Server sends 'greeting' type
                         addMessageToChat('assistant', data.response, null, 'greeting');
+                        sendMessage(data.response, true); // Use robust audio logic
                     } else if (data.messageType === 'exit') {
                         addMessageToChat('assistant', data.response, null, 'exit');
+                        sendMessage(data.response, true); // Use robust audio logic
                     } else if (data.messageType === 'system' || data.messageType === 'time' || data.messageType === 'date' || data.messageType === 'datetime') {  // Using 'datetime' here too
                         addMessageToChat('assistant', data.response, null, data.messageType);  // Pass the actual type
+                        sendMessage(data.response, true); // Use robust audio logic
                     } else {
                         // Regular message handling
                         const messageElement = addMessageToChat('assistant', data.response, {
@@ -883,11 +721,6 @@ function setupSSEConnection() {
                             startTime: data.metrics?.startTime || Date.now(),
                             tokenCount: data.tokenCount
                         });
-                    }
-
-                    // Queue audio if enabled
-                    if (data.shouldPlayAudio && state.selectedVoice) {
-                        queueAudioChunk(data.response);
                     }
                 }
             } catch (error) {
@@ -1003,6 +836,62 @@ async function fetchWithRetry(url, options, maxRetries = 3) {
 // Send message function
 async function sendMessage(message, isGreeting = false) {
     try {
+        // Robust greeting logic: always handle greetings here first
+        if (isGreeting) {
+            console.log('[AUDIO-GREETING] Robust greeting logic entered');
+            try {
+                // Add user bubble for the query
+                addMessageToChat('user', message);
+                const startTime = Date.now();
+
+                // Use dynamic greeting
+                const greeting = await generateGreeting();
+
+                // Stop any current audio and clear the queue
+                console.log('[AUDIO-GREETING] Awaiting stopAudioPlayback before greeting...');
+                await stopAudioPlayback();
+                console.log('[AUDIO-GREETING] stopAudioPlayback complete. Now queuing greeting:', greeting);
+                
+                // Always pass a valid options object
+                const messageElement = addMessageToChat('assistant', greeting, { type: 'greeting' });
+                const endTime = Date.now();
+
+                // Add metadata for greeting
+                updateMetadata(messageElement, {
+                    model: 'greeting',
+                    metrics: {
+                        model: 'greeting',
+                        totalTokens: greeting.length,
+                        startTime: startTime,
+                        endTime: endTime,
+                        durationInSeconds: ((endTime - startTime) / 1000).toFixed(2)
+                    },
+                    startTime: startTime,
+                    endTime: endTime
+                });
+
+                try {
+                    console.log('[AUDIO-GREETING] Calling queueAudioChunk for greeting...');
+                    await queueAudioChunk(greeting);
+                    console.log('[AUDIO-GREETING] queueAudioChunk complete. Checking if playNextInQueue needed...');
+                    if (!state.isPlaying && !state.stopRequested) {
+                        await playNextInQueue();
+                    }
+                    // Wait for the audio to finish playing
+                    while (state.audioQueue.length > 0 || state.isPlaying) {
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                    }
+                    console.log('[AUDIO-GREETING] Greeting audio finished.');
+                } catch (error) {
+                    console.error('[AUDIO-GREETING] Audio playback error:', error);
+                }
+
+                return;
+            } catch (error) {
+                console.error('Error in greeting:', error);
+            }
+        }
+
         // Check for date/time requests
         const hasDate = message.toLowerCase().match(/date/);
         const hasTime = message.toLowerCase().match(/time/);
@@ -1520,7 +1409,11 @@ async function sendMessage(message, isGreeting = false) {
                         ? `Good ${timeOfDay} ${userName}! It's nice to chat with you again. How may I be of assistance to you today?`
                         : `Good ${timeOfDay}! How can I assist you today?`;
 
-                    resetAudioState();
+                    // Stop any current audio and clear the queue
+                    console.log('[AUDIO-GREETING] Awaiting stopAudioPlayback before greeting...');
+                    await stopAudioPlayback();
+                    console.log('[AUDIO-GREETING] stopAudioPlayback complete. Now queuing greeting:', greeting);
+                    
                     const messageElement = addMessageToChat('assistant', greeting, null, 'greeting');
                     const endTime = Date.now();
 
@@ -1539,10 +1432,19 @@ async function sendMessage(message, isGreeting = false) {
                     });
 
                     try {
+                        console.log('[AUDIO-GREETING] Calling queueAudioChunk for greeting...');
                         await queueAudioChunk(greeting);
-                        await playNextInQueue();
+                        console.log('[AUDIO-GREETING] queueAudioChunk complete. Checking if playNextInQueue needed...');
+                        if (!state.isPlaying && !state.stopRequested) {
+                            await playNextInQueue();
+                        }
+                        // Wait for the audio to finish playing
+                        while (state.audioQueue.length > 0 || state.isPlaying) {
+                            await new Promise(resolve => setTimeout(resolve, 100));
+                        }
+                        console.log('[AUDIO-GREETING] Greeting audio finished.');
                     } catch (error) {
-                        console.error('Audio playback error:', error);
+                        console.error('[AUDIO-GREETING] Audio playback error:', error);
                     }
 
                     return;
@@ -1763,10 +1665,18 @@ async function getAIResponse(message, selectedModel, history, systemPrompt, sess
 }
 
 // Add message to chat function
-function addMessageToChat(role, content, options = {}) {
+function addMessageToChat(role, content, options = {}, messageType) {
     const messageElement = document.createElement('div');
     messageElement.className = `message ${role}`;
-    
+
+    // Add special classes for greeting and exit/closing messages
+    const type = options.type || messageType;
+    if (type === 'greeting') {
+        messageElement.classList.add('greeting-bubble');
+    } else if (type === 'exit') {
+        messageElement.classList.add('exit-bubble');
+    }
+
     const contentElement = document.createElement('div');
     contentElement.className = 'message-content';
 
@@ -2280,6 +2190,13 @@ function resetAudioState() {
 
 // Stop audio playback function
 function stopAudioPlayback() {
+    console.log('[AUDIO] stopAudioPlayback called. State before:', {
+        stopRequested: state.stopRequested,
+        isPlaying: state.isPlaying,
+        isAISpeaking: state.isAISpeaking,
+        audioQueue: [...state.audioQueue],
+        currentAudio: state.currentAudio
+    });
     state.stopRequested = true;
     state.audioQueue = [];
     
@@ -2289,6 +2206,7 @@ function stopAudioPlayback() {
             state.currentAudio.pause();
             state.currentAudio.currentTime = 0;
             state.currentAudio = null;
+            console.log('[AUDIO] Audio faded out and stopped.');
         });
     }
 
@@ -2301,36 +2219,53 @@ function stopAudioPlayback() {
         if (state.isConversationMode && !state.isListening && !state.isRendering) {
             startListening();
         }
+        console.log('[AUDIO] stopAudioPlayback complete. State after:', {
+            stopRequested: state.stopRequested,
+            isPlaying: state.isPlaying,
+            isAISpeaking: state.isAISpeaking,
+            audioQueue: [...state.audioQueue],
+            currentAudio: state.currentAudio
+        });
     }, 100);
 }
 
 // Queue audio chunk function
 async function queueAudioChunk(text) {
+    console.log('[AUDIO] queueAudioChunk called with:', text);
     if (!text) return;
     // Don't reset the queue, just update state flags
     state.stopRequested = false;
     state.isAISpeaking = true;
     updateStatus(MESSAGES.STATUS.SPEAKING);
 
-    // First split into major sections (for recipes, lists, etc.)
-    const sections = text.split(/(?=Ingredients:|Instructions:)/);
-    let chunks = [];
+    // For greetings, don't split into sentences
+    if (text.toLowerCase().includes('good morning') || 
+        text.toLowerCase().includes('good afternoon') || 
+        text.toLowerCase().includes('good evening') ||
+        text.toLowerCase().includes('good night')) {
+        state.audioQueue = state.audioQueue.concat([text]);
+        console.log('[AUDIO] Queued greeting:', text);
+    } else {
+        // First split into major sections (for recipes, lists, etc.)
+        const sections = text.split(/(?=Ingredients:|Instructions:)/);
+        let chunks = [];
 
-    sections.forEach(section => {
-        // Split each section into sentences
-        const sentences = section
-            .replace(/([.!?])\s+/g, '$1|')  // Mark sentence boundaries
-            .split('|')
-            .map(s => s.trim())
-            .filter(s => s.length > 0);
-        // Add sentences to chunks array
-        chunks = chunks.concat(sentences);
-    });
+        sections.forEach(section => {
+            // Split each section into sentences
+            const sentences = section
+                .replace(/([.!?])\s+/g, '$1|')  // Mark sentence boundaries
+                .split('|')
+                .map(s => s.trim())
+                .filter(s => s.length > 0);
+            // Add sentences to chunks array
+            chunks = chunks.concat(sentences);
+        });
 
-    // Append new chunks to existing queue
-    state.audioQueue = state.audioQueue.concat(chunks);
-    console.log('Queued chunks:', state.audioQueue);
-    
+        // Append new chunks to existing queue
+        state.audioQueue = state.audioQueue.concat(chunks);
+        console.log('[AUDIO] Queued chunks:', state.audioQueue);
+    }
+    console.log('[AUDIO] queueAudioChunk exit. Queue state:', state.audioQueue);
     if (!state.isPlaying && !state.stopRequested) {
         await playNextInQueue();
     }
@@ -2338,11 +2273,13 @@ async function queueAudioChunk(text) {
 
 // Update playNextInQueue function to ensure sequential playback
 async function playNextInQueue() {
+    console.log('[AUDIO] playNextInQueue called. Queue:', state.audioQueue, 'isPlaying:', state.isPlaying, 'stopRequested:', state.stopRequested);
     if (!state.audioQueue.length || state.isPlaying || state.stopRequested) {
         if (!state.audioQueue.length || state.stopRequested) {
             updateStatus(state.isConversationMode ? MESSAGES.STATUS.LISTENING : MESSAGES.STATUS.READY);
             state.isAISpeaking = false;
         }
+        console.log('[AUDIO] playNextInQueue exit early.');
         return;
     }
 
@@ -2352,7 +2289,7 @@ async function playNextInQueue() {
         updateStatus(MESSAGES.STATUS.SPEAKING);
 
         const text = state.audioQueue[0];
-        console.log('Playing chunk:', text);
+        console.log('[AUDIO] Playing chunk:', text);
 
         const response = await fetch(AUDIO_CONFIG.apiUrl, {
             method: 'POST',
@@ -2390,6 +2327,7 @@ async function playNextInQueue() {
         URL.revokeObjectURL(audioUrl);
         state.audioQueue.shift();  // Remove played chunk
         state.isPlaying = false;
+        console.log('[AUDIO] Finished playing chunk. Queue now:', state.audioQueue);
 
         // Process next chunk if available
         if (state.audioQueue.length > 0 && !state.stopRequested) {
@@ -2400,7 +2338,7 @@ async function playNextInQueue() {
         }
 
     } catch (error) {
-        console.error('Audio playback error:', error);
+        console.error('[AUDIO] Audio playback error:', error);
         state.isPlaying = false;
         state.isAISpeaking = false;
         updateStatus(state.isConversationMode ? MESSAGES.STATUS.LISTENING : MESSAGES.STATUS.READY);
@@ -2409,6 +2347,7 @@ async function playNextInQueue() {
             setTimeout(() => playNextInQueue(), AUDIO_CONFIG.retryDelay);
         }
     }
+    console.log('[AUDIO] playNextInQueue exit.');
 }
 
 
@@ -2439,8 +2378,8 @@ function startInactivityTimer() {
             messageType: 'exit'
         });
 
-        // Queue the timeout message audio
-        await queueAudioChunk(timeoutMessage);
+        // Use sendMessage for audio playback of timeout/exit
+        await sendMessage(timeoutMessage, true);
 
         // Reset conversation mode
         state.isConversationMode = false;
@@ -2955,17 +2894,36 @@ window.printRecipe = async function(recipeText, messageElement) {
 
         const recipeName = data.recipe.name;
         
-        // Split the recipe text into sections
-        const sections = recipeText.split(/(?:ingredients:|instructions:|directions:)/i);
+        // Enhanced recipe parsing
+        const sections = recipeText.split(/(?:ingredients:|instructions:|directions:|cooking time:|servings:|difficulty:|notes:|tips:)/i);
         
+        // Extract recipe metadata
         const description = sections[0]
             .split('\n')[0]
             .substring(recipeName.length)
             .replace(/^[^a-zA-Z]+/, '')
             .trim();
 
+        // Parse cooking time, servings, and difficulty
+        const cookingTime = recipeText.match(/cooking time:?\s*(\d+\s*(?:minutes?|hours?|mins?|hrs?))/i)?.[1] || 'Not specified';
+        const servings = recipeText.match(/servings:?\s*(\d+)/i)?.[1] || 'Not specified';
+        const difficulty = recipeText.match(/difficulty:?\s*(easy|medium|hard|beginner|intermediate|advanced)/i)?.[1] || 'Not specified';
+
+        // Parse ingredients with quantities
         const ingredients = sections[1] ? sections[1].trim().split(/\d+\./).filter(item => item.trim()) : [];
+        const formattedIngredients = ingredients.map(item => {
+            const match = item.match(/^([\d\/\s]+(?:\s*(?:cup|tbsp|tsp|oz|g|ml|lb|kg)s?)?)\s*(.+)/i);
+            if (match) {
+                return `<li><span class="quantity">${match[1].trim()}</span> ${match[2].trim()}</li>`;
+            }
+            return `<li>${item.trim()}</li>`;
+        });
+
+        // Parse instructions
         const instructions = sections[2] ? sections[2].trim().split(/\d+\./).filter(item => item.trim()) : [];
+
+        // Parse notes/tips
+        const notes = sections[3] ? sections[3].trim().split(/\d+\./).filter(item => item.trim()) : [];
 
         // Create print window
         const printWindow = window.open('', '_blank');
@@ -2973,18 +2931,38 @@ window.printRecipe = async function(recipeText, messageElement) {
             throw new Error('Pop-up blocked. Please allow pop-ups and try again.');
         }
 
-        // Create formatted HTML with recipe content first, then images section
+        // Create formatted HTML with enhanced recipe content
         const formattedText = `
             <div class="recipe-content">
+                <div class="recipe-metadata">
+                    <div class="metadata-item">
+                        <span class="label">Cooking Time:</span>
+                        <span class="value">${cookingTime}</span>
+                    </div>
+                    <div class="metadata-item">
+                        <span class="label">Servings:</span>
+                        <span class="value">${servings}</span>
+                    </div>
+                    <div class="metadata-item">
+                        <span class="label">Difficulty:</span>
+                        <span class="value">${difficulty}</span>
+                    </div>
+                </div>
                 <div class="recipe-intro">${description}</div>
                 <h2>Ingredients</h2>
                 <ul class="ingredients-list">
-                    ${ingredients.map(item => `<li>${item.trim()}</li>`).join('')}
+                    ${formattedIngredients.join('')}
                 </ul>
                 <h2>Instructions</h2>
                 <ol class="instructions-list">
                     ${instructions.map(item => `<li>${item.trim()}</li>`).join('')}
                 </ol>
+                ${notes.length > 0 ? `
+                    <h2>Notes & Tips</h2>
+                    <ul class="notes-list">
+                        ${notes.map(item => `<li>${item.trim()}</li>`).join('')}
+                    </ul>
+                ` : ''}
             </div>
             ${imageUrls.length > 0 ? `
                 <div class="recipe-images">
@@ -2994,6 +2972,11 @@ window.printRecipe = async function(recipeText, messageElement) {
                     </div>
                 </div>
             ` : ''}
+            <div class="recipe-actions">
+                <button onclick="window.print()" class="print-button">Print Recipe</button>
+                <button onclick="saveAsPDF()" class="pdf-button">Save as PDF</button>
+                <button onclick="shareRecipe()" class="share-button">Share Recipe</button>
+            </div>
         `;
 
         printWindow.document.write(`
@@ -3007,9 +2990,10 @@ window.printRecipe = async function(recipeText, messageElement) {
                             max-width: 800px;
                             margin: 0 auto;
                             padding: 40px;
+                            color: #333;
                         }
                         h1 {
-                            font-size: 24px;
+                            font-size: 28px;
                             margin-bottom: 20px;
                             border-bottom: 2px solid #333;
                             padding-bottom: 10px;
@@ -3018,35 +3002,74 @@ window.printRecipe = async function(recipeText, messageElement) {
                             letter-spacing: 1px;
                         }
                         h2 {
-                            font-size: 20px;
-                            margin: 20px 0 10px 0;
+                            font-size: 22px;
+                            margin: 30px 0 15px 0;
                             color: #444;
+                            border-bottom: 1px solid #ddd;
+                            padding-bottom: 5px;
+                        }
+                        .recipe-metadata {
+                            display: grid;
+                            grid-template-columns: repeat(3, 1fr);
+                            gap: 20px;
+                            margin: 20px 0;
+                            padding: 15px;
+                            background: #f9f9f9;
+                            border-radius: 8px;
+                        }
+                        .metadata-item {
+                            text-align: center;
+                        }
+                        .metadata-item .label {
+                            display: block;
+                            font-weight: bold;
+                            color: #666;
+                            margin-bottom: 5px;
+                        }
+                        .metadata-item .value {
+                            color: #333;
                         }
                         .recipe-intro {
                             font-style: italic;
-                            margin-bottom: 20px;
+                            margin: 20px 0;
                             color: #666;
+                            line-height: 1.6;
                         }
                         .recipe-content {
                             margin-bottom: 40px;
                         }
                         .ingredients-list {
-                            list-style-type: disc !important;
-                            padding-left: 20px;
-                            margin-bottom: 20px;
+                            list-style-type: none !important;
+                            padding-left: 0;
+                            margin-bottom: 30px;
                         }
                         .ingredients-list li {
-                            margin-bottom: 8px;
+                            margin-bottom: 10px;
                             line-height: 1.4;
-                            display: list-item !important;
+                            display: flex;
+                            align-items: baseline;
+                        }
+                        .ingredients-list .quantity {
+                            font-weight: bold;
+                            margin-right: 10px;
+                            min-width: 80px;
                         }
                         .instructions-list {
                             padding-left: 20px;
-                            margin-bottom: 20px;
+                            margin-bottom: 30px;
                         }
                         .instructions-list li {
-                            margin-bottom: 12px;
+                            margin-bottom: 15px;
                             line-height: 1.6;
+                        }
+                        .notes-list {
+                            list-style-type: disc;
+                            padding-left: 20px;
+                            margin-bottom: 30px;
+                        }
+                        .notes-list li {
+                            margin-bottom: 10px;
+                            color: #666;
                         }
                         .recipe-images {
                             margin-top: 40px;
@@ -3064,13 +3087,51 @@ window.printRecipe = async function(recipeText, messageElement) {
                             height: 300px;
                             object-fit: cover;
                             border-radius: 8px;
+                            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                        }
+                        .recipe-actions {
+                            display: flex;
+                            gap: 15px;
+                            margin-top: 30px;
+                            padding-top: 20px;
+                            border-top: 1px solid #eee;
+                        }
+                        .recipe-actions button {
+                            padding: 10px 20px;
+                            border: none;
+                            border-radius: 5px;
+                            cursor: pointer;
+                            font-weight: bold;
+                            transition: background-color 0.2s;
+                        }
+                        .print-button {
+                            background-color: #4CAF50;
+                            color: white;
+                        }
+                        .pdf-button {
+                            background-color: #2196F3;
+                            color: white;
+                        }
+                        .share-button {
+                            background-color: #9C27B0;
+                            color: white;
+                        }
+                        .recipe-actions button:hover {
+                            opacity: 0.9;
                         }
                         @media print {
+                            .recipe-actions {
+                                display: none;
+                            }
                             .recipe-images {
                                 break-before: always;
                             }
                             .image-grid img {
                                 max-height: 250px;
+                            }
+                            .recipe-metadata {
+                                background: none;
+                                border: 1px solid #ddd;
                             }
                         }
                     </style>
@@ -3078,6 +3139,22 @@ window.printRecipe = async function(recipeText, messageElement) {
                 <body>
                     <h1>${recipeName}</h1>
                     ${formattedText}
+                    <script>
+                        function saveAsPDF() {
+                            window.print();
+                        }
+                        function shareRecipe() {
+                            if (navigator.share) {
+                                navigator.share({
+                                    title: '${recipeName}',
+                                    text: 'Check out this recipe!',
+                                    url: window.location.href
+                                });
+                            } else {
+                                alert('Sharing is not supported on this browser');
+                            }
+                        }
+                    </script>
                 </body>
             </html>
         `);
