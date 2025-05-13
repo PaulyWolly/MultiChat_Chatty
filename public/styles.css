@@ -719,7 +719,7 @@ button {
     width: 100%;
 }
 
-.message-bubble.ai {
+.message.bubble.ai {
     width: 80vw;
     margin-left: auto;
     margin-right: 0;
@@ -747,13 +747,13 @@ button {
 
 /* Special message types */
 .greeting-bubble {
-    background-color: #b9f6c3 !important;  /* Green background */
-    border: 1px solid #8be49b !important;
+    background: #d4f7d4 !important; /* light green */
+    color: #222;
 }
 
 .exit-bubble {
-    background-color: #f030562e !important;  /* Pink background */
-    border: 1px solid #e4b5bd !important;
+    background: #ffd6db !important; /* light red/pink */
+    color: #222;
 }
 
 /* Hide metadata for special messages */
