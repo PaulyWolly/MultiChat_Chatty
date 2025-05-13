@@ -1,8 +1,8 @@
 /*
   APP.js
-  Version: 21.0
-  AppName: Multi-Chat [v21.0]
-  Updated: April 2, 2025 @5:45PM
+  Version: 22.0.1
+  AppName: Multi-Chat [v22.0.1]
+  Updated: May 13, 2025 @2:54PM
   Created by Paul Welby
 */
 
@@ -2138,25 +2138,31 @@ async function playNextInQueue() {
         const audioBlob = await response.blob();
         if (audioBlob.size === 0) throw new Error('Empty audio response');
 
-        if (state.currentAudio) {
-            state.currentAudio.pause();
-            state.currentAudio = null;
-        }
+        cleanup(state.currentAudio);
         
         const audioUrl = URL.createObjectURL(audioBlob);
         state.currentAudio = new Audio(audioUrl);
-        state.currentAudio.volume = AUDIO_CONFIG.volume;
+        state.currentAudio.volume = 0; // Start at 0 for fade in
 
+        // Fade in
+        await fadeAudio(state.currentAudio, 0, AUDIO_CONFIG.volume, 200);
+
+        // Wait for current chunk to finish before moving to next
         await new Promise((resolve, reject) => {
-            state.currentAudio.onended = resolve;
+            state.currentAudio.onended = async () => {
+                // Fade out before resolving
+                await fadeAudio(state.currentAudio, AUDIO_CONFIG.volume, 0, 200);
+                resolve();
+            };
             state.currentAudio.onerror = reject;
             state.currentAudio.play().catch(reject);
         });
 
         URL.revokeObjectURL(audioUrl);
-        state.audioQueue.shift();
+        state.audioQueue.shift();  // Remove played chunk
         state.isPlaying = false;
 
+        // Process next chunk if available
         if (state.audioQueue.length > 0 && !state.stopRequested) {
             setTimeout(() => playNextInQueue(), AUDIO_CONFIG.pauseDuration);
         } else {
@@ -2166,10 +2172,12 @@ async function playNextInQueue() {
 
     } catch (error) {
         console.error('Audio playback error:', error);
+        cleanup(state.currentAudio);
+        state.audioQueue.shift();
         state.isPlaying = false;
         state.isAISpeaking = false;
-        updateStatus(state.isConversationMode ? MESSAGES.STATUS.LISTENING : MESSAGES.STATUS.READY);
         
+        // Try next chunk if available
         if (state.audioQueue.length > 0) {
             setTimeout(() => playNextInQueue(), AUDIO_CONFIG.retryDelay);
         }
@@ -2249,10 +2257,12 @@ function resetAudioState() {
         audioQueueLength: state.audioQueue.length
     });
 
-    // Stop any current audio
+    // Stop any current audio with fade out
     if (state.currentAudio) {
-        state.currentAudio.pause();
-        state.currentAudio = null;
+        fadeAudio(state.currentAudio, AUDIO_CONFIG.volume, 0, 200).then(() => {
+            state.currentAudio.pause();
+            state.currentAudio = null;
+        });
     }
 
     state.stopRequested = false;
@@ -2274,9 +2284,12 @@ function stopAudioPlayback() {
     state.audioQueue = [];
     
     if (state.currentAudio) {
-        state.currentAudio.pause();
-        state.currentAudio.currentTime = 0;
-        state.currentAudio = null;
+        // Fade out before stopping
+        fadeAudio(state.currentAudio, AUDIO_CONFIG.volume, 0, 200).then(() => {
+            state.currentAudio.pause();
+            state.currentAudio.currentTime = 0;
+            state.currentAudio = null;
+        });
     }
 
     state.isPlaying = false;
@@ -2294,7 +2307,6 @@ function stopAudioPlayback() {
 // Queue audio chunk function
 async function queueAudioChunk(text) {
     if (!text) return;
-    
     // Don't reset the queue, just update state flags
     state.stopRequested = false;
     state.isAISpeaking = true;
@@ -2311,12 +2323,11 @@ async function queueAudioChunk(text) {
             .split('|')
             .map(s => s.trim())
             .filter(s => s.length > 0);
-
         // Add sentences to chunks array
         chunks = chunks.concat(sentences);
     });
 
-    // Add new chunks to existing queue instead of replacing
+    // Append new chunks to existing queue
     state.audioQueue = state.audioQueue.concat(chunks);
     console.log('Queued chunks:', state.audioQueue);
     
@@ -4388,6 +4399,7 @@ async function prepareAudio(text) {
     return audio;
 }
 
+// Audio fade effect function
 function fadeAudio(audio, from, to, duration) {
     return new Promise(resolve => {
         const steps = 20;
@@ -4408,6 +4420,7 @@ function fadeAudio(audio, from, to, duration) {
     });
 }
 
+// Audio cleanup function
 function cleanup(audio) {
     if (audio) {
         audio.pause();
