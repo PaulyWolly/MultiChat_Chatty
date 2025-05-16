@@ -1,8 +1,8 @@
 /*
   JOKE_MANAGER.js
-  Version: 22.0.2
-  AppName: Multi-Chat [v22.0.2]
-  Updated: May 13, 2025 @4:45PM
+  Version: 23.0.0
+  AppName: Multi-Chat [v23.0.0]
+  Updated: 5/16/2025 @1:00AM
   Created by Paul Welby
 */
 
