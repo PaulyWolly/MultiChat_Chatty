@@ -2,8 +2,8 @@
   STYLES.css
   Version: 22.0.2
   AppName: Multi-Chat [v22.0.2]
-  Updated: May 13, 2025 @4:45PM
-  Created by Paul Welby 
+  Updated: May 15, 2025 @10:00AM
+  Created by Paul Welby
 */
 
 body {
@@ -77,18 +77,19 @@ body {
     height: 100%;
 }
 
-status {
+#status {
     color: #0451f8;
-    font-weight: bold;
+    font-weight: 500;
+    font-size: 1.0em;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
     gap: 2px;
-    line-height: 1.2;
-    font-size: 2.3vh;
-    white-space: pre-wrap;
+    line-height: .7;
+    white-space: pre-line;
     text-align: left;
     margin: 5px 0;
+    padding: 0;
 }
 
 #conversation-status {
@@ -164,6 +165,24 @@ status {
     display: none;
     width: 110px;
     height: 32px;
+}
+
+/* Processing indicator */
+#processing-indicator {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 10px 20px;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    border-radius: 5px;
+    z-index: 1000;
+    display: none;
+}
+
+#processing-indicator.active {
+    display: block;
 }
 
 button {
@@ -396,23 +415,6 @@ button {
     font-weight: normal;
 }
 
-#processing-indicator {
-    background-color: rgba(0, 0, 0, 0.7);
-    color: white;
-    padding: 5px 10px;
-    border-radius: 4px;
-    font-size: 14px;
-    display: none;
-    white-space: nowrap;
-    height: 22px;
-    line-height: 22px;
-    position: absolute;
-    bottom: 24px;
-    left: 38%;
-    z-index: 1000;
-    transform: translateX(-50%);
-}
-
 #image-results {
     display: flex;
     flex-wrap: wrap;
@@ -549,9 +551,34 @@ button {
     }
 }
 
+/* Remove forced 48%/50% width for multi-paragraph assistant messages */
+.message.assistant:has(p + p),
+.message.assistant:has(.message-content > div + div),
+.message.assistant:has(br),
+.message.assistant .message-content:has(br),
 .message.assistant:has(.message-content > p:nth-child(2)),
 .message.assistant .message-content:has(> p:nth-child(2)) {
-    width: 48%;
+    /* width: 80% !important;
+    max-width: 80% !important; */
+    margin-top: 15px;
+}
+
+.message.assistant {
+    width: 80%;
+    max-width: 80%;
+}
+
+.message.assistant .message-content {
+    width: 100%;
+    max-width: 100%;
+    align-items: stretch;
+}
+
+.message.assistant p {
+    width: 100%;
+    margin: 8px 0;
+    white-space: normal;
+    word-wrap: break-word;
 }
 
 .icon-button {
@@ -747,12 +774,12 @@ button {
 
 /* Special message types */
 .greeting-bubble {
-    background: #d4f7d4 !important; /* light green */
+    background: #e6fbe6 !important; /* light green */
     color: #222;
 }
 
 .exit-bubble {
-    background: #ffd6db !important; /* light red/pink */
+    background: #ffeaea !important; /* light red */
     color: #222;
 }
 
@@ -1253,6 +1280,10 @@ button {
     font-size: 1.7vh;
     max-width: 68%;
     font-weight: 600;
+    line-height: 1.15;
+    padding: 0;
+    margin: 0;
+    white-space: pre-line;
 }
 
 .status-listening {
@@ -1453,4 +1484,32 @@ button {
 
 .youtube-popup-btn:active {
     transform: translateY(1px);
+}
+
+.general-bubble {
+    background: #f5f5f5 !important; /* light grey */
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 12px 18px;
+    margin-bottom: 8px;
+}
+
+.general-bubble .message-content > *:first-child {
+    margin-top: 10px;
+}
+
+.message-bubble {
+    width: 100%;
+    max-width: none; /* or set to your desired max */
+    display: flex;
+    flex-direction: column;
+}
+
+.message-content {
+    width: 100%;
+    max-width: 100%;
+    display: block;
+    word-break: break-word;
+    white-space: pre-line; /* preserves line breaks, but allows wrapping */
+    box-sizing: border-box;
 }
