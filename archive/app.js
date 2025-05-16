@@ -11,7 +11,7 @@
 // =====================================================
 
 // SERVER URL
-const SERVER_URL = 'http://localhost:3210';
+const SERVER_URL = 'http://localhost:5210';
 
 // Time constants
 const INTERVAL = 10;  // Set timeout duration in minutes
