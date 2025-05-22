@@ -38,9 +38,11 @@ export class PlaylistManager {
               <button class="create-playlist-btn">Create Playlist</button>
             </div>
           </div>
-          <div class="playlists-container" style="max-height: 220px; min-height: 120px; overflow-y: auto; margin-bottom: 0;"></div>
+          <div class="playlist-manager-row">
+            <div class="playlists-container" style="max-height: 220px; min-height: 120px; overflow-y: auto; margin-bottom: 0;"></div>
+            <div class="pending-video-container"></div>
+          </div>
           <div class="current-playlist-header" style="margin-top: 8px;"></div>
-          <div class="pending-video-container"></div>
           <div class="videos-container"></div>
         </div>
       </div>
@@ -210,8 +212,6 @@ export class PlaylistManager {
     } else {
       headerContainer.innerHTML = '<span class="current-playlist-name">Select a playlist</span>';
     }
-    // Always render the pending video in the header area, even if no playlist is selected
-    this.renderPendingVideo();
   }
 
   async selectPlaylist(playlistId) {
@@ -484,26 +484,18 @@ export class PlaylistManager {
   }
 
   renderPendingVideo() {
-    // Only render the pending video absolutely next to the playlist name header
-    const headerContainer = this.dialog.querySelector('.current-playlist-header');
-    // Remove any old pending video container
-    const oldPending = this.dialog.querySelector('.pending-video-container');
-    if (oldPending) oldPending.innerHTML = '';
-    // Remove any previous .pending-video-abs
-    const prevAbs = headerContainer.querySelector('.pending-video-abs');
-    if (prevAbs) prevAbs.remove();
-    // Remove any old add-to-playlist-header-btn in header
-    const headerBtnContainer = this.dialog.querySelector('.add-to-playlist-header-btn-container');
-    headerBtnContainer.innerHTML = '';
-    if (!this.currentVideo || !headerContainer) return;
+    const pendingContainer = this.dialog.querySelector('.pending-video-container');
+    if (!pendingContainer) return;
+    pendingContainer.innerHTML = '';
+    if (!this.currentVideo) {
+      pendingContainer.innerHTML = `<div class="pending-placeholder">Pending videos will show here</div>`;
+      return;
+    }
     // Truncate title to 30 characters
     const truncatedTitle = (this.currentVideo.title && this.currentVideo.title.length > 30)
       ? this.currentVideo.title.slice(0, 50) + '...'
       : this.currentVideo.title || 'Untitled Video';
-    // Create and append the absolutely positioned pending video
-    const absDiv = document.createElement('div');
-    absDiv.className = 'pending-video-abs';
-    absDiv.innerHTML = `
+    pendingContainer.innerHTML = `
       <div class="pending-video" draggable="true" id="pending-video">
         <span class="drag-icon" style="font-size: 2.2em; margin-right: 14px; cursor: grab; color: #2196f3;">&#9776;</span>
         <img src="${this.currentVideo.thumbnail}" alt="" />
@@ -511,21 +503,10 @@ export class PlaylistManager {
         <span style="color:#2196f3;margin-left:18px;">Drag to playlist</span>
       </div>
     `;
-    headerContainer.appendChild(absDiv);
-    const pending = absDiv.querySelector('.pending-video');
+    const pending = pendingContainer.querySelector('.pending-video');
     pending.addEventListener('dragstart', (e) => {
       e.dataTransfer.setData('application/json', JSON.stringify(this.currentVideo));
     });
-    // Add the 'Add to Playlist' button in the header if a playlist is selected
-    if (this.selectedPlaylistId) {
-      const addBtn = document.createElement('button');
-      addBtn.className = 'add-to-playlist-header-btn';
-      addBtn.textContent = 'Add to Playlist';
-      addBtn.disabled = false;
-      addBtn.style.marginRight = '12px';
-      addBtn.addEventListener('click', () => this.addCurrentVideoToPlaylist());
-      headerBtnContainer.appendChild(addBtn);
-    }
   }
 
   async addCurrentVideoToPlaylist() {
@@ -571,6 +552,8 @@ export class PlaylistManager {
         this.showError('Failed to add video to playlist.');
       }
     }
+    this.currentVideo = null;
+    this.renderPendingVideo();
   }
 
   async renameVideoTitle(videoEntryId, newTitle) {
