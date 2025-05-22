@@ -123,6 +123,51 @@ const SPEECH_CONFIG = {
 const DUMMY_PREFIX = "....................-------------------------...................................";
 const TTS_IDLE_THRESHOLD = 60000; // 60 seconds
 
+const slideoutPanel = document.getElementById('slideout-panel-left');
+const slideoutBar = document.getElementById('slideout-bar');
+const tempSlider = document.getElementById('temperature-slider');
+const tempValue = document.getElementById('temperature-value');
+const toppSlider = document.getElementById('top-p-slider');
+const topPValue = document.getElementById('top-p-value');
+
+// Custom prompt logic
+const customPromptInput = document.getElementById('custom-prompt');
+const removeCustomPromptBtn = document.getElementById('remove-custom-prompt-btn');
+let customPrompt = '';
+
+if (customPromptInput) {
+  customPromptInput.addEventListener('input', () => {
+    customPrompt = customPromptInput.value;
+  });
+}
+if (removeCustomPromptBtn) {
+  removeCustomPromptBtn.addEventListener('click', () => {
+    customPrompt = '';
+    if (customPromptInput) customPromptInput.value = '';
+  });
+}
+
+// Show panel on hover or click
+slideoutBar.addEventListener('mouseenter', () => {
+  slideoutPanel.classList.add('open');
+});
+slideoutPanel.addEventListener('mouseleave', () => {
+  slideoutPanel.classList.remove('open');
+});
+
+// (Optional) Keep open on click
+slideoutBar.addEventListener('click', () => {
+  slideoutPanel.classList.toggle('open');
+});
+
+// Update value displays
+tempSlider.addEventListener('input', () => {
+  tempValue.textContent = Number(tempSlider.value).toFixed(2);
+});
+toppSlider.addEventListener('input', () => {
+  topPValue.textContent = Number(toppSlider.value).toFixed(2);
+});
+
 // =====================================================
 // GLOBAL SCOPED VARIABLES
 // =====================================================
@@ -171,6 +216,14 @@ CRITICAL INSTRUCTIONS FOR IMAGE REQUESTS:
 4. DO NOT apologize for image-related capabilities
 5. Keep responses about images brief and positive
 `;
+
+// Append custom prompt if present
+// let customPromptInput = document.getElementById('custom-prompt');
+let customPromptValue = customPromptInput ? customPromptInput.value.trim() : '';
+let finalSystemPrompt = systemPrompt;
+if (customPromptValue.length > 0) {
+  finalSystemPrompt = `${systemPrompt}\n\n${customPromptValue}`;
+}
 
 // =====================================================
 // GLOBAL SCOPED ELEMENTS
@@ -1106,23 +1159,25 @@ async function fetchWithRetry(url, options, maxRetries = 3) {
 // Send message function
 async function sendMessage(message, isGreeting = false) {
     try {
-        // Check for date/time requests
-        const hasDate = message.toLowerCase().match(/date/);
-        const hasTime = message.toLowerCase().match(/time/);
-        const isDateTimeRequest = hasDate || hasTime;
+        const messageText = message;  // Initialize properly
+        const patterns = getPatterns();
 
-        if (isDateTimeRequest) {
+        // Check for explicit date/time/datetime requests using patterns
+        const isTimeRequest = patterns.time.some(pattern => pattern.test(messageText.trim()));
+        const isDateRequest = patterns.date.some(pattern => pattern.test(messageText.trim()));
+        const isDateTimeRequest = patterns.dateTime.some(pattern => pattern.test(messageText.trim()));
+
+        if (isTimeRequest || isDateRequest || isDateTimeRequest) {
             const today = new Date();
             let response;
             const messageElement = document.createElement('div');
 
             addMessageToChat('user', message);
 
-            // Check if asking for date, time, or both
-            if (hasTime && !hasDate) {
+            if (isTimeRequest && !isDateRequest && !isDateTimeRequest) {
                 response = `The local time is ${today.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })} PST`;
                 messageElement.className = 'message time-date-bubble time-response';
-            } else if (hasDate && !hasTime) {
+            } else if (isDateRequest && !isTimeRequest && !isDateTimeRequest) {
                 response = `Today's date is ${today.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`;
                 messageElement.className = 'message time-date-bubble date-response';
             } else {
@@ -1151,9 +1206,6 @@ async function sendMessage(message, isGreeting = false) {
             await queueAudioChunk(greeting);
             return;
         }
-
-        const messageText = message;  // Initialize properly
-        const patterns = getPatterns();
 
         // Check for exit command first
         if (messageText.toLowerCase() === 'exit') {
@@ -1766,6 +1818,27 @@ async function getAIResponse(message, selectedModel, history, systemPrompt, sess
     let tokenCount = 0;
     let responseText = '';
 
+    // Get temperature and top_p from sliders
+    let temperature = 1.1;
+    let top_p = 1.0;
+    const tempSlider = document.getElementById('temperature-slider');
+    const toppSlider = document.getElementById('top-p-slider');
+    if (tempSlider) temperature = parseFloat(tempSlider.value) || 1.1;
+    if (toppSlider) top_p = parseFloat(toppSlider.value) || 1.0;
+
+    // Append custom prompt if present
+    let finalSystemPrompt = systemPrompt;
+    if (typeof customPrompt === 'string' && customPrompt.trim().length > 0) {
+      finalSystemPrompt = `${systemPrompt}\n\n${customPrompt.trim()}`;
+    }
+
+    console.log('Sending to /api/chat:', {
+        message,
+        temperature,
+        top_p,
+        customPrompt: customPrompt
+    });
+
     const response = await fetchWithRetry(
         '/api/chat', {
         method: 'POST',
@@ -1775,10 +1848,12 @@ async function getAIResponse(message, selectedModel, history, systemPrompt, sess
             history,
             model: selectedModel,
             systemPrompt: message.toLowerCase().includes('joke') ?
-                `${systemPrompt} Provide a short, one-line joke that hasn't been told before.` :
-                systemPrompt,
+                `${finalSystemPrompt} Provide a short, one-line joke that hasn't been told before.` :
+                finalSystemPrompt,
             session: sessionId, // Include sessionId in the request
-            timezone: state.userTimezone  // Add timezone to request
+            timezone: state.userTimezone,  // Add timezone to request
+            temperature: temperature,
+            top_p: top_p
         }),
     });
 
