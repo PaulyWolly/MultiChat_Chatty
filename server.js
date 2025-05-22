@@ -1,8 +1,8 @@
 /*
-  SERVER.js
-  Version: 21.0
-  AppName: Multi-Chat [v21.0]
-  Updated: April 2, 2025 @5:45PM
+  SERVER.JS
+  Version: 2
+  AppName: Multi-Chat [v2]
+  Updated: 05/21/2025 @11:30PM
   Created by Paul Welby
 */
 
@@ -54,7 +54,7 @@ console.log('OpenAI client initialized with API key:', {
 const app = express();
 
 // Set the port
-const port = process.env.PORT || 5210;
+const port = process.env.PORT || 5200;
 
 // Configure middleware with increased limits
 app.use(cors());
@@ -1768,7 +1768,8 @@ app.post('/api/youtube/search', async (req, res) => {
                 description: video.snippet.description,
                 channelTitle: video.snippet.channelTitle,
                 publishedAt: video.snippet.publishedAt,
-                duration: video.contentDetails.duration
+                duration: video.contentDetails.duration,
+                thumbnail: video.snippet.thumbnails.high.url
             }));
 
             res.json({ success: true, videos });
@@ -1788,7 +1789,8 @@ app.post('/api/youtube/search', async (req, res) => {
                     success: true,
                     video: {
                         id: video.id.videoId,
-                        title: video.snippet.title
+                        title: video.snippet.title,
+                        thumbnail: video.snippet.thumbnails.high.url
                     }
                 });
             } else {
@@ -1821,6 +1823,6 @@ app.listen(port, '0.0.0.0', () => {
 
 
 // =====================================================
-// END OF Server.js FILE v20.0.0
+// END OF Server.js FILE v2
 // =====================================================
 

@@ -58,6 +58,11 @@ router.post('/:playlistId/videos', requireAuth, async (req, res) => {
       return res.status(404).json({ error: 'Playlist not found' });
     }
 
+    // Check for duplicate videoId
+    if (playlist.videos.some(v => v.videoId === videoId)) {
+      return res.status(409).json({ error: 'DUPLICATE_VIDEO' });
+    }
+
     playlist.videos.unshift({ videoId, title, thumbnail });
     await playlist.save();
     res.json({ success: true, playlist });
@@ -67,7 +72,7 @@ router.post('/:playlistId/videos', requireAuth, async (req, res) => {
 });
 
 // Remove a video from a playlist
-router.delete('/:playlistId/videos/:videoId', requireAuth, async (req, res) => {
+router.delete('/:playlistId/videos/:videoEntryId', requireAuth, async (req, res) => {
   try {
     const playlist = await Playlist.findOne({ 
       _id: req.params.playlistId, 
@@ -78,7 +83,7 @@ router.delete('/:playlistId/videos/:videoId', requireAuth, async (req, res) => {
       return res.status(404).json({ error: 'Playlist not found' });
     }
 
-    playlist.videos = playlist.videos.filter(v => v.videoId !== req.params.videoId);
+    playlist.videos = playlist.videos.filter(v => v._id.toString() !== req.params.videoEntryId);
     await playlist.save();
     res.json({ success: true, playlist });
   } catch (error) {
@@ -112,9 +117,9 @@ router.put('/:playlistId', requireAuth, async (req, res) => {
 // Move video between playlists
 router.post('/:playlistId/move', requireAuth, async (req, res) => {
   try {
-    const { videoId, targetPlaylistId } = req.body;
-    if (!videoId || !targetPlaylistId) {
-      return res.status(400).json({ error: 'Video ID and target playlist ID required' });
+    const { videoEntryId, targetPlaylistId } = req.body;
+    if (!videoEntryId || !targetPlaylistId) {
+      return res.status(400).json({ error: 'Video entry ID and target playlist ID required' });
     }
 
     const sourcePlaylist = await Playlist.findOne({ 
@@ -131,18 +136,55 @@ router.post('/:playlistId/move', requireAuth, async (req, res) => {
       return res.status(404).json({ error: 'Playlist not found' });
     }
 
-    const video = sourcePlaylist.videos.find(v => v.videoId === videoId);
+    const video = sourcePlaylist.videos.id(videoEntryId);
     if (!video) {
       return res.status(404).json({ error: 'Video not found in source playlist' });
     }
 
-    sourcePlaylist.videos = sourcePlaylist.videos.filter(v => v.videoId !== videoId);
+    sourcePlaylist.videos = sourcePlaylist.videos.filter(v => v._id.toString() !== videoEntryId);
     targetPlaylist.videos.unshift(video);
 
     await Promise.all([sourcePlaylist.save(), targetPlaylist.save()]);
     res.json({ success: true, sourcePlaylist, targetPlaylist });
   } catch (error) {
     res.status(500).json({ error: 'Failed to move video' });
+  }
+});
+
+// Delete a playlist
+router.delete('/:playlistId', requireAuth, async (req, res) => {
+  try {
+    const playlist = await Playlist.findOneAndDelete({ _id: req.params.playlistId, userId: req.userId });
+    if (!playlist) {
+      return res.status(404).json({ error: 'Playlist not found' });
+    }
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete playlist' });
+  }
+});
+
+// Rename a video title in a playlist
+router.put('/:playlistId/videos/:videoEntryId/title', requireAuth, async (req, res) => {
+  try {
+    const { title } = req.body;
+    if (!title) return res.status(400).json({ error: 'New title required' });
+
+    const playlist = await Playlist.findOne({ _id: req.params.playlistId, userId: req.userId });
+    if (!playlist) {
+      return res.status(404).json({ error: 'Playlist not found' });
+    }
+
+    const video = playlist.videos.id(req.params.videoEntryId);
+    if (!video) {
+      return res.status(404).json({ error: 'Video not found in playlist' });
+    }
+
+    video.title = title;
+    await playlist.save();
+    res.json({ success: true, playlist });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to rename video title' });
   }
 });
 

@@ -96,17 +96,16 @@ async function promptForHeader(current) {
       message: `Time (HH:MM[AM|PM]): (type 'Q' or 'X' to exit)`,
       initial: current.Updated ? current.Updated.split('@')[1].trim() : '1:00PM',
       validate: input => {
+        input = input.trim();
         if (makeExitValidator('Time')(input) !== true) return false;
-        const timeRegex = /^(1[0-2]|0?[1-9]):(00|30)(AM|PM)$/i;
+        const timeRegex = /^(1[0-2]|0?[1-9]):[0-5][0-9](AM|PM)$/i;
         if (!timeRegex.test(input)) {
-          return 'Please enter a valid time in HH:MM[AM|PM] format (e.g., 1:00PM, 2:30AM).\nOnly :00 and :30 minute values are allowed.';
+          return 'Please enter a valid time in HH:MMAM or HH:MMPM format (e.g., 1:00PM, 2:30AM).';
         }
-        // Standardize the format (ensure proper capitalization)
-        const [time, meridiem] = input.split(/(?=[AP]M)/i);
-        return time + meridiem.toUpperCase();
+        return true;
       },
       result: input => {
-        // Ensure consistent formatting
+        input = input.trim();
         const [time, meridiem] = input.split(/(?=[AP]M)/i);
         return time + meridiem.toUpperCase();
       }
