@@ -2,7 +2,7 @@
   STYLES.CSS
   Version: 2
   AppName: Multi-Chat [v2]
-  Updated: 05/21/2025 @11:30PM
+  Updated: 05/22/2025 @10:45AM
   Created by Paul Welby
 */
 
@@ -37,7 +37,8 @@ body {
 
 
 
-#model-select, #voice-select {
+#model-select,
+#voice-select {
     padding: 5px;
     font-size: 16px;
 }
@@ -109,10 +110,12 @@ status {
 #input-container {
     display: flex;
     align-items: center;
-    background-color: #f5f5f5;  /* Light grey background */
+    background-color: #f5f5f5;
+    /* Light grey background */
     padding: 10px;
     border-radius: 8px;
-    width: 35vw;  /* Fixed width */
+    width: 35vw;
+    /* Fixed width */
     margin-left: 200px;
 }
 
@@ -122,13 +125,16 @@ status {
     border: 1px solid #ccc;
     border-radius: 4px;
     margin: 0 10px;
-    height: 32px;  /* Match button height */
+    height: 32px;
+    /* Match button height */
 }
 
-#send-button, #mic-button {
+#send-button,
+#mic-button {
     padding: 5px 10px;
     margin-left: 5px;
-    background-color: #007bff;  /* Default blue background */
+    background-color: #007bff;
+    /* Default blue background */
     color: white;
     border: none;
     border-radius: 4px;
@@ -138,17 +144,22 @@ status {
     font-size: 14px;
 }
 
-#send-button:hover, #mic-button:hover {
-    background-color: #0056b3;  /* Darker blue on hover */
+#send-button:hover,
+#mic-button:hover {
+    background-color: #0056b3;
+    /* Darker blue on hover */
 }
 
 #image-upload-btn {
     background: none;
     border: none;
     cursor: pointer;
-    height: 40px;  /* Taller height */
-    width: 40px;   /* Matching width */
-    font-size: 24px;  /* Larger icon */
+    height: 40px;
+    /* Taller height */
+    width: 40px;
+    /* Matching width */
+    font-size: 24px;
+    /* Larger icon */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -239,7 +250,8 @@ button {
 
 /* System bubble styling (for date/time responses) */
 .system-bubble {
-    background-color: #f0f0f0 !important;  /* Light grey background */
+    background-color: #f0f0f0 !important;
+    /* Light grey background */
     border: 1px solid #e0e0e0 !important;
     align-self: flex-start;
     max-width: fit-content;
@@ -248,7 +260,8 @@ button {
 }
 
 .time-date-bubble {
-    background-color: #f1dac7 !important;  /* Light grey background */
+    background-color: #f1dac7 !important;
+    /* Light grey background */
     border: 1px solid #e0e0e0 !important;
     align-self: flex-start;
     max-width: fit-content;
@@ -290,7 +303,8 @@ button {
 }
 
 .message-text {
-    white-space: nowrap; /* Keep on single line by default */
+    white-space: nowrap;
+    /* Keep on single line by default */
     overflow: hidden;
     text-overflow: ellipsis;
     min-width: 0;
@@ -305,7 +319,8 @@ button {
     word-wrap: break-word;
 }
 
-.response-time, .token-count {
+.response-time,
+.token-count {
     color: #777;
 }
 
@@ -314,9 +329,11 @@ button {
 }
 
 .message.exit {
-    background-color: #f0f0f0; /* Same as assistant messages */
+    background-color: #f0f0f0;
+    /* Same as assistant messages */
     align-self: flex-start;
-    max-width: fit-content; /* Adjust width to fit content */
+    max-width: fit-content;
+    /* Adjust width to fit content */
     padding: 8px 12px;
     border-radius: 12px;
     margin: 2px 0;
@@ -325,7 +342,8 @@ button {
 
 .footer {
     display: flex;
-    justify-content: flex-end; /* Aligns children to the right */
+    justify-content: flex-end;
+    /* Aligns children to the right */
     align-items: center;
     padding: 10px;
     background-color: #f0f0f0;
@@ -333,20 +351,27 @@ button {
     width: 45vw;
     position: relative;
     left: 17%;
-    gap: 10px;  /* Add gap between processing indicator and input container */
+    gap: 10px;
+    /* Add gap between processing indicator and input container */
 }
 
 .input-container {
     display: flex;
     align-items: center;
-    gap: 10px;  /* Space between elements */
-    width: 100%; /* Allow container to take full width */
-    max-width: 800px; /* Adjust this value to set the maximum width */
+    gap: 10px;
+    /* Space between elements */
+    width: 100%;
+    /* Allow container to take full width */
+    max-width: 800px;
+    /* Adjust this value to set the maximum width */
     margin-left: auto;
-    margin-right: 10px; /* Add some right margin */
+    margin-right: 10px;
+    /* Add some right margin */
 }
 
-#send-button, #mic-button, #stop-audio-button {
+#send-button,
+#mic-button,
+#stop-audio-button {
     padding: 5px 10px;
     margin-left: 5px;
     background-color: #007bff;
@@ -354,12 +379,16 @@ button {
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    height: 32px; /* Set a fixed height for all buttons */
-    line-height: 22px; /* Adjust line height to vertically center text */
-    font-size: 14px; /* Ensure consistent font size */
+    height: 32px;
+    /* Set a fixed height for all buttons */
+    line-height: 22px;
+    /* Adjust line height to vertically center text */
+    font-size: 14px;
+    /* Ensure consistent font size */
 }
 
-#send-button:hover, #mic-button:hover {
+#send-button:hover,
+#mic-button:hover {
     background-color: #0056b3;
     color: white !important;
 }
@@ -504,14 +533,19 @@ button {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    width: 100%;  /* Ensure content takes full width */
-    white-space: normal;  /* Allow text to wrap */
-    word-wrap: break-word;  /* Break long words if needed */
+    width: 100%;
+    /* Ensure content takes full width */
+    white-space: normal;
+    /* Allow text to wrap */
+    word-wrap: break-word;
+    /* Break long words if needed */
 }
 
 .message-text {
-    width: 100%;  /* Take full width of parent */
-    white-space: normal;  /* Allow text to wrap */
+    width: 100%;
+    /* Take full width of parent */
+    white-space: normal;
+    /* Allow text to wrap */
     word-wrap: break-word;
     line-height: 1.4;
     margin: 0;
@@ -544,7 +578,9 @@ button {
         width: 100%;
     }
 
-    #send-button, #mic-button, #stop-audio-button {
+    #send-button,
+    #mic-button,
+    #stop-audio-button {
         padding: 5px;
     }
 }
@@ -607,7 +643,7 @@ button {
     background: white;
     padding: 10px;
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     border: 1px solid #ddd;
     z-index: 1;
 }
@@ -716,8 +752,10 @@ button {
 
 .ai-message-bubble {
     width: 80%;
-    margin-left: auto;    /* This will keep it aligned to the right */
-    margin-right: 0;      /* This will keep it aligned to the right */
+    margin-left: auto;
+    /* This will keep it aligned to the right */
+    margin-right: 0;
+    /* This will keep it aligned to the right */
 }
 
 /* If you have a container for the message, you might also need: */
@@ -755,12 +793,14 @@ button {
 
 /* Special message types */
 .greeting-bubble {
-    background-color: #b9f6c3 !important;  /* Green background */
+    background-color: #b9f6c3 !important;
+    /* Green background */
     border: 1px solid #8be49b !important;
 }
 
 .exit-bubble {
-    background-color: #f030562e !important;  /* Pink background */
+    background-color: #f030562e !important;
+    /* Pink background */
     border: 1px solid #e4b5bd !important;
 }
 
@@ -919,27 +959,32 @@ button {
 .message.search-results {
     background-color: #f8f9fa;
     border-left: 4px solid #007bff;
-    margin-bottom: 10px;  /* Reduce space between search result messages */
+    margin-bottom: 10px;
+    /* Reduce space between search result messages */
 }
 
 .message.search-results .message-content {
     font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-    line-height: 1.3;  /* Reduce line height */
+    line-height: 1.3;
+    /* Reduce line height */
 }
 
 /* Adjust spacing for search result items */
 .message.search-results .message-content p {
-    margin: 4px 0;  /* Reduce paragraph spacing */
+    margin: 4px 0;
+    /* Reduce paragraph spacing */
 }
 
 /* Style the numbered items */
 .message.search-results .message-content ol {
-    margin: 8px 0;  /* Reduce space between numbered items */
+    margin: 8px 0;
+    /* Reduce space between numbered items */
     padding-left: 20px;
 }
 
 .message.search-results .message-content li {
-    margin-bottom: 12px;  /* Reduce space between list items */
+    margin-bottom: 12px;
+    /* Reduce space between list items */
 }
 
 /* Style links */
@@ -961,7 +1006,8 @@ button {
 
 /* Adjust separator line spacing */
 .message.search-results hr {
-    margin: 8px 0;  /* Reduce space around separator lines */
+    margin: 8px 0;
+    /* Reduce space around separator lines */
     opacity: 0.2;
 }
 
@@ -988,7 +1034,7 @@ button {
     padding: 10px;
     background-color: #f5f5f5;
     border-radius: 5px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .metadata-item {
@@ -1034,8 +1080,10 @@ button {
 .message.assistant {
     background-color: #f0f0f0;
     align-self: flex-start;
-    width: max-content;  /* Natural width for short messages */
-    max-width: 80%;     /* Never exceed 80% */
+    width: max-content;
+    /* Natural width for short messages */
+    max-width: 80%;
+    /* Never exceed 80% */
     padding: 8px 12px;
     border-radius: 12px;
     border: 1px solid #e0e0e0;
@@ -1052,24 +1100,30 @@ button {
 .message.assistant:has(p + p),
 .message.assistant:has(.message-content > div + div),
 .message.assistant:has(br) {
-    width: 80%;  /* Full width for long content */
+    width: 80%;
+    /* Full width for long content */
 }
 
 /* Make text fill the width in multi-paragraph messages */
 .message.assistant:has(p + p) .message-content,
 .message.assistant:has(.message-content > div + div) .message-content,
 .message.assistant:has(br) .message-content {
-    width: 100%;  /* Fill the container */
+    width: 100%;
+    /* Fill the container */
 }
 
 /* Text content in multi-paragraph messages */
 .message.assistant:has(p + p) .message-text,
 .message.assistant:has(.message-content > div + div) .message-text,
 .message.assistant:has(br) .message-text {
-    width: 100%;         /* Fill the full width */
-    white-space: normal; /* Allow wrapping */
-    text-align: left;    /* Align text to left */
-    display: block;      /* Ensure block display */
+    width: 100%;
+    /* Fill the full width */
+    white-space: normal;
+    /* Allow wrapping */
+    text-align: left;
+    /* Align text to left */
+    display: block;
+    /* Ensure block display */
 }
 
 /* Hide empty metadata divs */
@@ -1097,15 +1151,20 @@ button {
 .message-content {
     display: flex;
     flex-direction: column;
-    width: 100%;  /* Fill the container width */
-    word-wrap: break-word;  /* Allow word breaking */
-    white-space: pre-wrap;  /* Preserve whitespace but wrap */
-    overflow-wrap: break-word;  /* Break long words if needed */
+    width: 100%;
+    /* Fill the container width */
+    word-wrap: break-word;
+    /* Allow word breaking */
+    white-space: pre-wrap;
+    /* Preserve whitespace but wrap */
+    overflow-wrap: break-word;
+    /* Break long words if needed */
 }
 
 /* Ensure assistant messages wrap properly */
 .message.assistant .message-content {
-    max-width: 100%;  /* Ensure content doesn't overflow */
+    max-width: 100%;
+    /* Ensure content doesn't overflow */
     text-align: left;
     padding-left: 5px;
     padding-right: 5px;
@@ -1199,12 +1258,16 @@ button {
     color: #212529;
     font-weight: 500;
     margin-bottom: 10px;
-    white-space: normal;      /* Allow wrapping */
-    word-break: break-word;   /* Break long words if needed */
-    overflow-wrap: break-word;/* Ensure wrapping for long words */
+    white-space: normal;
+    /* Allow wrapping */
+    word-break: break-word;
+    /* Break long words if needed */
+    overflow-wrap: break-word;
+    /* Ensure wrapping for long words */
     width: 70%;
     position: relative;
-    left: 40px;              /* Fill the card width */
+    left: 40px;
+    /* Fill the card width */
 }
 
 .video-title-MULTI {
@@ -1214,12 +1277,16 @@ button {
     color: #212529;
     font-weight: 500;
     margin-bottom: 10px;
-    white-space: normal;      /* Allow wrapping */
-    word-break: break-word;   /* Break long words if needed */
-    overflow-wrap: break-word;/* Ensure wrapping for long words */
+    white-space: normal;
+    /* Allow wrapping */
+    word-break: break-word;
+    /* Break long words if needed */
+    overflow-wrap: break-word;
+    /* Ensure wrapping for long words */
     width: 70%;
     position: relative;
-    left: -8px;              /* Fill the card width */
+    left: -8px;
+    /* Fill the card width */
 }
 
 .video-controls {
@@ -1255,7 +1322,7 @@ button {
     max-width: 250px;
     height: auto;
     border-radius: 6px;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
     display: block;
     margin-right: 20px;
     /* margin: 0 auto; */
@@ -1302,7 +1369,7 @@ button {
     align-items: flex-start;
     position: relative;
     width: 85%;
-    margin-left: 30px;   
+    margin-left: 30px;
     position: relative;
     width: 85%;
     margin-left: 4px;
@@ -1335,15 +1402,18 @@ button {
     .youtube-results.grid .video-list {
         grid-template-columns: repeat(2, 1fr);
     }
+
     .video-item {
         min-width: 320px;
         max-width: 320px;
     }
 }
+
 @media (max-width: 800px) {
     .youtube-results.grid .video-list {
         grid-template-columns: 1fr;
     }
+
     .video-item {
         min-width: 90vw;
         max-width: 98vw;
@@ -1356,7 +1426,7 @@ button {
     align-items: center;
     background: #fff;
     border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
     padding: 18px 8px 12px 8px;
     position: relative;
     min-width: 350px;
@@ -1382,6 +1452,7 @@ button {
     background: #007bff;
     color: #fff;
 }
+
 .youtube-action-btn.tab-btn:hover {
     background: #0056b3;
 }
@@ -1485,7 +1556,7 @@ button {
 .youtube-single-bubble .youtube-thumb-link img {
     max-width: 250px;
     border-radius: 6px;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
     display: block;
     margin: 0 auto;
 }
@@ -1529,7 +1600,7 @@ button {
     border-radius: 12px;
     padding: 20px;
     border: 1px solid #e0e0e0;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
 }
 
 .youtube-multi-bubble .video-list {
@@ -1547,7 +1618,7 @@ button {
     background: #f9f9f9;
     border-radius: 8px;
     padding: 12px;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -1565,7 +1636,7 @@ button {
     width: 100%;
     height: auto;
     border-radius: 6px;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
     display: block;
 }
 
@@ -1660,7 +1731,7 @@ button {
     .youtube-multi-bubble .video-list {
         grid-template-columns: 1fr;
     }
-    
+
     .youtube-multi-bubble {
         max-width: 100%;
         padding: 12px;
@@ -1695,7 +1766,7 @@ button {
     border-radius: 12px;
     padding: 20px;
     border: 1px solid #e0e0e0;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
 }
 
 .youtube-multi-bubble .video-item {
@@ -1703,7 +1774,7 @@ button {
     background: #f9f9f9;
     border-radius: 8px;
     padding: 10px;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
     /* margin-bottom: 12px; */
     display: flex;
     flex-direction: column;
@@ -1721,6 +1792,7 @@ button {
     list-style: none !important;
     max-width: 750px !important;
 }
+
 .youtube-single-bubble .video-item {
     position: relative !important;
     display: flex !important;
@@ -1733,6 +1805,7 @@ button {
     min-width: unset !important;
     max-width: unset !important;
 }
+
 .youtube-single-bubble .button-thumb-group.top-buttons,
 .youtube-single-bubble .button-thumb-group.bottom-buttons {
     display: flex !important;
@@ -1742,12 +1815,14 @@ button {
     justify-content: flex-start !important;
     margin-bottom: 10px !important;
 }
+
 .youtube-single-bubble .button-thumb-group.bottom-buttons {
     flex-direction: column !important;
     align-items: center !important;
     margin-top: 10px !important;
     margin-bottom: 0 !important;
 }
+
 .youtube-single-bubble .youtube-thumb-link {
     display: flex !important;
     justify-content: center !important;
@@ -1763,10 +1838,11 @@ button {
     text-decoration: none;
     box-shadow: rgba(0, 0, 0, 0.25) 0px 14px 28px, rgba(0, 0, 0, 0.22) 0px 10px 10px;
     /* box-shadow: rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px; */
-    background-color: #0056b3 !important;}
+    background-color: #0056b3 !important;
+}
 
 .youtube-action-btn.youtube-popup-btn:hover {
-  background: #1976d2 !important;
+    background: #1976d2 !important;
 }
 
 .youtube-action-btn.youtube-direct-link {
@@ -1779,16 +1855,16 @@ button {
 }
 
 .youtube-action-btn.youtube-popup-btn:hover {
-  background: #678eee;
+    background: #678eee;
 }
 
 .youtube-action-btn.add-to-playlist-btn {
-  background: #4caf50;
-  /* display: none; */
+    background: #4caf50;
+    /* display: none; */
 }
 
 .youtube-action-btn.add-to-playlist-btn:hover {
-  background: #388e3c;
+    background: #388e3c;
 }
 
 .youtube-popup-button {
@@ -1859,6 +1935,7 @@ button {
     transition: color 0.2s;
     display: inline;
 }
+
 .add-to-playlist-link:hover {
     color: #388e3c;
     text-decoration: underline;
@@ -1907,7 +1984,7 @@ button {
     background: #f9f9f9;
     border-radius: 8px;
     padding: 10px;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
     margin-bottom: 12px;
     width: 100%;
 }
@@ -2004,7 +2081,7 @@ button {
 .youtube-single-bubble-dummy .youtube-thumb-link-dummy img {
     max-width: 250px;
     border-radius: 6px;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
     display: block;
     margin: 0 auto;
 }
@@ -2041,138 +2118,149 @@ button {
 
 /* Playlist Manager: Video thumbnails in playlist list */
 .playlist-manager-dialog .videos-container .video-thumbnail {
-  max-width: 80px;
-  max-height: 60px;
-  border-radius: 6px;
-  margin-right: 12px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.10);
+    max-width: 80px;
+    max-height: 60px;
+    border-radius: 6px;
+    margin-right: 12px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.10);
 }
 
 /* Drag handle/icon for pending video */
 .pending-video .drag-icon {
-  font-size: 2.2em;
-  margin-right: 14px;
-  cursor: grab;
-  color: #2196f3;
-  user-select: none;
-  vertical-align: middle;
+    font-size: 2.2em;
+    margin-right: 14px;
+    cursor: grab;
+    color: #2196f3;
+    user-select: none;
+    vertical-align: middle;
 }
 
 /* Pending video thumbnail size */
 .pending-video img {
-  max-width: 80px;
-  max-height: 60px;
-  border-radius: 6px;
-  margin-right: 8px;
-  vertical-align: middle;
+    max-width: 80px;
+    max-height: 60px;
+    border-radius: 6px;
+    margin-right: 8px;
+    vertical-align: middle;
 }
 
-/* Drop target only first 50% of the row, left-aligned */
+/* Drop target covers full width of playlist item */
 .playlist-item.drag-over {
-  background: #e3f2fd;
-  border: 2px dashed #2196f3;
-  border-radius: 8px;
-  width: 50%;
-  margin-left: 0;
-  margin-right: auto;
+    background: #e3f2fd;
+    border: 2px dashed #2196f3;
+    border-radius: 8px;
+    /* width: 50%; */
+    /* margin-left: 0; */
+    /* margin-right: auto; */
 }
 
 /* Absolutely positioned pending video next to playlist name header */
 .pending-video-abs {
-  position: absolute;
-  top: 50%;
-  right: 35px;
-  transform: translateY(-50%) translateX(32px);
-  z-index: 2;
-  display: flex;
-  align-items: center;
+    position: absolute;
+    top: 50%;
+    right: 35px;
+    transform: translateY(-50%) translateX(32px);
+    z-index: 2;
+    display: flex;
+    align-items: center;
 }
 
 /* Pencil always to the right of playlist name */
 
 .edit-playlist-btn {
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  font-size: 1.1em;
-  vertical-align: middle;
-  margin-left: 0;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 1.1em;
+    vertical-align: middle;
+    margin-left: 0;
 }
 
 /* Playlist videos table */
 .playlist-videos-table {
-  width: 100%;
-  table-layout: fixed;
-  border-collapse: separate;
-  border-spacing: 0 8px;
-  margin-top: 12px;
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: separate;
+    border-spacing: 0 8px;
+    /* margin-top: 20px !important; */
 }
+
 /* .playlist-videos-table thead {
   display: block;
   width: 100%;
 } */
 .playlist-videos-table thead {
-  position: sticky;
-  top: 0;
-  background: #f5f7fa;
-  z-index: 2;
-  box-shadow: 0 2px 2px -1px rgba(0,0,0,0.04);
-  display: table-header-group;
+    position: sticky;
+    top: 0;
+    background: #f5f7fa;
+    z-index: 2;
+    box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.04);
+    display: table-header-group;
 }
+
 .playlist-videos-table tbody {
-  max-height: 35vh;
-  overflow-y: auto;
-  width: 100%;
+    /* max-height: 35vh; */
+    /* overflow-y: auto; */
+    /* width: 100%; */
 }
+
 .playlist-videos-table tr {
-  background: #f9fbfd;
-  border-radius: 8px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    background: #f9fbfd;
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
 }
+
 .playlist-videos-table th,
 .playlist-videos-table td {
-  display: table-cell;
-  box-sizing: border-box;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  padding: 8px 6px;
-  vertical-align: middle;
+    display: table-cell;
+    box-sizing: border-box;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding: 8px 6px;
+    vertical-align: middle;
 }
+
 .playlist-videos-table th {
-  font-weight: bold;
-  background: #f5f7fa;
-  position: sticky;
-  top: 0;
-  z-index: 2;
+    font-weight: bold;
+    background: #f5f7fa;
+    position: sticky;
+    top: 0;
+    z-index: 2;
 }
+
 .playlist-videos-table tr {
-  background: #f9fbfd;
-  border-radius: 8px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    background: #f9fbfd;
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
 }
+
 .playlist-videos-table tr:hover {
-  background: #e3f2fd;
+    background: #e3f2fd;
 }
+
 .playlist-videos-table .video-thumbnail {
-  max-width: 110px;
-  max-height: 78px;
-  border-radius: 8px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.10);
+    max-width: 110px;
+    max-height: 78px;
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.10);
 }
+
 .action-btn {
-  background: none;
-  border: none;
-  font-size: 1.3em;
-  margin: 0 4px;
-  cursor: pointer;
-  color: #2196f3;
-  vertical-align: middle;
-  transition: color 0.2s;
+    background: none;
+    border: none;
+    font-size: 1.3em;
+    margin: 0 4px;
+    cursor: pointer;
+    color: #2196f3;
+    vertical-align: middle;
+    transition: color 0.2s;
 }
+
 .action-btn:hover {
-  color: #1565c0;
+    color: #1565c0;
 }
+
 /* Pending video row styling */
 .pending-video {
     display: flex;
@@ -2182,67 +2270,70 @@ button {
     border-radius: 8px;
     margin-bottom: 12px;
     padding: 10px 16px;
-    font-size: .8em;
+    font-size: .7em;
     position: relative;
-    right: 260px;
-    bottom: 15px;
+    right: 0px;
+    bottom: -5px;
     box-shadow: 0 2px 8px rgba(233, 40, 40, 0.08);
 }
+
 .pending-video .drag-icon {
-  font-size: 2.2em;
-  margin-right: 14px;
-  cursor: grab;
-  color: #2196f3;
-  user-select: none;
-  vertical-align: middle;
+    font-size: 2.2em;
+    margin-right: 14px;
+    cursor: grab;
+    color: #2196f3;
+    user-select: none;
+    vertical-align: middle;
 }
+
 .pending-video img {
-  max-width: 110px;
-  max-height: 78px;
-  border-radius: 8px;
-  margin-right: 8px;
-  vertical-align: middle;
+    max-width: 90px;
+    max-height: 78px;
+    border-radius: 8px;
+    margin-right: 8px;
+    vertical-align: middle;
 }
 
 /* 4. Close (X) icon in top right */
 .playlist-manager-dialog .close-btn {
-  position: absolute;
-  top: 10px;
- right: 0px;
-  background: #fff;
-  border: 2px solid #e0e0e0;
-  border-radius: 50%;
-  width: 38px;
-  height: 38px;
-  font-size: 2em;
-  color: #e92828;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  z-index: 10;
+    position: absolute;
+    top: 10px;
+    right: 0px;
+    background: #fff;
+    border: 2px solid #e0e0e0;
+    border-radius: 50%;
+    width: 38px;
+    height: 38px;
+    font-size: 2em;
+    color: #e92828;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    z-index: 10;
 }
+
 .playlist-manager-dialog .close-btn:hover {
-  background: #ffeaea;
-  border-color: #e92828;
+    background: #ffeaea;
+    border-color: #e92828;
 }
 
 /* 3. Larger text fields and buttons */
 .playlist-manager-content input,
 .playlist-manager-content button {
-  font-size: 1.15em;
-  padding: 8px;
+    font-size: 1.15em;
+    padding: 8px;
 }
 
 .playlist-item {
-  cursor: pointer;
-  padding-top: 5px;
-  padding-bottom: 5px;
+    cursor: pointer;
+    padding-top: 5px;
+    padding-bottom: 5px;
 }
 
 .playlist-item.active {
-  background-color: #f0f0f0;
+    background-color: #f0f0f0;
 }
 
 .playlist-manager-header {
@@ -2293,10 +2384,10 @@ button {
 }
 
 .playlist-manager-dialog .videos-container {
-  max-height: 40vh;
-  min-height: 20vh;
-  overflow-y: auto;
-  margin-top: 12px;
+    max-height: 40vh;
+    min-height: 20vh;
+    overflow-y: auto;
+    margin-top: 12px;
 }
 
 /* .playlist-manager-dialog .playlist-videos-table {
@@ -2336,104 +2427,117 @@ button {
 } */
 
 .playlist-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-bottom: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 8px;
 }
+
 .playlist-controls-row {
-  display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-  gap: 16px;
-  margin-bottom: 8px;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 8px;
 }
+
 .playlist-search-input {
-  flex: 1 1 50%;
-  min-width: 0;
-  max-width: 50%;
-  padding: 7px 12px;
-  border: 1.5px solid #b0b0b0;
-  border-radius: 7px;
-  font-size: 1.08em;
-  margin-bottom: 0;
-  box-sizing: border-box;
+    flex: 1 1 50%;
+    min-width: 0;
+    max-width: 50%;
+    padding: 7px 12px;
+    border: 1.5px solid #b0b0b0;
+    border-radius: 7px;
+    font-size: 1.08em;
+    margin-bottom: 0;
+    box-sizing: border-box;
 }
+
 .playlist-create-controls {
-  display: flex;
-  flex: 1 1 50%;
-  gap: 8px;
-  align-items: center;
-  max-width: 50%;
+    display: flex;
+    flex: 1 1 50%;
+    gap: 8px;
+    align-items: center;
+    max-width: 50%;
 }
+
 .new-playlist-input {
-  flex: 2 1 60%;
-  min-width: 0;
-  padding: 7px 12px;
-  border: 1.5px solid #b0b0b0;
-  border-radius: 7px;
-  font-size: 1.08em;
-  box-sizing: border-box;
+    flex: 2 1 60%;
+    min-width: 0;
+    padding: 7px 12px;
+    border: 1.5px solid #b0b0b0;
+    border-radius: 7px;
+    font-size: 1.08em;
+    box-sizing: border-box;
 }
+
 .create-playlist-btn {
-  flex: 1 1 40%;
-  padding: 7px 14px;
-  font-size: 1.08em;
-  border-radius: 7px;
-  border: 1.5px solid #b0b0b0;
-  background: #f5f5f5;
-  cursor: pointer;
-  transition: background 0.2s;
+    flex: 1 1 40%;
+    padding: 7px 14px;
+    font-size: 1.08em;
+    border-radius: 7px;
+    border: 1.5px solid #b0b0b0;
+    background: #f5f5f5;
+    cursor: pointer;
+    transition: background 0.2s;
 }
+
 .create-playlist-btn:hover {
-  background: #e3f2fd;
+    background: #e3f2fd;
 }
+
 .playlists-container {
-  max-height: 150px !important;
-  min-height: 120px;
-  overflow-y: auto;
-  border: 1px solid #e0e0e0;
-  border-radius: 7px;
-  background: #fafbfc;
-  padding: 4px 0;
-  margin-bottom: 0;
+    max-height: 130px !important;
+    min-height: 120px;
+    overflow-y: auto;
+    border: 1px solid #e0e0e0;
+    border-radius: 7px;
+    background: #fafbfc;
+    padding: 4px 0;
+    margin-bottom: 0;
 }
+
 .current-playlist-header {
-  margin-top: 40px !important;
-  font-weight: bold;
-  font-size: 1.2em;
-  display: flex;
-  align-items: center;
-  gap: 10px;
+    margin-top: 40px !important;
+    font-weight: bold;
+    font-size: 1.2em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
+
 .videos-container {
-  margin-top: 8px !important;
+    margin-top: 8px !important;
 }
 
 .current-playlist-name {
-  font-size: 1.2em;
-  font-weight: bold;
-  display: flex;
-  align-items: center;
-  gap: 10px;
+    font-size: 1.2em;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
 .add-to-playlist-header-btn {
-  padding: 7px 16px;
-  border-radius: 6px;
-  background: #4caf50;
-  color: #fff;
-  font-size: 1em;
-  border: none;
-  cursor: pointer;
-  margin-right: 80px;
-  transition: background 0.2s;
-}
-.add-to-playlist-header-btn:hover {
-  background: #388e3c;
+    padding: 7px 16px;
+    border-radius: 6px;
+    background: #4caf50;
+    color: #fff;
+    font-size: 1em;
+    border: none;
+    cursor: pointer;
+    margin-right: 80px;
+    transition: background 0.2s;
+    margin-right: 60px !important;
+    margin-bottom: 8px !important;
 }
 
-.status-msg, .status-default {
+.add-to-playlist-header-btn:hover {
+    background: #388e3c;
+}
+
+.status-msg,
+.status-default {
     font-size: 1.0em;
     font-weight: bold;
     color: #140cf5 !important;
@@ -2451,163 +2555,281 @@ button {
 
 .playlist-videos-table th,
 .playlist-videos-table td {
-  padding: 8px 6px;
-  vertical-align: middle;
+    padding: 8px 6px;
+    vertical-align: middle;
 }
 
 .playlist-videos-table th {
-  font-weight: bold;
+    font-weight: bold;
 }
 
 .playlist-videos-table td img.video-thumbnail {
-  width: 48px;
-  height: 36px;
-  object-fit: cover;
-  border-radius: 4px;
+    width: 48px;
+    height: 36px;
+    object-fit: cover;
+    border-radius: 4px;
 }
 
 .playlist-videos-table td.video-title-cell {
-  white-space: normal;
-  word-break: break-word;
+    white-space: normal;
+    word-break: break-word;
 }
 
 /* Playlist Table Column Tweaks (final, non-destructive) */
 .playlist-col-thumb {
-  width: 40px;
+    width: 40px;
 }
+
 .playlist-col-title {
-  width: auto;
+    width: auto;
 }
+
 .playlist-col-actions {
-  width: 160px;
+    width: 160px;
 }
 
 
 .playlist-thumb-cell {
-  padding-right: 12px !important;
+    padding-right: 12px !important;
 }
+
 .video-title-cell {
-  padding-left: 8px !important;
+    padding-left: 8px !important;
 }
+
 .playlist-actions-cell {
-  padding-left: 0;
-  text-align: right;
-  /* width: 1%; <-- REMOVE */
+    padding-left: 0;
+    text-align: right;
+    /* width: 1%; <-- REMOVE */
 }
+
 .playlist-videos-table td img.video-thumbnail {
-  width: 40px;
-  height: 30px;
-  object-fit: cover;
-  border-radius: 4px;
-  display: block;
-  margin: 0;
+    width: 50px;
+    height: 40px;
+    object-fit: cover;
+    border-radius: 4px;
+    display: block;
+    margin: 0;
 }
+
 .video-title-text {
-  margin-left: 0;
-  padding-left: 0;
-  display: block;
+    margin-left: 0;
+    padding-left: 0;
+    display: block;
 }
 
 /* Playlist table header class stubs for targeting */
 .playlist-video-header {
-  /* Add custom styles for the Video header here */
-  width: 48px;
+    /* Add custom styles for the Video header here */
+    width: 48px;
 }
+
 .playlist-title-header {
-  /* Add custom styles for the Title header here */
-  width: auto;
-  text-align: left;
+    /* Add custom styles for the Title header here */
+    width: auto;
+    text-align: left;
 }
+
 .playlist-actions-header {
-  /* Add custom styles for the Actions header here */
-  width: 200px !important;
-  min-width: 180px;
-  max-width: 240px;
-  text-align: right;
+    /* Add custom styles for the Actions header here */
+    width: 200px !important;
+    min-width: 180px;
+    max-width: 240px;
+    text-align: right;
 }
 
 /* --- Playlist Table: Standard Layout, Sticky Header, Scrollable Body --- */
 .playlist-table-wrapper {
-  max-height: 38vh;
-  overflow-y: auto;
-  width: 100%;
+    max-height: 40vh;
+    overflow-y: auto;
+    width: 100%;
+    padding-top: 0;
 }
+
+/* Increase height for large viewports (e.g., 100% zoom or large screens) */
+@media (min-height: 1000px) {
+  .playlist-table-wrapper {
+    max-height: 45vh;
+  }
+}
+
 .playlist-videos-table {
-  width: 100%;
-  table-layout: fixed;
-  border-collapse: separate;
-  border-spacing: 0 8px;
-  margin-top: 12px;
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: separate;
+    border-spacing: 0 8px;
+    /* margin-top: 20px !important; */
 }
+
 .playlist-videos-table thead {
-  /* No display: block! */
+    /* No display: block! */
 }
+
 .playlist-videos-table tbody {
-  /* No display: block! */
-  /* No max-height or overflow here! */
+    /* No display: block! */
+    /* No max-height or overflow here! */
 }
+
 .playlist-videos-table th {
-  position: sticky;
-  top: 0;
-  background: #f5f7fa;
-  z-index: 2;
-  box-shadow: 0 2px 2px -1px rgba(0,0,0,0.04);
+    position: sticky;
+    top: 0;
+    background: #f5f7fa;
+    z-index: 2;
+    box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.04);
 }
+
 /* Let colgroup and .playlist-col-* control widths */
 
 /* --- Playlist Table: Stronger Spacing and Icon Visibility --- */
 .playlist-videos-table td.playlist-thumb-cell {
-  padding-right: 16px !important;
+    padding-right: 16px !important;
 }
+
 .playlist-videos-table td.video-title-cell {
-  padding-left: 10px !important;
+    padding-left: 10px !important;
 }
+
 .playlist-videos-table td.playlist-actions-cell {
-  min-width: 180px;
-  max-width: 240px;
-  width: 200px !important;
-  text-align: right;
+    min-width: 180px;
+    max-width: 240px;
+    width: 200px !important;
+    text-align: right;
 }
+
 .playlist-videos-table .action-btn {
-  margin: 0 8px !important;
+    margin: 0 8px !important;
 }
 
 /* --- Playlist Table: Fix Header and Actions Column Visibility --- */
 .playlist-col-thumb,
 .playlist-video-header {
-  width: 70px !important;
-  min-width: 60px;
-  max-width: 90px;
+    width: 70px !important;
+    min-width: 60px;
+    max-width: 90px;
 }
+
 .playlist-col-actions,
 .playlist-actions-header {
-  width: 240px !important;
-  min-width: 200px;
-  max-width: 300px;
+    width: 240px !important;
+    min-width: 200px;
+    max-width: 300px;
 }
+
 .playlist-videos-table th {
-  white-space: normal !important;
+    white-space: normal !important;
 }
 
 .playlist-col-actions,
 .playlist-actions-header,
 .playlist-videos-table td.playlist-actions-cell {
-  /* width: 480px !important; */
-  min-width: 400px;
-  max-width: 480px;
-  text-align: center !important;
+    /* width: 480px !important; */
+    min-width: 330px;
+    max-width: 480px;
+    text-align: center !important;
 }
 
 /* --- Playlist Table: Always Show Actions Dropdown --- */
 .playlist-videos-table td.playlist-actions-cell {
-  overflow: visible !important;
-  text-overflow: unset !important;
-  white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: unset !important;
+    white-space: normal !important;
 }
 
 /* --- Playlist Table: Fix Sticky Header Jump --- */
 .playlist-videos-table {
-  border-collapse: collapse !important;
-  border-spacing: 0 !important;
-  margin-top: 0 !important;
+    border-collapse: collapse !important;
+    border-spacing: 0 !important;
+    margin-top: 0 !important;
+}
+
+#slideout-bar {
+    position: fixed;
+    top: 2.5%;
+    left: 0;
+    width: 6px;
+    height: 95vh;
+    background-color: #007bff;
+    border-radius: 0 8px 8px 0;
+    cursor: pointer;
+    z-index: 10000;
+}
+
+#slideout-panel-left {
+    position: fixed;
+    top: 2.5%;
+    left: 0;
+    height: 95vh;
+    width: 500px;
+    z-index: 9999;
+    pointer-events: none;
+}
+
+#slideout-content {
+    position: absolute;
+    top: 0;
+    left: 0;
+    /* width: 488px; */
+    height: 100%;
+    background: #f5f5f5;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
+    border-radius: 0 8px 8px 0;
+    padding: 24px 18px 18px 18px;
+    transform: translateX(-500px);
+    transition: transform 0.3s;
+    pointer-events: auto;
+}
+
+/* Show panel content on hover or open */
+#slideout-bar:hover + #slideout-panel-left #slideout-content,
+#slideout-panel-left.open #slideout-content {
+    transform: translateX(0);
+    pointer-events: auto;
+}
+
+#slideout-panel-left label {
+    display: block;
+    margin-bottom: 18px;
+}
+
+/* Playlist Manager Flex Row Layout */
+.playlist-manager-row {
+    display: flex;
+    flex-direction: row;
+    gap: 24px;
+    width: 100%;
+    align-items: flex-start;
+}
+
+.playlists-container {
+    width: 50%;
+    max-width: 50%;
+    min-width: 200px;
+    /* existing styles... */
+}
+
+.pending-video-container {
+    width: 50%;
+    max-width: 50%;
+    min-width: 200px;
+    min-height: 138px;
+    border: 2px solid #007bff;
+    background: rgba(0, 123, 255, 0.05);
+    border-radius: 10px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 18px;
+    box-sizing: border-box;
+    font-size: 1.1em;
+    color: #007bff;
+    margin-top: 0px;
+}
+
+.pending-placeholder {
+    color: #007bff;
+    opacity: 0.7;
+    font-style: italic;
+    text-align: center;
+    width: 100%;
+    padding: 18px 0;
 }
