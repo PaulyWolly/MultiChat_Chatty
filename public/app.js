@@ -1,8 +1,8 @@
 /*
   APP.js
-  Version: 21.0
-  AppName: Multi-Chat [v21.0]
-  Updated: April 2, 2025 @5:45PM
+  Version: 2
+  AppName: Multi-Chat [v2]
+  Updated: May 21, 2025 @6:00AM
   Created by Paul Welby
 */
 
@@ -22,7 +22,7 @@ console.log('PlaylistManager initialized:', window.playlistManager);
 // =====================================================
 
 // SERVER URL
-const SERVER_URL = 'http://localhost:5210';
+const SERVER_URL = 'http://localhost:5200';
 
 // Time constants
 const INTERVAL = 10;  // Set timeout duration in minutes
@@ -957,7 +957,11 @@ function setupSSEConnection() {
             try {
                 const data = JSON.parse(event.data);
                 if (data.type === 'heartbeat') {
-                    console.log('Heartbeat received:', new Date(data.timestamp).toLocaleTimeString());
+                    if (data.timestamp && !isNaN(new Date(data.timestamp).getTime())) {
+                        console.log('Heartbeat received:', new Date(data.timestamp).toLocaleTimeString());
+                    } else {
+                        console.log('Heartbeat received (no valid timestamp)');
+                    }
                 }
                 if (data.response) {
                     // Check for special message types
@@ -3021,6 +3025,17 @@ function initializeSpeechRecognition() {
         };
 
         state.recognition.onerror = (event) => {
+            if (event.error === 'no-speech') {
+                // Optionally, you can restart listening here if you want continuous mode
+                // Or just ignore it
+                console.log('No speech detected, waiting for user...');
+                state.isListening = false;
+                elements.micButton.textContent = '🎤';
+                // Optionally restart listening:
+                // if (state.isConversationMode) startListening();
+                return;
+            }
+            // For all other errors, log as before
             console.error('Recognition error:', event.error);
             state.isListening = false;
             elements.micButton.textContent = '🎤';
@@ -4246,24 +4261,25 @@ const handleYoutube = {
                     <div class="youtube-single-bubble">
                         <p>Found result for: "${query}"</p>
                         <div class="video-item">
-                            <div class="button-thumb-group top-buttons">
+                            <div class="button-thumb-group-SINGLE top-buttons">
                                 <a href="#" class="youtube-action-btn youtube-popup-btn" data-video-id="${videos[0].id}" role="button" tabindex="0">Play in Popup</a>
-                                <button class="youtube-action-btn add-to-playlist-btn" data-video='${JSON.stringify({
-                                    videoId: videos[0].id,
-                                    title: videos[0].title,
-                                    thumbnail: videos[0].thumbnail
-                                })}' title="Add to Playlist">+</button>
-                                <button class="youtube-action-btn view-playlists-btn" title="View My Playlists" style="font-size:18px;padding:0 10px;background:none;border:none;cursor:pointer;vertical-align:middle;">
+                                
+                                <button class="youtube-action-btn view-playlists-SINGLE-btn" title="View My Playlists" style="font-size:18px;padding:0 10px;background:none;border:none;cursor:pointer;vertical-align:middle;">
                                   <span style="display:inline-block;vertical-align:middle;">&#9776;</span>
                                 </button>
+                                <button type="button" class="add-to-playlist-SINGLE-btn" data-video="${encodeURIComponent(JSON.stringify({videoId: videos[0].id, title: videos[0].title, thumbnail: videos[0].thumbnail}))}" title="Add to Playlist">+</button>
+                                
                             </div>
                             <span class="youtube-thumb-link youtube-popup-thumb" data-video-id="${videos[0].id}">
                                 <img src="https://img.youtube.com/vi/${videos[0].id}/hqdefault.jpg" alt="${videos[0].title}" title="Popup: ${videos[0].title}" />
                             </span>
-                            <div class="button-thumb-group bottom-buttons">
+                            
+                            <div class="button-thumb-group-SINGLE bottom-buttons">
                                 <a href="https://www.youtube.com/watch?v=${videos[0].id}" target="_blank" rel="noopener noreferrer" class="youtube-action-btn youtube-direct-link">Watch on YouTube</a>
                             </div>
-                            <div class="video-title">${videos[0].title}</div>
+                            
+                            <div class="video-title-SINGLE">${videos[0].title}</div>
+
                         </div>
                     </div>
                 `;
@@ -4275,24 +4291,24 @@ const handleYoutube = {
                         <div class="video-list">
                             ${videos.map(video => `
                                 <div class="video-item">
-                                    <div class="button-thumb-group top-buttons">
+                                    <div class="button-thumb-group-MULTI top-buttons">
                                         <a href="#" class="youtube-action-btn youtube-popup-btn" data-video-id="${video.id}" role="button" tabindex="0">Play in Popup</a>
-                                        <button class="youtube-action-btn add-to-playlist-btn" data-video='${JSON.stringify({
-                                            videoId: video.id,
-                                            title: video.title,
-                                            thumbnail: video.thumbnail
-                                        })}' title="Add to Playlist">+</button>
-                                        <button class="youtube-action-btn view-playlists-btn" title="View My Playlists" style="font-size:18px;padding:0 10px;background:none;border:none;cursor:pointer;vertical-align:middle;">
+                                        
+                                        <button class="youtube-action-btn view-playlists-MULTI-btn" title="View My Playlists" style="font-size:18px;padding:0 10px;background:none;border:none;cursor:pointer;vertical-align:middle;">
                                           <span style="display:inline-block;vertical-align:middle;">&#9776;</span>
                                         </button>
+                                        <button type="button" class="add-to-playlist-MULTI-btn" data-video="${encodeURIComponent(JSON.stringify({videoId: video.id, title: video.title, thumbnail: video.thumbnail}))}" title="Add to Playlist">+</button>
+                                        
                                     </div>
                                     <span class="youtube-thumb-link youtube-popup-thumb" data-video-id="${video.id}">
                                         <img src="https://img.youtube.com/vi/${video.id}/hqdefault.jpg" alt="${video.title}" title="Popup: ${video.title}" />
                                     </span>
-                                    <div class="button-thumb-group bottom-buttons">
+                                    <div class="button-thumb-group-MULTI bottom-buttons">
                                         <a href="https://www.youtube.com/watch?v=${video.id}" target="_blank" rel="noopener noreferrer" class="youtube-action-btn youtube-direct-link">Watch on YouTube</a>
                                     </div>
-                                    <div class="video-title">${video.title}</div>
+
+                                    <div class="video-title-MULTI">${video.title}</div>
+                                
                                 </div>
                             `).join('')}
                         </div>
@@ -4319,11 +4335,12 @@ const handleYoutube = {
                 document.querySelectorAll('.add-to-playlist-btn').forEach(btn => {
                     btn.addEventListener('click', (e) => {
                         e.preventDefault();
-                        const videoData = JSON.parse(btn.getAttribute('data-video'));
+                        const videoData = JSON.parse(decodeURIComponent(btn.dataset.video));
                         if (window.playlistManager) {
                             window.playlistManager.show(videoData);
                         } else {
                             console.error('PlaylistManager not initialized');
+                            showToast('Unable to open playlist manager. Please try again.');
                         }
                     });
                 });
@@ -4352,7 +4369,7 @@ const handleYoutube = {
         const top = Math.floor((window.screen.height - height) / 2);
     
         const popup = window.open(
-            `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`,
+            `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&vq=hd1080&hd=1`,
             'YouTubePlayer',
             `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=no,status=no`
         );
@@ -4409,7 +4426,9 @@ const handleYoutube = {
             controls: '1',
             fs: '1',
             playsinline: '1',
-            iv_load_policy: '3'
+            iv_load_policy: '3',
+            vq: 'hd1080',  // Request 1080p quality
+            hd: '1'        // Enable HD
         });
         
         // Set proper sandbox attributes to allow necessary features while maintaining security
@@ -4492,6 +4511,7 @@ const handleYoutube = {
         }
     }
 };
+window.handleYoutube = handleYoutube;
 
 
 // =====================================================
@@ -4848,9 +4868,20 @@ function restoreHonorifics(text) {
 
 // Add event listener for Add to Playlist buttons
 document.addEventListener('click', async (e) => {
-  if (e.target.classList.contains('add-to-playlist-btn')) {
-    const videoData = JSON.parse(e.target.dataset.video);
-    playlistManager.show(videoData);
+  const button = e.target.closest('.add-to-playlist-SINGLE-btn, .add-to-playlist-MULTI-btn');
+  if (button) {
+    try {
+      const videoData = JSON.parse(decodeURIComponent(button.dataset.video));
+      if (window.playlistManager) {
+        window.playlistManager.show(videoData);
+      } else {
+        console.error('PlaylistManager not initialized');
+        showToast('Unable to open playlist manager. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error parsing video data:', error);
+      showToast('Error adding to playlist. Please try again.');
+    }
   }
 });
 
@@ -4882,4 +4913,33 @@ function showLocalVideoModal(videoUrl, title) {
     document.body.appendChild(modal);
     document.getElementById('close-local-video-modal').onclick = () => modal.remove();
     modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+}
+
+// ... existing code ...
+// Add click handlers for YouTube popup images (SINGLE and MULTI)
+document.addEventListener('click', function(e) {
+  console.log('Global click detected on:', e.target);
+  // Look for both the span and the img elements
+  const thumb = e.target.closest('.youtube-thumb-link.youtube-popup-thumb, .youtube-popup-thumb');
+  console.log('Found youtube-popup-thumb:', !!thumb);
+  if (thumb) {
+    console.log('Thumb classes:', thumb.className);
+    console.log('Has video-id:', thumb.hasAttribute('data-video-id'));
+    console.log('Video ID:', thumb.getAttribute('data-video-id'));
+  }
+  if (thumb && thumb.hasAttribute('data-video-id')) {
+    e.preventDefault();
+    const videoId = thumb.getAttribute('data-video-id');
+    console.log('handleYoutube exists:', !!window.handleYoutube);
+    console.log('openYoutubePopup exists:', !!(window.handleYoutube && typeof window.handleYoutube.openYoutubePopup === 'function'));
+    if (window.handleYoutube && typeof window.handleYoutube.openYoutubePopup === 'function') {
+      window.handleYoutube.openYoutubePopup(videoId);
+    }
+  }
+});
+// ... existing code ...
+
+// Add showToast function to app.js:
+function showToast(message) {
+  alert(message);
 }
