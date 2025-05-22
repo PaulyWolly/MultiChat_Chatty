@@ -57,9 +57,9 @@ class PlaylistService {
     }
   }
 
-  async removeVideoFromPlaylist(playlistId, videoId) {
+  async removeVideoFromPlaylist(playlistId, videoEntryId) {
     try {
-      const response = await fetch(`${this.baseUrl}/${playlistId}/videos/${videoId}?sessionId=${window.sessionId}`, {
+      const response = await fetch(`${this.baseUrl}/${playlistId}/videos/${videoEntryId}?sessionId=${window.sessionId}`, {
         method: 'DELETE'
       });
       if (!response.ok) {
@@ -93,14 +93,14 @@ class PlaylistService {
     }
   }
 
-  async moveVideo(playlistId, videoId, targetPlaylistId) {
+  async moveVideo(playlistId, videoEntryId, targetPlaylistId) {
     try {
       const response = await fetch(`${this.baseUrl}/${playlistId}/move?sessionId=${window.sessionId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ videoId, targetPlaylistId })
+        body: JSON.stringify({ videoEntryId, targetPlaylistId })
       });
       if (!response.ok) {
         const error = await response.json();
@@ -109,6 +109,42 @@ class PlaylistService {
       return response.json();
     } catch (error) {
       console.error('Error moving video:', error);
+      throw error;
+    }
+  }
+
+  async deletePlaylist(playlistId) {
+    try {
+      const response = await fetch(`${this.baseUrl}/${playlistId}?sessionId=${window.sessionId}`, {
+        method: 'DELETE'
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to delete playlist');
+      }
+      return response.json();
+    } catch (error) {
+      console.error('Error deleting playlist:', error);
+      throw error;
+    }
+  }
+
+  async renameVideoTitle(playlistId, videoEntryId, newTitle) {
+    try {
+      const response = await fetch(`${this.baseUrl}/${playlistId}/videos/${videoEntryId}/title?sessionId=${window.sessionId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ title: newTitle })
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to rename video title');
+      }
+      return response.json();
+    } catch (error) {
+      console.error('Error renaming video title:', error);
       throw error;
     }
   }
