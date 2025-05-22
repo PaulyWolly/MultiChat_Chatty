@@ -1303,6 +1303,9 @@ button {
     position: relative;
     width: 85%;
     margin-left: 30px;   
+    position: relative;
+    width: 85%;
+    margin-left: 4px;
 }
 
 .button-thumb-group-MULTI {
@@ -1594,7 +1597,7 @@ button {
     padding: 0;
     line-height: 1;
     position: absolute;
-    right: 25px;
+    right: -24px;
     top: 15px;
     z-index: 1000;
     pointer-events: auto;
@@ -2270,6 +2273,10 @@ button {
     margin-top: 15px;
     padding: 0 !important;
     font-size: 18px !important;
+    position: absolute;
+    bottom: 5px;
+    right: 30px;
+
 }
 
 .youtube-action-btn.view-playlists-MULTI-btn {
@@ -2280,6 +2287,9 @@ button {
     margin-top: 15px;
     padding: 0 !important;
     font-size: 18px !important;
+    position: absolute;
+    bottom: 5px;
+    right: 85px;
 }
 
 .playlist-manager-dialog .videos-container {
@@ -2506,6 +2516,7 @@ button {
 .playlist-title-header {
   /* Add custom styles for the Title header here */
   width: auto;
+  text-align: left;
 }
 .playlist-actions-header {
   /* Add custom styles for the Actions header here */
@@ -2581,10 +2592,10 @@ button {
 .playlist-col-actions,
 .playlist-actions-header,
 .playlist-videos-table td.playlist-actions-cell {
-  width: 480px !important;
+  /* width: 480px !important; */
   min-width: 400px;
   max-width: 480px;
-  text-align: right;
+  text-align: center !important;
 }
 
 /* --- Playlist Table: Always Show Actions Dropdown --- */

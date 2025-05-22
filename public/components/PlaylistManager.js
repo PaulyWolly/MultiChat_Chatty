@@ -53,6 +53,13 @@ export class PlaylistManager {
     // Add event listeners
     this.dialog.querySelector('.close-btn').addEventListener('click', () => this.hide());
     this.dialog.querySelector('.create-playlist-btn').addEventListener('click', () => this.createPlaylist());
+    // Add Enter key support for new playlist input
+    this.dialog.querySelector('.new-playlist-input').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        this.createPlaylist();
+      }
+    });
     // this.dialog.querySelector('.add-to-playlist-header-btn').addEventListener('click', () => this.addCurrentVideoToPlaylist());
     
     // Add search input event
