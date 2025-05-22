@@ -27,24 +27,21 @@ export class PlaylistManager {
       <div class="playlist-manager-content">
         <div class="playlist-manager-header">
           <h2>Playlist Manager</h2>
+          <span class="add-to-playlist-header-btn-container"></span>
           <button class="close-btn">&times;</button>
         </div>
         <div class="playlist-manager-body">
-          <div class="playlist-list">
-            <div class="playlist-actions">
+          <div class="playlist-controls-row">
+            <input type="text" class="playlist-search-input" placeholder="Search playlists...">
+            <div class="playlist-create-controls">
               <input type="text" class="new-playlist-input" placeholder="New playlist name">
               <button class="create-playlist-btn">Create Playlist</button>
             </div>
-            <div class="playlists-container"></div>
           </div>
-          <div class="playlist-content">
-            <div class="current-playlist-header">
-              <h3 class="current-playlist-name">Select a playlist</h3>
-            </div>
-            <div class="pending-video-container"></div>
-            <div class="videos-container"></div>
-            <button class="add-to-playlist-btn" disabled>Add to Playlist</button>
-          </div>
+          <div class="playlists-container" style="max-height: 220px; min-height: 120px; overflow-y: auto; margin-bottom: 0;"></div>
+          <div class="current-playlist-header" style="margin-top: 8px;"></div>
+          <div class="pending-video-container"></div>
+          <div class="videos-container"></div>
         </div>
       </div>
     `;
@@ -56,7 +53,12 @@ export class PlaylistManager {
     // Add event listeners
     this.dialog.querySelector('.close-btn').addEventListener('click', () => this.hide());
     this.dialog.querySelector('.create-playlist-btn').addEventListener('click', () => this.createPlaylist());
-    this.dialog.querySelector('.add-to-playlist-btn').addEventListener('click', () => this.addCurrentVideoToPlaylist());
+    // this.dialog.querySelector('.add-to-playlist-header-btn').addEventListener('click', () => this.addCurrentVideoToPlaylist());
+    
+    // Add search input event
+    this.dialog.querySelector('.playlist-search-input').addEventListener('input', (e) => {
+      this.renderPlaylists(e.target.value);
+    });
     
     console.log('PlaylistManager initialization complete');
   }
@@ -104,13 +106,17 @@ export class PlaylistManager {
     }
   }
 
-  renderPlaylists() {
+  renderPlaylists(filter = '') {
     const container = this.dialog.querySelector('.playlists-container');
-    container.style.marginTop = '18px';
-    container.innerHTML = this.playlists.map(playlist => `
-      <div class="playlist-item${playlist._id === this.selectedPlaylistId ? ' active' : ''}" data-id="${playlist._id}" style="cursor:pointer;">
+    let filtered = this.playlists;
+    if (filter && filter.trim()) {
+      const f = filter.trim().toLowerCase();
+      filtered = this.playlists.filter(p => p.name.toLowerCase().includes(f));
+    }
+    container.innerHTML = filtered.map(playlist => `
+      <div class="playlist-item${playlist._id === this.selectedPlaylistId ? ' active' : ''}" data-id="${playlist._id}" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center; padding:6px 10px; border-radius:6px; margin-bottom:2px; background:${playlist._id === this.selectedPlaylistId ? '#e3f2fd' : 'transparent'};">
         <span class="playlist-name">${playlist.name}</span>
-        <span class="playlist-count">(${playlist.videos.length})</span>
+        <span class="playlist-count" style="color:#888;font-size:0.95em;">(${playlist.videos.length})</span>
       </div>
     `).join('');
 
@@ -141,13 +147,14 @@ export class PlaylistManager {
 
     // Render the active playlist name with pencil above the table
     const headerContainer = this.dialog.querySelector('.current-playlist-header');
-    headerContainer.style.position = 'relative';
+    headerContainer.style.marginTop = '8px';
     const playlist = this.playlists.find(p => p._id === this.selectedPlaylistId);
     if (playlist) {
       headerContainer.innerHTML = `
-        <div style="display:inline-flex;align-items:center;gap:10px;">
-          <h3 class="current-playlist-name" style="display:inline-block;font-weight:bold;vertical-align:middle;">${playlist.name}</h3>
+        <div style="display:inline-flex;align-items:center;gap:10px;font-weight:bold;font-size:1.2em;">
+          <span class="current-playlist-name" style="font-weight:bold;">${playlist.name}</span>
           <button class="edit-playlist-btn" title="Rename Playlist" data-id="${playlist._id}" style="font-size:1.1em;vertical-align:middle;background:transparent;border:none;cursor:pointer;">&#9998;</button>
+          <button class="delete-playlist-btn" title="Delete Playlist" data-id="${playlist._id}" style="font-size:1.1em;vertical-align:middle;background:transparent;border:none;cursor:pointer;color:#e92828;">&#128465;</button>
           <span class="rename-controls" style="display:none;margin-left:8px;">
             <input type="text" class="rename-playlist-input" value="${playlist.name}" style="font-size:1em;width:120px;">
             <button class="submit-rename-btn" data-id="${playlist._id}" style="font-size:1em;">✔</button>
@@ -175,8 +182,26 @@ export class PlaylistManager {
         btn.style.display = '';
         headerContainer.querySelector('.rename-controls').style.display = 'none';
       });
+      const deleteBtn = headerContainer.querySelector('.delete-playlist-btn');
+      deleteBtn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const confirmed = await showCustomConfirm(`Are you sure you want to delete the playlist "${playlist.name}"? This cannot be undone.`);
+        if (confirmed) {
+          await playlistService.deletePlaylist(playlist._id);
+          this.selectedPlaylistId = null;
+          await this.loadPlaylists();
+          if (this.playlists.length === 0) {
+            this.hide();
+            showToast('Playlist deleted. No playlists remain.');
+          } else {
+            this.selectedPlaylistId = this.playlists[0]._id;
+            this.renderPlaylists();
+            showToast('Playlist deleted.');
+          }
+        }
+      });
     } else {
-      headerContainer.innerHTML = '<h3 class="current-playlist-name">Select a playlist</h3>';
+      headerContainer.innerHTML = '<span class="current-playlist-name">Select a playlist</span>';
     }
     // Always render the pending video in the header area, even if no playlist is selected
     this.renderPendingVideo();
@@ -189,31 +214,43 @@ export class PlaylistManager {
       this.dialog.querySelector('.current-playlist-name').textContent = playlist.name;
       this.renderVideos(playlist.videos);
     }
-    this.renderPlaylists();
-    const addBtn = this.dialog.querySelector('.add-to-playlist-btn');
-    addBtn.disabled = !playlistId;
+    this.renderPlaylists(this.dialog.querySelector('.playlist-search-input').value);
+    const addBtn = this.dialog.querySelector('.add-to-playlist-header-btn');
+    if (addBtn) {
+      addBtn.disabled = !playlistId;
+    }
   }
 
   renderVideos(videos) {
     const container = this.dialog.querySelector('.videos-container');
+    container.style.marginTop = '8px';
     container.innerHTML = `
-      <table class="playlist-videos-table">
+    <div class="playlist-table-wrapper">
+      <table class="playlist-videos-table" style="table-layout: fixed; width: 100%;">
+        <colgroup>
+          <col class="playlist-col-thumb">
+          <col class="playlist-col-title">
+          <col class="playlist-col-actions">
+        </colgroup>
         <thead>
           <tr>
-            <th>Video</th>
-            <th>Title</th>
-            <th style="text-align:right;">Actions</th>
+            <th class="playlist-video-header">Video</th>
+            <th class="playlist-title-header">Title</th>
+            <th class="playlist-actions-header">Actions</th>
           </tr>
         </thead>
         <tbody>
           ${videos.map(video => `
-            <tr class="playlist-video-row">
-              <td><img class="video-thumbnail" src="${video.thumbnail}" alt="${video.title}" title="${video.title}" /></td>
-              <td>${video.title}</td>
-              <td style="text-align:right;">
-                <button class="action-btn view-video-btn" title="View/Play" data-local-url="${video.localUrl || ''}">&#128065;</button>
-                <button class="action-btn remove-video-btn" title="Remove" data-id="${video.videoId}">&#128465;</button>
-                <select class="move-to-playlist">
+            <tr class="playlist-video-row" data-entry-id="${video._id}">
+              <td class="playlist-thumb-cell"><img class="video-thumbnail youtube-popup-thumb" src="${video.thumbnail}" alt="${video.title}" title="${video.title}" style="cursor:pointer;" data-video-id="${video.videoId}" /></td>
+              <td class="video-title-cell">
+                <span class="video-title-text">${video.title}</span>
+              </td>
+              <td class="playlist-actions-cell" style="text-align:right;">
+                <button class="action-btn view-video-btn" title="View/Play" data-video-id="${video.videoId}" data-local-url="${video.localUrl || ''}" data-entry-id="${video._id}">&#128065;</button>
+                <button class="edit-video-title-btn" title="Edit Title" style="background:none;border:none;cursor:pointer;font-size:1.1em;margin-left:8px;vertical-align:middle;">✏️</button>
+                <button class="action-btn remove-video-btn" title="Remove" data-id="${video._id}">&#128465;</button>
+                <select class="move-to-playlist" data-entry-id="${video._id}">
                   <option value="">Move to...</option>
                   ${this.playlists.filter(p => p._id !== this.selectedPlaylistId).map(p => `<option value="${p._id}">${p.name}</option>`).join('')}
                 </select>
@@ -222,28 +259,140 @@ export class PlaylistManager {
           `).join('')}
         </tbody>
       </table>
+    </div>
     `;
+
+    // Remove Refresh button handler
+    // const refreshBtn = container.querySelector('.refresh-playlist-btn');
+    // if (refreshBtn) {
+    //   refreshBtn.addEventListener('click', async () => {
+    //     await this.loadPlaylists();
+    //     const playlist = this.playlists.find(p => p._id === this.selectedPlaylistId);
+    //     if (playlist) {
+    //       this.renderVideos(playlist.videos);
+    //     }
+    //   });
+    // }
 
     // Add event listeners for actions
     container.querySelectorAll('.view-video-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        const url = btn.dataset.localUrl;
-        const title = btn.closest('tr').querySelector('td:nth-child(2)').textContent;
-        this.hide();
-        setTimeout(() => {
-          if (url) showLocalVideoModal(url, title);
-        }, 200);
+        console.log('Eye icon clicked');
+        const videoId = btn.dataset.videoId;
+        console.log('Video ID:', videoId);
+        console.log('handleYoutube exists:', !!window.handleYoutube);
+        console.log('openYoutubePopup exists:', !!(window.handleYoutube && typeof window.handleYoutube.openYoutubePopup === 'function'));
+        
+        if (videoId && window.handleYoutube && typeof window.handleYoutube.openYoutubePopup === 'function') {
+          window.handleYoutube.openYoutubePopup(videoId);
+          this.hide();
+        } else {
+          showToast('Unable to play video. Please try again.');
+        }
       });
     });
     container.querySelectorAll('.remove-video-btn').forEach(btn => {
       btn.addEventListener('click', () => this.removeVideo(btn.dataset.id));
     });
     container.querySelectorAll('.move-to-playlist').forEach(select => {
-      select.addEventListener('change', (e) => {
-        if (e.target.value) {
-          this.moveVideo(select.closest('tr').querySelector('.remove-video-btn').dataset.id, e.target.value);
-          e.target.value = '';
+      select.addEventListener('change', async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const videoEntryId = select.dataset.entryId;
+        const targetPlaylistId = e.target.value;
+        console.log('Move video:', { videoEntryId, targetPlaylistId });
+        
+        if (targetPlaylistId) {
+          try {
+            await this.moveVideo(videoEntryId, targetPlaylistId);
+            // Reset the select element
+            e.target.value = '';
+          } catch (error) {
+            console.error('Error moving video:', error);
+            e.target.value = '';
+            this.showError('Failed to move video. Please try again.');
+          }
         }
+      });
+    });
+    // Add click event for video image to open popup
+    container.querySelectorAll('.youtube-popup-thumb').forEach(img => {
+      console.log('Adding click handler to image:', img);  // Log when we add the handler
+      img.addEventListener('click', (e) => {
+        console.log('IMAGE CLICKED!');  // Simple log to verify click
+        console.log('Image clicked');
+        const videoId = img.getAttribute('data-video-id');
+        console.log('Image Video ID:', videoId);
+        console.log('handleYoutube exists:', !!window.handleYoutube);
+        console.log('openYoutubePopup exists:', !!(window.handleYoutube && typeof window.handleYoutube.openYoutubePopup === 'function'));
+        
+        if (videoId && window.handleYoutube && typeof window.handleYoutube.openYoutubePopup === 'function') {
+          window.handleYoutube.openYoutubePopup(videoId);
+          this.hide();
+        } else {
+          showToast('Unable to play video. Please try again.');
+        }
+      });
+    });
+
+    // Add inline edit logic for video titles
+    container.querySelectorAll('.edit-video-title-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const row = btn.closest('tr');
+        const cell = row.querySelector('.video-title-cell');
+        const titleSpan = cell.querySelector('.video-title-text');
+        const oldTitle = titleSpan.textContent;
+        // Replace with input and submit button
+        cell.innerHTML = `<input type="text" class="edit-title-input" value="${oldTitle}" style="font-size:1em;width:70%;margin-right:6px;">` +
+          `<button class="submit-title-btn" title="Save" style="font-size:1.1em;vertical-align:middle;">✔</button>` +
+          `<button class="cancel-title-btn" title="Cancel" style="font-size:1.1em;vertical-align:middle;margin-left:4px;">✖</button>`;
+        const input = cell.querySelector('.edit-title-input');
+        input.focus();
+        // Submit on button click or Enter
+        cell.querySelector('.submit-title-btn').addEventListener('click', async (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const newTitle = input.value.trim();
+          console.log('Submit button clicked with new title:', newTitle);
+          if (newTitle) {
+            try {
+              console.log('Calling renameVideoTitle with:', { videoEntryId: row.dataset.entryId, newTitle });
+              await this.renameVideoTitle(row.dataset.entryId, newTitle);
+              // Update UI immediately after successful rename
+              cell.innerHTML = `<span class="video-title-text">${newTitle}</span>`;
+            } catch (error) {
+              console.error('Error renaming title:', error);
+              cell.innerHTML = `<span class="video-title-text">${oldTitle}</span>`;
+              this.showError('Failed to update video title.');
+            }
+          }
+        });
+        input.addEventListener('keydown', async (ev) => {
+          if (ev.key === 'Enter') {
+            ev.preventDefault();
+            const newTitle = input.value.trim();
+            if (newTitle) {
+              try {
+                await this.renameVideoTitle(row.dataset.entryId, newTitle);
+                cell.innerHTML = `<span class="video-title-text">${newTitle}</span>`;
+              } catch (error) {
+                console.error('Error renaming title:', error);
+                cell.innerHTML = `<span class="video-title-text">${oldTitle}</span>`;
+                this.showError('Failed to update video title.');
+              }
+            }
+          } else if (ev.key === 'Escape') {
+            cell.innerHTML = `<span class="video-title-text">${oldTitle}</span>`;
+          }
+        });
+        // Cancel button
+        cell.querySelector('.cancel-title-btn').addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          cell.innerHTML = `<span class="video-title-text">${oldTitle}</span>`;
+        });
       });
     });
   }
@@ -272,24 +421,57 @@ export class PlaylistManager {
     }
   }
 
-  async removeVideo(videoId) {
+  async removeVideo(videoEntryId) {
     if (!this.selectedPlaylistId) return;
-
+    const confirmed = await showCustomConfirm('Are you sure you want to delete this video from the playlist? This cannot be undone.');
+    if (!confirmed) return;
     try {
-      await playlistService.removeVideoFromPlaylist(this.selectedPlaylistId, videoId);
+      await playlistService.removeVideoFromPlaylist(this.selectedPlaylistId, videoEntryId);
+      // Immediately update UI after deletion
+      const playlist = this.playlists.find(p => p._id === this.selectedPlaylistId);
+      if (playlist) {
+        playlist.videos = playlist.videos.filter(v => v._id !== videoEntryId && v._id?.toString() !== videoEntryId);
+        this.renderVideos(playlist.videos);
+      }
       await this.loadPlaylists();
     } catch (error) {
       this.showError('Failed to remove video. Please try again.');
     }
   }
 
-  async moveVideo(videoId, targetPlaylistId) {
+  async moveVideo(videoEntryId, targetPlaylistId) {
     if (!this.selectedPlaylistId) return;
-
     try {
-      await playlistService.moveVideo(this.selectedPlaylistId, videoId, targetPlaylistId);
+      // Find the video in the current playlist to get its videoId
+      const playlist = this.playlists.find(p => p._id === this.selectedPlaylistId);
+      if (!playlist) {
+        throw new Error('Source playlist not found');
+      }
+      
+      const video = playlist.videos.find(v => v._id === videoEntryId || v._id?.toString() === videoEntryId);
+      if (!video) {
+        throw new Error('Video not found in source playlist');
+      }
+
+      console.log('Attempting to move video:', videoEntryId, 'to playlist:', targetPlaylistId);
+      await playlistService.moveVideo(this.selectedPlaylistId, videoEntryId, targetPlaylistId);
+      
+      // After successful move, reload playlists and re-render
       await this.loadPlaylists();
+      
+      // Update the current playlist view
+      const updatedPlaylist = this.playlists.find(p => p._id === this.selectedPlaylistId);
+      if (updatedPlaylist) {
+        this.renderVideos(updatedPlaylist.videos);
+      }
+      
+      // Update the playlist list
+      this.renderPlaylists();
+      
+      showToast('Video moved successfully!');
     } catch (error) {
+      console.error('Failed to move video:', error);
+      showToast('Failed to move video. Please try again.');
       this.showError('Failed to move video. Please try again.');
     }
   }
@@ -303,7 +485,14 @@ export class PlaylistManager {
     // Remove any previous .pending-video-abs
     const prevAbs = headerContainer.querySelector('.pending-video-abs');
     if (prevAbs) prevAbs.remove();
+    // Remove any old add-to-playlist-header-btn in header
+    const headerBtnContainer = this.dialog.querySelector('.add-to-playlist-header-btn-container');
+    headerBtnContainer.innerHTML = '';
     if (!this.currentVideo || !headerContainer) return;
+    // Truncate title to 30 characters
+    const truncatedTitle = (this.currentVideo.title && this.currentVideo.title.length > 30)
+      ? this.currentVideo.title.slice(0, 50) + '...'
+      : this.currentVideo.title || 'Untitled Video';
     // Create and append the absolutely positioned pending video
     const absDiv = document.createElement('div');
     absDiv.className = 'pending-video-abs';
@@ -311,7 +500,7 @@ export class PlaylistManager {
       <div class="pending-video" draggable="true" id="pending-video">
         <span class="drag-icon" style="font-size: 2.2em; margin-right: 14px; cursor: grab; color: #2196f3;">&#9776;</span>
         <img src="${this.currentVideo.thumbnail}" alt="" />
-        <span style="font-weight:bold; margin-left:10px;">${this.currentVideo.title || 'Untitled Video'}</span>
+        <span style="font-weight:bold; margin-left:10px;">${truncatedTitle}</span>
         <span style="color:#2196f3;margin-left:18px;">Drag to playlist</span>
       </div>
     `;
@@ -320,6 +509,16 @@ export class PlaylistManager {
     pending.addEventListener('dragstart', (e) => {
       e.dataTransfer.setData('application/json', JSON.stringify(this.currentVideo));
     });
+    // Add the 'Add to Playlist' button in the header if a playlist is selected
+    if (this.selectedPlaylistId) {
+      const addBtn = document.createElement('button');
+      addBtn.className = 'add-to-playlist-header-btn';
+      addBtn.textContent = 'Add to Playlist';
+      addBtn.disabled = false;
+      addBtn.style.marginRight = '12px';
+      addBtn.addEventListener('click', () => this.addCurrentVideoToPlaylist());
+      headerBtnContainer.appendChild(addBtn);
+    }
   }
 
   async addCurrentVideoToPlaylist() {
@@ -336,7 +535,11 @@ export class PlaylistManager {
       this.currentVideo = null;
       this.renderPendingVideo();
     } catch (error) {
-      this.showError('Failed to add video to playlist.');
+      if (error.message && error.message.includes('DUPLICATE_VIDEO')) {
+        showToast('Video already exists in your playlist');
+      } else {
+        this.showError('Failed to add video to playlist.');
+      }
     }
     this.currentVideo = null;
     this.renderPendingVideo();
@@ -355,12 +558,111 @@ export class PlaylistManager {
       this.currentVideo = null;
       this.renderPendingVideo();
     } catch (error) {
-      this.showError('Failed to add video to playlist.');
+      if (error.message && error.message.includes('DUPLICATE_VIDEO')) {
+        showToast('Video already exists in your playlist');
+      } else {
+        this.showError('Failed to add video to playlist.');
+      }
+    }
+  }
+
+  async renameVideoTitle(videoEntryId, newTitle) {
+    console.log('renameVideoTitle called with:', { videoEntryId, newTitle, selectedPlaylistId: this.selectedPlaylistId });
+    if (!this.selectedPlaylistId || !videoEntryId || !newTitle) {
+      console.log('Missing required parameters:', { selectedPlaylistId: this.selectedPlaylistId, videoEntryId, newTitle });
+      return;
+    }
+    try {
+      console.log('Calling playlistService.renameVideoTitle');
+      await playlistService.renameVideoTitle(this.selectedPlaylistId, videoEntryId, newTitle);
+      console.log('Successfully renamed video title');
+      await this.loadPlaylists();
+      const playlist = this.playlists.find(p => p._id === this.selectedPlaylistId);
+      if (playlist) {
+        console.log('Re-rendering videos after rename');
+        this.renderVideos(playlist.videos);
+      }
+      showToast('Video title updated!');
+    } catch (error) {
+      console.error('Error in renameVideoTitle:', error);
+      this.showError('Failed to update video title.');
     }
   }
 }
 
 // Create and export a singleton instance
 const playlistManager = new PlaylistManager();
+// Make it globally accessible
+window.playlistManager = playlistManager;
 
-export default playlistManager; 
+export default playlistManager;
+
+// Add global click handler for hamburger icons
+document.addEventListener('click', (e) => {
+  if (e.target.closest('.view-playlists-SINGLE-btn, .view-playlists-MULTI-btn')) {
+    e.preventDefault();
+    if (window.playlistManager) {
+      window.playlistManager.show();
+    } else {
+      console.error('PlaylistManager not initialized');
+      showToast('Unable to open playlist manager. Please try again.');
+    }
+  }
+});
+
+function showToast(message) {
+  let toast = document.getElementById('playlist-toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'playlist-toast';
+    toast.style.position = 'fixed';
+    toast.style.bottom = '30px';
+    toast.style.right = '30px';
+    toast.style.background = '#333';
+    toast.style.color = '#fff';
+    toast.style.padding = '16px 28px';
+    toast.style.borderRadius = '8px';
+    toast.style.fontSize = '1.1em';
+    toast.style.zIndex = 99999;
+    toast.style.boxShadow = '0 2px 8px rgba(0,0,0,0.2)';
+    toast.style.transition = 'opacity 0.3s';
+    toast.style.opacity = '0';
+    document.body.appendChild(toast);
+  }
+  toast.textContent = message;
+  toast.style.opacity = '1';
+  setTimeout(() => { toast.style.opacity = '0'; }, 2500);
+}
+
+// Custom confirm modal
+function showCustomConfirm(message) {
+  return new Promise((resolve) => {
+    let modal = document.getElementById('custom-confirm-modal');
+    if (modal) modal.remove();
+    modal = document.createElement('div');
+    modal.id = 'custom-confirm-modal';
+    modal.style.position = 'fixed';
+    modal.style.top = '0';
+    modal.style.left = '0';
+    modal.style.width = '100vw';
+    modal.style.height = '100vh';
+    modal.style.background = 'rgba(0,0,0,0.4)';
+    modal.style.display = 'flex';
+    modal.style.alignItems = 'center';
+    modal.style.justifyContent = 'center';
+    modal.style.zIndex = '10000';
+    modal.innerHTML = `
+      <div style="background:#fff;padding:32px 28px;border-radius:12px;box-shadow:0 4px 32px rgba(0,0,0,0.18);min-width:320px;max-width:90vw;display:flex;flex-direction:column;align-items:center;">
+        <div style="font-size:1.15em;font-weight:500;margin-bottom:18px;text-align:center;">${message}</div>
+        <div style="display:flex;gap:18px;justify-content:center;">
+          <button id="custom-confirm-yes" style="background:#e92828;color:#fff;padding:8px 22px;border:none;border-radius:7px;font-size:1.08em;cursor:pointer;">Delete</button>
+          <button id="custom-confirm-no" style="background:#f5f5f5;color:#222;padding:8px 22px;border:none;border-radius:7px;font-size:1.08em;cursor:pointer;">Cancel</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    document.getElementById('custom-confirm-yes').onclick = () => { modal.remove(); resolve(true); };
+    document.getElementById('custom-confirm-no').onclick = () => { modal.remove(); resolve(false); };
+    modal.onclick = (e) => { if (e.target === modal) { modal.remove(); resolve(false); } };
+  });
+} 
