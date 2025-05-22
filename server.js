@@ -2,7 +2,7 @@
   SERVER.JS
   Version: 2
   AppName: Multi-Chat [v2]
-  Updated: 05/21/2025 @11:30PM
+  Updated: 05/22/2025 @10:45AM
   Created by Paul Welby
 */
 
@@ -624,14 +624,16 @@ app.get('/api/chat', (req, res) => {
 // Chat endpoint with hierarchical query handling
 app.post('/api/chat', async (req, res) => {
     try {
-        const { message, history, model, systemPrompt, timezone } = req.body;
+        const { message, history, model, systemPrompt, timezone, temperature, top_p } = req.body;
 
         console.log('Chat request received:', {
             messageLength: message?.length,
             historyLength: history?.length,
             model: model,
             hasSystemPrompt: !!systemPrompt,
-            timezone: timezone
+            timezone: timezone,
+            temperature: temperature,
+            top_p: top_p
         });
 
         // Validate required parameters
@@ -694,7 +696,8 @@ app.post('/api/chat', async (req, res) => {
                     ...(Array.isArray(history) ? history : []),
                     { role: "user", content: message }
                 ],
-                stream: true
+                stream: true,
+                temperature: typeof temperature === 'number' ? temperature : 1.0
             });
 
             await handleGPT4oMiniResponse(completion, res, message, startTime);

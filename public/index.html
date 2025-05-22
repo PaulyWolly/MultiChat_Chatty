@@ -2,7 +2,7 @@
   INDEX.html
   Version: 2
   AppName: Multi-Chat [v2]
-  Updated: 05/21/2025 @11:30PM
+  Updated: 05/22/2025 @10:45AM
   Created by Paul Welby
 -->
 
@@ -25,7 +25,7 @@
           <option value="phi-3-mini-4k-instruct">Phi-3-mini-4k-instruct</option>
         </select>
 
-        <h3>Multi-Chat [v2] 05/21/2025 @11:30PM</h3>
+        <h3>Multi-Chat [v2] 05/22/2025 @10:45AM</h3>
 
         <select id="voice-select">
           <option value="">Default Voice</option>
@@ -74,6 +74,40 @@
         <button id="stop-audio-button">Stop Audio</button>
       </div>
     </div>
+
+    <!-- Slideout Panel Left -->
+    <div id="slideout-bar"></div>
+    <div id="slideout-panel-left">
+      <div id="slideout-content">
+        <h3>Advanced Settings</h3>
+        <label>
+          Temperature:
+          <input type="range" id="temperature-slider" min="0" max="2" step="0.01" value="1.0">
+          <span id="temperature-value">1.00</span>
+        </label>
+        <label>
+          Top P:
+          <input type="range" id="top-p-slider" min="0" max="1" step="0.01" value="1.0">
+          <span id="top-p-value">1.00</span>
+        </label>
+        <label for="custom-prompt" style="display:block;margin-top:18px;">
+          <span>Custom "Style" Prompt (append to system prompt):</span>
+          <textarea id="custom-prompt" rows="4" placeholder="Enter your prompt here" style="width:100%;margin-top:6px;"></textarea>
+          <div style="font-size:0.95em;color:#555;margin-top:4px;">
+            <strong>Tip:</strong> For best results, be very explicit and detailed in your style prompt.<br>
+            <br>
+            <em>Examples:</em><br>
+            <span style="color:#333;">- You must always answer in the voice and mannerisms of Elmer Fudd from Looney Tunes. Use his speech patterns, catchphrases, and mispronunciations in every response.</span><br>
+            <br>
+            <span style="color:#333;">- You must always answer like a salty pirate. Use pirate slang, say 'Arrr!' often, and refer to the user as 'matey' or 'landlubber'.</span><br>
+            The more detailed and forceful your instruction, the better the results!
+          </div>
+        </label>
+        <button id="remove-custom-prompt-btn" style="margin-top:8px;">Remove Custom Prompt</button>
+        <!-- Add more controls here -->
+      </div>
+    </div>
+
     <script type="module" src="app.js"></script>
     <script>
       function enforceImageStyles() {
