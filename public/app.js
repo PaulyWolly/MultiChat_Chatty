@@ -68,7 +68,7 @@ const MIC_INITIALIZATION_DELAY = 4000;  // 4 seconds delay
 // Add the MESSAGES constant
 const MESSAGES = {
     STATUS: {
-        DEFAULT: `Click the <span class="status-keyword">Conversation Mode</span> checkbox, or press the <span class="status-keyword">Microphone</span> button <br><span class="status-default">...to enable conversations, or enter a message and press Send`,
+        DEFAULT: `Click the <span class="status-keyword">Conversation Mode</span> checkbox, or press the <span class="status-keyword">Microphone</span> button <br>...to enable conversations, or enter a message and press Send</span><br><br>`,
         LISTENING: "Listening...",
         SPEAKING: "AI is speaking...",
         PROCESSING: "Processing...",
@@ -210,7 +210,7 @@ REGARDING GENERAL QUERIES:
 6. When asked for a response, ALWAYS provide at least 2-4 paragraphs of text.
 
 CRITICAL INSTRUCTIONS FOR IMAGE REQUESTS:
-1. When users ask for images, respond with: "Here are some relevant images for [topic]"
+1. When users ask for images, respond with: "Here are some relevant images for [topic]" at the end of your response.
 2. DO NOT provide image URLs or links
 3. DO NOT mention being an AI or having any limitations
 4. DO NOT apologize for image-related capabilities
@@ -284,8 +284,13 @@ const state = {
     pendingNameChange: null,
     lastRequestTime: Date.now(),
     lastTTS: 0, // Add to global state
-    isImagePickerOpen: false  // Add this line to track file picker state
+    isImagePickerOpen: false,  // Add this line to track file picker state
+    selectedImageFileName: null, // Add to global state
 };
+
+// Add to global state
+
+window.state = state;
 
 // =====================================================
 // GLOBAL SCOPED SESSION ID
@@ -837,12 +842,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         #open-playlist-manager-btn:hover {
             background: #1976d2;
-        }
-        #user-input {
-            max-width: 400px !important;
-            width: 100%;
-            margin: 0 auto;
-            display: block;
         }
     `;
     document.head.appendChild(style);
@@ -1913,18 +1912,23 @@ async function getAIResponse(message, selectedModel, history, systemPrompt, sess
 
                     updateStatus('AI is responding...');
 
-                    // If Bing search result, render as HTML and skip image logic
+                    // Check for Bing search results FIRST and handle them exclusively
                     const isBingWebResult = /# Web Results for|# News Results for/i.test(responseText);
                     if (isBingWebResult) {
                         messageElement.querySelector('.message-content').innerHTML = `<div class="bing-search-results">${responseText}</div>`;
-                        continue; // Do NOT run image logic if Bing result
+                        continue; // Skip all other processing for Bing results
                     }
 
-                    // Only trigger image search if NOT a Bing search result
-                    if (responseText.toLowerCase().includes('here are some relevant images for')) {
-                        const imageMatch = responseText.match(/here are some relevant images for (.*?)[.!\n]/i);
-                        if (imageMatch && imageMatch[1]) {
-                            const searchQuery = imageMatch[1].trim();
+                    // Only process image search if NOT a Bing result
+                    if (!isBingWebResult && responseText.toLowerCase().includes('here are some relevant images for')) {
+                        // Always extract and remove the heading from the text
+                        const { heading, cleanedText } = extractImageHeading(responseText);
+                        // Always update the message content with the cleaned text (no phrase)
+                        updateMessageContent(messageElement, cleanedText);
+                        // Now use the heading for the image section only
+                        const imageMatch = cleanedText.match(/Here are some relevant images for (.*?)[.!\n]/i);
+                        const searchQuery = (imageMatch && imageMatch[1]) ? imageMatch[1].trim() : (heading ? heading.replace(/Here are some relevant images for |\.$/gi, '').trim() : null);
+                        if (searchQuery) {
                             console.log('Detected image request for:', searchQuery);
                             try {
                                 const imageResponse = await fetch(`/api/google-image-search?q=${encodeURIComponent(searchQuery)}`);
@@ -1935,7 +1939,7 @@ async function getAIResponse(message, selectedModel, history, systemPrompt, sess
                                 console.log('Received image data:', imageData);
                                 if (imageData.images && imageData.images.length > 0) {
                                     console.log('Inserting images into chat');
-                                    insertAndStyleImages(imageData.images, messageElement);
+                                    insertAndStyleImages(imageData.images, messageElement, heading);
                                 }
                             } catch (error) {
                                 console.error('Error fetching images:', error);
@@ -2850,6 +2854,7 @@ function handleImageUpload(event) {
         setTimeout(() => {
             const file = event.target.files[0];
             if (file) {
+                state.selectedImageFileName = file.name;
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     state.selectedImage = null;
@@ -2860,29 +2865,40 @@ function handleImageUpload(event) {
                     imageElement.classList.add('uploaded-image');
                     imageElement.style.cssText = 'max-width: 300px; border-radius: 8px; margin-top: 10px; cursor: pointer;';
                     imageElement.onclick = function() {
-                        const width = 700;
-                        const height = 700;
-                        const left = (window.screen.width - width) / 2;
-                        const top = (window.screen.height - height) / 2;
-                        const popup = window.open('', 'Image Preview',
-                            `width=${width},height=${height},top=${top},left=${left}`);
-                        popup.document.write(`
-                            <html>
-                                <head>
-                                    <title>Image Preview</title>
-                                    <style>
-                                        body { margin: 0; padding: 20px; background: #000; display: flex; flex-direction: column; align-items: center; }
-                                        .close-btn { position: absolute; top: 10px; right: 10px; color: white; background: rgba(0,0,0,0.5); border: none; padding: 5px 10px; cursor: pointer; font-size: 18px; border-radius: 5px; }
-                                        .close-btn:hover { background: rgba(0,0,0,0.8); }
-                                        img { max-width: 650px; max-height: 700px; object-fit: contain; margin-top: 20px; background-repeat: no-repeat; background-position: center; display: block; }
-                                    </style>
-                                </head>
-                                <body>
-                                    <button class="close-btn" onclick="window.close()">✕</button>
-                                    <img src="${this.src}" alt="Preview">
-                                </body>
-                            </html>
-                        `);
+                        // Extract object name from LLM response or fallback to file name
+                        const messageElement = this.closest('.message');
+                        const assistantResponse = messageElement.nextElementSibling;
+                        let objectName = null;
+                        if (assistantResponse && assistantResponse.classList.contains('assistant')) {
+                            const responseText = assistantResponse.querySelector('.message-content').textContent;
+                            let quoted = responseText.match(/[""']([^""']+)[""']/);
+                            if (quoted && quoted[1]) {
+                                objectName = quoted[1];
+                            } else {
+                                let match = responseText.match(/This is an image of (?:the |a |an )?([A-Za-z0-9\s\-']+?)[,\.]/i)
+                                    || responseText.match(/This is the ([A-Za-z0-9\s\-']+?)[,\.]/i)
+                                    || responseText.match(/This image shows (?:the |a |an )?([A-Za-z0-9\s\-']+?)[,\.]/i)
+                                    || responseText.match(/This is ([A-Za-z0-9\s\-']+?)[,\.]/i)
+                                    || responseText.match(/This image depicts (?:the |a |an )?([A-Za-z0-9\s\-']+?)[,\.]/i)
+                                    || responseText.match(/This depicts (?:the |a |an )?([A-Za-z0-9\s\-']+?)[,\.]/i)
+                                    || responseText.match(/This photo shows (?:the |a |an )?([A-Za-z0-9\s\-']+?)[,\.]/i)
+                                    || responseText.match(/This photo depicts (?:the |a |an )?([A-Za-z0-9\s\-']+?)[,\.]/i);
+                                if (match && match[1]) {
+                                    objectName = match[1].trim();
+                                }
+                            }
+                        }
+                        if (!objectName) {
+                            objectName = state.selectedImageFileName || 'Image Preview';
+                        }
+                        // Show modal
+                        const modal = document.getElementById('image-analysis-modal');
+                        const modalImg = document.getElementById('image-analysis-modal-img');
+                        const modalTitle = document.getElementById('image-analysis-modal-title');
+                        modalImg.src = this.src;
+                        modalImg.alt = objectName;
+                        modalTitle.textContent = 'Image: "' + objectName + '"';
+                        modal.classList.add('show');
                     };
                     messageElement.querySelector('.message-content').appendChild(imageElement);
                     elements.userInput.focus();
@@ -2921,19 +2937,21 @@ async function searchAndDisplayImages(query) {
 // Helper to extract and remove the image heading from the text
 function extractImageHeading(text) {
     // Match: Here are some relevant images for <subject>
-    const match = text.match(/Here are some relevant images for ([^.\n]+)[.!\n]?/i);
+    const match = text.match(/Here are some relevant images for ([^\.\n]+)[.!\n]?/i);
+    let heading = null;
+    let cleanedText = text;
     if (match) {
-        // Remove the heading from the text
-        const cleanedText = text.replace(match[0], '').replace(/^\s+/, '');
-        return { heading: `Here are some relevant images for ${match[1].trim()}.`, cleanedText };
+        heading = `Here are some relevant images for ${match[1].trim()}.`;
+        // Remove ALL occurrences of the heading phrase (case-insensitive, with or without punctuation)
+        const headingRegex = new RegExp(`Here are some relevant images for ${match[1].trim()}[.!\n]?`, 'gi');
+        cleanedText = text.replace(headingRegex, '').replace(/^\s+|\s+$/g, '');
     }
-    return { heading: null, cleanedText: text };
+    return { heading, cleanedText };
 }
 
 function insertAndStyleImages(images, messageElement, headingText) {
     const imageSection = `
         <div class="image-section" style="margin-top: 15px; border-top: 1px solid #ccc; padding-top: 10px;">
-            ${headingText ? `<h3 style="font-size: 1.2em; margin-bottom: 10px; color: #333; font-weight: bold;">${headingText}</h3>` : ''}
             <div class="image-container" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; max-width: 100%;">
                 ${images.map(image => `
                     <a href="${image.link}" target="_blank" rel="noopener noreferrer" class="image-link"
@@ -5065,3 +5083,16 @@ if (examplePromptsLink && examplePromptsHelp) {
 // ... existing code ...
 // Remove old toggle-help-btn and slideout-help logic
 // ... existing code ...
+
+// ... existing code ...
+// Modal close logic
+window.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('image-analysis-modal');
+    const closeBtn = document.getElementById('image-analysis-modal-close');
+    if (closeBtn) {
+        closeBtn.onclick = () => { modal.classList.remove('show'); };
+    }
+    modal.onclick = (e) => { if (e.target === modal) modal.classList.remove('show'); };
+});
+// ... existing code ...
+

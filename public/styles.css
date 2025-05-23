@@ -1,8 +1,8 @@
 /*
   STYLES.CSS
   Version: 2
-  AppName: Multi-Chat [v2]
-  Updated: 05/22/2025 @9:00PM
+  AppName: MutliChat_v2
+  Updated: 05/23/2025 @11:35AM
   Created by Paul Welby
 */
 
@@ -14,6 +14,7 @@ body {
     height: 100vh;
     margin: 0;
     background-color: #f0f0f0;
+    color: #000 !important;
 }
 
 #chat-container {
@@ -112,22 +113,22 @@ status {
     align-items: center;
     background-color: #f5f5f5;
     /* Light grey background */
-    padding: 10px;
+    padding: 5px 5px 0px 20px;
     border-radius: 8px;
     width: 35vw;
     /* Fixed width */
     margin-left: 200px;
 }
 
-#user-input {
+/* #user-input {
     flex: 1;
     padding: 8px;
     border: 1px solid #ccc;
     border-radius: 4px;
     margin: 0 10px;
     height: 38px;
-    /* Match button height */
-}
+    margin-bottom: 5px !important;
+} */
 
 #send-button,
 #mic-button {
@@ -415,6 +416,7 @@ button {
     display: none;
     width: 100px;
     height: 40px;
+    font-size: .95em;
     margin-right: 0px;
     margin-top: 42px;
 }
@@ -606,6 +608,15 @@ button {
     font-size: 2.0rem;
     padding: 5px;
     color: #666;
+}
+
+.image-upload-icon-button {
+    background: transparent !important;
+    border: none;
+    cursor: pointer;
+    font-size: 2.0rem;
+    margin-right: 18px !important;
+    font-size: 38px !important;
 }
 
 .icon-button:hover {
@@ -828,17 +839,23 @@ button {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    max-width: 90%;
-    max-height: 90vh;
+    width: 90vw;
+    height: 90vh;
+    background: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     z-index: 1001;
 }
 
-.analysis-popup-image {
-    max-width: 100%;
-    max-height: 90vh;
+.analysis-popup-image, .popup-image {
+    width: 100%;
+    height: 100%;
     object-fit: contain;
     border-radius: 8px;
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    background: #000;
+    /* Remove any max-width/max-height */
 }
 
 .analysis-preview-image:hover {
@@ -2441,22 +2458,31 @@ button {
 }
 
 .playlist-controls-row {
-    display: flex;
-    flex-direction: row;
-    align-items: flex-start;
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
     gap: 16px;
-    margin-bottom: 8px;
+    align-items: center;
+    width: 100%;
+}
+.playlist-search-wrapper,
+.playlist-create-controls {
+    width: 100%;
+}
+.create-playlist-btn {
+    width: 100%;
+    min-width: 120px;
+    max-width: 200px;
 }
 
 .playlist-search-input {
     flex: 1 1 50%;
     min-width: 0;
-    max-width: 50%;
+    max-width: 100%;
     padding: 7px 12px;
     border: 1.5px solid #b0b0b0;
     border-radius: 7px;
     font-size: 1.08em;
-    margin-bottom: 0;
+    margin-bottom: 20px;
     box-sizing: border-box;
 }
 
@@ -2465,7 +2491,9 @@ button {
     flex: 1 1 50%;
     gap: 8px;
     align-items: center;
-    max-width: 50%;
+    max-width: 100%;
+    margin-left: 13px;
+    margin-bottom: 20px;
 }
 
 .new-playlist-input {
@@ -2768,10 +2796,11 @@ button {
     top: 0;
     left: 0;
     /* width: 488px; */
-    height: 100%;
-    background: #f5f5f5;
+    height: 89.5vh;
+    background: #e8f2fc;
     box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
     border-radius: 0 8px 8px 0;
+    border: 1px solid blue;
     padding: 24px 18px 18px 18px;
     transform: translateX(-500px);
     transition: transform 0.3s;
@@ -2829,7 +2858,7 @@ button {
     opacity: 0.7;
     font-style: italic;
     text-align: center;
-    width: 100%;
+    width: 60%;
     padding: 18px 0;
 }
 
@@ -2914,7 +2943,148 @@ button {
     color: #1976d2;
     cursor: pointer;
     font-size: 1em;
-    margin-top: 8px;
+    margin-top: 15px;
     user-select: none;
     text-decoration: none;
+}
+.user-input-textarea {
+    width: 85vw !important;
+    height: 6vh;
+    /* background: #000; */
+    display: flex;
+    align-items: center;
+    margin-right: 18px;
+    margin: 2px 20px 5px 0px;
+    justify-content: center;
+}
+
+.image-analysis-dialog {
+    width: 100%;
+    height: 93vh;
+    object-fit: contain;
+    display: block;
+    background: #000;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+.image-title-overlay {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    color: #fff;
+    background: rgba(0,0,0,0.7);
+    padding: 10px 18px 8px 18px;
+    font-size: 1.15em;
+    font-weight: 600;
+    border-bottom-right-radius: 12px;
+    z-index: 1002;
+    pointer-events: none;
+}
+
+/* Image Analysis Modal */
+.image-analysis-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: hsl(0deg 0% 13% / 75%);
+    z-index: 9999;
+}
+
+.image-analysis-modal.show {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.image-analysis-modal-content {
+    background: #222;
+    padding: 24px;
+    border-radius: 12px;
+    max-width: 90vw;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.image-analysis-modal-close {
+    align-self: flex-end;
+    margin-bottom: 0px;
+    font-size: 2.0em;
+    background: none;
+    border: none;
+    color: #ef0a0a;
+    cursor: pointer;
+    position: relative;
+    top: -20px;
+    right: -20px;
+}
+
+.image-analysis-modal-title {
+    color: #fff;
+    margin-bottom: 0px;
+    text-align: center;
+    position: relative;
+    top: -30px;
+    font-size: 1.4em;
+}
+
+.image-analysis-modal-img {
+    max-width: 80vw;
+    max-height: 70vh;
+    border-radius: 8px;
+    background: #000;
+}
+
+.custom-prompt-textarea {
+    width: 430px !important;
+    margin-top: 6px !important;
+    height: 99px;
+}
+
+.custom-prompt-tip {
+    font-size: 0.85em;
+    color:#555;
+    margin-top: 4px;
+    font-style: italic;
+}
+
+.example-prompts-link-text {
+    margin-top: 20px;
+}
+
+/* Playlist search input with clear button */
+.playlist-search-wrapper {
+  position: relative;
+  width: 100%;
+}
+.playlist-search-input {
+  width: 100%;
+  padding-right: 2.5em;
+  box-sizing: border-box;
+  height: 42px;
+}
+.playlist-search-clear {
+  position: absolute;
+  top: 37%;
+  right: 5px;
+  top: 35% !important;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: hsl(359.24deg 100% 49.61%) !important;
+  font-size: 1.7em !important;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  display: none;
+  z-index: 2;
+}
+.playlist-search-clear:focus {
+  outline: none;
+  color: #333;
 }
