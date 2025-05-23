@@ -120,8 +120,8 @@ const SPEECH_CONFIG = {
 };
 
 // Add at the top with other constants
-const DUMMY_PREFIX = "....................-------------------------...................................";
-const TTS_IDLE_THRESHOLD = 60000; // 60 seconds
+// const DUMMY_PREFIX = "....................-------------------------...................................";
+// const TTS_IDLE_THRESHOLD = 60000; // 60 seconds
 
 const slideoutPanel = document.getElementById('slideout-panel-left');
 const slideoutBar = document.getElementById('slideout-bar');
@@ -215,6 +215,10 @@ CRITICAL INSTRUCTIONS FOR IMAGE REQUESTS:
 3. DO NOT mention being an AI or having any limitations
 4. DO NOT apologize for image-related capabilities
 5. Keep responses about images brief and positive
+
+SPECIAL ABBREVIATION INSTRUCTIONS:
+1. Whenever you would output "U.S." or "U.S.A." in a response, instead output "United States" or "United States of America" respectively.
+2. Do not use the abbreviations "U.S." or "U.S.A." in your answers; always use the full country name.
 `;
 
 // Append custom prompt if present
@@ -280,6 +284,7 @@ const state = {
     pendingNameChange: null,
     lastRequestTime: Date.now(),
     lastTTS: 0, // Add to global state
+    isImagePickerOpen: false  // Add this line to track file picker state
 };
 
 // =====================================================
@@ -862,12 +867,12 @@ async function initializeApp() {
 
         // Initialize other components
         await loadPersonalInfo();
-        setupEventListeners();
+        setupEventListeners(); // Only call this ONCE
         await populateVoiceList();
         await checkMicrophonePermission();
 
-        // Set up event listeners
-        setupEventListeners();
+        // Remove this duplicate:
+        // setupEventListeners();
 
         // Load personal info from MongoDB
         await loadPersonalInfo();
@@ -882,6 +887,9 @@ async function initializeApp() {
             }
             updateStatus(MESSAGES.STATUS.DEFAULT);
         }, MIC_INITIALIZATION_DELAY);
+
+        // Add TTS warm-up function
+        await warmUpTTS();
 
         console.log('App initialization completed successfully');
 
@@ -922,8 +930,21 @@ function setupEventListeners() {
             sendMessage();
         }
     });
-    elements.imageUploadBtn.addEventListener('click', () => elements.imageInput.click());
-    elements.imageInput.addEventListener('change', handleImageUpload);
+    elements.imageUploadBtn.addEventListener('click', () => {
+        elements.processingIndicator.style.display = 'block'; // Show immediately
+        if (!state.isImagePickerOpen) {
+            state.isImagePickerOpen = true;
+            elements.imageInput.click();
+        }
+    });
+    elements.imageInput.addEventListener('change', (event) => {
+        state.isImagePickerOpen = false;
+        handleImageUpload(event);
+    });
+    elements.imageInput.addEventListener('click', (event) => {
+        // This ensures the flag resets if the user cancels the dialog
+        event.target.value = '';
+    });
     elements.modelSelect.addEventListener('change', () => state.selectedModel = this.value);
     elements.conversationModeToggle.addEventListener('change', handleConversationModeToggle);
     elements.stopAudioButton.addEventListener('click', stopAudioPlayback);
@@ -2306,7 +2327,7 @@ async function populateVoiceList() {
 // Update the playAudio function
 async function playAudio(text) {
     if (!text) return;
-
+    text = preprocessForTTS(text);
     try {
         state.isAISpeaking = true;
         state.isPlaying = true;
@@ -2526,34 +2547,18 @@ function stopAudioPlayback() {
 // Queue audio chunk function
 async function queueAudioChunk(text) {
     if (!text) return;
-    
-    // Don't reset the queue, just update state flags
+    text = preprocessForTTS(text);
     state.stopRequested = false;
     state.isAISpeaking = true;
     updateStatus(MESSAGES.STATUS.SPEAKING);
-
-    // First split into major sections (for recipes, lists, etc.)
     const sections = text.split(/(?=Ingredients:|Instructions:)/);
     let chunks = [];
-
     sections.forEach(section => {
-        // Use splitTextIntoChunks with forTTS=true to handle honorifics for TTS
         const sectionChunks = splitTextIntoChunks(section, 200, true);
         chunks = chunks.concat(sectionChunks);
     });
-
-    // Prepend DUMMY_PREFIX if first TTS or after idle
-    const now = Date.now();
-    if (!state.lastTTS || now - state.lastTTS > TTS_IDLE_THRESHOLD) {
-        if (chunks.length > 0) {
-            chunks[0] = DUMMY_PREFIX + chunks[0];
-        }
-    }
-
-    // Add new chunks to existing queue instead of replacing
     state.audioQueue = state.audioQueue.concat(chunks);
     console.log('Queued chunks:', state.audioQueue);
-    
     if (!state.isPlaying && !state.stopRequested) {
         await playNextInQueue();
     }
@@ -2836,89 +2841,57 @@ async function handleImageAnalysis(imageData, prompt = '') {
 
 // Handle image upload function
 function handleImageUpload(event) {
-    const file = event.target.files[0];
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            // Clear any existing selected image state
-            state.selectedImage = null;
-
-            // Set the new image
-            state.selectedImage = e.target.result;
-
-            // Create a new user message with the image
-            const messageElement = addMessageToChat('user', '');
-            const imageElement = document.createElement('img');
-            imageElement.src = state.selectedImage;
-            imageElement.classList.add('uploaded-image');
-            imageElement.style.cssText = 'max-width: 300px; border-radius: 8px; margin-top: 10px; cursor: pointer;';
-
-            // Add click handler to open image in popup window with proper styling
-            imageElement.onclick = function() {
-                // Calculate center position
-                const width = 700;
-                const height = 700;
-                const left = (window.screen.width - width) / 2;
-                const top = (window.screen.height - height) / 2;
-
-                // Add position parameters to window.open
-                const popup = window.open('', 'Image Preview',
-                    `width=${width},height=${height},top=${top},left=${left}`);
-                popup.document.write(`
-                    <html>
-                        <head>
-                            <title>Image Preview</title>
-                            <style>
-                                body {
-                                    margin: 0;
-                                    padding: 20px;
-                                    background: #000;
-                                    display: flex;
-                                    flex-direction: column;
-                                    align-items: center;
-                                }
-                                .close-btn {
-                                    position: absolute;
-                                    top: 10px;
-                                    right: 10px;
-                                    color: white;
-                                    background: rgba(0,0,0,0.5);
-                                    border: none;
-                                    padding: 5px 10px;
-                                    cursor: pointer;
-                                    font-size: 18px;
-                                    border-radius: 5px;
-                                }
-                                .close-btn:hover {
-                                    background: rgba(0,0,0,0.8);
-                                }
-                                img {
-                                    max-width: 650px;
-                                    max-height: 700px;
-                                    object-fit: contain;
-                                    margin-top: 20px;
-                                    background-repeat: no-repeat;
-                                    background-position: center;
-                                    display: block;
-                                }
-                            </style>
-                        </head>
-                        <body>
-                            <button class="close-btn" onclick="window.close()">✕</button>
-                            <img src="${this.src}" alt="Preview">
-                        </body>
-                    </html>
-                `);
-            };
-
-            messageElement.querySelector('.message-content').appendChild(imageElement);
-
-            // Focus input for description
-            elements.userInput.focus();
-            elements.userInput.placeholder = "Add a description or ask about the image...";
-        };
-        reader.readAsDataURL(file);
-    }
+    // Do NOT show processing indicator here; it's shown on button click
+    requestAnimationFrame(() => {
+        setTimeout(() => {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    state.selectedImage = null;
+                    state.selectedImage = e.target.result;
+                    const messageElement = addMessageToChat('user', '');
+                    const imageElement = document.createElement('img');
+                    imageElement.src = state.selectedImage;
+                    imageElement.classList.add('uploaded-image');
+                    imageElement.style.cssText = 'max-width: 300px; border-radius: 8px; margin-top: 10px; cursor: pointer;';
+                    imageElement.onclick = function() {
+                        const width = 700;
+                        const height = 700;
+                        const left = (window.screen.width - width) / 2;
+                        const top = (window.screen.height - height) / 2;
+                        const popup = window.open('', 'Image Preview',
+                            `width=${width},height=${height},top=${top},left=${left}`);
+                        popup.document.write(`
+                            <html>
+                                <head>
+                                    <title>Image Preview</title>
+                                    <style>
+                                        body { margin: 0; padding: 20px; background: #000; display: flex; flex-direction: column; align-items: center; }
+                                        .close-btn { position: absolute; top: 10px; right: 10px; color: white; background: rgba(0,0,0,0.5); border: none; padding: 5px 10px; cursor: pointer; font-size: 18px; border-radius: 5px; }
+                                        .close-btn:hover { background: rgba(0,0,0,0.8); }
+                                        img { max-width: 650px; max-height: 700px; object-fit: contain; margin-top: 20px; background-repeat: no-repeat; background-position: center; display: block; }
+                                    </style>
+                                </head>
+                                <body>
+                                    <button class="close-btn" onclick="window.close()">✕</button>
+                                    <img src="${this.src}" alt="Preview">
+                                </body>
+                            </html>
+                        `);
+                    };
+                    messageElement.querySelector('.message-content').appendChild(imageElement);
+                    elements.userInput.focus();
+                    elements.userInput.placeholder = "Add a description or ask about the image...";
+                    elements.processingIndicator.style.display = 'none';
+                    elements.imageInput.value = '';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                elements.processingIndicator.style.display = 'none';
+            }
+        }, 0);
+    });
 }
 
 // Search and display images function
@@ -5017,4 +4990,40 @@ document.addEventListener('click', function(e) {
 // Add showToast function to app.js:
 function showToast(message) {
   alert(message);
+}
+
+// Add TTS warm-up function
+async function warmUpTTS() {
+    try {
+        await fetch(AUDIO_CONFIG.apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                text: '\u200B', // zero-width space (silent)
+                voice: AUDIO_CONFIG.defaultVoice,
+                rate: AUDIO_CONFIG.rate,
+                pitch: AUDIO_CONFIG.pitch,
+                volume: AUDIO_CONFIG.volume
+            })
+        });
+        console.log('TTS engine warmed up.');
+    } catch (error) {
+        console.warn('TTS warm-up failed:', error);
+    }
+}
+
+// Add TTS pre-processing for U.S. and U.S.A.
+function preprocessForTTS(text) {
+    let processed = text
+        // Replace specific phrases first
+        .replace(/U\.S\. Citizen/gi, 'United States citizen')
+        .replace(/U\.S\. government/gi, 'United States government')
+        // Replace abbreviations (with or without periods)
+        .replace(/U\.S\.A\./gi, 'United States of America')
+        .replace(/U\.S\.A/gi, 'United States of America')
+        .replace(/U\.S\./gi, 'United States')
+        .replace(/U\.S/gi, 'United States')
+        .replace(/\bUS\b/g, 'United States');
+    console.log('TTS text:', processed);
+    return processed;
 }
