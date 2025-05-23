@@ -1913,22 +1913,26 @@ async function getAIResponse(message, selectedModel, history, systemPrompt, sess
 
                     updateStatus('AI is responding...');
 
-                    // Check for image trigger phrase
+                    // If Bing search result, render as HTML and skip image logic
+                    const isBingWebResult = /# Web Results for|# News Results for/i.test(responseText);
+                    if (isBingWebResult) {
+                        messageElement.querySelector('.message-content').innerHTML = `<div class="bing-search-results">${responseText}</div>`;
+                        continue; // Do NOT run image logic if Bing result
+                    }
+
+                    // Only trigger image search if NOT a Bing search result
                     if (responseText.toLowerCase().includes('here are some relevant images for')) {
                         const imageMatch = responseText.match(/here are some relevant images for (.*?)[.!\n]/i);
                         if (imageMatch && imageMatch[1]) {
                             const searchQuery = imageMatch[1].trim();
                             console.log('Detected image request for:', searchQuery);
-
                             try {
                                 const imageResponse = await fetch(`/api/google-image-search?q=${encodeURIComponent(searchQuery)}`);
                                 if (!imageResponse.ok) {
                                     throw new Error(`HTTP error! status: ${imageResponse.status}`);
                                 }
-
                                 const imageData = await imageResponse.json();
                                 console.log('Received image data:', imageData);
-
                                 if (imageData.images && imageData.images.length > 0) {
                                     console.log('Inserting images into chat');
                                     insertAndStyleImages(imageData.images, messageElement);
@@ -4229,7 +4233,7 @@ const handleYoutube = {
                 <div class="youtube-single-bubble">
                     <p>Found result for: \"dummy\" (local dev video)</p>
                     <div class="video-item">
-                        <div class="video-title">${dummyVideo.title}</div>
+                        
                         <div class="button-thumb-group top-buttons">
                             <a href="#" class="youtube-action-btn youtube-popup-btn" data-local-video="${dummyVideo.localUrl}" role="button" tabindex="0">Play in Popup</a>
                             <button class="youtube-action-btn add-to-playlist-btn" data-video='${JSON.stringify(dummyVideo)}' title="Add to Playlist">+</button>
@@ -4240,9 +4244,12 @@ const handleYoutube = {
                         <span class="youtube-thumb-link youtube-popup-thumb" data-local-video="${dummyVideo.localUrl}">
                             <img src="${dummyVideo.thumbnail}" alt="${dummyVideo.title}" title="Local Video" style="max-width:250px; border-radius:6px; box-shadow:0 1px 4px rgba(0,0,0,0.12); display:block; margin:0 auto;" />
                         </span>
+
                         <div class="button-thumb-group bottom-buttons">
                             <a href="#" class="youtube-action-btn youtube-direct-link" style="opacity:0.5;pointer-events:none;">Watch on YouTube (N/A)</a>
                         </div>
+                        
+                        <div class="video-title">${dummyVideo.title}</div>
                     </div>
                 </div>
             `;
@@ -5027,3 +5034,34 @@ function preprocessForTTS(text) {
     console.log('TTS text:', processed);
     return processed;
 }
+
+// ... existing code ...
+// Slideout help/examples toggle
+const toggleHelpBtn = document.getElementById('toggle-help-btn');
+const slideoutHelp = document.getElementById('slideout-help');
+if (toggleHelpBtn && slideoutHelp) {
+  toggleHelpBtn.addEventListener('click', () => {
+    const isOpen = slideoutHelp.style.display === 'block';
+    slideoutHelp.style.display = isOpen ? 'none' : 'block';
+    toggleHelpBtn.textContent = isOpen ? '+' : '–';
+  });
+}
+// ... existing code ...
+
+// ... existing code ...
+// Example Prompts toggle for prompt field
+const examplePromptsLink = document.getElementById('example-prompts-link');
+const examplePromptsHelp = document.getElementById('example-prompts-help');
+if (examplePromptsLink && examplePromptsHelp) {
+  examplePromptsLink.addEventListener('click', () => {
+    const isOpen = examplePromptsHelp.style.display === 'block';
+    examplePromptsHelp.style.display = isOpen ? 'none' : 'block';
+    const caret = examplePromptsLink.querySelector('.caret');
+    if (caret) {
+      caret.classList.toggle('open');
+    }
+  });
+}
+// ... existing code ...
+// Remove old toggle-help-btn and slideout-help logic
+// ... existing code ...
