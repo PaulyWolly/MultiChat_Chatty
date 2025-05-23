@@ -1,8 +1,8 @@
 /*
   SERVER.JS
   Version: 2
-  AppName: Multi-Chat [v2]
-  Updated: 05/22/2025 @9:00PM
+  AppName: MutliChat_v2
+  Updated: 05/23/2025 @11:35AM
   Created by Paul Welby
 */
 
