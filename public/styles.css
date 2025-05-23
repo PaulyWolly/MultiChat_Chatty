@@ -2,7 +2,7 @@
   STYLES.CSS
   Version: 2
   AppName: Multi-Chat [v2]
-  Updated: 05/22/2025 @10:45AM
+  Updated: 05/22/2025 @9:00PM
   Created by Paul Welby
 */
 
@@ -2245,16 +2245,27 @@ button {
 .action-btn {
     background: none;
     border: none;
-    font-size: 1.3em;
+    font-size: 1.45em;
     margin: 0 4px;
     cursor: pointer;
-    color: #2196f3;
     vertical-align: middle;
     transition: color 0.2s;
 }
 
+.action-btn.view-video-btn {
+    color: blue;
+}
+
+.action-btn.edit-video-title-btn {
+    color: #00a000;
+}
+
+.action-btn.remove-video-btn {
+    color: #e92828;
+}
+
 .action-btn:hover {
-    color: #1565c0;
+    opacity: 0.8;
 }
 
 /* Pending video row styling */
@@ -2318,7 +2329,7 @@ button {
 /* 3. Larger text fields and buttons */
 .playlist-manager-content input,
 .playlist-manager-content button {
-    font-size: 1.15em;
+    font-size: 1.35em;
     padding: 8px;
 }
 
@@ -2746,7 +2757,7 @@ button {
     position: fixed;
     top: 2.5%;
     left: 0;
-    height: 95vh;
+    height: 90vh;
     width: 500px;
     z-index: 9999;
     pointer-events: none;
@@ -2846,3 +2857,64 @@ button {
     background-color: #004085;
 } */
 
+/* Video EDIT/Action button ICONS */
+.video-edit-icon {
+    color: #037c13;
+}
+
+.video-edit-icon:hover {
+    color: #37d65c;
+}
+
+.remove-video-icon {
+    color: #ec0707;
+}
+
+.remove-video-icon:hover {
+    color: #dd5050;
+}
+
+.bing-search-results {
+    background: #f5f7fa;
+    border: 1.5px solid #1976d2;
+    border-radius: 10px;
+    padding: 18px 22px;
+    margin: 18px 0;
+    font-size: 1.08em;
+    color: #222;
+    box-shadow: 0 2px 8px rgba(25, 118, 210, 0.07);
+    line-height: 1.6;
+}
+.bing-search-results h1, .bing-search-results h2, .bing-search-results h3 {
+    color: #1976d2;
+    margin-top: 0;
+}
+.bing-search-results a {
+    color: #1976d2;
+    text-decoration: underline;
+    word-break: break-all;
+}
+.bing-search-results a:hover {
+    color: #0d47a1;
+    text-decoration: underline;
+}
+
+.caret {
+    display: inline-block;
+    transition: transform 0.2s ease;
+    font-size: 0.8em;
+    margin-left: 4px;
+}
+
+.caret.open {
+    transform: rotate(180deg);
+}
+
+.example-prompts-link {
+    color: #1976d2;
+    cursor: pointer;
+    font-size: 1em;
+    margin-top: 8px;
+    user-select: none;
+    text-decoration: none;
+}
