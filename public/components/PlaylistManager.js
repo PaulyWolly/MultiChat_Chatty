@@ -32,7 +32,10 @@ export class PlaylistManager {
         </div>
         <div class="playlist-manager-body">
           <div class="playlist-controls-row">
-            <input type="text" class="playlist-search-input" placeholder="Search playlists...">
+            <div class="playlist-search-wrapper">
+              <input type="text" class="playlist-search-input" placeholder="Search/filter playlists...">
+              <button class="playlist-search-clear" style="display:none;" tabindex="-1" aria-label="Clear search">&times;</button>
+            </div>
             <div class="playlist-create-controls">
               <input type="text" class="new-playlist-input" placeholder="New playlist name">
               <button class="create-playlist-btn">Create Playlist</button>
@@ -64,9 +67,18 @@ export class PlaylistManager {
     });
     // this.dialog.querySelector('.add-to-playlist-header-btn').addEventListener('click', () => this.addCurrentVideoToPlaylist());
     
-    // Add search input event
-    this.dialog.querySelector('.playlist-search-input').addEventListener('input', (e) => {
+    // Add search input event and clear button logic
+    const searchInput = this.dialog.querySelector('.playlist-search-input');
+    const clearBtn = this.dialog.querySelector('.playlist-search-clear');
+    searchInput.addEventListener('input', (e) => {
       this.renderPlaylists(e.target.value);
+      clearBtn.style.display = e.target.value ? 'block' : 'none';
+    });
+    clearBtn.addEventListener('click', () => {
+      searchInput.value = '';
+      clearBtn.style.display = 'none';
+      this.renderPlaylists('');
+      searchInput.focus();
     });
     
     console.log('PlaylistManager initialization complete');
@@ -488,7 +500,7 @@ export class PlaylistManager {
     if (!pendingContainer) return;
     pendingContainer.innerHTML = '';
     if (!this.currentVideo) {
-      pendingContainer.innerHTML = `<div class="pending-placeholder">Pending videos will show here</div>`;
+      pendingContainer.innerHTML = `<div class="pending-placeholder">Pending videos you can 'Drag & Drop' onto a playlist on the LEFT will show here</div>`;
       return;
     }
     // Truncate title to 30 characters
