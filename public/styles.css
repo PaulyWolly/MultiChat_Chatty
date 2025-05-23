@@ -125,7 +125,7 @@ status {
     border: 1px solid #ccc;
     border-radius: 4px;
     margin: 0 10px;
-    height: 32px;
+    height: 38px;
     /* Match button height */
 }
 
@@ -414,8 +414,9 @@ button {
     cursor: pointer;
     display: none;
     width: 100px;
-    margin-right: 2px;
-    margin-bottom: 4px;
+    height: 40px;
+    margin-right: 0px;
+    margin-top: 42px;
 }
 
 #stop-audio-button:hover {
@@ -1020,7 +1021,7 @@ button {
     cursor: pointer;
     color: #666;
     transition: color 0.2s;
-    margin-left: 5px;
+    margin-right: 8px;
 }
 
 #input-container button:hover,
@@ -2198,11 +2199,6 @@ button {
     display: table-header-group;
 }
 
-.playlist-videos-table tbody {
-    /* max-height: 35vh; */
-    /* overflow-y: auto; */
-    /* width: 100%; */
-}
 
 .playlist-videos-table tr {
     background: #f9fbfd;
@@ -2538,7 +2534,7 @@ button {
 
 .status-msg,
 .status-default {
-    font-size: 1.0em;
+    font-size: .9em;
     font-weight: bold;
     color: #140cf5 !important;
     margin-bottom: 0px;
@@ -2661,14 +2657,6 @@ button {
     /* margin-top: 20px !important; */
 }
 
-.playlist-videos-table thead {
-    /* No display: block! */
-}
-
-.playlist-videos-table tbody {
-    /* No display: block! */
-    /* No max-height or overflow here! */
-}
 
 .playlist-videos-table th {
     position: sticky;
@@ -2833,3 +2821,28 @@ button {
     width: 100%;
     padding: 18px 0;
 }
+
+.mic-send-button {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+.mic-send-button:hover {
+    background-color: #007bff;
+    color: #fff;
+    cursor: pointer;
+}
+
+/* .mic-send-button:hover {
+    background-color: #0056b3 !important;
+    margin-top: 7px !important;
+    color: #fff !important;
+} */
+
+/* .mic-send-button:active {
+    background-color: #004085;
+} */
+
