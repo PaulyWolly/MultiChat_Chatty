@@ -2,3 +2,7 @@
 .env
 .env_full
 \node_modules
+
+# Reference repositories
+ref_repo-DEBUG_778400e_MultiChat/
+ref_repo-MultiChat_v2/
