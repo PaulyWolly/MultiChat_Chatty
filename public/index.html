@@ -1,8 +1,14 @@
 <!--
   INDEX.html
+<<<<<<< HEAD
   Version: 22.0.2
   AppName: Multi-Chat [v22.0.2]
   Updated: May 15, 2025 @10:00AM
+=======
+  Version: 2
+  AppName: MutliChat_v2
+  Updated: 05/23/2025 @11:35AM
+>>>>>>> new-history
   Created by Paul Welby
 -->
 
@@ -11,7 +17,11 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<<<<<<< HEAD
     <title>Multi-Chat (modularized) [v22.0.2] 5-15-25 @10:00AM</title>
+=======
+    <title>MutliChat_v2</title>
+>>>>>>> new-history
     <link rel="stylesheet" href="styles.css" />
     <link rel="icon" type="image/png" href="chat-1.png" />
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -25,7 +35,11 @@
           <option value="phi-3-mini-4k-instruct">Phi-3-mini-4k-instruct</option>
         </select>
 
+<<<<<<< HEAD
         <h3>Multi-Chat (modularized) [v22.0.2] 5-15-25 @10:00AM</h3>
+=======
+        <h3>MutliChat_v2 05/23/2025 @11:35AM</h3>
+>>>>>>> new-history
 
         <select id="voice-select">
           <option value="">Default Voice</option>
@@ -37,7 +51,10 @@
             type="checkbox"
             class="conversation-mode-checkbox"
             id="conversation-mode"
+<<<<<<< HEAD
             disabled
+=======
+>>>>>>> new-history
           />
         </div>
       </div>
@@ -45,6 +62,7 @@
       <div id="chat-messages"></div>
       <div id="image-results"></div>
 
+<<<<<<< HEAD
       <div id="processing-indicator" class="main-indicator">Processing...</div>
       <div id="bottom-bar">
         <div id="status-container">
@@ -53,6 +71,22 @@
         </div>
         <div id="input-container">
           <button class="icon-button" id="image-upload-btn">🖼️</button>
+=======
+      <div id="processing-indicator">Processing...</div>
+      <div id="bottom-bar">
+        <div id="status-container">
+          <div class="status-msg" id="status"></div>
+          <div id="conversation-status"></div>
+        </div>
+        <div class="playlist-manager-btn">
+          <button id="open-playlist-manager-btn">My Playlists</button>
+        </div>
+        <div id="input-container">
+          <!-- Processing indicator -->
+          <div id="processing-indicator">Processing...</div>
+
+          <button class="image-upload-icon-button" id="image-upload-btn" title="Click to Upload an IMAGE for analysis">🖼️</button>
+>>>>>>> new-history
           <input
             type="file"
             id="image-input"
@@ -60,6 +94,7 @@
             style="display: none"
           />
           <textarea
+<<<<<<< HEAD
             id="user-input"
             placeholder="Type your message..."
           ></textarea>
@@ -73,6 +108,68 @@
     <!-- Load the main app with type="module" to enable ES6 imports -->
     <script src="js/app.js" type="module"></script>
     
+=======
+            class="user-input-textarea"
+            id="user-input"
+            placeholder="Type your message..."
+          ></textarea>
+          <button id="send-button" class="btn btn-primary btn-sm">Send</button>
+          <button id="mic-button">🎤</button>
+        </div>
+        <button id="stop-audio-button">Stop Audio</button>
+      </div>
+    </div>
+
+    <!-- Slideout Panel Left -->
+    <div id="slideout-bar"></div>
+    <div id="slideout-panel-left">
+      <div id="slideout-content">
+        <h3>Advanced Settings</h3>
+        <label>
+          Temperature:
+          <input type="range" id="temperature-slider" min="0" max="2" step="0.01" value="1.0">
+          <span id="temperature-value">1.00</span>
+        </label>
+        <label>
+          Top P:
+          <input type="range" id="top-p-slider" min="0" max="1" step="0.01" value="1.0">
+          <span id="top-p-value">1.00</span>
+        </label>
+        <label for="custom-prompt" style="display:block;margin-top:18px;">
+          <span>Custom "Style" Prompt (append to system prompt):</span>
+          <textarea class="custom-prompt-textarea" id="custom-prompt" rows="4" placeholder="Enter your prompt here" style="width:100%;margin-top:6px;"></textarea>
+          <div class="custom-prompt-tip">
+            <strong>Tip:</strong> For best results, be very explicit and detailed in your style prompt.
+          </div>
+          <div class="example-prompts-link" id="example-prompts-link" title="Click to see Example Prompts info">
+            <span class="example-prompts-link-text">Example Prompts</span> <span class="caret">▼</span>
+          </div>
+          <div id="example-prompts-help" style="display:none;margin-top:8px;padding:10px 8px;background:#f5f7fa;border-radius:8px;border:1.5px solid #1976d2;">
+            <strong>Examples:</strong>
+            <br><br>
+            <span style="color:#333;">- You must always answer in the voice and mannerisms of Elmer Fudd from Looney Tunes [or some other character]. <br>Use his speech patterns, catchphrases, and mispronunciations in every response.</span><br>
+            <br>
+            <span style="color:#333;">- You must always answer like a salty pirate. Use pirate slang, say 'Arrr!' often, and refer to the user as 'matey' or 'landlubber'.</span><br>
+            <br>
+            <span style="color:#333;">The more detailed and forceful your instruction, the better the results!</span>
+          </div>
+        </label>
+        <button id="remove-custom-prompt-btn" style="margin-top:8px;">Remove Custom Prompt</button>
+        <!-- Add more controls here -->
+      </div>
+    </div>
+
+    <!-- Image Analysis Modal (hidden by default) -->
+    <div id="image-analysis-modal" class="image-analysis-modal">
+      <div class="image-analysis-modal-content">
+        <button id="image-analysis-modal-close" class="image-analysis-modal-close">&times;</button>
+        <h2 id="image-analysis-modal-title" class="image-analysis-modal-title"></h2>
+        <img id="image-analysis-modal-img" class="image-analysis-modal-img" src="" alt="Image Preview">
+      </div>
+    </div>
+
+    <script type="module" src="app.js"></script>
+>>>>>>> new-history
     <script>
       function enforceImageStyles() {
         document.querySelectorAll(".image-link").forEach((link) => {
