@@ -1,8 +1,8 @@
 /*
   SERVER.JS
-  Version: 1.0.0
-  AppName: MultiChat_Chatty [v1.0.0]
-  Updated: 05/24/2025 @9:00AM
+  Version: 2
+  AppName: MutliChat_v2
+  Updated: 05/23/2025 @11:35AM
   Created by Paul Welby
 */
 
@@ -54,7 +54,7 @@ console.log('OpenAI client initialized with API key:', {
 const app = express();
 
 // Set the port
-const port = process.env.PORT || 5300;
+const port = process.env.PORT || 5200;
 
 // Configure middleware with increased limits
 app.use(cors());
@@ -558,76 +558,95 @@ app.post('/api/tts', async (req, res) => {
     }
 });
 
-// GET /api/chat for SSE streaming (EventSource)
-app.get('/api/chat', async (req, res) => {
-    try {
-        const { message, model, sessionId, timezone } = req.query;
+// Update the chat endpoint to include the formatted timeout message
+app.get('/api/chat', (req, res) => {
+    // Keep track of connection state
+    let isConnected = false;
+    let connectionAttempts = 0;
+    const maxAttempts = 5;
 
-        console.log('SSE GET /api/chat request received:', {
-            messageLength: message?.length,
-            model: model,
-            sessionId: sessionId,
-            timezone: timezone
-        });
+    console.log('\n━━━━━━━━━━━ SSE Connection Request ━━━━━━━━━━━');
+    console.log('Time:', new Date().toLocaleTimeString());
+    console.log('Client:', req.headers['user-agent']);
+    console.log('Session:', req.query.sessionId);
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 
-        if (!message) {
-            res.status(400).json({ error: 'Message is required' });
-            return;
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+
+    // Send initial connection success message
+    res.write(`data: ${JSON.stringify({ type: 'connection', status: 'established' })}\n\n`);
+    isConnected = true;
+
+    // Set up heartbeat interval with animation
+    let heartPhase = 0;  // 0: empty, 1: red, 2: light red
+    const heartbeatInterval = setInterval(() => {
+        if (!isConnected) {
+            console.log('Attempting to restore connection...');
+            connectionAttempts++;
+            if (connectionAttempts > maxAttempts) {
+                console.log('Max reconnection attempts reached');
+                clearInterval(heartbeatInterval);
+                return;
+            }
         }
 
-        // Keep track of connection state
-        let isConnected = false;
-        let connectionAttempts = 0;
-        const maxAttempts = 5;
+        const hearts = ['♡', '❤️', '💗'];  // empty, red, light red
+        const heart = hearts[heartPhase];
+        process.stdout.write(`\r\u001b[?25l`);  // Windows-compatible cursor hide
+        process.stdout.write(`Heartbeat ${new Date().toLocaleTimeString()}  ${heart}                \u001b[?25l`);
+        heartPhase = (heartPhase + 1) % 3;  // Cycle through 3 phases
 
+        try {
+            res.write(`data: ${JSON.stringify({ type: 'heartbeat' })}\n\n`);
+            isConnected = true;
+            connectionAttempts = 0;
+        } catch (error) {
+            console.log('Heartbeat error:', error.message);
+            isConnected = false;
+        }
+    }, 500);
+
+    // Add cleanup on connection close
+    req.on('close', () => {
+        process.stdout.write(`\u001b[?25h`);  // Windows-compatible cursor show
+        process.stdout.write('\n');
+        console.log('\n━━━━━━━━━━━ SSE Connection Closed ━━━━━━━━━━━');
+        console.log('Time:', new Date().toLocaleTimeString());
+        console.log('Session:', req.query.sessionId);
+        console.log('Final connection state:', { isConnected, attempts: connectionAttempts });
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+        clearInterval(heartbeatInterval);
+    });
+});
+
+// Chat endpoint with hierarchical query handling
+app.post('/api/chat', async (req, res) => {
+    try {
+        const { message, history, model, systemPrompt, timezone, temperature, top_p } = req.body;
+
+        console.log('Chat request received:', {
+            messageLength: message?.length,
+            historyLength: history?.length,
+            model: model,
+            hasSystemPrompt: !!systemPrompt,
+            timezone: timezone,
+            temperature: temperature,
+            top_p: top_p
+        });
+
+        // Validate required parameters
+        if (!message) {
+            throw new Error('Message is required');
+        }
+
+        const startTime = Date.now();
+
+        // Set headers for SSE
         res.setHeader('Content-Type', 'text/event-stream');
         res.setHeader('Cache-Control', 'no-cache');
         res.setHeader('Connection', 'keep-alive');
-
-        // Send initial connection success message
-        res.write(`data: ${JSON.stringify({ type: 'connection', status: 'established' })}\n\n`);
-        isConnected = true;
-
-        // Set up heartbeat interval with animation
-        let heartPhase = 0;  // 0: empty, 1: red, 2: light red
-        const heartbeatInterval = setInterval(() => {
-            if (!isConnected) {
-                console.log('Attempting to restore connection...');
-                connectionAttempts++;
-                if (connectionAttempts > maxAttempts) {
-                    console.log('Max reconnection attempts reached');
-                    clearInterval(heartbeatInterval);
-                    return;
-                }
-            }
-
-            const hearts = ['♡', '❤️', '💗'];  // empty, red, light red
-            const heart = hearts[heartPhase];
-            process.stdout.write(`\r\u001b[?25l`);  // Windows-compatible cursor hide
-            process.stdout.write(`Heartbeat ${new Date().toLocaleTimeString()}  ${heart}                \u001b[?25l`);
-            heartPhase = (heartPhase + 1) % 3;  // Cycle through 3 phases
-
-            try {
-                res.write(`data: ${JSON.stringify({ type: 'heartbeat' })}\n\n`);
-                isConnected = true;
-                connectionAttempts = 0;
-            } catch (error) {
-                console.log('Heartbeat error:', error.message);
-                isConnected = false;
-            }
-        }, 500);
-
-        // Add cleanup on connection close
-        req.on('close', () => {
-            process.stdout.write(`\u001b[?25h`);  // Windows-compatible cursor show
-            process.stdout.write('\n');
-            console.log('\n━━━━━━━━━━━ SSE Connection Closed ━━━━━━━━━━━');
-            console.log('Time:', new Date().toLocaleTimeString());
-            console.log('Session:', req.query.sessionId);
-            console.log('Final connection state:', { isConnected, attempts: connectionAttempts });
-            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
-            clearInterval(heartbeatInterval);
-        });
 
         // 1. Check for greetings
         if (chatPatterns.greetings.some(pattern => pattern.test(message.toLowerCase()))) {
@@ -681,157 +700,11 @@ app.get('/api/chat', async (req, res) => {
                 temperature: typeof temperature === 'number' ? temperature : 1.0
             });
 
-            await handleGPT4oMiniResponse(completion, res, message, Date.now());
+            await handleGPT4oMiniResponse(completion, res, message, startTime);
         } else {
             throw new Error(`Unsupported model: ${model}. Currently only supporting gpt-4o-mini`);
         }
-    } catch (error) {
-        console.error('Error in GET /api/chat:', error);
-        res.write(`data: ${JSON.stringify({ error: 'Server error' })}\n\n`);
-        res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
-        res.end();
-    }
-});
 
-// Chat endpoint with hierarchical query handling
-app.post('/api/chat', async (req, res) => {
-    try {
-        const { message, history, model, systemPrompt, timezone } = req.body;
-
-        console.log('Chat request received:', {
-            messageLength: message?.length,
-            historyLength: history?.length,
-            model: model,
-            hasSystemPrompt: !!systemPrompt,
-            timezone: timezone
-        });
-
-        // Validate required parameters
-        if (!message) {
-            throw new Error('Message is required');
-        }
-
-        const startTime = Date.now();
-
-        // Detect if client wants SSE
-        const wantsSSE = req.headers.accept && req.headers.accept.includes('text/event-stream');
-
-        if (wantsSSE) {
-            // --- SSE RESPONSE (current logic) ---
-            res.setHeader('Content-Type', 'text/event-stream');
-            res.setHeader('Cache-Control', 'no-cache');
-            res.setHeader('Connection', 'keep-alive');
-
-            // 1. Check for greetings
-            if (chatPatterns.greetings.some(pattern => pattern.test(message.toLowerCase()))) {
-                const timeOfDay = getTimeOfDay(timezone);
-                const response = `Good ${timeOfDay}! How can I help you today?`;
-                res.write(`data: ${JSON.stringify({ response })}\n\n`);
-                res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
-                res.end();
-                return;
-            }
-
-            // 2. Check for time/date queries
-            const isTimeQuery = chatPatterns.time.some(pattern => pattern.test(message.toLowerCase()));
-            const isDateQuery = chatPatterns.date.some(pattern => pattern.test(message.toLowerCase()));
-            const isDateTimeQuery = chatPatterns.dateTime.some(pattern => pattern.test(message.toLowerCase()));
-
-            if (isTimeQuery || isDateQuery || isDateTimeQuery) {
-                const now = new Date();
-                const formattedTime = formatTimeDateStr(now, timezone);
-                let response;
-
-                if (isTimeQuery) {
-                    response = `The current time is ${formattedTime.timeStr}`;
-                } else if (isDateQuery) {
-                    response = `Today is ${formattedTime.dateStr}`;
-                } else {
-                    response = `It is ${formattedTime.timeStr} on ${formattedTime.dateStr}`;
-                }
-
-                const holiday = getHoliday(now);
-                if (holiday) {
-                    response += `. ${holiday.greeting}`;
-                }
-
-                res.write(`data: ${JSON.stringify({ response })}\n\n`);
-                res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
-                res.end();
-                return;
-            }
-
-            // 3. Handle model-specific responses (streaming)
-            if (model === 'gpt-4o-mini' || !model) {
-                const completion = await openai.chat.completions.create({
-                    model: "gpt-4o-mini",
-                    messages: [
-                        { role: "system", content: systemPrompt || "You are a helpful assistant." },
-                        ...(Array.isArray(history) ? history : []),
-                        { role: "user", content: message }
-                    ],
-                    stream: true
-                });
-                await handleGPT4oMiniResponse(completion, res, message, startTime);
-            } else {
-                throw new Error(`Unsupported model: ${model}. Currently only supporting gpt-4o-mini`);
-            }
-            return;
-        } else {
-            // --- JSON RESPONSE (for fetch) ---
-            // 1. Check for greetings
-            if (chatPatterns.greetings.some(pattern => pattern.test(message.toLowerCase()))) {
-                const timeOfDay = getTimeOfDay(timezone);
-                const response = `Good ${timeOfDay}! How can I help you today?`;
-                res.json({ response });
-                return;
-            }
-
-            // 2. Check for time/date queries
-            const isTimeQuery = chatPatterns.time.some(pattern => pattern.test(message.toLowerCase()));
-            const isDateQuery = chatPatterns.date.some(pattern => pattern.test(message.toLowerCase()));
-            const isDateTimeQuery = chatPatterns.dateTime.some(pattern => pattern.test(message.toLowerCase()));
-
-            if (isTimeQuery || isDateQuery || isDateTimeQuery) {
-                const now = new Date();
-                const formattedTime = formatTimeDateStr(now, timezone);
-                let response;
-
-                if (isTimeQuery) {
-                    response = `The current time is ${formattedTime.timeStr}`;
-                } else if (isDateQuery) {
-                    response = `Today is ${formattedTime.dateStr}`;
-                } else {
-                    response = `It is ${formattedTime.timeStr} on ${formattedTime.dateStr}`;
-                }
-
-                const holiday = getHoliday(now);
-                if (holiday) {
-                    response += `. ${holiday.greeting}`;
-                }
-
-                res.json({ response });
-                return;
-            }
-
-            // 3. Handle model-specific responses (non-streaming)
-            if (model === 'gpt-4o-mini' || !model) {
-                const completion = await openai.chat.completions.create({
-                    model: "gpt-4o-mini",
-                    messages: [
-                        { role: "system", content: systemPrompt || "You are a helpful assistant." },
-                        ...(Array.isArray(history) ? history : []),
-                        { role: "user", content: message }
-                    ],
-                    stream: false
-                });
-                const responseText = completion.choices[0]?.message?.content || '';
-                res.json({ response: responseText });
-            } else {
-                throw new Error(`Unsupported model: ${model}. Currently only supporting gpt-4o-mini`);
-            }
-            return;
-        }
     } catch (error) {
         console.error('Chat endpoint error:', {
             name: error.name,
@@ -1023,6 +896,7 @@ app.post('/api/datetime', async (req, res) => {
         });
     }
 });
+
 
 // =====================================================
 // JOKE API ENDPOINTS
@@ -1952,5 +1826,6 @@ app.listen(port, '0.0.0.0', () => {
 
 
 // =====================================================
-// END OF Server.js FILE v20.0.0
+// END OF Server.js FILE v2
 // =====================================================
+
