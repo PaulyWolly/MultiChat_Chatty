@@ -1,15 +1,8 @@
 /*
-<<<<<<< HEAD
-  STYLES.css
-  Version: 22.0.2
-  AppName: Multi-Chat [v22.0.2]
-  Updated: May 15, 2025 @10:00AM
-=======
   STYLES.CSS
   Version: 2
   AppName: MutliChat_v2
   Updated: 05/23/2025 @11:35AM
->>>>>>> new-history
   Created by Paul Welby
 */
 
@@ -21,10 +14,7 @@ body {
     height: 100vh;
     margin: 0;
     background-color: #f0f0f0;
-<<<<<<< HEAD
-=======
     color: #000 !important;
->>>>>>> new-history
 }
 
 #chat-container {
@@ -48,12 +38,8 @@ body {
 
 
 
-<<<<<<< HEAD
-#model-select, #voice-select {
-=======
 #model-select,
 #voice-select {
->>>>>>> new-history
     padding: 5px;
     font-size: 16px;
 }
@@ -65,10 +51,7 @@ body {
 
 #mode-toggle label {
     margin-right: 10px;
-<<<<<<< HEAD
-=======
     font-weight: 700;
->>>>>>> new-history
 }
 
 #chat-messages {
@@ -97,33 +80,18 @@ body {
     height: 100%;
 }
 
-<<<<<<< HEAD
-#status {
-    color: #0451f8;
-    font-weight: 500;
-    font-size: 1.0em;
-=======
 status {
     color: #0451f8;
     font-weight: bold;
->>>>>>> new-history
     display: flex;
     flex-direction: column;
     align-items: flex-start;
     gap: 2px;
-<<<<<<< HEAD
-    line-height: .7;
-    white-space: pre-line;
-    text-align: left;
-    margin: 5px 0;
-    padding: 0;
-=======
     line-height: 1.2;
     font-size: 2.3vh;
     white-space: pre-wrap;
     text-align: left;
     margin: 5px 0;
->>>>>>> new-history
 }
 
 #conversation-status {
@@ -135,11 +103,7 @@ status {
     flex-direction: column;
     align-items: flex-start;
     gap: 2px;
-<<<<<<< HEAD
-    font-size: 2.3vh;
-=======
     font-size: 1.9vh;
->>>>>>> new-history
     font-weight: 400;
     max-width: 65%;
 }
@@ -147,16 +111,6 @@ status {
 #input-container {
     display: flex;
     align-items: center;
-<<<<<<< HEAD
-    background-color: #f5f5f5;  /* Light grey background */
-    padding: 10px;
-    border-radius: 8px;
-    width: 45vw;  /* Fixed width */
-    margin-right: 10px;
-}
-
-#user-input {
-=======
     background-color: #f5f5f5;
     /* Light grey background */
     padding: 5px 5px 0px 20px;
@@ -167,21 +121,11 @@ status {
 }
 
 /* #user-input {
->>>>>>> new-history
     flex: 1;
     padding: 8px;
     border: 1px solid #ccc;
     border-radius: 4px;
     margin: 0 10px;
-<<<<<<< HEAD
-    height: 32px;  /* Match button height */
-}
-
-#send-button, #mic-button {
-    padding: 5px 10px;
-    margin-left: 5px;
-    background-color: #007bff;  /* Default blue background */
-=======
     height: 38px;
     margin-bottom: 5px !important;
 } */
@@ -192,7 +136,6 @@ status {
     margin-left: 5px;
     background-color: #007bff;
     /* Default blue background */
->>>>>>> new-history
     color: white;
     border: none;
     border-radius: 4px;
@@ -202,46 +145,32 @@ status {
     font-size: 14px;
 }
 
-<<<<<<< HEAD
-#send-button:hover, #mic-button:hover {
-    background-color: #0056b3;  /* Darker blue on hover */
-=======
 #send-button:hover,
 #mic-button:hover {
     background-color: #0056b3;
     /* Darker blue on hover */
->>>>>>> new-history
 }
 
 #image-upload-btn {
     background: none;
     border: none;
     cursor: pointer;
-<<<<<<< HEAD
-    height: 40px;  /* Taller height */
-    width: 40px;   /* Matching width */
-    font-size: 24px;  /* Larger icon */
-=======
     height: 40px;
     /* Taller height */
     width: 40px;
     /* Matching width */
     font-size: 24px;
     /* Larger icon */
->>>>>>> new-history
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
 #stop-audio-button {
-<<<<<<< HEAD
-=======
     position: fixed;
     bottom: 40px;
     right: 40px;
     z-index: 99999;
->>>>>>> new-history
     padding: 5px 10px;
     margin-left: 10px;
     background-color: #dc3545;
@@ -254,27 +183,6 @@ status {
     height: 32px;
 }
 
-<<<<<<< HEAD
-/* Processing indicator */
-#processing-indicator {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    padding: 10px 20px;
-    background-color: rgba(0, 0, 0, 0.8);
-    color: white;
-    border-radius: 5px;
-    z-index: 1000;
-    display: none;
-}
-
-#processing-indicator.active {
-    display: block;
-}
-
-=======
->>>>>>> new-history
 button {
     padding: 10px 20px;
     font-size: 16px;
@@ -343,9 +251,6 @@ button {
 
 /* System bubble styling (for date/time responses) */
 .system-bubble {
-<<<<<<< HEAD
-    background-color: #f0f0f0 !important;  /* Light grey background */
-=======
     background-color: #f0f0f0 !important;
     /* Light grey background */
     border: 1px solid #e0e0e0 !important;
@@ -358,7 +263,6 @@ button {
 .time-date-bubble {
     background-color: #f1dac7 !important;
     /* Light grey background */
->>>>>>> new-history
     border: 1px solid #e0e0e0 !important;
     align-self: flex-start;
     max-width: fit-content;
@@ -400,12 +304,8 @@ button {
 }
 
 .message-text {
-<<<<<<< HEAD
-    white-space: nowrap; /* Keep on single line by default */
-=======
     white-space: nowrap;
     /* Keep on single line by default */
->>>>>>> new-history
     overflow: hidden;
     text-overflow: ellipsis;
     min-width: 0;
@@ -420,44 +320,21 @@ button {
     word-wrap: break-word;
 }
 
-<<<<<<< HEAD
-.response-time, .token-count {
-    color: #777;
-}
-
-#stop-audio-button {
-    background-color: #ff4d4d;
-    color: white;
-    border: none;
-    padding: 5px 10px;
-    margin-left: 5px;
-    cursor: pointer;
-    border-radius: 3px;
-}
-
-=======
 .response-time,
 .token-count {
     color: #777;
 }
 
->>>>>>> new-history
 #stop-audio-button:hover {
     background-color: #ff3333;
 }
 
 .message.exit {
-<<<<<<< HEAD
-    background-color: #f0f0f0; /* Same as assistant messages */
-    align-self: flex-start;
-    max-width: fit-content; /* Adjust width to fit content */
-=======
     background-color: #f0f0f0;
     /* Same as assistant messages */
     align-self: flex-start;
     max-width: fit-content;
     /* Adjust width to fit content */
->>>>>>> new-history
     padding: 8px 12px;
     border-radius: 12px;
     margin: 2px 0;
@@ -466,12 +343,8 @@ button {
 
 .footer {
     display: flex;
-<<<<<<< HEAD
-    justify-content: flex-end; /* Aligns children to the right */
-=======
     justify-content: flex-end;
     /* Aligns children to the right */
->>>>>>> new-history
     align-items: center;
     padding: 10px;
     background-color: #f0f0f0;
@@ -479,27 +352,13 @@ button {
     width: 45vw;
     position: relative;
     left: 17%;
-<<<<<<< HEAD
-    gap: 10px;  /* Add gap between processing indicator and input container */
-=======
     gap: 10px;
     /* Add gap between processing indicator and input container */
->>>>>>> new-history
 }
 
 .input-container {
     display: flex;
     align-items: center;
-<<<<<<< HEAD
-    gap: 10px;  /* Space between elements */
-    width: 100%; /* Allow container to take full width */
-    max-width: 800px; /* Adjust this value to set the maximum width */
-    margin-left: auto;
-    margin-right: 10px; /* Add some right margin */
-}
-
-#send-button, #mic-button, #stop-audio-button {
-=======
     gap: 10px;
     /* Space between elements */
     width: 100%;
@@ -514,7 +373,6 @@ button {
 #send-button,
 #mic-button,
 #stop-audio-button {
->>>>>>> new-history
     padding: 5px 10px;
     margin-left: 5px;
     background-color: #007bff;
@@ -522,14 +380,6 @@ button {
     border: none;
     border-radius: 4px;
     cursor: pointer;
-<<<<<<< HEAD
-    height: 32px; /* Set a fixed height for all buttons */
-    line-height: 22px; /* Adjust line height to vertically center text */
-    font-size: 14px; /* Ensure consistent font size */
-}
-
-#send-button:hover, #mic-button:hover {
-=======
     height: 32px;
     /* Set a fixed height for all buttons */
     line-height: 22px;
@@ -540,7 +390,6 @@ button {
 
 #send-button:hover,
 #mic-button:hover {
->>>>>>> new-history
     background-color: #0056b3;
     color: white !important;
 }
@@ -566,14 +415,10 @@ button {
     cursor: pointer;
     display: none;
     width: 100px;
-<<<<<<< HEAD
-    margin-right: 8px;
-=======
     height: 40px;
     font-size: .95em;
     margin-right: 0px;
     margin-top: 42px;
->>>>>>> new-history
 }
 
 #stop-audio-button:hover {
@@ -588,8 +433,6 @@ button {
     font-weight: normal;
 }
 
-<<<<<<< HEAD
-=======
 #processing-indicator {
     background-color: rgba(0, 0, 0, 0.7);
     color: white;
@@ -607,7 +450,6 @@ button {
     transform: translateX(-50%);
 }
 
->>>>>>> new-history
 #image-results {
     display: flex;
     flex-wrap: wrap;
@@ -694,16 +536,6 @@ button {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-<<<<<<< HEAD
-    width: 100%;  /* Ensure content takes full width */
-    white-space: normal;  /* Allow text to wrap */
-    word-wrap: break-word;  /* Break long words if needed */
-}
-
-.message-text {
-    width: 100%;  /* Take full width of parent */
-    white-space: normal;  /* Allow text to wrap */
-=======
     width: 100%;
     /* Ensure content takes full width */
     white-space: normal;
@@ -717,7 +549,6 @@ button {
     /* Take full width of parent */
     white-space: normal;
     /* Allow text to wrap */
->>>>>>> new-history
     word-wrap: break-word;
     line-height: 1.4;
     margin: 0;
@@ -725,14 +556,9 @@ button {
 
 /* Ensure assistant messages use maximum width */
 .message.assistant {
-<<<<<<< HEAD
-    width: 80%;  /* Match the bubble width */
-    max-width: 80%;
-=======
     width: 80%;
     max-width: 80%;
     margin: 2px 0;
->>>>>>> new-history
 }
 
 /* Ensure paragraphs within messages fill width */
@@ -741,11 +567,8 @@ button {
     margin: 8px 0;
     white-space: normal;
     word-wrap: break-word;
-<<<<<<< HEAD
-=======
     font-size: 14px;
     font-weight: 600;
->>>>>>> new-history
 }
 
 /* Media query for smaller screens */
@@ -758,13 +581,9 @@ button {
         width: 100%;
     }
 
-<<<<<<< HEAD
-    #send-button, #mic-button, #stop-audio-button {
-=======
     #send-button,
     #mic-button,
     #stop-audio-button {
->>>>>>> new-history
         padding: 5px;
     }
 }
@@ -777,40 +596,9 @@ button {
     }
 }
 
-<<<<<<< HEAD
-/* Remove forced 48%/50% width for multi-paragraph assistant messages */
-.message.assistant:has(p + p),
-.message.assistant:has(.message-content > div + div),
-.message.assistant:has(br),
-.message.assistant .message-content:has(br),
-.message.assistant:has(.message-content > p:nth-child(2)),
-.message.assistant .message-content:has(> p:nth-child(2)) {
-    /* width: 80% !important;
-    max-width: 80% !important; */
-    margin-top: 15px;
-}
-
-.message.assistant {
-    width: 80%;
-    max-width: 80%;
-}
-
-.message.assistant .message-content {
-    width: 100%;
-    max-width: 100%;
-    align-items: stretch;
-}
-
-.message.assistant p {
-    width: 100%;
-    margin: 8px 0;
-    white-space: normal;
-    word-wrap: break-word;
-=======
 .message.assistant:has(.message-content > p:nth-child(2)),
 .message.assistant .message-content:has(> p:nth-child(2)) {
     width: 48%;
->>>>>>> new-history
 }
 
 .icon-button {
@@ -822,8 +610,6 @@ button {
     color: #666;
 }
 
-<<<<<<< HEAD
-=======
 .image-upload-icon-button {
     background: transparent !important;
     border: none;
@@ -833,7 +619,6 @@ button {
     font-size: 38px !important;
 }
 
->>>>>>> new-history
 .icon-button:hover {
     color: #333;
 }
@@ -870,11 +655,7 @@ button {
     background: white;
     padding: 10px;
     border-radius: 8px;
-<<<<<<< HEAD
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-=======
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
->>>>>>> new-history
     border: 1px solid #ddd;
     z-index: 1;
 }
@@ -983,15 +764,10 @@ button {
 
 .ai-message-bubble {
     width: 80%;
-<<<<<<< HEAD
-    margin-left: auto;    /* This will keep it aligned to the right */
-    margin-right: 0;      /* This will keep it aligned to the right */
-=======
     margin-left: auto;
     /* This will keep it aligned to the right */
     margin-right: 0;
     /* This will keep it aligned to the right */
->>>>>>> new-history
 }
 
 /* If you have a container for the message, you might also need: */
@@ -1001,11 +777,7 @@ button {
     width: 100%;
 }
 
-<<<<<<< HEAD
-.message.bubble.ai {
-=======
 .message-bubble.ai {
->>>>>>> new-history
     width: 80vw;
     margin-left: auto;
     margin-right: 0;
@@ -1019,13 +791,8 @@ button {
 }
 
 .conversation-mode-checkbox {
-<<<<<<< HEAD
-    height: 20px;
-    width: 20px;
-=======
     height: 22px;
     width: 22px;
->>>>>>> new-history
 }
 
 /* If needed, we can also add a max-width to ensure it doesn't get too wide on large screens */
@@ -1038,15 +805,6 @@ button {
 
 /* Special message types */
 .greeting-bubble {
-<<<<<<< HEAD
-    background: #e6fbe6 !important; /* light green */
-    color: #222;
-}
-
-.exit-bubble {
-    background: #ffeaea !important; /* light red */
-    color: #222;
-=======
     background-color: #b9f6c3 !important;
     /* Green background */
     border: 1px solid #8be49b !important;
@@ -1056,7 +814,6 @@ button {
     background-color: #f030562e !important;
     /* Pink background */
     border: 1px solid #e4b5bd !important;
->>>>>>> new-history
 }
 
 /* Hide metadata for special messages */
@@ -1082,19 +839,6 @@ button {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-<<<<<<< HEAD
-    max-width: 90%;
-    max-height: 90vh;
-    z-index: 1001;
-}
-
-.analysis-popup-image {
-    max-width: 100%;
-    max-height: 90vh;
-    object-fit: contain;
-    border-radius: 8px;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-=======
     width: 90vw;
     height: 90vh;
     background: #000;
@@ -1112,7 +856,6 @@ button {
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
     background: #000;
     /* Remove any max-width/max-height */
->>>>>>> new-history
 }
 
 .analysis-preview-image:hover {
@@ -1234,52 +977,32 @@ button {
 .message.search-results {
     background-color: #f8f9fa;
     border-left: 4px solid #007bff;
-<<<<<<< HEAD
-    margin-bottom: 10px;  /* Reduce space between search result messages */
-=======
     margin-bottom: 10px;
     /* Reduce space between search result messages */
->>>>>>> new-history
 }
 
 .message.search-results .message-content {
     font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-<<<<<<< HEAD
-    line-height: 1.3;  /* Reduce line height */
-=======
     line-height: 1.3;
     /* Reduce line height */
->>>>>>> new-history
 }
 
 /* Adjust spacing for search result items */
 .message.search-results .message-content p {
-<<<<<<< HEAD
-    margin: 4px 0;  /* Reduce paragraph spacing */
-=======
     margin: 4px 0;
     /* Reduce paragraph spacing */
->>>>>>> new-history
 }
 
 /* Style the numbered items */
 .message.search-results .message-content ol {
-<<<<<<< HEAD
-    margin: 8px 0;  /* Reduce space between numbered items */
-=======
     margin: 8px 0;
     /* Reduce space between numbered items */
->>>>>>> new-history
     padding-left: 20px;
 }
 
 .message.search-results .message-content li {
-<<<<<<< HEAD
-    margin-bottom: 12px;  /* Reduce space between list items */
-=======
     margin-bottom: 12px;
     /* Reduce space between list items */
->>>>>>> new-history
 }
 
 /* Style links */
@@ -1301,12 +1024,8 @@ button {
 
 /* Adjust separator line spacing */
 .message.search-results hr {
-<<<<<<< HEAD
-    margin: 8px 0;  /* Reduce space around separator lines */
-=======
     margin: 8px 0;
     /* Reduce space around separator lines */
->>>>>>> new-history
     opacity: 0.2;
 }
 
@@ -1319,10 +1038,7 @@ button {
     cursor: pointer;
     color: #666;
     transition: color 0.2s;
-<<<<<<< HEAD
-=======
     margin-right: 8px;
->>>>>>> new-history
 }
 
 #input-container button:hover,
@@ -1336,11 +1052,7 @@ button {
     padding: 10px;
     background-color: #f5f5f5;
     border-radius: 5px;
-<<<<<<< HEAD
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-=======
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
->>>>>>> new-history
 }
 
 .metadata-item {
@@ -1386,15 +1098,10 @@ button {
 .message.assistant {
     background-color: #f0f0f0;
     align-self: flex-start;
-<<<<<<< HEAD
-    width: max-content;  /* Natural width for short messages */
-    max-width: 80%;     /* Never exceed 80% */
-=======
     width: max-content;
     /* Natural width for short messages */
     max-width: 80%;
     /* Never exceed 80% */
->>>>>>> new-history
     padding: 8px 12px;
     border-radius: 12px;
     border: 1px solid #e0e0e0;
@@ -1411,36 +1118,22 @@ button {
 .message.assistant:has(p + p),
 .message.assistant:has(.message-content > div + div),
 .message.assistant:has(br) {
-<<<<<<< HEAD
-    width: 80%;  /* Full width for long content */
-=======
     width: 80%;
     /* Full width for long content */
->>>>>>> new-history
 }
 
 /* Make text fill the width in multi-paragraph messages */
 .message.assistant:has(p + p) .message-content,
 .message.assistant:has(.message-content > div + div) .message-content,
 .message.assistant:has(br) .message-content {
-<<<<<<< HEAD
-    width: 100%;  /* Fill the container */
-=======
     width: 100%;
     /* Fill the container */
->>>>>>> new-history
 }
 
 /* Text content in multi-paragraph messages */
 .message.assistant:has(p + p) .message-text,
 .message.assistant:has(.message-content > div + div) .message-text,
 .message.assistant:has(br) .message-text {
-<<<<<<< HEAD
-    width: 100%;         /* Fill the full width */
-    white-space: normal; /* Allow wrapping */
-    text-align: left;    /* Align text to left */
-    display: block;      /* Ensure block display */
-=======
     width: 100%;
     /* Fill the full width */
     white-space: normal;
@@ -1449,7 +1142,6 @@ button {
     /* Align text to left */
     display: block;
     /* Ensure block display */
->>>>>>> new-history
 }
 
 /* Hide empty metadata divs */
@@ -1477,12 +1169,6 @@ button {
 .message-content {
     display: flex;
     flex-direction: column;
-<<<<<<< HEAD
-    width: 100%;  /* Fill the container width */
-    word-wrap: break-word;  /* Allow word breaking */
-    white-space: pre-wrap;  /* Preserve whitespace but wrap */
-    overflow-wrap: break-word;  /* Break long words if needed */
-=======
     width: 100%;
     /* Fill the container width */
     word-wrap: break-word;
@@ -1491,26 +1177,15 @@ button {
     /* Preserve whitespace but wrap */
     overflow-wrap: break-word;
     /* Break long words if needed */
->>>>>>> new-history
 }
 
 /* Ensure assistant messages wrap properly */
 .message.assistant .message-content {
-<<<<<<< HEAD
-    max-width: 100%;  /* Ensure content doesn't overflow */
-    text-align: left;
-}
-
-/* Special handling for image analysis responses */
-.message.assistant:has(.message-content > div) {
-    width: 80%;  /* Full width for long content */
-=======
     max-width: 100%;
     /* Ensure content doesn't overflow */
     text-align: left;
     padding-left: 5px;
     padding-right: 5px;
->>>>>>> new-history
 }
 
 /* Add these styles at the end of your existing styles.css file */
@@ -1562,20 +1237,6 @@ button {
 
 /* YouTube Results List */
 .youtube-results {
-<<<<<<< HEAD
-    margin: 10px 0;
-
-    padding: 15px;
-    background: #f8f9fa;
-    border-radius: 8px;
-    width: 98%;
-}
-
-.video-list {
-    list-style: decimal;
-    padding-left: 25px;
-
-=======
     width: 80%;
     max-width: 80%;
     margin: 0 auto;
@@ -1587,17 +1248,10 @@ button {
 .video-list {
     list-style: none;
     padding-left: 0;
->>>>>>> new-history
     margin: 0;
 }
 
 .video-item {
-<<<<<<< HEAD
-    margin-bottom: 15px;
-    padding: 10px;
-    border-bottom: 1px solid #e9ecef;
-    line-height: 1.4;
-=======
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -1608,20 +1262,11 @@ button {
     max-width: 320px;
     width: 100%;
     margin: 0 auto;
->>>>>>> new-history
 }
 
 .video-item:last-child {
     border-bottom: none;
 }
-<<<<<<< HEAD
-
-.video-title {
-    font-size: 1.1em;
-    margin-bottom: 8px;
-    color: #212529;
-    display: block;
-=======
 */
 
 .video-title-SINGLE {
@@ -1660,7 +1305,6 @@ button {
     position: relative;
     left: -8px;
     /* Fill the card width */
->>>>>>> new-history
 }
 
 .video-controls {
@@ -1691,41 +1335,6 @@ button {
     padding-left: 5px;
 }
 
-<<<<<<< HEAD
-/* Add these styles at the end of the file */
-
-/* Exit message styling */
-.message.assistant[data-type="exit"] {
-    background-color: #ffebee;  /* Light red background */
-    border-color: #ef9a9a;      /* Darker red border */
-}
-
-/* Joke list styling */
-.joke-list {
-    margin: 10px 0;
-    padding: 10px;
-    background-color: #f5f5f5;
-    border-radius: 5px;
-}
-
-.joke-item {
-    margin: 5px 0;
-    padding: 5px;
-    border-bottom: 1px solid #e0e0e0;
-}
-
-.joke-number {
-    font-weight: bold;
-    margin-right: 10px;
-    color: #666;
-}
-
-.joke-text {
-    color: #333;
-}
-
-/* Status message specific styles */
-=======
 .youtube-thumb-link img {
     /* width: 95%; */
     max-width: 250px;
@@ -1894,247 +1503,11 @@ button {
     width: 100%;
 }
 
->>>>>>> new-history
 .status-default {
     color: #0451f8;
     font-size: 1.7vh;
     max-width: 68%;
     font-weight: 600;
-<<<<<<< HEAD
-    line-height: 1.15;
-    padding: 0;
-    margin: 0;
-    white-space: pre-line;
-}
-
-.status-listening {
-    color: #0451f8;
-    font-size: 1.7vh;
-    font-weight: 600;
-}
-
-.status-video-playing {
-    color: #d32f2f;
-    font-size: 2.3vh;
-    font-weight: 600;
-}
-
-.status-processing {
-    color: #f57c00;
-    font-size: 2.3vh;
-    font-weight: 600;
-}
-
-.status-error {
-    color: #c62828;
-    font-size: 2.3vh;
-    font-weight: 600;
-}
-
-.status-initializing {
-    color: #39393a;
-    font-size: 1.7vh;
-    font-weight: 600;
-}
-
-.conversation-enable-message {
-    color: #666;
-    font-style: italic;
-    font-size: 1.7vh;
-    font-weight: 400;
-    white-space: pre-wrap;
-    max-width: 100%;
-}
-
-/* Add specific styling for joke list messages */
-.message.assistant.joke-list-message {
-    max-width: fit-content;  /* Change from fixed 30% to fit-content */
-    width: auto;
-    margin-right: 20px;  /* Add some right margin for spacing */
-}
-
-.message.assistant.joke-list-message .message-content {
-    width: 100%;
-    min-width: fit-content;  /* Ensure content doesn't get squished */
-}
-
-.message.assistant.joke-list-message ol {
-    margin: 10px 0;
-    padding-left: 25px;
-    white-space: nowrap;  /* Keep joke titles on single lines */
-}
-
-.message.assistant.joke-list-message li {
-    margin: 5px 0;
-}
-
-.youtube-fallback,
-.youtube-error {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.9);
-    color: white;
-    text-align: center;
-    padding: 20px;
-}
-
-.youtube-direct-link {
-    display: inline-block;
-    margin-top: 15px;
-    padding: 10px 20px;
-    background: #ff0000;
-    color: white;
-    text-decoration: none;
-    border-radius: 5px;
-    font-weight: bold;
-}
-
-.youtube-direct-link:hover {
-    background: #cc0000;
-}
-
-.video-options {
-    display: flex;
-    gap: 10px;
-    margin-top: 10px;
-}
-
-.play-here-btn {
-    padding: 8px 16px;
-    background-color: #ff0000;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-weight: bold;
-    transition: background-color 0.2s;
-}
-
-.play-here-btn:hover {
-    background-color: #cc0000;
-}
-
-.youtube-direct-link {
-    display: inline-block;
-    padding: 8px 16px;
-    background-color: #282828;
-    color: white !important;
-    text-decoration: none;
-    border-radius: 5px;
-    font-weight: bold;
-    transition: background-color 0.2s;
-}
-
-.youtube-direct-link:hover {
-    background-color: #1a1a1a;
-    text-decoration: none !important;
-}
-
-.video-controls {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    margin-top: 5px;
-}
-
-.channel-info {
-    margin-left: auto;
-    color: #666;
-    font-size: 0.9em;
-}
-
-.youtube-loading {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: rgba(0, 0, 0, 0.8);
-    color: white;
-    padding: 15px 25px;
-    border-radius: 5px;
-    font-size: 16px;
-}
-
-.youtube-error {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.9);
-    color: white;
-    text-align: center;
-    padding: 20px;
-}
-
-.youtube-direct-link {
-    display: inline-block;
-    margin-top: 15px;
-    padding: 10px 20px;
-    background: #ff0000;
-    color: white !important;
-    text-decoration: none;
-    border-radius: 5px;
-    font-weight: bold;
-    transition: background-color 0.2s;
-}
-
-.youtube-direct-link:hover {
-    background: #cc0000;
-    text-decoration: none !important;
-}
-
-.youtube-popup-btn {
-    background-color: #ff0000;
-    color: white;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-weight: 500;
-    margin-right: 10px;
-    transition: background-color 0.2s ease;
-}
-
-.youtube-popup-btn:hover {
-    background-color: #cc0000;
-}
-
-.youtube-popup-btn:active {
-    transform: translateY(1px);
-}
-
-.general-bubble {
-    background: #f5f5f5 !important; /* light grey */
-    border: 1px solid #e0e0e0;
-    border-radius: 12px;
-    padding: 12px 18px;
-    margin-bottom: 8px;
-}
-
-.general-bubble .message-content > *:first-child {
-    margin-top: 10px;
-}
-
-.message-bubble {
-    width: 100%;
-    max-width: none; /* or set to your desired max */
-    display: flex;
-    flex-direction: column;
-}
-
-.message-content {
-    width: 100%;
-    max-width: 100%;
-    display: block;
-    word-break: break-word;
-    white-space: pre-line; /* preserves line breaks, but allows wrapping */
-    box-sizing: border-box;
-}
-=======
 }
 
 /* ===== YOUTUBE SINGLE VIDEO LAYOUT ===== */
@@ -3843,4 +3216,3 @@ button {
     align-items: center;
     gap: 0.4em;
 }
->>>>>>> new-history
