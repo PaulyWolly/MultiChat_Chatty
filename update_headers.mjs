@@ -167,20 +167,13 @@ async function main() {
   // Use the first file with a header as the template for defaults
   let firstHeader = { Version: '', AppName: '', Updated: '', CreatedBy: '' };
   for (const filePath of FILES) {
-    console.log(`Checking file: ${filePath}`);
     if (fs.existsSync(filePath)) {
-      console.log(`File exists: ${filePath}`);
       const content = fs.readFileSync(filePath, 'utf8');
       const header = getHeader(content);
       if (header) {
-        console.log(`Found header in: ${filePath}`);
         firstHeader = parseHeader(header);
         break;
-      } else {
-        console.log(`No header found in: ${filePath}`);
       }
-    } else {
-      console.log(`File not found: ${filePath}`);
     }
   }
 
@@ -189,14 +182,9 @@ async function main() {
 
   const changes = [];
   for (const filePath of FILES) {
-    console.log(`\nProcessing file: ${filePath}`);
-    if (!fs.existsSync(filePath)) {
-      console.log(`File not found: ${filePath}`);
-      continue;
-    }
+    if (!fs.existsSync(filePath)) continue;
     let content = fs.readFileSync(filePath, 'utf8');
     let oldHeader = getHeader(content);
-    console.log(`Old header found: ${oldHeader ? 'Yes' : 'No'}`);
 
     if (filePath.endsWith('.js') || filePath.endsWith('.css') || filePath.endsWith('server.js')) {
       // Build new header
@@ -209,12 +197,9 @@ async function main() {
         `  Created by ${updated.CreatedBy}`,
         '*/'
       ].join('\n');
-      console.log(`New header for ${filePath}:`, newHeader);
       content = updateHeaderInText(content, newHeader);
-      console.log(`Content updated: ${content !== oldHeader}`);
       fs.writeFileSync(filePath, content, 'utf8');
-      console.log(`File written: ${filePath}`);
-      changes.push(filePath);
+      changes.push({ file: filePath, old: oldHeader, new: newHeader });
     } else if (filePath.endsWith('index.html')) {
       const newContent = updateIndexHtml(content, updated);
       fs.writeFileSync(filePath, newContent, 'utf8');
