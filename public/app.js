@@ -68,7 +68,7 @@ const MIC_INITIALIZATION_DELAY = 4000;  // 4 seconds delay
 // Add the MESSAGES constant
 const MESSAGES = {
     STATUS: {
-        DEFAULT: `Click the <span class="status-keyword">Conversation Mode</span> checkbox, or press the <span class="status-keyword">Microphone</span> button <br>...to enable conversations, or enter a message and press Send</span><br><br>`,
+        DEFAULT: `<br>Click the <span class="status-keyword">Conversation Mode</span> checkbox, or press the <span class="status-keyword">Microphone</span> button <br>...to enable conversations, or enter a message and press Send</span><br><br>`,
         LISTENING: "Listening...",
         SPEAKING: "AI is speaking...",
         PROCESSING: "Processing...",
@@ -1183,6 +1183,76 @@ async function sendMessage(message, isGreeting = false) {
         const messageText = message;  // Initialize properly
         const patterns = getPatterns();
 
+        // NEW: Bing/web/internet search trigger (regardless of order)
+        const lowerMsg = messageText.toLowerCase();
+        const hasBingSearch = lowerMsg.includes('bing') && lowerMsg.includes('search');
+        const hasWebSearch = lowerMsg.includes('web') && lowerMsg.includes('search');
+        const hasInternetSearch = lowerMsg.includes('internet') && lowerMsg.includes('search');
+        if (hasBingSearch || hasWebSearch || hasInternetSearch) {
+            // Extract the query after the last occurrence of 'search'
+            const lastSearchIdx = lowerMsg.lastIndexOf('search');
+            let query = messageText.slice(lastSearchIdx + 6).replace(/^\s*for\s*/i, '').trim();
+            if (!query) query = messageText; // fallback if nothing after 'search'
+            addMessageToChat('user', messageText);
+            try {
+                const requestStartTime = Date.now();
+                const response = await fetch('/api/bing-search', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query })
+                });
+                const data = await response.json();
+                const messageElement = addMessageToChat('assistant', data.response);
+                const requestDuration = data.metrics?.duration || `${((Date.now() - requestStartTime) / 1000).toFixed(2)}s`;
+                updateMetadata(messageElement, {
+                    model: 'bing-search',
+                    metrics: {
+                        model: 'bing-search',
+                        totalTokens: data.response.length,
+                        startTime: data.metrics?.startTime || requestStartTime,
+                        endTime: data.metrics?.endTime || Date.now(),
+                        duration: requestDuration
+                    }
+                });
+                return;
+            } catch (error) {
+                console.error('Search error:', error);
+                return;
+            }
+        }
+
+        // NEW: If message starts with 'search ', trigger Bing search
+        const searchStartMatch = messageText.match(/^search\s+(.+)/i);
+        if (searchStartMatch) {
+            const query = searchStartMatch[1].trim();
+            addMessageToChat('user', messageText);
+            try {
+                const requestStartTime = Date.now();
+                const response = await fetch('/api/bing-search', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query })
+                });
+                const data = await response.json();
+                const messageElement = addMessageToChat('assistant', data.response);
+                const requestDuration = data.metrics?.duration || `${((Date.now() - requestStartTime) / 1000).toFixed(2)}s`;
+                updateMetadata(messageElement, {
+                    model: 'bing-search',
+                    metrics: {
+                        model: 'bing-search',
+                        totalTokens: data.response.length,
+                        startTime: data.metrics?.startTime || requestStartTime,
+                        endTime: data.metrics?.endTime || Date.now(),
+                        duration: requestDuration
+                    }
+                });
+                return;
+            } catch (error) {
+                console.error('Search error:', error);
+                return;
+            }
+        }
+
         // Check for explicit date/time/datetime requests using patterns
         const isTimeRequest = patterns.time.some(pattern => pattern.test(messageText.trim()));
         const isDateRequest = patterns.date.some(pattern => pattern.test(messageText.trim()));
@@ -2013,9 +2083,18 @@ function addMessageToChat(role, content, options = {}) {
     // Handle different content types
     if (typeof content === 'object' && content.type === 'youtube') {
         contentElement.innerHTML = content.html;
-    } else {
+    } else if (typeof content === 'string') {
+        // Check for HTML-based search results
+        if (
+            content.includes('<h2>Web Results') ||
+            content.includes('<h2>News Results') ||
+            content.includes("<ol class='search-results-list'>") ||
+            content.includes('<ol class="search-results-list">')
+        ) {
+            contentElement.innerHTML = content;
+        }
         // For assistant recipe messages, format ingredients as dashed HTML list
-        if (role === 'assistant' && typeof content === 'string' && content.match(/Ingredients:/i) && content.match(/Instructions:|Directions:/i)) {
+        else if (role === 'assistant' && content.match(/Ingredients:/i) && content.match(/Instructions:|Directions:/i)) {
             content = formatIngredientsAsDashedList(content);
             contentElement.innerHTML = content;
         } else {
@@ -2035,9 +2114,18 @@ function updateMessageContent(messageElement, content, tokenCount) {
     const metadataElement = messageElement.querySelector('.metadata');
 
     if (contentElement) {
-        // Restore honorifics and abbreviations for display
-        content = restoreHonorifics(content);
-        contentElement.innerText = content;
+        // Check for HTML-based search results
+        if (
+            content.includes('<h2>Web Results') ||
+            content.includes('<h2>News Results') ||
+            content.includes("<ol class='search-results-list'>") ||
+            content.includes('<ol class="search-results-list">')
+        ) {
+            contentElement.innerHTML = content;
+        } else {
+            // For regular text content
+            contentElement.textContent = content;
+        }
     }
 
     if (metadataElement && tokenCount) {
@@ -5206,4 +5294,6 @@ window.addEventListener('DOMContentLoaded', function() {
     modal.onclick = (e) => { if (e.target === modal) modal.classList.remove('show'); };
 });
 // ... existing code ...
+
+
 
