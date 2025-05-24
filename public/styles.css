@@ -2123,6 +2123,14 @@ button {
     justify-content: flex-start;
 }
 
+.playlist-manager-message {
+    margin: 20px 160px -40px 0 !important;
+    text-align: right !important;
+    color: #05d505 !important;
+    font-weight: bold !important;
+}
+
+
 .close-btn {
     position: absolute;
     top: 12px;
@@ -2675,7 +2683,7 @@ button {
 
 /* --- Playlist Table: Standard Layout, Sticky Header, Scrollable Body --- */
 .playlist-table-wrapper {
-    max-height: 40vh;
+    max-height: 37vh;
     overflow-y: auto;
     width: 100%;
     padding-top: 0;
@@ -3087,4 +3095,119 @@ button {
 .playlist-search-clear:focus {
   outline: none;
   color: #333;
+}
+
+.playlist-manager-body {
+  position: relative;
+}
+
+.playlist-manager-message {
+  position: absolute;
+  left: 74%; /* Adjust as needed for your layout */
+  top: 200px; /* Adjust as needed to appear below the blue box */
+  transform: translateX(-50%);
+  z-index: 10;
+  width: 320px;
+  text-align: right;
+  color: #2196f3;
+  font-weight: bold;
+  /* background: #fff; */
+  border-radius: 6px;
+  /* box-shadow: 0 2px 8px rgba(0,0,0,0.08); */
+  pointer-events: none;
+  padding: 8px 0;
+  margin: 0;
+}
+
+.playlist-message-emoji-stack {
+    display: inline-block;
+    position: relative;
+    width: 1.4em;
+    height: 1.4em;
+    vertical-align: middle;
+    margin-bottom: 5px;
+}
+
+.playlist-message-happy-emoji,
+.playlist-message-sparkle-emoji,
+.playlist-message-thumbs-emoji {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    line-height: 1.4em;
+    pointer-events: none;
+}
+
+.playlist-message-happy-emoji {
+    font-size: 1.4em;
+    animation: verticalNodFade 1.2s cubic-bezier(0.4, 0, 0.2, 1) 1;
+    transform-origin: center bottom;
+    position: absolute;
+    left: 0; top: 0; width: 100%; height: 100%;
+    text-align: center;
+    line-height: 1.4em;
+    pointer-events: none;
+    opacity: 1;
+    visibility: visible;
+    animation-fill-mode: forwards;
+}
+
+@keyframes verticalNodFade {
+    0%   { transform: translateY(0); opacity: 1; visibility: visible; }
+    12%  { transform: translateY(4px); opacity: 1; visibility: visible; }
+    24%  { transform: translateY(0); opacity: 1; visibility: visible; }
+    36%  { transform: translateY(4px); opacity: 1; visibility: visible; }
+    48%  { transform: translateY(0); opacity: 1; visibility: visible; }
+    80%  { opacity: 1; visibility: visible; }
+    99%  { opacity: 0; visibility: visible; }
+    100% { opacity: 0; visibility: hidden; }
+}
+
+.playlist-message-sparkle-emoji {
+    font-size: 1.1em;
+    opacity: 0;
+    position: absolute;
+    left: 0; top: 0; width: 100%; height: 100%;
+    text-align: center;
+    line-height: 1.4em;
+    pointer-events: none;
+    animation: sparkleAppearFade 1s ease-in;
+    animation-delay: 1.2s;
+    animation-fill-mode: forwards;
+}
+
+@keyframes sparkleAppearFade {
+    0%   { opacity: 0; transform: scale(0.7) rotate(-10deg);}
+    10%  { opacity: 1; transform: scale(1.2) rotate(10deg);}
+    80%  { opacity: 1; }
+    100% { opacity: 0; transform: scale(0.7) rotate(0deg);}
+}
+
+.playlist-message-thumbs-emoji {
+    font-size: 1.2em;
+    opacity: 0;
+    position: absolute;
+    left: 0; top: 0; width: 100%; height: 100%;
+    text-align: center;
+    line-height: 1.4em;
+    pointer-events: none;
+    animation: thumbsAppear 0.8s ease-in;
+    animation-delay: 2.2s;
+    animation-fill-mode: forwards;
+}
+
+@keyframes thumbsAppear {
+    0%   { opacity: 0; transform: scale(0.7) rotate(-20deg);}
+    60%  { opacity: 0; }
+    80%  { opacity: 1; transform: scale(1.2) rotate(10deg);}
+    100% { opacity: 1; transform: scale(1) rotate(0deg);}
+}
+
+.playlist-message-flex {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
 }

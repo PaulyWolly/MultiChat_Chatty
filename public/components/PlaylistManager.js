@@ -45,11 +45,15 @@ export class PlaylistManager {
             <div class="playlists-container" style="max-height: 220px; min-height: 120px; overflow-y: auto; margin-bottom: 0;"></div>
             <div class="pending-video-container"></div>
           </div>
+          
+          <div class="playlist-manager-message" style="margin: 12px 0 0 0; text-align: right;"></div>
           <div class="current-playlist-header" style="margin-top: 8px;"></div>
           <div class="videos-container"></div>
         </div>
       </div>
     `;
+
+    // <button onclick="window.playlistManager.showPlaylistMessage('Video has been added to playlist!')">Test Message</button>
 
     // Add to DOM immediately
     document.body.appendChild(this.dialog);
@@ -529,7 +533,7 @@ export class PlaylistManager {
         title: this.currentVideo.title && this.currentVideo.title.trim() ? this.currentVideo.title : 'Untitled Video',
         thumbnail: this.currentVideo.thumbnail
       });
-      this.showError('Video added to playlist!');
+      this.showPlaylistMessage('Video has been added to playlist!');
       await this.loadPlaylists();
       this.renderVideos(this.playlists.find(p => p._id === this.selectedPlaylistId)?.videos || []);
       this.currentVideo = null;
@@ -552,7 +556,12 @@ export class PlaylistManager {
         title: video.title && video.title.trim() ? video.title : 'Untitled Video',
         thumbnail: video.thumbnail
       });
-      this.showError('Video added to playlist!');
+      this.showPlaylistMessage('Video has been added to playlist! ' +
+        '<span class="playlist-message-emoji-stack">' +
+          '<span class="playlist-message-happy-emoji">😄</span>' +
+          '<span class="playlist-message-sparkle-emoji">✨</span>' +
+          '<span class="playlist-message-thumbs-emoji">👍</span>' +
+        '</span>');
       await this.loadPlaylists();
       this.renderVideos(this.playlists.find(p => p._id === playlistId)?.videos || []);
       this.currentVideo = null;
@@ -588,6 +597,24 @@ export class PlaylistManager {
     } catch (error) {
       console.error('Error in renameVideoTitle:', error);
       this.showError('Failed to update video title.');
+    }
+  }
+
+  showPlaylistMessage(msg) {
+    const msgDiv = this.dialog.querySelector('.playlist-manager-message');
+    if (msgDiv) {
+      msgDiv.innerHTML =
+        '<div class="playlist-message-flex">' +
+          '<span>Video has been added to playlist!</span>' +
+          '<span class="playlist-message-emoji-stack">' +
+            '<span class="playlist-message-happy-emoji">😄</span>' +
+            '<span class="playlist-message-sparkle-emoji">✨</span>' +
+            '<span class="playlist-message-thumbs-emoji">👍</span>' +
+          '</span>' +
+        '</div>';
+      msgDiv.style.color = '#2196f3';
+      msgDiv.style.fontWeight = 'bold';
+      setTimeout(() => { msgDiv.innerHTML = ''; }, 10000);
     }
   }
 }
