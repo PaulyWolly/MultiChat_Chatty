@@ -70,9 +70,18 @@ async function getGitHubData(since) {
   return { newPRs, newIssues, commits };
 }
 
-function dedupeAndFormat(commits, prs, issues) {
+function dedupeAndFormat(commits, prs, issues, version) {
   const seen = new Set();
   const bullets = [];
+  
+  // Get the current date for the version header
+  const today = new Date();
+  const dateStr = today.toISOString().split('T')[0];
+  
+  // Add version header
+  bullets.push(`## v${version} (${dateStr})`);
+  bullets.push('');  // Empty line after header
+  
   for (const c of commits) {
     const key = c.message || c.commit && c.commit.message;
     if (!seen.has(key)) {
@@ -119,7 +128,21 @@ async function main() {
   const lastDate = getLastReleaseDate() || new Date(0);
   const localCommits = getLocalCommits(lastDate);
   const { newPRs, newIssues, commits } = await getGitHubData(lastDate);
-  const bullets = dedupeAndFormat(localCommits, newPRs, newIssues);
+  
+  // Prompt for version number
+  const { version } = await inquirer.prompt([
+    {
+      type: 'input',
+      name: 'version',
+      message: 'Enter version number (e.g., 1.0.0):',
+      default: '1.0.0',
+      validate: input => /^\d+\.\d+\.\d+$/.test(input) || 'Please enter a valid version number (e.g., 1.0.0)'
+    }
+  ]);
+  
+  // Update the version in dedupeAndFormat
+  const bullets = dedupeAndFormat(localCommits, newPRs, newIssues, version);
+  
   if (!bullets.trim()) {
     console.log('No new changes found since last release note.');
     return;
