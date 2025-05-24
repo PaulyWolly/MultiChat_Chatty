@@ -1,8 +1,8 @@
 <!--
   INDEX.html
-  Version: 1.0.0
-  AppName: MultiChat_Chatty [v1.0.0]
-  Updated: 05/24/2025 @9:00AM
+  Version: 2
+  AppName: MutliChat_v2
+  Updated: 05/23/2025 @11:35AM
   Created by Paul Welby
 -->
 
@@ -11,7 +11,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MultiChat_Chatty [v1.0.0]</title>
+    <title>MutliChat_v2</title>
     <link rel="stylesheet" href="styles.css" />
     <link rel="icon" type="image/png" href="chat-1.png" />
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -25,7 +25,7 @@
           <option value="phi-3-mini-4k-instruct">Phi-3-mini-4k-instruct</option>
         </select>
 
-        <h3>MultiChat_Chatty [v1.0.0] 05/24/2025 @9:00AM</h3>
+        <h3>MutliChat_v2 05/23/2025 @11:35AM</h3>
 
         <select id="voice-select">
           <option value="">Default Voice</option>
@@ -37,7 +37,6 @@
             type="checkbox"
             class="conversation-mode-checkbox"
             id="conversation-mode"
-            disabled
           />
         </div>
       </div>
@@ -45,16 +44,19 @@
       <div id="chat-messages"></div>
       <div id="image-results"></div>
 
-      <div id="processing-indicator" class="main-indicator">Processing...</div>
+      <div id="processing-indicator">Processing...</div>
       <div id="bottom-bar">
         <div id="status-container">
-          <div class="status-msg" id="status">Click the Conversation Mode checkbox, or press the microphone button to enable conversations, or enter a message and press Send</div>
+          <div class="status-msg" id="status"></div>
           <div id="conversation-status"></div>
         </div>
         <div class="playlist-manager-btn">
           <button id="open-playlist-manager-btn">My Playlists</button>
         </div>
         <div id="input-container">
+          <!-- Processing indicator -->
+          <div id="processing-indicator">Processing...</div>
+
           <button class="image-upload-icon-button" id="image-upload-btn" title="Click to Upload an IMAGE for analysis">🖼️</button>
           <input
             type="file"
@@ -70,7 +72,7 @@
           <button id="send-button" class="btn btn-primary btn-sm">Send</button>
           <button id="mic-button">🎤</button>
         </div>
-        <button id="stop-audio-button" style="display: none;">Stop Audio</button>
+        <button id="stop-audio-button">Stop Audio</button>
       </div>
     </div>
 
@@ -109,6 +111,7 @@
           </div>
         </label>
         <button id="remove-custom-prompt-btn" style="margin-top:8px;">Remove Custom Prompt</button>
+        <!-- Add more controls here -->
       </div>
     </div>
 
@@ -121,9 +124,7 @@
       </div>
     </div>
 
-    <!-- Load the main app with type="module" to enable ES6 imports -->
     <script type="module" src="app.js"></script>
-    
     <script>
       function enforceImageStyles() {
         document.querySelectorAll(".image-link").forEach((link) => {
