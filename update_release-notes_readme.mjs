@@ -8,7 +8,7 @@ import path from 'path';
 const GITHUB_TOKEN = process.env.MULTICHAT_ACCESS_TOKEN;
 
 const REPO_OWNER = 'PaulyWolly'; // TODO: Replace with your GitHub username or org
-const REPO_NAME = 'multichat-v23.0.0-working'; // TODO: Replace with your repo name
+const REPO_NAME = 'MultiChat_Chatty'; // TODO: Replace with your repo name
 
 const RELEASE_NOTES_PATH = path.resolve('./RELEASE-NOTES.md');
 const README_PATH = path.resolve('./README.md');
