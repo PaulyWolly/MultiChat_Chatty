@@ -286,6 +286,7 @@ const state = {
     lastTTS: 0, // Add to global state
     isImagePickerOpen: false,  // Add this line to track file picker state
     selectedImageFileName: null, // Add to global state
+    pendingInitials: null,
 };
 
 // Add to global state
@@ -2034,6 +2035,8 @@ function updateMessageContent(messageElement, content, tokenCount) {
     const metadataElement = messageElement.querySelector('.metadata');
 
     if (contentElement) {
+        // Restore honorifics and abbreviations for display
+        content = restoreHonorifics(content);
         contentElement.innerText = content;
     }
 
@@ -2242,9 +2245,10 @@ async function getPersonalInfo(key = null) {
 
 // Split text into chunks function
 function splitTextIntoChunks(text, maxLength = 200, forTTS = false) {
-    const honorifics = /(?:Mr\.|Mrs\.|Dr\.|Sr\.|Jr\.|Ms\.|Prof\.|Rev\.|Capt\.|Lt\.|Col\.|Gen\.|Sgt\.|Cpl\.|Pvt\.|St\.)/g;
-    // Replace honorifics with a marker
-    let tempText = text.replace(honorifics, match => match.replace('.', 'DOT'));
+    // Add H.G. and J.K. to the honorifics regex
+    const honorifics = /(?:Mr\.|Mrs\.|Dr\.|Sr\.|Jr\.|Ms\.|Prof\.|Rev\.|Capt\.|Lt\.|Col\.|Gen\.|Sgt\.|Cpl\.|Pvt\.|St\.|H\.G\.|J\.K\.)/g;
+    // Replace honorifics and abbreviations with a marker
+    let tempText = text.replace(honorifics, match => match.replace(/\./g, 'DOT'));
     // If for TTS, remove the DOT marker (so "MrDOT Smith" becomes "Mr Smith")
     if (forTTS) tempText = tempText.replace(/DOT/g, '');
     // If for display, restore the period
@@ -2555,20 +2559,124 @@ function stopAudioPlayback() {
 // Queue audio chunk function
 async function queueAudioChunk(text) {
     if (!text) return;
+    
+    // First, check if this chunk is part of a split initial sequence
+    // This handles cases where the AI splits "H.G. Wells" across multiple chunks
+    if (text.trim() === 'H.' || text.trim() === 'G.') {
+        // Store this chunk temporarily and wait for the next chunk
+        if (!state.pendingInitials) {
+            state.pendingInitials = text.trim();
+            return; // Skip this chunk for now
+        } else {
+            // We have both initials, combine them
+            text = state.pendingInitials + text.trim();
+            state.pendingInitials = null;
+        }
+    }
+    
+    // Also handle cases where we have "H." at the end of a chunk
+    if (text.endsWith(' H.') || text.endsWith(' G.')) {
+        const lastChar = text.slice(-2);
+        if (!state.pendingInitials) {
+            state.pendingInitials = lastChar;
+            text = text.slice(0, -2);
+        } else {
+            text = text.slice(0, -2) + state.pendingInitials + lastChar;
+            state.pendingInitials = null;
+        }
+    }
+    
+    // Handle cases where we have "Wells" at the start of a chunk
+    if (text.trim().startsWith('Wells')) {
+        if (state.pendingInitials) {
+            text = state.pendingInitials + text.trim();
+            state.pendingInitials = null;
+        }
+    }
+    
+    // Generic pattern to match any sequence of initials (1-3 letters) followed by a last name
+    const initialPattern = /([A-Z]\.?\s*){1,3}([A-Z][a-z]+)/g;
+    
+    // First pass: Replace all initial sequences with a single unit
+    text = text.replace(initialPattern, (match) => {
+        console.log('Found initial sequence:', match);
+        // Remove all spaces and periods between initials
+        const result = match.replace(/[\s\.]+/g, '');
+        console.log('Converted to:', result);
+        return result;
+    });
+    
+    console.log('After initial replacement:', text);
+    
+    // Also handle cases where it's part of a phrase
+    text = text.replace(/(?:by|from|of|based on)\s+([A-Z]\.?\s*){1,3}([A-Z][a-z]+)/g, (match) => {
+        console.log('Found phrase with initials:', match);
+        // Keep the preposition but join the initials
+        const result = match.replace(/([A-Z]\.?\s*){1,3}([A-Z][a-z]+)/g, (name) => {
+            return name.replace(/[\s\.]+/g, '');
+        });
+        console.log('Converted phrase to:', result);
+        return result;
+    });
+    
+    console.log('After phrase replacement:', text);
+    
+    // Protect honorifics and abbreviations before TTS
+    text = protectHonorifics(text);
     text = preprocessForTTS(text);
+    console.log('After TTS preprocessing:', text);
+    
     state.stopRequested = false;
     state.isAISpeaking = true;
     updateStatus(MESSAGES.STATUS.SPEAKING);
+    
+    // Split into sections, but preserve our protected names
     const sections = text.split(/(?=Ingredients:|Instructions:)/);
     let chunks = [];
     sections.forEach(section => {
         const sectionChunks = splitTextIntoChunks(section, 200, true);
         chunks = chunks.concat(sectionChunks);
     });
+    
+    console.log('Chunks before post-processing:', chunks);
+    
+    // Final safety check - look for any remaining split instances of initials
+    for (let i = 0; i < chunks.length - 2; i++) {
+        const current = chunks[i].trim();
+        const next = chunks[i + 1].trim();
+        const nextNext = chunks[i + 2].trim();
+        
+        // Check for any remaining split initial patterns
+        if (
+            /^[A-Z]\.?$/i.test(current) && // First initial
+            /^[A-Z]\.?$/i.test(next) &&    // Second initial
+            /^[A-Z][a-z]+/i.test(nextNext) // Last name
+        ) {
+            console.log('Found split initials:', {current, next, nextNext});
+            // Join them together without spaces or periods
+            const joined = current.replace(/\./g, '') + 
+                          next.replace(/\./g, '') + 
+                          nextNext;
+            console.log('Joined into:', joined);
+            chunks.splice(i, 3, joined);
+        }
+    }
+    // NEW: Merge a chunk that is just initials (e.g., 'HG') with the next chunk if it starts with a last name (e.g., 'Wells')
+    for (let i = 0; i < chunks.length - 1; i++) {
+        const current = chunks[i].trim();
+        const next = chunks[i + 1].trim();
+        // Match 2-3 uppercase letters (no punctuation or spaces)
+        if (/^[A-Z]{2,3}$/.test(current) && /^[A-Z][a-z]+/.test(next)) {
+            console.log('Merging split initials and last name:', {current, next});
+            chunks.splice(i, 2, current + ' ' + next);
+        }
+    }
+    
+    console.log('Chunks after post-processing:', chunks);
     state.audioQueue = state.audioQueue.concat(chunks);
-    console.log('Queued chunks:', state.audioQueue);
-    if (!state.isPlaying && !state.stopRequested) {
-        await playNextInQueue();
+    console.log('Final queued chunks:', chunks);
+    if (!state.isPlaying) {
+        playNextInQueue();
     }
 }
 
@@ -4889,18 +4997,19 @@ function printRecipe(recipeText, messageElement) {
 // Helper functions for honorific handling
 function protectHonorifics(text) {
     const honorifics = [
-        'Mr', 'Mrs', 'Ms', 'Dr', 'Sr', 'Jr', 'Prof', 'Rev', 'Fr', 'St', 'Mx', 'Capt', 'Lt', 'Col', 'Gen', 'Sgt', 'Adm', 'Maj', 'Hon', 'Pres', 'Gov', 'Amb', 'Sec', 'Supt', 'Rep', 'Sen', 'Treas', 'Dir'
+        'Mr', 'Mrs', 'Ms', 'Dr', 'Sr', 'Jr', 'Prof', 'Rev', 'Fr', 'St', 'Mx', 'Capt', 'Lt', 'Col', 'Gen', 'Sgt', 'Adm', 'Maj', 'Hon', 'Pres', 'Gov', 'Amb', 'Sec', 'Supt', 'Rep', 'Sen', 'Treas', 'Dir', 'H.G', 'J.K', 'HG', 'JK'
     ];
-    // For TTS: completely remove the period after honorifics
-    return text.replace(new RegExp(`\\b(${honorifics.join('|')})\\.(?=\\s|$)`, 'g'), '$1');
+    // For TTS: completely remove the period after honorifics and abbreviations
+    // Also match forms with optional spaces/periods
+    return text.replace(new RegExp(`\\b(${honorifics.join('|').replace(/\./g, '\\.?')})\\.?\\s?\\.?\\s?(?=\\w)`, 'gi'), (m) => m.replace(/\./g, ''));
 }
 
 function restoreHonorifics(text) {
     const honorifics = [
-        'Mr', 'Mrs', 'Ms', 'Dr', 'Sr', 'Jr', 'Prof', 'Rev', 'Fr', 'St', 'Mx', 'Capt', 'Lt', 'Col', 'Gen', 'Sgt', 'Adm', 'Maj', 'Hon', 'Pres', 'Gov', 'Amb', 'Sec', 'Supt', 'Rep', 'Sen', 'Treas', 'Dir'
+        'Mr', 'Mrs', 'Ms', 'Dr', 'Sr', 'Jr', 'Prof', 'Rev', 'Fr', 'St', 'Mx', 'Capt', 'Lt', 'Col', 'Gen', 'Sgt', 'Adm', 'Maj', 'Hon', 'Pres', 'Gov', 'Amb', 'Sec', 'Supt', 'Rep', 'Sen', 'Treas', 'Dir', 'H.G', 'J.K', 'HG', 'JK'
     ];
-    // For display: ensure periods are present
-    return text.replace(new RegExp(`\\b(${honorifics.join('|')})(?=\\s|$)`, 'g'), '$1.');
+    // For display: ensure periods are present (for classic honorifics only)
+    return text.replace(/\b(HG|JK)\b/g, (m) => m[0] + '.' + m[1] + '.');
 }
 
 
@@ -5048,8 +5157,10 @@ function preprocessForTTS(text) {
         .replace(/U\.S\.A/gi, 'United States of America')
         .replace(/U\.S\./gi, 'United States')
         .replace(/U\.S/gi, 'United States')
-        .replace(/\bUS\b/g, 'United States');
-    console.log('TTS text:', processed);
+        .replace(/\bUS\b/g, 'United States')
+        // Aggressively protect H.G. Wells and J.K. Rowling (all forms, no spaces between initials)
+        .replace(/H\s*\.?\s*G\s*\.?\s*Wells/gi, 'HG Wells')
+        .replace(/J\s*\.?\s*K\s*\.?\s*Rowling/gi, 'JK Rowling');
     return processed;
 }
 
