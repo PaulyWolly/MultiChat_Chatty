@@ -1,5 +1,5 @@
 # AI Chat Application with Memory and Voice Interaction
-#### v21.0
+#### v1.0.0
 
 ## Overview
 
