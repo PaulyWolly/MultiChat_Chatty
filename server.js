@@ -1360,11 +1360,7 @@ async function extractSearchIntent(query) {
             messages: [
                 {
                     role: "system",
-                    content: `${BING_SEARCH_PROMPT}\n\nExtract the precise search intent from user queries.
-                    Maintain important qualifiers like 'latest', 'current', or 'recent'.
-                    Remove only filler words and search commands.
-                    Example: 'show me a web search for latest advances in AI' → 'latest advances in AI'
-                    Example: 'tell me about current developments in quantum computing' → 'current developments in quantum computing'`
+                    content: `${BING_SEARCH_PROMPT}\n\nExtract the precise search intent from user queries.\nMaintain important qualifiers like 'latest', 'current', or 'recent'.\nRemove only filler words and search commands.\nExample: 'show me a web search for latest advances in AI' → 'latest advances in AI'\nExample: 'tell me about current developments in quantum computing' → 'current developments in quantum computing'`
                 },
                 {
                     role: "user",
@@ -1374,7 +1370,9 @@ async function extractSearchIntent(query) {
             max_tokens: 50,
             temperature: 0
         });
-        return completion.choices[0].message.content.trim();
+        const cleaned = completion.choices[0].message.content.trim();
+        console.log('extractSearchIntent:', { original: query, cleaned });
+        return cleaned;
     } catch (error) {
         console.error('Error extracting search intent:', error);
         return cleanSearchQuery(query);  // Fallback to basic cleaning
@@ -1388,9 +1386,11 @@ app.post('/api/bing-search', async (req, res) => {
 
     try {
         const cleanQuery = await extractSearchIntent(query);
-        const response = await axios.get('https://api.bing.microsoft.com/v7.0/search', {
+        const bingApiKey = process.env.BING_SEARCH_V7_SUBSCRIPTION_KEY || process.env.BING_SUBSCRIPTION_KEY;
+        const bingApiUrl = process.env.BING_SEARCH_URL || 'https://api.bing.microsoft.com/v7.0/search';
+        const response = await axios.get(bingApiUrl, {
             headers: {
-                'Ocp-Apim-Subscription-Key': process.env.BING_SUBSCRIPTION_KEY
+                'Ocp-Apim-Subscription-Key': bingApiKey
             },
             params: {
                 q: cleanQuery,
@@ -1400,37 +1400,46 @@ app.post('/api/bing-search', async (req, res) => {
             }
         });
 
+        // Add debug logging for the full Bing API response
+        console.log('Bing API response.data:', JSON.stringify(response.data, null, 2));
+
         let formattedResults = '';
 
         if (response.data.webPages?.value) {
-            formattedResults += `# Web Results for "${cleanQuery}"\n\n`;
+            formattedResults += `<h2>Web Results for "${cleanQuery}"</h2>\n<ol class='search-results-list'>`;
             response.data.webPages.value.forEach((result, index) => {
                 // Extract domain name for source
                 const sourceDomain = new URL(result.url).hostname.replace('www.', '');
 
-                formattedResults += `${index + 1}. <a href="${result.url}" target="_blank">${result.name}</a>\n\n` +
-                    `   ${result.snippet}\n\n` +
-                    `   <div class="search-metadata">\n` +
-                    `      <div class="metadata-item" data-label="Source:">${sourceDomain}</div>\n` +
-                    `      <div class="metadata-item" data-label="URL:"><a href="${result.url}" target="_blank">${result.url}</a></div>\n` +
-                    `      <div class="metadata-item" data-label="Last Updated:">${new Date(result.dateLastCrawled).toLocaleDateString()}</div>\n` +
-                    `   </div>\n\n` +
-                    `---\n\n`;
+                formattedResults += `
+<li class='search-result-item'>
+    <a href="${result.url}" target="_blank">${result.name}</a><br>
+    <span>${result.snippet}</span>
+    <div class="search-metadata">
+        <div class="metadata-item" data-label="Source:">${sourceDomain}</div>
+        <div class="metadata-item" data-label="URL:"><a href="${result.url}" target="_blank">${result.url}</a></div>
+        <div class="metadata-item" data-label="Last Updated:">${new Date(result.dateLastCrawled).toLocaleDateString()}</div>
+    </div>
+</li>`;
             });
+            formattedResults += `</ol>`;
         }
 
         if (response.data.news?.value) {
-            formattedResults += `# News Results for "${cleanQuery}"\n\n`;
+            formattedResults += `<h2>News Results for "${cleanQuery}"</h2>\n<ol class='news-results-list'>`;
             response.data.news.value.forEach((result, index) => {
-                formattedResults += `${index + 1}. <a href="${result.url}" target="_blank">${result.name}</a>\n\n` +
-                    `   ${result.description}\n\n` +
-                    `   <div class="search-metadata">\n` +
-                    `      <div class="metadata-item" data-label="Source:">${result.provider[0]?.name || 'Unknown'}</div>\n` +
-                    `      <div class="metadata-item" data-label="URL:">${result.url}</div>\n` +
-                    `      <div class="metadata-item" data-label="Published:">${new Date(result.datePublished).toLocaleDateString()}</div>\n` +
-                    `   </div>\n\n` +
-                    `---\n\n`;
+                formattedResults += `
+<li class='news-result-item'>
+    <a href="${result.url}" target="_blank">${result.name}</a><br>
+    <span>${result.description}</span>
+    <div class="search-metadata">
+        <div class="metadata-item" data-label="Source:">${result.provider[0]?.name || 'Unknown'}</div>
+        <div class="metadata-item" data-label="URL:"><a href="${result.url}" target="_blank">${result.url}</a></div>
+        <div class="metadata-item" data-label="Published:">${new Date(result.datePublished).toLocaleDateString()}</div>
+    </div>
+</li>`;
             });
+            formattedResults += `</ol>`;
         }
 
         // Calculate duration at the end
