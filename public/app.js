@@ -1,8 +1,8 @@
 /*
-  APP.js
-  Version: 2
-  AppName: Multi-Chat [v2]
-  Updated: May 21, 2025 @6:00AM
+  APP.JS
+  Version: 1
+  AppName: MultiChat_Chatty [v1]
+  Updated: 05/24/2025 @10:00AM
   Created by Paul Welby
 */
 
@@ -22,7 +22,7 @@ console.log('PlaylistManager initialized:', window.playlistManager);
 // =====================================================
 
 // SERVER URL
-const SERVER_URL = 'http://localhost:5200';
+const SERVER_URL = 'http://localhost:5300';
 
 // Time constants
 const INTERVAL = 10;  // Set timeout duration in minutes

@@ -1,8 +1,8 @@
 /*
   SERVER.JS
-  Version: 2
-  AppName: MutliChat_v2
-  Updated: 05/23/2025 @11:35AM
+  Version: 1
+  AppName: MultiChat_Chatty [v1]
+  Updated: 05/24/2025 @10:00AM
   Created by Paul Welby
 */
 
@@ -54,7 +54,7 @@ console.log('OpenAI client initialized with API key:', {
 const app = express();
 
 // Set the port
-const port = process.env.PORT || 5200;
+const port = process.env.PORT || 5300;
 
 // Configure middleware with increased limits
 app.use(cors());

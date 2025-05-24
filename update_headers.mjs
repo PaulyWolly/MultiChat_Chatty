@@ -4,15 +4,10 @@ import pkg from 'enquirer';
 const { prompt } = pkg;
 
 const FILES = [
-  'public/js/app.js',
-  'public/js/dom.js',
-  'public/js/config.js',
-  'public/js/modules/audio/audioManager.js',
-  'public/js/modules/jokes/jokeManager.js',
-  'public/js/modules/recipe/recipeManager.js',
-  'public/js/modules/speech/speechRecognition.js',
-  'public/js/modules/utils/helpers.js',
-  'public/js/modules/youtube/youtubeManager.js',
+  'public/app.js',
+  'public/youtubeModule.js',
+  'public/components/PlaylistManager.js',
+  'public/services/playlist.service.js',
   'server.js',
   'public/styles.css',
   'public/index.html',
