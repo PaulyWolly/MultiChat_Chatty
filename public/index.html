@@ -1,14 +1,8 @@
 <!--
   INDEX.html
-<<<<<<< HEAD
-  Version: 22.0.2
-  AppName: Multi-Chat [v22.0.2]
-  Updated: May 15, 2025 @10:00AM
-=======
-  Version: 2
-  AppName: MutliChat_v2
-  Updated: 05/23/2025 @11:35AM
->>>>>>> new-history
+  Version: 1.0.0
+  AppName: MultiChat_Chatty [v1.0.0]
+  Updated: 05/24/2025 @9:00AM
   Created by Paul Welby
 -->
 
@@ -17,11 +11,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<<<<<<< HEAD
-    <title>Multi-Chat (modularized) [v22.0.2] 5-15-25 @10:00AM</title>
-=======
-    <title>MutliChat_v2</title>
->>>>>>> new-history
+    <title>MultiChat_Chatty [v1.0.0]</title>
     <link rel="stylesheet" href="styles.css" />
     <link rel="icon" type="image/png" href="chat-1.png" />
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -35,11 +25,7 @@
           <option value="phi-3-mini-4k-instruct">Phi-3-mini-4k-instruct</option>
         </select>
 
-<<<<<<< HEAD
-        <h3>Multi-Chat (modularized) [v22.0.2] 5-15-25 @10:00AM</h3>
-=======
-        <h3>MutliChat_v2 05/23/2025 @11:35AM</h3>
->>>>>>> new-history
+        <h3>MultiChat_Chatty [v1.0.0] 05/24/2025 @9:00AM</h3>
 
         <select id="voice-select">
           <option value="">Default Voice</option>
@@ -51,10 +37,7 @@
             type="checkbox"
             class="conversation-mode-checkbox"
             id="conversation-mode"
-<<<<<<< HEAD
             disabled
-=======
->>>>>>> new-history
           />
         </div>
       </div>
@@ -62,31 +45,17 @@
       <div id="chat-messages"></div>
       <div id="image-results"></div>
 
-<<<<<<< HEAD
       <div id="processing-indicator" class="main-indicator">Processing...</div>
       <div id="bottom-bar">
         <div id="status-container">
-          <div id="status">Click the Conversation Mode checkbox, or press the microphone button to enable conversations, or enter a message and press Send</div>
-          <div id="conversation-status"></div>
-        </div>
-        <div id="input-container">
-          <button class="icon-button" id="image-upload-btn">🖼️</button>
-=======
-      <div id="processing-indicator">Processing...</div>
-      <div id="bottom-bar">
-        <div id="status-container">
-          <div class="status-msg" id="status"></div>
+          <div class="status-msg" id="status">Click the Conversation Mode checkbox, or press the microphone button to enable conversations, or enter a message and press Send</div>
           <div id="conversation-status"></div>
         </div>
         <div class="playlist-manager-btn">
           <button id="open-playlist-manager-btn">My Playlists</button>
         </div>
         <div id="input-container">
-          <!-- Processing indicator -->
-          <div id="processing-indicator">Processing...</div>
-
           <button class="image-upload-icon-button" id="image-upload-btn" title="Click to Upload an IMAGE for analysis">🖼️</button>
->>>>>>> new-history
           <input
             type="file"
             id="image-input"
@@ -94,21 +63,6 @@
             style="display: none"
           />
           <textarea
-<<<<<<< HEAD
-            id="user-input"
-            placeholder="Type your message..."
-          ></textarea>
-          <button id="send-button">Send</button>
-          <button id="mic-button">🎤</button>
-        </div>
-        <button id="stop-audio-button" style="display: none;">Stop Audio</button>
-      </div>
-    </div>
-    
-    <!-- Load the main app with type="module" to enable ES6 imports -->
-    <script src="js/app.js" type="module"></script>
-    
-=======
             class="user-input-textarea"
             id="user-input"
             placeholder="Type your message..."
@@ -116,7 +70,7 @@
           <button id="send-button" class="btn btn-primary btn-sm">Send</button>
           <button id="mic-button">🎤</button>
         </div>
-        <button id="stop-audio-button">Stop Audio</button>
+        <button id="stop-audio-button" style="display: none;">Stop Audio</button>
       </div>
     </div>
 
@@ -155,7 +109,6 @@
           </div>
         </label>
         <button id="remove-custom-prompt-btn" style="margin-top:8px;">Remove Custom Prompt</button>
-        <!-- Add more controls here -->
       </div>
     </div>
 
@@ -168,8 +121,9 @@
       </div>
     </div>
 
+    <!-- Load the main app with type="module" to enable ES6 imports -->
     <script type="module" src="app.js"></script>
->>>>>>> new-history
+    
     <script>
       function enforceImageStyles() {
         document.querySelectorAll(".image-link").forEach((link) => {
