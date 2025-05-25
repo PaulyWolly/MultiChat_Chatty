@@ -2867,12 +2867,14 @@ button {
 }
 
 .pending-placeholder {
-    color: #007bff;
+    color: #07090a;
     opacity: 0.7;
     font-style: italic;
+    font-weight: 600;
     text-align: center;
-    width: 60%;
+    width: 73%;
     padding: 18px 0;
+    margin-top: 10px;
 }
 
 .mic-send-button {
@@ -3162,11 +3164,17 @@ button {
 
 @keyframes verticalNodFade {
     0%   { transform: translateY(0); opacity: 1; visibility: visible; }
-    12%  { transform: translateY(4px); opacity: 1; visibility: visible; }
-    24%  { transform: translateY(0); opacity: 1; visibility: visible; }
-    36%  { transform: translateY(4px); opacity: 1; visibility: visible; }
+    8%   { transform: translateY(4px); opacity: 1; visibility: visible; }
+    16%  { transform: translateY(0); opacity: 1; visibility: visible; }
+    24%  { transform: translateY(4px); opacity: 1; visibility: visible; }
+    32%  { transform: translateY(0); opacity: 1; visibility: visible; }
+    40%  { transform: translateY(4px); opacity: 1; visibility: visible; }
     48%  { transform: translateY(0); opacity: 1; visibility: visible; }
-    80%  { opacity: 1; visibility: visible; }
+    56%  { transform: translateY(4px); opacity: 1; visibility: visible; }
+    64%  { transform: translateY(0); opacity: 1; visibility: visible; }
+    72%  { transform: translateY(4px); opacity: 1; visibility: visible; }
+    80%  { transform: translateY(0); opacity: 1; visibility: visible; }
+    90%  { opacity: 1; visibility: visible; }
     99%  { opacity: 0; visibility: visible; }
     100% { opacity: 0; visibility: hidden; }
 }

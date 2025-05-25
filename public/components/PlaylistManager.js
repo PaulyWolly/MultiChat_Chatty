@@ -139,13 +139,47 @@ export class PlaylistManager {
       const f = filter.trim().toLowerCase();
       filtered = this.playlists.filter(p => p.name.toLowerCase().includes(f));
     }
-    // Sort playlists alphabetically by name
-    filtered = filtered.slice().sort((a, b) => {
-      if (a.name.toLowerCase() < b.name.toLowerCase()) return this.playlistSortAsc ? -1 : 1;
-      if (a.name.toLowerCase() > b.name.toLowerCase()) return this.playlistSortAsc ? 1 : -1;
-      return 0;
-    });
-    container.innerHTML = filtered.map(playlist => `
+    // --- Custom sort logic ---
+    // 1. Always show the selected playlist at the top
+    // 2. If none selected, show the most recently created playlist at the top
+    // 3. Allow user to sort the rest ASC/DESC by name
+    // 4. Keep sort control working
+    let sorted;
+    if (!filter || !filter.trim()) {
+      let rest = filtered.slice();
+      let topPlaylist = null;
+      if (this.selectedPlaylistId) {
+        const idx = rest.findIndex(p => p._id === this.selectedPlaylistId);
+        if (idx !== -1) {
+          topPlaylist = rest.splice(idx, 1)[0];
+        }
+      }
+      if (!topPlaylist && rest.length > 0) {
+        // If nothing selected, use the most recent
+        rest.sort((a, b) => {
+          const dateA = new Date(a.createdAt || 0);
+          const dateB = new Date(b.createdAt || 0);
+          return dateB - dateA;
+        });
+        topPlaylist = rest.shift();
+      }
+      // Sort the rest by name ASC/DESC
+      rest.sort((a, b) => {
+        if (a.name.toLowerCase() < b.name.toLowerCase()) return this.playlistSortAsc ? -1 : 1;
+        if (a.name.toLowerCase() > b.name.toLowerCase()) return this.playlistSortAsc ? 1 : -1;
+        return 0;
+      });
+      sorted = topPlaylist ? [topPlaylist, ...rest] : rest;
+    } else {
+      // If filtering, maintain alphabetical sort
+      sorted = filtered.slice().sort((a, b) => {
+        if (a.name.toLowerCase() < b.name.toLowerCase()) return this.playlistSortAsc ? -1 : 1;
+        if (a.name.toLowerCase() > b.name.toLowerCase()) return this.playlistSortAsc ? 1 : -1;
+        return 0;
+      });
+    }
+    console.log('Playlist sort state:', { sortAsc: this.playlistSortAsc, filter, sorted });
+    container.innerHTML = sorted.map(playlist => `
       <div class="playlist-item${playlist._id === this.selectedPlaylistId ? ' active' : ''}" data-id="${playlist._id}" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center; padding:6px 10px; border-radius:6px; margin-bottom:2px; background:${playlist._id === this.selectedPlaylistId ? '#e3f2fd' : 'transparent'};">
         <span class="playlist-name">${playlist.name}</span>
         <span class="playlist-count" style="color:#888;font-size:0.95em;">(${playlist.videos.length})</span>
@@ -681,8 +715,10 @@ function showToast(message) {
     toast = document.createElement('div');
     toast.id = 'playlist-toast';
     toast.style.position = 'fixed';
-    toast.style.bottom = '30px';
-    toast.style.right = '30px';
+    toast.style.bottom = '20px';
+    toast.style.left = '50%';
+    toast.style.right = 'auto';
+    toast.style.transform = 'translateX(-50%)';
     toast.style.background = '#333';
     toast.style.color = '#fff';
     toast.style.padding = '16px 28px';

@@ -4414,92 +4414,21 @@ const handleMyJokes = {
 
 const handleYoutube = {
     isPlaying: false,
+    currentQuery: '',
+    currentPageToken: null,
+    currentSearchParams: null,  // Store complete search parameters
 
     async handleYoutubeRequest(messageText) {
         console.log('handleYoutubeRequest received:', messageText);
-        const patterns = getPatterns();
 
-        // Add user's message first
-        addMessageToChat('user', messageText);
-
-        // Check for play request first
-        const isPlay = patterns.youtube.playVideo.test(messageText);
-
-        // Extract query by removing YouTube-related terms
-        let query = messageText.toLowerCase()
-            .replace(/youtube/i, '')
-            .replace(/play/i, '')
-            .replace(/search/i, '')
-            .replace(/for/i, '')
-            .replace(/videos?/i, '')
-            .replace(/about/i, '')
-            .trim();
-
-        // DUMMY VIDEO MODE
-        if (query === 'dummy') {
-            const dummyVideo = {
-                id: 'local-dummy',
-                title: '',
-                thumbnail: '/assets/img/lucky-tiger-promo-snapshot.png',
-                localUrl: '/assets/video/lucky-tiger-promo-video.mp4'
+        // Reset pagination state for new searches
+        if (!messageText.includes('more videos')) {
+            this.currentQuery = messageText;
+            this.currentPageToken = null;
+            this.currentSearchParams = {
+                query: messageText.replace(/^(play|search)\s+/i, '').trim(),
+                type: messageText.toLowerCase().includes('play') ? 'play' : 'search'
             };
-            const html = `
-                <div class="youtube-single-bubble">
-                    <p>Found result for: \"dummy\" (local dev video)</p>
-                    <div class="video-item">
-                        
-                        <div class="button-thumb-group top-buttons">
-                            <a href="#" class="youtube-action-btn youtube-popup-btn" data-local-video="${dummyVideo.localUrl}" role="button" tabindex="0">Play in Popup</a>
-                            <button class="youtube-action-btn add-to-playlist-btn" data-video='${JSON.stringify(dummyVideo)}' title="Add to Playlist">+</button>
-                            <button class="youtube-action-btn view-playlists-btn" title="View My Playlists" style="font-size:18px;padding:0 10px;background:none;border:none;cursor:pointer;vertical-align:middle;">
-                              <span style="display:inline-block;vertical-align:middle;">&#9776;</span>
-                            </button>
-                        </div>
-                        <span class="youtube-thumb-link youtube-popup-thumb" data-local-video="${dummyVideo.localUrl}">
-                            <img src="${dummyVideo.thumbnail}" alt="${dummyVideo.title}" title="Local Video" style="max-width:250px; border-radius:6px; box-shadow:0 1px 4px rgba(0,0,0,0.12); display:block; margin:0 auto;" />
-                        </span>
-
-                        <div class="button-thumb-group bottom-buttons">
-                            <a href="#" class="youtube-action-btn youtube-direct-link" style="opacity:0.5;pointer-events:none;">Watch on YouTube (N/A)</a>
-                        </div>
-                        
-                        <div class="video-title">${dummyVideo.title}</div>
-                    </div>
-                </div>
-            `;
-            const messageContent = { type: 'youtube', html };
-            addMessageToChat('assistant', messageContent, { type: 'youtube' });
-            // Add click handler for local video popup and playlist button
-            setTimeout(() => {
-                document.querySelectorAll('.youtube-popup-btn[data-local-video]').forEach(el => {
-                    el.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        const videoUrl = el.getAttribute('data-local-video');
-                        showLocalVideoModal(videoUrl, dummyVideo.title);
-                    });
-                });
-                document.querySelectorAll('.add-to-playlist-btn').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        const videoData = JSON.parse(btn.getAttribute('data-video'));
-                        console.log('Playlist button clicked', videoData); // <-- Are we feeling the click?
-                        if (window.playlistManager) {
-                            window.playlistManager.show(videoData);
-                        } else {
-                            console.error('PlaylistManager not initialized');
-                        }
-                    });
-                });
-                document.querySelectorAll('.view-playlists-btn').forEach(btn => {
-                  btn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    if (window.playlistManager) {
-                      window.playlistManager.show();
-                    }
-                  });
-                });
-            }, 100);
-            return true;
         }
 
         try {
@@ -4507,13 +4436,16 @@ const handleYoutube = {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    query,
-                    type: isPlay ? 'play' : 'search'
+                    ...this.currentSearchParams,
+                    pageToken: this.currentPageToken
                 })
             });
 
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             const data = await response.json();
+
+            // Store the next page token
+            this.currentPageToken = data.nextPageToken;
 
             // Always treat a single video as a SINGLE layout
             let videos = [];
@@ -4528,7 +4460,7 @@ const handleYoutube = {
                 // SINGLE layout for any single video
                 html = `
                     <div class="youtube-single-bubble">
-                        <p>Found result for: "${query}"</p>
+                        <p>Found result for: "${this.currentSearchParams.query}"</p>
                         <div class="video-item">
                             <div class="button-thumb-group-SINGLE top-buttons">
                                 <a href="#" class="youtube-action-btn youtube-popup-btn" data-video-id="${videos[0].id}" role="button" tabindex="0">Play in Popup</a>
@@ -4548,7 +4480,6 @@ const handleYoutube = {
                             </div>
                             
                             <div class="video-title-SINGLE">${videos[0].title}</div>
-
                         </div>
                     </div>
                 `;
@@ -4556,7 +4487,7 @@ const handleYoutube = {
                 // MULTI layout
                 html = `
                     <div class="youtube-multi-bubble">
-                        <p>Found results for: "${query}"</p>
+                        <p>Found results for: "${this.currentSearchParams.query}"</p>
                         <div class="video-list">
                             ${videos.map(video => `
                                 <div class="video-item">
@@ -4577,10 +4508,16 @@ const handleYoutube = {
                                     </div>
 
                                     <div class="video-title-MULTI">${video.title}</div>
-                                
                                 </div>
                             `).join('')}
                         </div>
+                        ${this.currentPageToken ? `
+                            <div class="more-videos-container" style="text-align: center; margin-top: 15px;">
+                                <button class="more-videos-btn" style="padding: 8px 16px; border: 1px solid hsla(11, 100%, 62.2%, 1) ; background-color: #4caf50;box-shadow: rgba(0, 0, 0, 0.25) 0px 14px 28px, rgba(0, 0, 0, 0.22) 0px 7px 10px ;color: white; border: none; border-radius: 4px; cursor: pointer;">
+                                    More Videos...
+                                </button>
+                            </div>
+                        ` : ''}
                     </div>
                 `;
             } else {
@@ -4600,33 +4537,37 @@ const handleYoutube = {
                     });
                 });
 
+                // Handle "More Videos" button
+                document.querySelectorAll('.more-videos-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        this.handleYoutubeRequest('more videos');
+                    });
+                });
+
                 // Handle playlist buttons
-                document.querySelectorAll('.add-to-playlist-btn').forEach(btn => {
+                document.querySelectorAll('.view-playlists-SINGLE-btn, .view-playlists-MULTI-btn').forEach(btn => {
                     btn.addEventListener('click', (e) => {
                         e.preventDefault();
-                        const videoData = JSON.parse(decodeURIComponent(btn.dataset.video));
                         if (window.playlistManager) {
-                            window.playlistManager.show(videoData);
-                        } else {
-                            console.error('PlaylistManager not initialized');
-                            showToast('Unable to open playlist manager. Please try again.');
+                            window.playlistManager.show();
                         }
                     });
                 });
-                document.querySelectorAll('.view-playlists-btn').forEach(btn => {
-                  btn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    if (window.playlistManager) {
-                      window.playlistManager.show();
-                    }
-                  });
+
+                // Handle add to playlist buttons
+                document.querySelectorAll('.add-to-playlist-SINGLE-btn, .add-to-playlist-MULTI-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const videoData = JSON.parse(decodeURIComponent(btn.getAttribute('data-video')));
+                        if (window.playlistManager) {
+                            window.playlistManager.showAddToPlaylist(videoData);
+                        }
+                    });
                 });
             }, 100);
-            return true;
         } catch (error) {
-            console.error('Error with YouTube request:', error);
-            addMessageToChat('assistant', 'Sorry, there was an error processing your YouTube request.');
-            return true;
+            console.error('Error handling YouTube request:', error);
+            addMessageToChat('assistant', `Error: ${error.message}`);
         }
     },
 
