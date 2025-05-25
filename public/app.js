@@ -1405,22 +1405,11 @@ async function sendMessage(message, isGreeting = false) {
         const pendingJoke = sessionStorage.getItem('pendingJoke');
         if (pendingJoke && /^yes$/i.test(messageText)) {
             addMessageToChat('user', messageText);
-            const joke = JSON.parse(pendingJoke);
-            const startTime = performance.now();
-            const metadata = {
-                type: 'my-joke',
-                model: elements.modelSelect ? elements.modelSelect.value : 'memory',
-                metrics: {
-                    model: elements.modelSelect ? elements.modelSelect.value : 'memory',
-                    totalTokens: joke.content.length,
-                    startTime: startTime,
-                    endTime: performance.now(),
-                    duration: ((performance.now() - startTime) / 1000).toFixed(2)
-                }
-            };
-            const jokeElement = addMessageToChat('assistant', joke.content, metadata);
+            const jokeObj = JSON.parse(pendingJoke);
+            const metadata = jokeObj.metadata;
+            const jokeElement = addMessageToChat('assistant', jokeObj.content, metadata);
             updateMetadata(jokeElement, metadata);
-            await queueAudioChunk(joke.content);
+            await queueAudioChunk(jokeObj.content);
             sessionStorage.removeItem('pendingJoke');
             return;
         }
@@ -4222,33 +4211,45 @@ const handleMyJokes = {
 
             if (data.success && data.joke) {
                 const message = "I found your joke. Would you like to hear it? Say Yes to hear it or No to cancel.";
+                const endTime = performance.now();
+                const duration = ((endTime - startTime) / 1000).toFixed(2);
+                const tokenCount = data.joke.content.length;
+                const model = elements.modelSelect ? elements.modelSelect.value : 'memory';
                 const metadata = {
                     type: 'my-joke',
-                    model: elements.modelSelect ? elements.modelSelect.value : 'memory',
+                    model,
                     metrics: {
-                        model: elements.modelSelect ? elements.modelSelect.value : 'memory',
-                        totalTokens: message.length,
-                        startTime: startTime,
-                        endTime: performance.now(),
-                        duration: ((performance.now() - startTime) / 1000).toFixed(2)
+                        model,
+                        totalTokens: tokenCount,
+                        startTime,
+                        endTime,
+                        duration
                     }
                 };
                 const messageElement = addMessageToChat('assistant', message, metadata);
                 updateMetadata(messageElement, metadata);
                 await queueAudioChunk(message);
 
-                sessionStorage.setItem('pendingJoke', JSON.stringify(data.joke));
+                // Store both joke and metadata in sessionStorage
+                sessionStorage.setItem('pendingJoke', JSON.stringify({
+                    content: data.joke.content,
+                    title: data.joke.title,
+                    metadata
+                }));
             } else {
-                const message = `Sorry, I couldn't find a joke about "${title}".`;
+                const message = `Sorry, I couldn't find a joke about \"${title}\".`;
+                const endTime = performance.now();
+                const duration = ((endTime - startTime) / 1000).toFixed(2);
+                const model = elements.modelSelect ? elements.modelSelect.value : 'memory';
                 const metadata = {
                     type: 'my-joke',
-                    model: elements.modelSelect ? elements.modelSelect.value : 'memory',
+                    model,
                     metrics: {
-                        model: elements.modelSelect ? elements.modelSelect.value : 'memory',
+                        model,
                         totalTokens: message.length,
-                        startTime: startTime,
-                        endTime: performance.now(),
-                        duration: ((performance.now() - startTime) / 1000).toFixed(2)
+                        startTime,
+                        endTime,
+                        duration
                     }
                 };
                 const messageElement = addMessageToChat('assistant', message, metadata);
@@ -4258,15 +4259,18 @@ const handleMyJokes = {
         } catch (error) {
             console.error('Error retrieving joke:', error);
             const errorMessage = "Sorry, there was an error retrieving your joke.";
+            const endTime = performance.now();
+            const duration = ((endTime - startTime) / 1000).toFixed(2);
+            const model = elements.modelSelect ? elements.modelSelect.value : 'memory';
             const errorMetadata = {
                 type: 'my-joke',
-                model: elements.modelSelect ? elements.modelSelect.value : 'memory',
+                model,
                 metrics: {
-                    model: elements.modelSelect ? elements.modelSelect.value : 'memory',
+                    model,
                     totalTokens: errorMessage.length,
-                    startTime: startTime,
-                    endTime: performance.now(),
-                    duration: ((performance.now() - startTime) / 1000).toFixed(2)
+                    startTime,
+                    endTime,
+                    duration
                 }
             };
             const errorElement = addMessageToChat('assistant', errorMessage, errorMetadata);
