@@ -142,7 +142,7 @@ status {
 #mic-button {
     background: transparent !important;
     color: #007bff !important;
-    border: 2px solid #007bff !important;
+    border: 2px solid hsl(240deg 7% 62% / 24%) !important;
     box-shadow: none !important;
     transition: background 0.2s, color 0.2s;
     padding: 5px 10px;
@@ -578,7 +578,7 @@ button {
 /* Ensure paragraphs within messages fill width */
 .message.assistant p {
     width: 100%;
-    margin: 2px 0;
+    margin: 2px 0 10px 0;
     white-space: normal;
     word-wrap: break-word;
     font-size: 15px;
@@ -2677,6 +2677,14 @@ button {
   color: #1976d2;
 }
 
+.format-greeting {
+    background-color: #b9f6c3 !important; /* Green background */
+    border: 1px solid #8be49b !important;
+    align-self: flex-start;
+    max-width: fit-content;
+    border-radius: 12px;
+}
+
 /* Special message types */
 .greeting-bubble {
     background-color: #b9f6c3 !important; /* Green background */
@@ -2684,7 +2692,7 @@ button {
     align-self: flex-start;
     max-width: fit-content;
     border-radius: 12px;
-    padding: 0 14px !important;
+    padding: 8px 8px 0px 8px !important; 
 }
 
 .exit-bubble {
