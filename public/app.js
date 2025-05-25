@@ -120,7 +120,7 @@ const SPEECH_CONFIG = {
 };
 
 // Add at the top with other constants
-// const DUMMY_PREFIX = "....................-------------------------...................................";
+const DUMMY_PREFIX = '.......................';
 // const TTS_IDLE_THRESHOLD = 60000; // 60 seconds
 
 const slideoutPanel = document.getElementById('slideout-panel-left');
@@ -869,10 +869,14 @@ async function initializeApp() {
         await loadPersonalInfo();
         setupEventListeners(); // Only call this ONCE
         await populateVoiceList();
+        
+        // Warm up TTS right after voice list is populated
+        console.log('[INIT] About to warm up TTS...');
+        await warmUpTTS({ silentOnly: true });
+        console.log('[INIT] TTS warm-up completed');
+        
+        // Check microphone permission
         await checkMicrophonePermission();
-
-        // Remove this duplicate:
-        // setupEventListeners();
 
         // Load personal info from MongoDB
         await loadPersonalInfo();
@@ -887,9 +891,6 @@ async function initializeApp() {
             }
             updateStatus(MESSAGES.STATUS.DEFAULT);
         }, MIC_INITIALIZATION_DELAY);
-
-        // Add TTS warm-up function
-        await warmUpTTS();
 
         console.log('App initialization completed successfully');
 
@@ -1409,7 +1410,11 @@ async function sendMessage(message, isGreeting = false) {
             const metadata = jokeObj.metadata;
             const jokeElement = addMessageToChat('assistant', jokeObj.content, metadata);
             updateMetadata(jokeElement, metadata);
-            await queueAudioChunk(jokeObj.content);
+            // Use the new chunking function for My Jokes
+            const jokeChunks = splitMyJokesTextIntoChunks(jokeObj.content);
+            for (const chunk of jokeChunks) {
+                await queueAudioChunk(chunk);
+            }
             sessionStorage.removeItem('pendingJoke');
             return;
         }
@@ -1966,6 +1971,11 @@ async function sendMessage(message, isGreeting = false) {
     } catch (error) {
         console.error('Error in greeting:', error);
     }
+
+    // Handle joke playback
+    if (await handleJokePlayback(messageText)) {
+        return; // Exit early if joke playback was handled
+    }
 }
 
 // Get AI response function
@@ -2119,6 +2129,7 @@ function addMessageToChat(role, content, options = {}) {
         const type = options.type || options.messageType || '';
         if (type === 'greeting') {
             messageElement.classList.add('greeting-bubble');
+            messageElement.classList.add('format-greeting');
         } else if (type === 'exit') {
             messageElement.classList.add('exit-bubble');
         }
@@ -4995,17 +5006,23 @@ async function playNextInQueue() {
         });
 
         if (!response.ok) throw new Error(`TTS API error: ${response.status}`);
-        
         const audioBlob = await response.blob();
         if (audioBlob.size === 0) throw new Error('Empty audio response');
 
         cleanup(state.currentAudio);
-        
+
         const audioUrl = URL.createObjectURL(audioBlob);
         state.currentAudio = new Audio(audioUrl);
         state.currentAudio.volume = AUDIO_CONFIG.volume;
 
-        // Wait for audio to finish before playing next chunk
+        // Wait for audio to be fully ready
+        await new Promise(resolve => {
+            state.currentAudio.addEventListener('canplaythrough', resolve, { once: true });
+        });
+
+        // Always apply a 200ms delay before playing the first chunk
+        await new Promise(resolve => setTimeout(resolve, 200));
+
         await new Promise((resolve, reject) => {
             state.currentAudio.onended = resolve;
             state.currentAudio.onerror = reject;
@@ -5013,7 +5030,7 @@ async function playNextInQueue() {
         });
 
         state.audioQueue.shift();
-        
+
         // Continue with next chunk after pause
         if (state.audioQueue.length > 0 && !state.stopRequested) {
             setTimeout(() => {
@@ -5023,8 +5040,12 @@ async function playNextInQueue() {
         } else {
             state.isPlaying = false;
             state.isAISpeaking = false;
+            elements.stopAudioButton.style.display = 'none'; // Hide Stop Audio button
             if (state.isConversationMode) {
+                updateStatus(MESSAGES.STATUS.LISTENING);
                 startListening();
+            } else {
+                updateStatus(MESSAGES.STATUS.READY);
             }
         }
 
@@ -5322,37 +5343,61 @@ function showToast(message) {
 }
 
 // Add TTS warm-up function
-async function warmUpTTS() {
+async function warmUpTTS({ silentOnly = false, audibleOnly = false } = {}) {
     try {
-        // Request a short, quiet audio from the TTS engine
-        const response = await fetch(AUDIO_CONFIG.apiUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                text: '...', // Use a short, non-intrusive utterance
-                voice: AUDIO_CONFIG.defaultVoice,
-                rate: AUDIO_CONFIG.rate,
-                pitch: AUDIO_CONFIG.pitch,
-                volume: 0.01 // Very quiet
-            })
-        });
-
-        if (!response.ok) throw new Error(`TTS API error: ${response.status}`);
-        const audioBlob = await response.blob();
-        if (audioBlob.size === 0) throw new Error('Empty audio response');
-
-        // Play the warm-up audio and wait for it to finish
-        const audioUrl = URL.createObjectURL(audioBlob);
-        const audio = new Audio(audioUrl);
-        await new Promise(resolve => {
-            audio.onended = resolve;
-            audio.onerror = resolve; // resolve on error to avoid hanging
-            audio.play();
-        });
-        URL.revokeObjectURL(audioUrl);
-        console.log('TTS engine warmed up and ready.');
+        if (!audibleOnly) {
+            // Step 1: Silent warm-up with DUMMY_PREFIX (not played)
+            const response1 = await fetch(AUDIO_CONFIG.apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    text: DUMMY_PREFIX,
+                    voice: AUDIO_CONFIG.defaultVoice,
+                    rate: AUDIO_CONFIG.rate,
+                    pitch: AUDIO_CONFIG.pitch,
+                    volume: 0
+                })
+            });
+            if (!response1.ok) throw new Error(`TTS API error: ${response1.status}`);
+            const audioBlob1 = await response1.blob();
+            if (audioBlob1.size === 0) throw new Error('Empty audio response (step 1)');
+            const audioUrl1 = URL.createObjectURL(audioBlob1);
+            const audio1 = new Audio(audioUrl1);
+            audio1.volume = 0;
+            await new Promise(resolve => {
+                audio1.addEventListener('canplaythrough', resolve, { once: true });
+            });
+            URL.revokeObjectURL(audioUrl1);
+        }
+        if (!silentOnly) {
+            // Step 2: Very quiet, real word, actually played
+            const response2 = await fetch(AUDIO_CONFIG.apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    text: 'ready',
+                    voice: AUDIO_CONFIG.defaultVoice,
+                    rate: AUDIO_CONFIG.rate,
+                    pitch: AUDIO_CONFIG.pitch,
+                    volume: 0.01
+                })
+            });
+            if (!response2.ok) throw new Error(`TTS API error: ${response2.status}`);
+            const audioBlob2 = await response2.blob();
+            if (audioBlob2.size === 0) throw new Error('Empty audio response (step 2)');
+            const audioUrl2 = URL.createObjectURL(audioBlob2);
+            const audio2 = new Audio(audioUrl2);
+            audio2.volume = 0.01;
+            await new Promise(resolve => {
+                audio2.addEventListener('ended', resolve, { once: true });
+                audio2.play();
+            });
+            URL.revokeObjectURL(audioUrl2);
+        }
+        isFirstTTSChunk = true;
+        console.log('TTS engine hybrid warm-up completed.');
     } catch (error) {
-        console.warn('TTS warm-up failed:', error);
+        console.warn('TTS hybrid warm-up failed:', error);
     }
 }
 
@@ -5417,10 +5462,65 @@ window.addEventListener('DOMContentLoaded', function() {
 });
 // ... existing code ...
 
+// ... existing code ...
+// Dedicated chunking for My Jokes playback
+function splitMyJokesTextIntoChunks(text, maxLength = 200) {
+    // Split by sentences, but keep punctuation
+    const sentences = text.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [text];
+    const chunks = [];
+    let currentChunk = '';
+    for (const sentence of sentences) {
+        if ((currentChunk + ' ' + sentence).trim().length > maxLength) {
+            if (currentChunk) {
+                chunks.push(currentChunk.trim());
+                currentChunk = '';
+            }
+        }
+        currentChunk += (currentChunk ? ' ' : '') + sentence.trim();
+    }
+    if (currentChunk) {
+        chunks.push(currentChunk.trim());
+    }
+    console.log('MyJokes TTS chunks:', chunks);
+    return chunks;
+}
+// ... existing code ...
+// In sendMessage, for the 'yes' branch (My Jokes playback):
+const pendingJoke = sessionStorage.getItem('pendingJoke');
+if (pendingJoke && /^yes$/i.test(messageText)) {
+    addMessageToChat('user', messageText);
+    const jokeObj = JSON.parse(pendingJoke);
+    const metadata = jokeObj.metadata;
+    const jokeElement = addMessageToChat('assistant', jokeObj.content, metadata);
+    updateMetadata(jokeElement, metadata);
+    // Use the new chunking function for My Jokes
+    const jokeChunks = splitMyJokesTextIntoChunks(jokeObj.content);
+    for (const chunk of jokeChunks) {
+        await queueAudioChunk(chunk);
+    }
+    sessionStorage.removeItem('pendingJoke');
+}
+// ... existing code ...
 
+// New top-level function for joke playback
+async function handleJokePlayback(messageText) {
+    const pendingJoke = sessionStorage.getItem('pendingJoke');
+    if (pendingJoke && /^yes$/i.test(messageText)) {
+        addMessageToChat('user', messageText);
+        const jokeObj = JSON.parse(pendingJoke);
+        const metadata = jokeObj.metadata;
+        const jokeElement = addMessageToChat('assistant', jokeObj.content, metadata);
+        updateMetadata(jokeElement, metadata);
+        // Use the new chunking function for My Jokes
+        const jokeChunks = splitMyJokesTextIntoChunks(jokeObj.content);
+        for (const chunk of jokeChunks) {
+            await queueAudioChunk(chunk);
+        }
+        sessionStorage.removeItem('pendingJoke');
+        return true; // Indicate that joke playback was handled
+    }
+    return false; // Indicate that joke playback was not handled
+}
 
-
-
-
-
+let isFirstTTSChunk = true;
 
