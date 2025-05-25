@@ -61,7 +61,6 @@ const MEMORY_KEYWORDS = {
     }
 };
 
-
 // Add at the top with other constants
 const MIC_INITIALIZATION_DELAY = 4000;  // 4 seconds delay
 
@@ -4689,7 +4688,7 @@ const handleYoutube = {
                             `).join('')}
                         </div>
                         ${this.currentPageToken ? `
-                            <div class="more-videos-container" style="text-align: right; margin-top: 15px;">
+                            <div class="more-videos-container" style="text-align: center; margin-top: 15px;">
                                 <button class="more-videos-btn" style="padding: 8px 16px; border: 1px solid hsla(11, 100%, 62.2%, 1) ; background-color: #4caf50;box-shadow: rgba(0, 0, 0, 0.25) 0px 14px 28px, rgba(0, 0, 0, 0.22) 0px 7px 10px ;color: white; border: none; border-radius: 4px; cursor: pointer;">
                                     More Videos...
                                 </button>
