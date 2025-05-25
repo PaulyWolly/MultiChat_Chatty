@@ -6,6 +6,7 @@ export class PlaylistManager {
     this.currentVideo = null;
     this.playlists = [];
     this.selectedPlaylistId = null;
+    this.playlistSortAsc = true; // Track sort order
     this.init();
   }
 
@@ -138,12 +139,44 @@ export class PlaylistManager {
       const f = filter.trim().toLowerCase();
       filtered = this.playlists.filter(p => p.name.toLowerCase().includes(f));
     }
+    // Sort playlists alphabetically by name
+    filtered = filtered.slice().sort((a, b) => {
+      if (a.name.toLowerCase() < b.name.toLowerCase()) return this.playlistSortAsc ? -1 : 1;
+      if (a.name.toLowerCase() > b.name.toLowerCase()) return this.playlistSortAsc ? 1 : -1;
+      return 0;
+    });
     container.innerHTML = filtered.map(playlist => `
       <div class="playlist-item${playlist._id === this.selectedPlaylistId ? ' active' : ''}" data-id="${playlist._id}" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center; padding:6px 10px; border-radius:6px; margin-bottom:2px; background:${playlist._id === this.selectedPlaylistId ? '#e3f2fd' : 'transparent'};">
         <span class="playlist-name">${playlist.name}</span>
         <span class="playlist-count" style="color:#888;font-size:0.95em;">(${playlist.videos.length})</span>
       </div>
     `).join('');
+
+    // --- Playlist List Outer Wrapper ---
+    let outer = this.dialog.querySelector('.playlist-list-outer');
+    if (!outer) {
+      outer = document.createElement('div');
+      outer.className = 'playlist-list-outer';
+      const playlistList = this.dialog.querySelector('.playlists-container');
+      if (playlistList) {
+        playlistList.parentElement.insertBefore(outer, playlistList);
+        outer.appendChild(playlistList);
+      }
+    }
+    // Remove any existing sort control
+    const oldSort = outer.querySelector('.playlist-sort-control');
+    if (oldSort) oldSort.remove();
+    // Add sort control absolutely positioned in the wrapper
+    const sortArrow = this.playlistSortAsc ? '▲' : '▼';
+    const sortControl = document.createElement('div');
+    sortControl.className = 'playlist-sort-control';
+    sortControl.innerHTML = `<span class="playlist-sort-label">Sort</span> <span class="playlist-sort-arrow">${sortArrow}</span>`;
+    outer.appendChild(sortControl);
+    sortControl.querySelector('.playlist-sort-arrow').onclick = (e) => {
+      e.stopPropagation();
+      this.playlistSortAsc = !this.playlistSortAsc;
+      this.renderPlaylists(this.dialog.querySelector('.playlist-search-input').value);
+    };
 
     container.querySelectorAll('.playlist-item').forEach(item => {
       item.addEventListener('click', (e) => {
@@ -163,6 +196,7 @@ export class PlaylistManager {
         try {
           const video = JSON.parse(e.dataTransfer.getData('application/json'));
           await this.addVideoToPlaylistById(item.dataset.id, video);
+          this.selectPlaylist(item.dataset.id);
         } catch (err) {
           this.showError('Failed to add video by drag-and-drop.');
         }
@@ -248,40 +282,42 @@ export class PlaylistManager {
     const container = this.dialog.querySelector('.videos-container');
     container.style.marginTop = '8px';
     container.innerHTML = `
-    <div class="playlist-table-wrapper">
-      <table class="playlist-videos-table" style="table-layout: fixed; width: 100%;">
-        <colgroup>
-          <col class="playlist-col-thumb">
-          <col class="playlist-col-title">
-          <col class="playlist-col-actions">
-        </colgroup>
-        <thead>
-          <tr>
-            <th class="playlist-video-header">Video</th>
-            <th class="playlist-title-header">Title</th>
-            <th class="playlist-actions-header">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${videos.map(video => `
-            <tr class="playlist-video-row" data-entry-id="${video._id}">
-              <td class="playlist-thumb-cell"><img class="video-thumbnail youtube-popup-thumb" src="${video.thumbnail}" alt="${video.title}" title="${video.title}" style="cursor:pointer;" data-video-id="${video.videoId}" /></td>
-              <td class="video-title-cell">
-                <span class="video-title-text">${video.title}</span>
-              </td>
-              <td class="playlist-actions-cell" style="text-align:right;">
-                <button class="action-btn view-video-btn" title="View/Play" data-video-id="${video.videoId}" data-local-url="${video.localUrl || ''}" data-entry-id="${video._id}">&#128065;</button>
-                <button class="edit-video-title-btn" title="Edit Title" style="background:none;border:none;cursor:pointer;font-size:1.1em;margin-left:8px;vertical-align:middle;">✏️</button>
-                <button class="action-btn remove-video-btn" title="Remove" data-id="${video._id}">&#128465;</button>
-                <select class="move-to-playlist" data-entry-id="${video._id}">
-                  <option value="">Move to...</option>
-                  ${this.playlists.filter(p => p._id !== this.selectedPlaylistId).map(p => `<option value="${p._id}">${p.name}</option>`).join('')}
-                </select>
-              </td>
-            </tr>
-          `).join('')}
-        </tbody>
-      </table>
+    <div class="playlist-table-blue-bg">
+        <div class="playlist-table-wrapper">
+            <table class="playlist-videos-table" style="table-layout: fixed; width: 100%;">
+                <colgroup>
+                    <col class="playlist-col-thumb">
+                    <col class="playlist-col-title">
+                    <col class="playlist-col-actions">
+                </colgroup>
+                <thead>
+                    <tr>
+                        <th class="playlist-video-header">Video</th>
+                        <th class="playlist-title-header">Title</th>
+                        <th class="playlist-actions-header">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${videos.map(video => `
+                        <tr class="playlist-video-row" data-entry-id="${video._id}">
+                            <td class="playlist-thumb-cell"><img class="video-thumbnail youtube-popup-thumb" src="${video.thumbnail}" alt="${video.title}" title="${video.title}" style="cursor:pointer;" data-video-id="${video.videoId}" /></td>
+                            <td class="video-title-cell">
+                                <span class="video-title-text">${video.title}</span>
+                            </td>
+                            <td class="playlist-actions-cell" style="text-align:right;">
+                                <button class="action-btn view-video-btn" title="View/Play" data-video-id="${video.videoId}" data-local-url="${video.localUrl || ''}" data-entry-id="${video._id}">&#128065;</button>
+                                <button class="edit-video-title-btn" title="Edit Title" style="background:none;border:none;cursor:pointer;font-size:1.1em;margin-left:8px;vertical-align:middle;">✏️</button>
+                                <button class="action-btn remove-video-btn" title="Remove" data-id="${video._id}">&#128465;</button>
+                                <select class="move-to-playlist" data-entry-id="${video._id}">
+                                    <option value="">Move to...</option>
+                                    ${this.playlists.filter(p => p._id !== this.selectedPlaylistId).map(p => `<option value="${p._id}">${p.name}</option>`).join('')}
+                                </select>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        </div>
     </div>
     `;
 
