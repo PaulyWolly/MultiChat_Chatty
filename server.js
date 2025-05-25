@@ -1737,9 +1737,10 @@ app.post('/api/debug/add-test-joke', async (req, res) => {
 // =====================================================
 
 app.post('/api/youtube/search', async (req, res) => {
+    console.log('YouTube Search POST body:', req.body);
     try {
-        const { query, type = 'search' } = req.body;
-        console.log('YouTube search request:', { query, type });
+        const { query, type = 'search', pageToken } = req.body;
+        console.log('YouTube search request:', { query, type, pageToken });
 
         // Check if API key exists
         if (!process.env.GOOGLE_API_KEY) {
@@ -1761,7 +1762,11 @@ app.post('/api/youtube/search', async (req, res) => {
                 part: ['snippet'],
                 q: query,
                 maxResults: 10,
-                type: 'video'
+                type: 'video',
+                pageToken: pageToken,
+                order: 'relevance',
+                regionCode: 'US',
+                safeSearch: 'none'
             });
 
             // Then get full video details including complete descriptions
@@ -1784,7 +1789,11 @@ app.post('/api/youtube/search', async (req, res) => {
                 thumbnail: video.snippet.thumbnails.high.url
             }));
 
-            res.json({ success: true, videos });
+            res.json({ 
+                success: true, 
+                videos,
+                nextPageToken: searchResponse.data.nextPageToken
+            });
         } else if (type === 'play') {
             // Handle single video playback
             const searchResponse = await youtube.search.list({
