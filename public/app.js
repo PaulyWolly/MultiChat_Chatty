@@ -1,8 +1,8 @@
 /*
   APP.JS
   Version: 1
-  AppName: Multi-Chat [v1]
-  Updated: 05/25/2025 @5:30AM
+  AppName: MultiChat_Chatty [v1]
+  Updated: 05/24/2025 @10:00AM
   Created by Paul Welby
 */
 
@@ -60,6 +60,7 @@ const MEMORY_KEYWORDS = {
         retrieve: /what (?:did I|about|was) (.+)/i
     }
 };
+
 
 // Add at the top with other constants
 const MIC_INITIALIZATION_DELAY = 4000;  // 4 seconds delay
@@ -119,7 +120,7 @@ const SPEECH_CONFIG = {
 };
 
 // Add at the top with other constants
-const DUMMY_PREFIX = '.......................';
+// const DUMMY_PREFIX = "....................-------------------------...................................";
 // const TTS_IDLE_THRESHOLD = 60000; // 60 seconds
 
 const slideoutPanel = document.getElementById('slideout-panel-left');
@@ -868,14 +869,10 @@ async function initializeApp() {
         await loadPersonalInfo();
         setupEventListeners(); // Only call this ONCE
         await populateVoiceList();
-        
-        // Warm up TTS right after voice list is populated
-        console.log('[INIT] About to warm up TTS...');
-        await warmUpTTS({ silentOnly: true });
-        console.log('[INIT] TTS warm-up completed');
-        
-        // Check microphone permission
         await checkMicrophonePermission();
+
+        // Remove this duplicate:
+        // setupEventListeners();
 
         // Load personal info from MongoDB
         await loadPersonalInfo();
@@ -890,6 +887,9 @@ async function initializeApp() {
             }
             updateStatus(MESSAGES.STATUS.DEFAULT);
         }, MIC_INITIALIZATION_DELAY);
+
+        // Add TTS warm-up function
+        await warmUpTTS();
 
         console.log('App initialization completed successfully');
 
@@ -1030,38 +1030,37 @@ function setupSSEConnection() {
         state.eventSource.onmessage = function(event) {
             try {
                 const data = JSON.parse(event.data);
-                // Handle completion signal
-                if (data.done || data.complete) {
-                    state.isProcessing = false;
-                    state.isSending = false;
-                    state.eventSource.close();
-                }
                 if (data.type === 'heartbeat') {
-                    // Handle heartbeat
-                    state.lastHeartbeat = Date.now();
-                    return;
+                    if (data.timestamp && !isNaN(new Date(data.timestamp).getTime())) {
+                        console.log('Heartbeat received:', new Date(data.timestamp).toLocaleTimeString());
+                    } else {
+                        console.log('Heartbeat received (no valid timestamp)');
+                    }
                 }
                 if (data.response) {
-                    // Remove all greeting handling here; only sendMessage handles greeting bubbles
-                    if (data.messageType === 'exit') {
+                    // Check for special message types
+                    if (data.messageType === 'greeting') {  // Server sends 'greeting' type
+                        addMessageToChat('assistant', data.response, null, 'greeting');
+                    } else if (data.messageType === 'exit') {
                         addMessageToChat('assistant', data.response, null, 'exit');
-                    } else if (data.messageType === 'system' || data.messageType === 'time' || data.messageType === 'date' || data.messageType === 'datetime') {
-                        addMessageToChat('assistant', data.response, null, data.messageType);
+                    } else if (data.messageType === 'system' || data.messageType === 'time' || data.messageType === 'date' || data.messageType === 'datetime') {  // Using 'datetime' here too
+                        addMessageToChat('assistant', data.response, null, data.messageType);  // Pass the actual type
                     } else {
+                        // Regular message handling
                         const messageElement = addMessageToChat('assistant', data.response, {
                             model: data.metrics?.model,
                             startTime: data.metrics?.startTime || Date.now(),
                             tokenCount: data.tokenCount
                         });
                     }
+
+                    // Queue audio if enabled
                     if (data.shouldPlayAudio && state.selectedVoice) {
                         queueAudioChunk(data.response);
                     }
                 }
             } catch (error) {
-                state.isProcessing = false;
-                state.isSending = false;
-                state.eventSource.close();
+                console.error('Error handling SSE message:', error);
             }
         };
 
@@ -1181,83 +1180,6 @@ async function fetchWithRetry(url, options, maxRetries = 3) {
 // Send message function
 async function sendMessage(message, isGreeting = false) {
     try {
-        // Handle greetings first
-        if (isGreeting) {
-            const greeting = await generateGreeting();
-            // Add user's greeting to chat
-            addMessageToChat('user', message);
-            // Add AI's greeting with greeting-bubble class and no metadata
-            addMessageToChat('assistant', greeting, { type: 'greeting' });
-            // Queue audio for greeting
-            if (typeof warmUpTTS === 'function') {
-                await warmUpTTS();
-            }
-            await queueAudioChunk(greeting);
-            return;
-        }
-
-        // Check for greetings in regular messages using a more comprehensive approach
-        const trimmedMessage = message.trim().toLowerCase();
-        
-        // Common greeting words and phrases
-        const greetingWords = [
-            'hi', 
-            'hi there', 
-            'hello', 
-            'hello there', 
-            'hey', 
-            'hey there',
-            'greetings', 
-            'yo', 
-            'sup', 
-            'wassup', 
-            'whats up', 
-            'what\'s up'
-        ];
-        
-        // Time-based greetings
-        const timeGreetings = [
-            'good morning', 
-            'good afternoon', 
-            'good evening', 
-            'morning', 
-            'afternoon', 
-            'evening'
-        ];
-        
-        // Simple conversation starters
-        const conversationStarters = [
-            'speak', 
-            'say something', 
-            'talk to me', 
-            'start', 
-            'begin'
-        ];
-        
-        // Check if the message matches any greeting pattern
-        const isGreetingMessage = 
-            greetingWords.some(word => trimmedMessage === word) ||
-            timeGreetings.some(greeting => trimmedMessage.startsWith(greeting)) ||
-            conversationStarters.some(starter => trimmedMessage === starter) ||
-            // Check for variations with "there" or other common additions
-            greetingWords.some(word => trimmedMessage.startsWith(word + ' there') || 
-                                     trimmedMessage.startsWith(word + '!') ||
-                                     trimmedMessage.startsWith(word + '?'));
-
-        if (isGreetingMessage) {
-            const greeting = await generateGreeting();
-            // Add user's greeting to chat
-            addMessageToChat('user', message);
-            // Add AI's greeting with greeting-bubble class and no metadata
-            addMessageToChat('assistant', greeting, { type: 'greeting' });
-            // Queue audio for greeting
-            if (typeof warmUpTTS === 'function') {
-                await warmUpTTS();
-            }
-            await queueAudioChunk(greeting);
-            return;
-        }
-
         const messageText = message;  // Initialize properly
         const patterns = getPatterns();
 
@@ -1363,6 +1285,19 @@ async function sendMessage(message, isGreeting = false) {
             return;
         }
 
+        if (isGreeting) {
+            const greeting = await generateGreeting();
+            // Add user's greeting to chat first
+            addMessageToChat('user', 'hello');
+            // Add AI's greeting with greeting-bubble class
+            addMessageToChat('assistant', greeting, {
+                type: 'greeting',
+                messageType: 'greeting-bubble'
+            });
+            await queueAudioChunk(greeting);
+            return;
+        }
+
         // Check for exit command first
         if (messageText.toLowerCase() === 'exit') {
             await exitConversation();
@@ -1405,15 +1340,15 @@ async function sendMessage(message, isGreeting = false) {
         const pendingJoke = sessionStorage.getItem('pendingJoke');
         if (pendingJoke && /^yes$/i.test(messageText)) {
             addMessageToChat('user', messageText);
-            const jokeObj = JSON.parse(pendingJoke);
-            const metadata = jokeObj.metadata;
-            const jokeElement = addMessageToChat('assistant', jokeObj.content, metadata);
-            updateMetadata(jokeElement, metadata);
-            // Use the new chunking function for My Jokes
-            const jokeChunks = splitMyJokesTextIntoChunks(jokeObj.content);
-            for (const chunk of jokeChunks) {
-                await queueAudioChunk(chunk);
-            }
+            const joke = JSON.parse(pendingJoke);
+            addMessageToChat('assistant', joke.content);
+            await queueAudioChunk(joke.content);
+            sessionStorage.removeItem('pendingJoke');
+            return;
+        } else if (pendingJoke && /^no$/i.test(messageText)) {
+            addMessageToChat('user', messageText);
+            addMessageToChat('assistant', "Okay, maybe next time!");
+            await queueAudioChunk("Okay, maybe next time!");
             sessionStorage.removeItem('pendingJoke');
             return;
         }
@@ -1725,12 +1660,6 @@ async function sendMessage(message, isGreeting = false) {
                 state.eventSource.close();
             }
 
-            if (data.type === 'heartbeat') {
-                // Handle heartbeat
-                state.lastHeartbeat = Date.now();
-                return;
-            }
-
             if (data.response) {
                 // Check for special message types (greetings)
                 if (data.messageType === 'greeting') {
@@ -1970,11 +1899,6 @@ async function sendMessage(message, isGreeting = false) {
     } catch (error) {
         console.error('Error in greeting:', error);
     }
-
-    // Handle joke playback
-    if (await handleJokePlayback(messageText)) {
-        return; // Exit early if joke playback was handled
-    }
 }
 
 // Get AI response function
@@ -2128,7 +2052,6 @@ function addMessageToChat(role, content, options = {}) {
         const type = options.type || options.messageType || '';
         if (type === 'greeting') {
             messageElement.classList.add('greeting-bubble');
-            messageElement.classList.add('format-greeting');
         } else if (type === 'exit') {
             messageElement.classList.add('exit-bubble');
         }
@@ -2142,13 +2065,11 @@ function addMessageToChat(role, content, options = {}) {
     if (role === 'assistant') {
         const type = options.type || options.messageType || '';
         const excludedTypes = ['greeting', 'exit', 'time', 'date', 'datetime'];
-        // Always add metadata for 'my-joke' type
-        if (type === 'my-joke' || !excludedTypes.includes(type)) {
+        if (!excludedTypes.includes(type)) {
             metadataElement = document.createElement('div');
             metadataElement.className = 'metadata';
             // Insert metadata before contentElement
             messageElement.appendChild(metadataElement);
-            
         }
     }
 
@@ -2162,27 +2083,25 @@ function addMessageToChat(role, content, options = {}) {
     // Handle different content types
     if (typeof content === 'object' && content.type === 'youtube') {
         contentElement.innerHTML = content.html;
-    } else if (role === 'assistant' && typeof content === 'string') {
-        // Split assistant output into paragraphs of up to 3 sentences each
-        const sentences = content.match(/[^.!?]+[.!?]+/g) || [content];
-        let paragraph = '';
-        let sentenceCount = 0;
-        for (let i = 0; i < sentences.length; i++) {
-            paragraph += sentences[i].trim() + ' ';
-            sentenceCount++;
-            if (sentenceCount === 5 || i === sentences.length - 1) {
-                const p = document.createElement('p');
-                p.textContent = paragraph.trim();
-                contentElement.appendChild(p);
-                paragraph = '';
-                sentenceCount = 0;
-            }
+    } else if (typeof content === 'string') {
+        // Check for HTML-based search results
+        if (
+            content.includes('<h2>Web Results') ||
+            content.includes('<h2>News Results') ||
+            content.includes("<ol class='search-results-list'>") ||
+            content.includes('<ol class="search-results-list">')
+        ) {
+            contentElement.innerHTML = content;
         }
-    } else {
-        contentElement.textContent = content;
+        // For assistant recipe messages, format ingredients as dashed HTML list
+        else if (role === 'assistant' && content.match(/Ingredients:/i) && content.match(/Instructions:|Directions:/i)) {
+            content = formatIngredientsAsDashedList(content);
+            contentElement.innerHTML = content;
+        } else {
+            contentElement.textContent = content;
+        }
     }
 
-    messageElement.appendChild(contentElement);
     elements.chatMessages.appendChild(messageElement);
     elements.chatMessages.scrollTop = elements.chatMessages.scrollHeight;
 
@@ -2203,23 +2122,6 @@ function updateMessageContent(messageElement, content, tokenCount) {
             content.includes('<ol class="search-results-list">')
         ) {
             contentElement.innerHTML = content;
-        } else if (messageElement.classList.contains('assistant')) {
-            // For assistant messages, split into paragraphs of up to 3 sentences
-            contentElement.innerHTML = '';
-            const sentences = content.match(/[^.!?]+[.!?]+/g) || [content];
-            let paragraph = '';
-            let sentenceCount = 0;
-            for (let i = 0; i < sentences.length; i++) {
-                paragraph += sentences[i].trim() + ' ';
-                sentenceCount++;
-                if (sentenceCount === 5 || i === sentences.length - 1) {
-                    const p = document.createElement('p');
-                    p.textContent = paragraph.trim();
-                    contentElement.appendChild(p);
-                    paragraph = '';
-                    sentenceCount = 0;
-                }
-            }
         } else {
             // For regular text content
             contentElement.textContent = content;
@@ -4034,20 +3936,7 @@ const handleMyJokes = {
                 }
                 state.isAISpeaking = true;
                 elements.stopAudioButton.style.display = 'block';
-                const startTime = performance.now();
-                const metadata = {
-                    type: 'my-joke',
-                    model: elements.modelSelect ? elements.modelSelect.value : 'memory',
-                    metrics: {
-                        model: elements.modelSelect ? elements.modelSelect.value : 'memory',
-                        totalTokens: jokeData.content.length,
-                        startTime: startTime,
-                        endTime: performance.now(),
-                        duration: ((performance.now() - startTime) / 1000).toFixed(2)
-                    }
-                };
-                const jokeElement = addMessageToChat('assistant', jokeData.content, metadata);
-                updateMetadata(jokeElement, metadata);
+                addMessageToChat('assistant', jokeData.content);
                 await queueAudioChunk(jokeData.content);
                 sessionStorage.removeItem('pendingJoke');
             } catch (error) {
@@ -4220,71 +4109,37 @@ const handleMyJokes = {
             const data = await response.json();
 
             if (data.success && data.joke) {
-                const message = "I found your joke. Would you like to hear it? Say Yes to hear it or No to cancel.";
-                const endTime = performance.now();
-                const duration = ((endTime - startTime) / 1000).toFixed(2);
-                const tokenCount = data.joke.content.length;
-                const model = elements.modelSelect ? elements.modelSelect.value : 'memory';
+                const message = "I found your joke. Would you like to hear it? Say YES to hear it or NO to cancel.";
                 const metadata = {
-                    type: 'my-joke',
-                    model,
-                    metrics: {
-                        model,
-                        totalTokens: tokenCount,
-                        startTime,
-                        endTime,
-                        duration
-                    }
+                    model: elements.modelSelect.value,
+                    duration: `${((performance.now() - startTime) / 1000).toFixed(2)}s`,
+                    tokens: '32 tokens',
+                    messageType: 'joke'
                 };
-                const messageElement = addMessageToChat('assistant', message, metadata);
-                updateMetadata(messageElement, metadata);
+                addMessageToChat('assistant', message, metadata);
                 await queueAudioChunk(message);
-
-                // Store both joke and metadata in sessionStorage
-                sessionStorage.setItem('pendingJoke', JSON.stringify({
-                    content: data.joke.content,
-                    title: data.joke.title,
-                    metadata
-                }));
+                sessionStorage.setItem('pendingJoke', JSON.stringify(data.joke));
             } else {
-                const message = `Sorry, I couldn't find a joke about \"${title}\".`;
-                const endTime = performance.now();
-                const duration = ((endTime - startTime) / 1000).toFixed(2);
-                const model = elements.modelSelect ? elements.modelSelect.value : 'memory';
+                const message = `Sorry, I couldn't find a joke about "${title}".`;
                 const metadata = {
-                    type: 'my-joke',
-                    model,
-                    metrics: {
-                        model,
-                        totalTokens: message.length,
-                        startTime,
-                        endTime,
-                        duration
-                    }
+                    model: elements.modelSelect.value,
+                    duration: `${((performance.now() - startTime) / 1000).toFixed(2)}s`,
+                    tokens: '37 tokens',
+                    messageType: 'joke'
                 };
-                const messageElement = addMessageToChat('assistant', message, metadata);
-                updateMetadata(messageElement, metadata);
+                addMessageToChat('assistant', message, metadata);
                 await queueAudioChunk(message);
             }
         } catch (error) {
             console.error('Error retrieving joke:', error);
             const errorMessage = "Sorry, there was an error retrieving your joke.";
-            const endTime = performance.now();
-            const duration = ((endTime - startTime) / 1000).toFixed(2);
-            const model = elements.modelSelect ? elements.modelSelect.value : 'memory';
-            const errorMetadata = {
-                type: 'my-joke',
-                model,
-                metrics: {
-                    model,
-                    totalTokens: errorMessage.length,
-                    startTime,
-                    endTime,
-                    duration
-                }
+            const metadata = {
+                model: elements.modelSelect.value,
+                duration: `${((performance.now() - startTime) / 1000).toFixed(2)}s`,
+                tokens: '30 tokens',
+                messageType: 'error'
             };
-            const errorElement = addMessageToChat('assistant', errorMessage, errorMetadata);
-            updateMetadata(errorElement, errorMetadata);
+            addMessageToChat('assistant', errorMessage, metadata);
             await queueAudioChunk(errorMessage);
         }
     },
@@ -4297,15 +4152,12 @@ const handleMyJokes = {
 
     // Add this new method to handleMyJokes
     async listJokes(showAll = false, metadata = {}) {
+        const startTime = performance.now();
         try {
-            const startTime = performance.now();
-            const response = await fetchWithRetry(`/api/jokes/list-jokes?type=my jokes&sessionId=${window.sessionId}`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
+            state.isAISpeaking = true;
+            elements.stopAudioButton.style.display = 'block';
 
+            const response = await fetch(`/api/jokes/list-jokes?type=my jokes&sessionId=${window.sessionId}`);
             const data = await response.json();
 
             if (data.success && data.jokes && data.jokes.length > 0) {
@@ -4316,7 +4168,6 @@ const handleMyJokes = {
 
                 // Add message with proper metadata
                 const messageElement = addMessageToChat('assistant', messageText, {
-                    type: 'my-joke',
                     model: elements.modelSelect.value,
                     metrics: {
                         model: elements.modelSelect.value,
@@ -4324,19 +4175,8 @@ const handleMyJokes = {
                         startTime: startTime,
                         endTime: endTime,
                         duration: duration
-                    }
-                });
-                
-                updateMetadata(messageElement, {
-                    type: 'my-joke',
-                    model: elements.modelSelect.value,
-                    metrics: {
-                        model: elements.modelSelect.value,
-                        totalTokens: tokenCount,
-                        startTime: startTime,
-                        endTime: endTime,
-                        duration: duration
-                    }
+                    },
+                    type: 'joke-list'
                 });
 
                 // Create and append the joke list
@@ -4353,8 +4193,6 @@ const handleMyJokes = {
                 const helpText = document.createElement('p');
                 helpText.style.marginTop = '10px';
                 helpText.style.fontStyle = 'italic';
-                helpText.style.marginRight = '20px';
-                helpText.style.color = 'blue';
                 helpText.textContent = 'To hear your joke, ask... "Tell me my joke about [joke name]"';
                 messageElement.querySelector('.message-content').appendChild(helpText);
 
@@ -4367,8 +4205,8 @@ const handleMyJokes = {
                 const message = "You haven't saved any jokes yet.";
                 const endTime = performance.now();
                 const duration = ((endTime - startTime) / 1000).toFixed(2);
-                const metadata = {
-                    type: 'my-joke',
+
+                addMessageToChat('assistant', message, {
                     model: elements.modelSelect.value,
                     metrics: {
                         model: elements.modelSelect.value,
@@ -4376,28 +4214,28 @@ const handleMyJokes = {
                         startTime: startTime,
                         endTime: endTime,
                         duration: duration
-                    }
-                };
-                const messageElement = addMessageToChat('assistant', message, metadata);
-                updateMetadata(messageElement, metadata);
+                    },
+                    type: 'joke-list'
+                });
                 await queueAudioChunk(message);
             }
         } catch (error) {
             console.error('Error listing jokes:', error);
             const errorMessage = "Sorry, there was an error retrieving your jokes.";
-            const errorMetadata = {
-                type: 'my-joke',
+            const endTime = performance.now();
+            const duration = ((endTime - startTime) / 1000).toFixed(2);
+
+            addMessageToChat('assistant', errorMessage, {
                 model: elements.modelSelect.value,
                 metrics: {
                     model: elements.modelSelect.value,
                     totalTokens: errorMessage.length,
-                    startTime: performance.now(),
-                    endTime: performance.now(),
-                    duration: '0.00'
-                }
-            };
-            const errorElement = addMessageToChat('assistant', errorMessage, errorMetadata);
-            updateMetadata(errorElement, errorMetadata);
+                    startTime: startTime,
+                    endTime: endTime,
+                    duration: duration
+                },
+                type: 'error'
+            });
             await queueAudioChunk(errorMessage);
         }
     },
@@ -4552,34 +4390,20 @@ const handleMyJokes = {
 
     // Display jokes in a formatted list
     displayJokes(jokes) {
-        const messageText = "Here is a listing of your jokes:";
-        // Add message with proper metadata and type
-        const messageElement = addMessageToChat('assistant', messageText, {
-            type: 'my-joke',
-            model: elements.modelSelect ? elements.modelSelect.value : 'memory',
-            metrics: {
-                model: elements.modelSelect ? elements.modelSelect.value : 'memory',
-                totalTokens: messageText.length + jokes.reduce((acc, joke) => acc + (joke.title?.length || 0), 0),
-                startTime: performance.now(),
-                endTime: performance.now(),
-                duration: '0.00'
-            }
-        });
-        // Create and append the joke list
-        const list = document.createElement('ol');
+        const jokeList = document.createElement('div');
+        jokeList.className = 'joke-list';
+
         jokes.forEach(joke => {
-            const item = document.createElement('li');
-            item.textContent = joke.title || joke.text;
-            list.appendChild(item);
+            const jokeItem = document.createElement('div');
+            jokeItem.className = 'joke-item';
+            jokeItem.innerHTML = `
+                <span class="joke-number">${joke.number}.</span>
+                <span class="joke-text">${joke.text}</span>
+            `;
+            jokeList.appendChild(jokeItem);
         });
-        messageElement.querySelector('.message-content').appendChild(list);
-        // Add help text
-        const helpText = document.createElement('p');
-        helpText.style.marginTop = '10px';
-        helpText.style.fontStyle = 'italic';
-        helpText.style.marginRight = '20px';
-        helpText.textContent = 'To hear your joke, ask... "Tell me my joke about [joke name]"';
-        messageElement.querySelector('.message-content').appendChild(helpText);
+
+        addMessageToChat('system', jokeList.outerHTML);
     },
 };
 
@@ -5005,23 +4829,17 @@ async function playNextInQueue() {
         });
 
         if (!response.ok) throw new Error(`TTS API error: ${response.status}`);
+        
         const audioBlob = await response.blob();
         if (audioBlob.size === 0) throw new Error('Empty audio response');
 
         cleanup(state.currentAudio);
-
+        
         const audioUrl = URL.createObjectURL(audioBlob);
         state.currentAudio = new Audio(audioUrl);
         state.currentAudio.volume = AUDIO_CONFIG.volume;
 
-        // Wait for audio to be fully ready
-        await new Promise(resolve => {
-            state.currentAudio.addEventListener('canplaythrough', resolve, { once: true });
-        });
-
-        // Always apply a 200ms delay before playing the first chunk
-        await new Promise(resolve => setTimeout(resolve, 200));
-
+        // Wait for audio to finish before playing next chunk
         await new Promise((resolve, reject) => {
             state.currentAudio.onended = resolve;
             state.currentAudio.onerror = reject;
@@ -5029,7 +4847,7 @@ async function playNextInQueue() {
         });
 
         state.audioQueue.shift();
-
+        
         // Continue with next chunk after pause
         if (state.audioQueue.length > 0 && !state.stopRequested) {
             setTimeout(() => {
@@ -5039,12 +4857,8 @@ async function playNextInQueue() {
         } else {
             state.isPlaying = false;
             state.isAISpeaking = false;
-            elements.stopAudioButton.style.display = 'none'; // Hide Stop Audio button
             if (state.isConversationMode) {
-                updateStatus(MESSAGES.STATUS.LISTENING);
                 startListening();
-            } else {
-                updateStatus(MESSAGES.STATUS.READY);
             }
         }
 
@@ -5342,61 +5156,22 @@ function showToast(message) {
 }
 
 // Add TTS warm-up function
-async function warmUpTTS({ silentOnly = false, audibleOnly = false } = {}) {
+async function warmUpTTS() {
     try {
-        if (!audibleOnly) {
-            // Step 1: Silent warm-up with DUMMY_PREFIX (not played)
-            const response1 = await fetch(AUDIO_CONFIG.apiUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    text: DUMMY_PREFIX,
-                    voice: AUDIO_CONFIG.defaultVoice,
-                    rate: AUDIO_CONFIG.rate,
-                    pitch: AUDIO_CONFIG.pitch,
-                    volume: 0
-                })
-            });
-            if (!response1.ok) throw new Error(`TTS API error: ${response1.status}`);
-            const audioBlob1 = await response1.blob();
-            if (audioBlob1.size === 0) throw new Error('Empty audio response (step 1)');
-            const audioUrl1 = URL.createObjectURL(audioBlob1);
-            const audio1 = new Audio(audioUrl1);
-            audio1.volume = 0;
-            await new Promise(resolve => {
-                audio1.addEventListener('canplaythrough', resolve, { once: true });
-            });
-            URL.revokeObjectURL(audioUrl1);
-        }
-        if (!silentOnly) {
-            // Step 2: Very quiet, real word, actually played
-            const response2 = await fetch(AUDIO_CONFIG.apiUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    text: 'ready',
-                    voice: AUDIO_CONFIG.defaultVoice,
-                    rate: AUDIO_CONFIG.rate,
-                    pitch: AUDIO_CONFIG.pitch,
-                    volume: 0.01
-                })
-            });
-            if (!response2.ok) throw new Error(`TTS API error: ${response2.status}`);
-            const audioBlob2 = await response2.blob();
-            if (audioBlob2.size === 0) throw new Error('Empty audio response (step 2)');
-            const audioUrl2 = URL.createObjectURL(audioBlob2);
-            const audio2 = new Audio(audioUrl2);
-            audio2.volume = 0.01;
-            await new Promise(resolve => {
-                audio2.addEventListener('ended', resolve, { once: true });
-                audio2.play();
-            });
-            URL.revokeObjectURL(audioUrl2);
-        }
-        isFirstTTSChunk = true;
-        console.log('TTS engine hybrid warm-up completed.');
+        await fetch(AUDIO_CONFIG.apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                text: '\u200B', // zero-width space (silent)
+                voice: AUDIO_CONFIG.defaultVoice,
+                rate: AUDIO_CONFIG.rate,
+                pitch: AUDIO_CONFIG.pitch,
+                volume: AUDIO_CONFIG.volume
+            })
+        });
+        console.log('TTS engine warmed up.');
     } catch (error) {
-        console.warn('TTS hybrid warm-up failed:', error);
+        console.warn('TTS warm-up failed:', error);
     }
 }
 
@@ -5461,65 +5236,5 @@ window.addEventListener('DOMContentLoaded', function() {
 });
 // ... existing code ...
 
-// ... existing code ...
-// Dedicated chunking for My Jokes playback
-function splitMyJokesTextIntoChunks(text, maxLength = 200) {
-    // Split by sentences, but keep punctuation
-    const sentences = text.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [text];
-    const chunks = [];
-    let currentChunk = '';
-    for (const sentence of sentences) {
-        if ((currentChunk + ' ' + sentence).trim().length > maxLength) {
-            if (currentChunk) {
-                chunks.push(currentChunk.trim());
-                currentChunk = '';
-            }
-        }
-        currentChunk += (currentChunk ? ' ' : '') + sentence.trim();
-    }
-    if (currentChunk) {
-        chunks.push(currentChunk.trim());
-    }
-    console.log('MyJokes TTS chunks:', chunks);
-    return chunks;
-}
-// ... existing code ...
-// In sendMessage, for the 'yes' branch (My Jokes playback):
-const pendingJoke = sessionStorage.getItem('pendingJoke');
-if (pendingJoke && /^yes$/i.test(messageText)) {
-    addMessageToChat('user', messageText);
-    const jokeObj = JSON.parse(pendingJoke);
-    const metadata = jokeObj.metadata;
-    const jokeElement = addMessageToChat('assistant', jokeObj.content, metadata);
-    updateMetadata(jokeElement, metadata);
-    // Use the new chunking function for My Jokes
-    const jokeChunks = splitMyJokesTextIntoChunks(jokeObj.content);
-    for (const chunk of jokeChunks) {
-        await queueAudioChunk(chunk);
-    }
-    sessionStorage.removeItem('pendingJoke');
-}
-// ... existing code ...
 
-// New top-level function for joke playback
-async function handleJokePlayback(messageText) {
-    const pendingJoke = sessionStorage.getItem('pendingJoke');
-    if (pendingJoke && /^yes$/i.test(messageText)) {
-        addMessageToChat('user', messageText);
-        const jokeObj = JSON.parse(pendingJoke);
-        const metadata = jokeObj.metadata;
-        const jokeElement = addMessageToChat('assistant', jokeObj.content, metadata);
-        updateMetadata(jokeElement, metadata);
-        // Use the new chunking function for My Jokes
-        const jokeChunks = splitMyJokesTextIntoChunks(jokeObj.content);
-        for (const chunk of jokeChunks) {
-            await queueAudioChunk(chunk);
-        }
-        sessionStorage.removeItem('pendingJoke');
-        return true; // Indicate that joke playback was handled
-    }
-    return false; // Indicate that joke playback was not handled
-}
-
-let isFirstTTSChunk = true;
 
