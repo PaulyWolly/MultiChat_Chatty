@@ -2,7 +2,7 @@
   SERVER.JS
   Version: 1
   AppName: MultiChat_Chatty [v1]
-  Updated: 05/24/2025 @10:00AM
+  Updated: 05/27/2025 @04:00AM
   Created by Paul Welby
 */
 
@@ -1736,11 +1736,67 @@ app.post('/api/debug/add-test-joke', async (req, res) => {
 // YOUTUBE API ENDPOINTS
 // =====================================================
 
+// Add cache for YouTube search results
+const youtubeCache = {
+    results: new Map(),
+    maxAge: 1000 * 60 * 60, // 1 hour cache
+    maxSize: 100, // Maximum number of cached results
+
+    get(key) {
+        const cached = this.results.get(key);
+        if (!cached) return null;
+        if (Date.now() - cached.timestamp > this.maxAge) {
+            this.results.delete(key);
+            return null;
+        }
+        return cached.data;
+    },
+
+    set(key, data) {
+        // Remove oldest entry if cache is full
+        if (this.results.size >= this.maxSize) {
+            const oldestKey = this.results.keys().next().value;
+            this.results.delete(oldestKey);
+        }
+        this.results.set(key, {
+            data,
+            timestamp: Date.now()
+        });
+    }
+};
+
 app.post('/api/youtube/search', async (req, res) => {
-    console.log('YouTube Search POST body:', req.body);
     try {
-        const { query, type = 'search', pageToken } = req.body;
+        const { query, type = 'search', pageToken = null } = req.body;
         console.log('YouTube search request:', { query, type, pageToken });
+
+        // Check for mock requests
+        if (query.toLowerCase().includes('dummy') || query.toLowerCase().includes('mock')) {
+            console.log('Using mock data for query:', query);
+            const mockVideos = Array.from({ length: 10 }, (_, i) => ({
+                id: `mock_video_${i + 1}`,
+                title: `Mock Video ${i + 1}`,
+                description: `This is a mock video description for testing purposes. Video ${i + 1}`,
+                channelTitle: 'Mock Channel',
+                publishedAt: new Date().toISOString(),
+                duration: 'PT10M30S',
+                thumbnail: `/assets/img/mock/thumb${(i % 30) + 1}.png`
+            }));
+
+            // Simulate pagination
+            let nextPageToken = null;
+            if (pageToken === 'PAGE_1') {
+                nextPageToken = 'PAGE_2';
+            } else if (pageToken === 'PAGE_2') {
+                nextPageToken = 'PAGE_3';
+            }
+
+            return res.json({
+                success: true,
+                videos: mockVideos,
+                nextPageToken
+            });
+        }
 
         // Check if API key exists
         if (!process.env.GOOGLE_API_KEY) {
@@ -1748,12 +1804,15 @@ app.post('/api/youtube/search', async (req, res) => {
             throw new Error('Google API key is not configured');
         }
 
-        // Log the API key presence (safely)
-        console.log('Google API key status:', {
-            exists: !!process.env.GOOGLE_API_KEY,
-            length: process.env.GOOGLE_API_KEY?.length,
-            prefix: process.env.GOOGLE_API_KEY?.substring(0, 5) + '...'
-        });
+        // Create cache key
+        const cacheKey = `${query}-${type}-${pageToken || 'first'}`;
+        
+        // Check cache first
+        const cachedResults = youtubeCache.get(cacheKey);
+        if (cachedResults) {
+            console.log('Returning cached YouTube results');
+            return res.json(cachedResults);
+        }
 
         if (type === 'search') {
             // First get the video IDs
@@ -1761,16 +1820,13 @@ app.post('/api/youtube/search', async (req, res) => {
                 auth: process.env.GOOGLE_API_KEY,
                 part: ['snippet'],
                 q: query,
-                maxResults: 10,
+                maxResults: 12,
                 type: 'video',
-                pageToken: pageToken,
-                order: 'relevance',
-                regionCode: 'US',
-                safeSearch: 'none'
+                pageToken: pageToken
             });
 
-            // Then get full video details including complete descriptions
-            const videoIds = searchResponse.data.items.map(item => item.id.videoId);
+            // Only fetch full details for the first 3 videos to save quota
+            const videoIds = searchResponse.data.items.slice(0, 3).map(item => item.id.videoId);
             console.log('Fetching full details for videos:', videoIds);
 
             const videoDetails = await youtube.videos.list({
@@ -1779,23 +1835,42 @@ app.post('/api/youtube/search', async (req, res) => {
                 id: videoIds.join(',')
             });
 
-            const videos = videoDetails.data.items.map(video => ({
-                id: video.id,
-                title: video.snippet.title,
-                description: video.snippet.description,
-                channelTitle: video.snippet.channelTitle,
-                publishedAt: video.snippet.publishedAt,
-                duration: video.contentDetails.duration,
-                thumbnail: video.snippet.thumbnails.high.url
-            }));
+            // Combine search results with detailed info for first 3 videos
+            const videos = searchResponse.data.items.map((item, index) => {
+                if (index < 3) {
+                    const details = videoDetails.data.items[index];
+                    return {
+                        id: item.id.videoId,
+                        title: item.snippet.title,
+                        description: item.snippet.description,
+                        channelTitle: item.snippet.channelTitle,
+                        publishedAt: item.snippet.publishedAt,
+                        duration: details.contentDetails.duration,
+                        thumbnail: item.snippet.thumbnails.medium.url
+                    };
+                }
+                return {
+                    id: item.id.videoId,
+                    title: item.snippet.title,
+                    description: item.snippet.description,
+                    channelTitle: item.snippet.channelTitle,
+                    publishedAt: item.snippet.publishedAt,
+                    thumbnail: item.snippet.thumbnails.medium.url
+                };
+            });
 
-            res.json({ 
-                success: true, 
+            const response = {
+                success: true,
                 videos,
                 nextPageToken: searchResponse.data.nextPageToken
-            });
-        } else if (type === 'play') {
-            // Handle single video playback
+            };
+
+            // Cache the results
+            youtubeCache.set(cacheKey, response);
+
+            res.json(response);
+        } else {
+            // Handle play request (single video)
             const searchResponse = await youtube.search.list({
                 auth: process.env.GOOGLE_API_KEY,
                 part: ['snippet'],
@@ -1804,24 +1879,62 @@ app.post('/api/youtube/search', async (req, res) => {
                 type: 'video'
             });
 
-            if (searchResponse.data.items.length > 0) {
-                const video = searchResponse.data.items[0];
-                res.json({
-                    success: true,
-                    video: {
-                        id: video.id.videoId,
-                        title: video.snippet.title,
-                        thumbnail: video.snippet.thumbnails.high.url
-                    }
-                });
-            } else {
-                res.json({ success: false, message: 'No videos found' });
+            if (!searchResponse.data.items.length) {
+                return res.json({ success: false, error: 'No videos found' });
             }
+
+            const videoId = searchResponse.data.items[0].id.videoId;
+            const videoDetails = await youtube.videos.list({
+                auth: process.env.GOOGLE_API_KEY,
+                part: ['snippet', 'contentDetails'],
+                id: videoId
+            });
+
+            const video = {
+                id: videoId,
+                title: videoDetails.data.items[0].snippet.title,
+                description: videoDetails.data.items[0].snippet.description,
+                channelTitle: videoDetails.data.items[0].snippet.channelTitle,
+                publishedAt: videoDetails.data.items[0].snippet.publishedAt,
+                duration: videoDetails.data.items[0].contentDetails.duration,
+                thumbnail: videoDetails.data.items[0].snippet.thumbnails.medium.url
+            };
+
+            const response = { success: true, video };
+            youtubeCache.set(cacheKey, response);
+            res.json(response);
         }
     } catch (error) {
         console.error('YouTube API error:', error);
         res.status(500).json({ success: false, error: error.message });
     }
+});
+
+// Mock YouTube search endpoint
+app.get('/api/mock-youtube-search', (req, res) => {
+    const mockVideos = Array.from({ length: 10 }, (_, i) => ({
+        id: { videoId: `mock_video_${i + 1}` },
+        snippet: {
+            title: `Mock Video ${i + 1}`,
+            thumbnails: { 
+                medium: { 
+                    url: `/assets/img/mock/thumb${i + 1}.png`,
+                    width: 320,
+                    height: 180
+                }
+            },
+            description: `Mock video description - video ${i + 1}.`,
+            channelTitle: 'Mock Channel',
+            publishedAt: new Date().toISOString()
+        }
+    }));
+
+    res.json({
+        success: true,
+        videos: mockVideos,
+        nextPageToken: 'mock_next_page',
+        prevPageToken: null
+    });
 });
 
 

@@ -2,7 +2,7 @@
   STYLES.CSS
   Version: 1
   AppName: MultiChat_Chatty [v1]
-  Updated: 05/24/2025 @10:00AM
+  Updated: 05/27/2025 @04:00AM
   Created by Paul Welby
 */
 
@@ -1192,21 +1192,37 @@ button {
 
 /* YouTube Container Styles */
 .youtube-container {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 80vw;
-    height: 80vh;
-    background: rgba(0, 0, 0, 0.9);
-    z-index: 1000;
-    /* padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5); */
+    display: none;
+    margin: 20px;
+    padding: 20px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .youtube-container.hidden {
     display: none;
+}
+
+.youtube-search-container {
+    margin-bottom: 20px;
+}
+
+.youtube-search-input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+.youtube-search-input:focus {
+    outline: none;
+    border-color: #1976d2;
+}
+
+.youtube-search-results {
+    margin-top: 20px;
 }
 
 .youtube-video {
@@ -1330,9 +1346,12 @@ button {
 .channel-info {
     display: block;
     font-size: 0.9em;
-    color: #6c757d;
+    color: chocolate;
     margin-top: 5px;
     padding-left: 5px;
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
 }
 
 .youtube-thumb-link img {
@@ -1630,7 +1649,7 @@ button {
     margin: 0;
     padding: 0;
     list-style: none;
-    width: 100%;
+    /* width: 100%; */
 }
 
 .youtube-multi-bubble .video-item {
@@ -1689,7 +1708,7 @@ button {
     line-height: 1;
     position: absolute;
     right: -24px;
-    top: 15px;
+    top: 6px;
     z-index: 1000;
     pointer-events: auto;
 }
@@ -1770,6 +1789,7 @@ button {
 /* --- YouTube Results: Only keep the following --- */
 .youtube-single-bubble {
     max-width: 92%;
+    width: 15vw;
     margin: 8px 0;
     background: #fff;
     border-radius: 12px;
@@ -1796,6 +1816,7 @@ button {
     padding: 10px;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
     /* margin-bottom: 12px; */
+    margin-left: -10px;
     display: flex;
     flex-direction: column;
 }
@@ -2402,7 +2423,7 @@ button {
     padding: 0 !important;
     font-size: 18px !important;
     position: absolute;
-    bottom: 5px;
+    bottom: 12px;
     right: 30px;
 
 }
@@ -3358,4 +3379,704 @@ button {
 
 .playlist-sort-arrow:hover {
   color: #1976d2;
+}
+
+/* YouTube Styles */
+.youtube-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.youtube-search-container {
+    margin-bottom: 20px;
+}
+
+.youtube-search-input {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    transition: border-color 0.3s ease;
+}
+
+.youtube-search-input:focus {
+    border-color: #ff0000;
+    outline: none;
+}
+
+.youtube-search-results {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.youtube-video-item {
+    background: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    cursor: pointer;
+}
+
+.youtube-video-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.video-thumbnail {
+    position: relative;
+    width: 100%;
+    padding-top: 56.25%; /* 16:9 aspect ratio */
+    background: #000;
+}
+
+.video-thumbnail img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.video-duration {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    background: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+.video-info {
+    padding: 12px;
+}
+
+.video-title {
+    margin: 0 0 8px;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.video-channel {
+    color: #606060;
+    font-size: 14px;
+    margin: 0 0 8px;
+}
+
+.video-description {
+    color: #606060;
+    font-size: 14px;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.video-player {
+    position: relative;
+    width: 100%;
+    padding-top: 56.25%; /* 16:9 aspect ratio */
+    margin-bottom: 20px;
+}
+
+.video-player iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+.video-details {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.video-details h2 {
+    margin: 0 0 12px;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.video-details .channel {
+    color: #606060;
+    font-size: 14px;
+    margin: 0 0 12px;
+}
+
+.video-details .description {
+    color: #030303;
+    font-size: 14px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+}
+
+.youtube-pagination {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.youtube-pagination button {
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #fff;
+    background: #ff0000;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.youtube-pagination button:hover:not(:disabled) {
+    background: #cc0000;
+}
+
+.youtube-pagination button:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+.youtube-error {
+    text-align: center;
+    padding: 20px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.youtube-error p {
+    color: #ff0000;
+    margin: 0;
+    font-size: 16px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .youtube-search-results {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    }
+
+    .video-title {
+        font-size: 14px;
+    }
+
+    .video-channel,
+    .video-description {
+        font-size: 12px;
+    }
+}
+
+/* Mock YouTube Styles */
+.youtube-single-bubble.mock,
+.youtube-multi-bubble.mock {
+    /* border: 2px dashed #4caf50; */
+    /* background-color: rgba(76, 175, 80, 0.1); */
+    padding: 20px;
+    border-radius: 8px;
+    margin: 10px 0;
+}
+
+.youtube-single-bubble.mock .video-list,
+.youtube-multi-bubble.mock .video-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    padding: 10px;
+}
+
+.youtube-single-bubble.mock .video-item,
+.youtube-multi-bubble.mock .video-item {
+    background-color: rgba(255, 255, 255, 0.9);
+    border: 1px solid #4caf50;
+    border-radius: 8px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.youtube-single-bubble.mock .youtube-thumb-link,
+.youtube-multi-bubble.mock .youtube-thumb-link {
+    position: relative;
+    width: 100%;
+    padding-top: 56.25%; /* 16:9 Aspect Ratio */
+    overflow: hidden;
+    border-radius: 4px;
+}
+
+.youtube-single-bubble.mock .youtube-thumb-link img,
+.youtube-multi-bubble.mock .youtube-thumb-link img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.youtube-single-bubble.mock .video-title,
+.youtube-multi-bubble.mock .video-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+    margin: 10px 0;
+    line-height: 1.4;
+}
+
+.youtube-single-bubble.mock .channel-info,
+.youtube-multi-bubble.mock .channel-info {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 10px;
+}
+
+.youtube-single-bubble.mock .button-thumb-group,
+.youtube-multi-bubble.mock .button-thumb-group {
+    display: flex;
+    gap: 10px;
+    margin-top: auto;
+}
+
+.youtube-single-bubble.mock .youtube-action-btn,
+.youtube-multi-bubble.mock .youtube-action-btn {
+    background-color: #4caf50;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s;
+}
+
+.youtube-single-bubble.mock .youtube-action-btn:hover,
+.youtube-multi-bubble.mock .youtube-action-btn:hover {
+    background-color: #388e3c;
+}
+
+/* Remove YouTube direct link button for mock layout */
+.youtube-single-bubble.mock .youtube-action-btn.youtube-direct-link,
+.youtube-multi-bubble.mock .youtube-action-btn.youtube-direct-link {
+    display: none;
+}
+
+/* Mock player styles */
+.mock-player {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.mock-player-content {
+    position: relative;
+    width: 80%;
+    max-width: 1200px;
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+}
+
+.mock-player-content img {
+    width: 100%;
+    height: auto;
+    border-radius: 4px;
+}
+
+.close-mock-player {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #4caf50;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.close-mock-player:hover {
+    background: #388e3c;
+}
+
+.youtube-multi-bubble.mock .video-list {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 24px !important;
+}
+
+.youtube-multi-bubble.mock {
+    width: 80%;
+    max-width: 80vw;
+    margin-left: 0;
+    margin-right: 0;
+    /* border: 2px dashed #4caf50; */
+    /* background-color: rgba(76, 175, 80, 0.1); */
+    padding: 20px;
+    border-radius: 8px;
+}
+
+.youtube-multi-bubble.mock .video-list {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 32px 32px !important;
+    padding: 10px;
+}
+
+.youtube-multi-bubble.mock .video-item {
+    background-color: rgba(255, 255, 255, 0.95);
+    border: 1.5px solid #4caf50;
+    border-radius: 8px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    min-height: 260px;
+    box-shadow: 0 2px 8px rgba(76, 175, 80, 0.08);
+}
+
+/* Reminder: Ensure mock images are at /assets/img/mock/thumbX.png and the <img src> is set correctly in the HTML. */
+
+.youtube-multi-bubble.mock .button-thumb-group {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 10px;
+    margin-top: auto;
+}
+
+.youtube-multi-bubble.mock {
+    border: 2px dashed #4caf50;
+    background-color: rgba(76, 175, 80, 0.08);
+    /* Do not override width, margin, or grid */
+}
+
+/* --- MOCK ASSISTANT MESSAGE BUBBLES --- */
+.message.mock-assistant {
+    background-color: #f0f0f0;
+    align-self: flex-start;
+    width: max-content;
+    max-width: 80%;
+    padding: 8px 12px;
+    border-radius: 12px;
+    border: 1px solid #e0e0e0;
+    margin: 2px 0;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+}
+.message.mock-assistant .message-content {
+    padding: 0;
+    background: none;
+    box-shadow: none;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    font-size: 1em;
+    color: #222;
+}
+/* Make sure mock YouTube HTML inside .mock-assistant bubbles is not affected by .assistant styles */
+.message.mock-assistant .youtube-single-bubble-mock,
+.message.mock-assistant .youtube-multi-bubble-mock {
+    max-width: 92%;
+    width: 15vw;
+    margin: 8px 0;
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px 20px 10px 20px;
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+.message.mock-assistant .message-content {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+    white-space: normal;
+    word-wrap: break-word;
+    max-width: 100%;
+    text-align: left;
+    padding-left: 5px;
+    padding-right: 5px;
+}
+.message.mock-assistant p {
+    width: 100%;
+    margin: 8px 0;
+    white-space: normal;
+    word-wrap: break-word;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+/* --- MOCK YOUTUBE SINGLE LAYOUT MIRROR STYLES --- */
+.video-item-mock {
+    position: relative !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    padding-top: 32px !important;
+    background: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    min-width: unset !important;
+    max-width: unset !important;
+}
+.button-thumb-group-single-mock {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    position: relative;
+    width: 85%;
+    margin-left: 4px;
+}
+.button-thumb-group-single-mock.top-buttons-mock {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
+    justify-content: flex-start !important;
+    margin-bottom: 10px !important;
+}
+.button-thumb-group-single-mock.bottom-buttons-mock {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    margin-top: 10px !important;
+    margin-bottom: 0 !important;
+}
+.youtube-action-btn-mock {
+    background-color: #4f49f3;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s;
+}
+.youtube-action-btn-mock:hover {
+    background-color: #388e3c;
+}
+.youtube-thumb-link-mock {
+    display: flex !important;
+    justify-content: center !important;
+    margin: 12px 0 !important;
+    width: 100% !important;
+}
+.youtube-thumb-link-mock img {
+    max-width: 250px;
+    height: auto;
+    border-radius: 6px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+    display: block;
+    margin-right: 20px;
+}
+
+/* --- MOCK YOUTUBE SINGLE BUTTONS: MIRROR REAL SINGLE BUTTONS --- */
+.youtube-action-btn-mock.youtube-popup-btn-mock {
+    padding: 8px 16px;
+    margin-right: 8px;
+    background-color: #0056b3 !important;
+    color: #fff;
+    border-radius: 6px;
+    border: none;
+    font-size: 15px;
+    font-weight: bold;
+    box-shadow: rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px;
+    text-decoration: none;
+    position: relative;
+    top: -6px;
+    transition: background 0.2s;
+}
+.youtube-action-btn-mock.youtube-popup-btn-mock:hover {
+    background: #1976d2 !important;
+}
+
+.view-playlists-single-btn-mock {
+    background: #fff;
+    color: #222;
+    /* border: 1.5px solid #222; */
+    /* border-radius: 6px; */
+    font-size: 18px;
+    padding: 8px 12px;
+    margin: -8px 0px 0 0px;
+    font-weight: bold;
+    box-shadow: none;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+    vertical-align: middle;
+}
+.view-playlists-single-btn-mock:hover {
+    background: #f0f0f0;
+    color: #0056b3;
+}
+
+.add-to-playlist-single-btn-mock {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+    margin: 0 4px;
+    padding: 0;
+    line-height: 1;
+    position: absolute;
+    right: -24px;
+    top: -2px;
+    z-index: 1000;
+    pointer-events: auto;
+}
+.add-to-playlist-single-btn-mock:hover {
+    background-color: #388e3c;
+    transform: scale(1.1);
+}
+.video-title-single-mock {
+    font-size: .8em;
+    /* font-weight: bold; */
+    margin-top: 10px;
+    margin-bottom: 10px;
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+}
+.channel-info-single-mock {
+    font-size: 1em;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    margin-left: auto;
+    margin-right: auto;
+    color: chocolate;
+}
+
+/* --- Ensure 4-column grid for MULTI-MOCK and MULTI --- */
+.youtube-multi-bubble-mock .video-list-mock {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 24px !important;
+    margin: 0;
+    padding: 10px;
+}
+.youtube-multi-bubble .video-list {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 24px !important;
+    margin: 0;
+    padding: 10px;
+}
+@media (max-width: 1200px) {
+    .youtube-multi-bubble-mock .video-list-mock,
+    .youtube-multi-bubble .video-list {
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
+}
+@media (max-width: 992px) {
+    .youtube-multi-bubble-mock .video-list-mock,
+    .youtube-multi-bubble .video-list {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+@media (max-width: 576px) {
+    .youtube-multi-bubble-mock .video-list-mock,
+    .youtube-multi-bubble .video-list {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+.view-playlists-multi-btn-mock {
+    background: #fff;
+    color: #222;
+    font-size: 18px;
+    padding: 8px 12px;
+    margin: -8px 0px 0 10px;
+}
+.add-to-playlist-multi-btn-mock {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background-color: #4caf50;
+    color: white;
+    
+}
+
+/* --- Ensure MULTI-MOCK video-item-mock matches SINGLE-MOCK styles exactly --- */
+.youtube-multi-bubble-mock {
+    max-width: 92% !important;
+    width: 80% !important;
+    margin: 16px auto !important;
+    padding: 24px 24px 16px 24px !important;
+    background: #fff !important;
+    border-radius: 12px !important;
+    border: 1px solid #e0e0e0 !important;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.06) !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+}
+.youtube-multi-bubble-mock .video-list-mock {
+    margin-top: 8px !important;
+    margin-bottom: 8px !important;
+    box-sizing: border-box !important;
+}
+.youtube-multi-bubble-mock .video-item-mock {
+    position: relative !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    padding-top: 32px !important;
+    background: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    min-width: unset !important;
+    max-width: unset !important;
+    background: #fff !important;
+    border-radius: 12px !important;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.06) !important;
+    box-sizing: border-box !important;
+    padding: 16px 8px 16px 8px !important;
+    margin: 0 auto !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+}
+/* Remove conflicting width/max-width on inner bubble for mock */
+.message.mock-assistant .youtube-multi-bubble-mock {
+    max-width: 100% !important;
+    width: 99% !important;
+    margin-right: 10px !important;
 }
