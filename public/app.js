@@ -2,7 +2,7 @@
   APP.JS
   Version: 1
   AppName: MultiChat_Chatty [v1]
-  Updated: 05/24/2025 @10:00AM
+  Updated: 05/27/2025 @04:00AM
   Created by Paul Welby
 */
 
@@ -4416,17 +4416,57 @@ const handleYoutube = {
     isPlaying: false,
     currentQuery: '',
     currentPageToken: null,
-    currentSearchParams: null,  // Store complete search parameters
+    currentSearchParams: null,
+    currentPage: 1,
+    nextPageToken: null,
+    prevPageToken: null,
+    isSearching: false,
+    searchTimeout: null,
+    videoContainer: null,
+    searchResults: null,
+
+    init() {
+        this.videoContainer = document.getElementById('youtube-container');
+        this.searchResults = document.getElementById('youtube-search-results');
+        this.setupEventListeners();
+    },
+
+    setupEventListeners() {
+        const searchInput = document.getElementById('youtube-search');
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                clearTimeout(this.searchTimeout);
+                this.searchTimeout = setTimeout(() => {
+                    this.search(e.target.value);
+                }, 500);
+            });
+        }
+
+        // Add pagination event listeners
+        const prevButton = document.getElementById('youtube-prev-page');
+        const nextButton = document.getElementById('youtube-next-page');
+        if (prevButton) {
+            prevButton.addEventListener('click', () => this.changePage('prev'));
+        }
+        if (nextButton) {
+            nextButton.addEventListener('click', () => this.changePage('next'));
+        }
+    },
 
     async handleYoutubeRequest(messageText) {
+        addMessageToChat('user', messageText);
         console.log('handleYoutubeRequest received:', messageText);
+
+        // Check for mock queries
+        const isMockQuery = messageText.toLowerCase().includes('mock') || messageText.toLowerCase().includes('dummy');
+        const isPlayQuery = messageText.toLowerCase().includes('play');
 
         // Reset pagination state for new searches
         if (!messageText.includes('more videos')) {
             this.currentQuery = messageText;
             this.currentPageToken = null;
             this.currentSearchParams = {
-                query: messageText.replace(/^(play|search)\s+/i, '').trim(),
+                query: messageText.replace(/^youtube\s+(?:search|play)\s+/i, '').trim(),
                 type: messageText.toLowerCase().includes('play') ? 'play' : 'search'
             };
         }
@@ -4456,75 +4496,139 @@ const handleYoutube = {
             }
 
             let html = '';
-            if (videos.length === 1) {
-                // SINGLE layout for any single video
+            let messageRole = 'assistant';
+            let messageType = { type: 'youtube' };
+            if (isMockQuery && isPlayQuery) {
+                // SINGLE-MOCK: Only one mock video
+                const video = {
+                    id: 'mock_video_1',
+                    title: 'Mock Video 1',
+                    description: 'This is a mock video description for testing purposes. Video 1',
+                    channelTitle: 'Mock Channel',
+                    publishedAt: new Date().toISOString(),
+                    duration: 'PT10M30S',
+                    thumbnail: '/assets/img/mock/thumb1.png'
+                };
+                html = `
+                    <div class="youtube-single-bubble-mock">\n                        
+                        <p class="youtube-single-mock-title">Found result for: "${this.currentSearchParams.query}"</p>\n                        
+                        <div class="video-item-mock">\n                            
+                            <div class="button-thumb-group-single-mock top-buttons-mock">\n                                
+                                <a href="#" class="youtube-action-btn-mock youtube-popup-btn-mock" data-video-id="${video.id}" role="button" tabindex="0">Play in Popup</a>\n                                
+                                <button class="youtube-action-btn-mock view-playlists-single-btn-mock" title="View My Playlists"><span>&#9776;</span></button>\n                                
+                                <button type="button" class="add-to-playlist-single-btn-mock" data-video="${encodeURIComponent(
+                                    JSON.stringify({
+                                        videoId: video.id,
+                                        title: video.title,
+                                        thumbnail: video.thumbnail,
+                                    })
+                                    )}\" title="Add to Playlist">+</button>\n                            
+                            </div>\n                            
+                            <span class="youtube-thumb-link-mock youtube-popup-thumb-mock" data-video-id="${video.id}">\n                                
+                                <img src="${video.thumbnail}\" alt="${video.title}\" title="Popup: ${video.title}" />\n
+                            </span>\n                            
+                            <div class="button-thumb-group-single-mock bottom-buttons-mock">\n                                
+                            <button class="youtube-action-btn-mock youtube-direct-link-mock" disabled>Watch on YouTube (Disabled)</button>\n                            
+                        </div>\n                            
+                            <div class="video-title-single-mock">${video.title}</div>\n                            
+                            <div class="channel-info-single-mock">${video.channelTitle}</div>\n                        
+                        </div>\n                    
+                    </div>\n                
+                `;
+                messageRole = 'mock-assistant';
+                messageType = { type: 'youtube-mock' };
+            } else if (isMockQuery && !isPlayQuery) {
+                // MULTI-MOCK: 12 mock videos
+                const mockVideos = Array.from({ length: 12 }, (_, i) => ({
+                    id: `mock_video_${i + 1}`,
+                    title: `Mock Video ${i + 1}`,
+                    description: `This is a mock video description for testing purposes. Video ${i + 1}`,
+                    channelTitle: 'Mock Channel',
+                    publishedAt: new Date().toISOString(),
+                    duration: 'PT10M30S',
+                    thumbnail: `/assets/img/mock/thumb${(i % 30) + 1}.png`
+                }));
+                html = `
+                    <div class="youtube-multi-bubble-mock" style="width:80%;max-width:80vw;">
+                        <p class="youtube-multi-mock-title">Found results for: "${this.currentSearchParams.query}"</p>
+                        <div class="video-list-mock" style="display:grid;grid-template-columns:repeat(4,1fr);gap:24px;">
+                            ${mockVideos.map(video => `
+                                <div class="video-item-mock">
+                                    <div class="button-thumb-group-single-mock top-buttons-mock">
+                                        <a href="#" class="youtube-action-btn-mock youtube-popup-btn-mock" data-video-id="${video.id}" role="button" tabindex="0">Play in Popup</a>
+                                        <button class="youtube-action-btn-mock view-playlists-single-btn-mock" title="View My Playlists"><span>&#9776;</span></button>
+                                        <button type="button" class="add-to-playlist-single-btn-mock" data-video="${encodeURIComponent(JSON.stringify({videoId: video.id, title: video.title, thumbnail: video.thumbnail}))}" title="Add to Playlist">+</button>
+                                    </div>
+                                    <span class="youtube-thumb-link-mock youtube-popup-thumb-mock" data-video-id="${video.id}">
+                                        <img src="${video.thumbnail}" alt="${video.title}" title="Popup: ${video.title}" />
+                                    </span>
+                                    <div class="button-thumb-group-single-mock bottom-buttons-mock">
+                                        <button class="youtube-action-btn-mock youtube-direct-link-mock" disabled>Watch on YouTube (Disabled)</button>
+                                    </div>
+                                    <div class="video-title-single-mock">${video.title}</div>
+                                    <div class="channel-info-single-mock">${video.channelTitle}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+                messageRole = 'mock-assistant';
+                messageType = { type: 'youtube-mock' };
+            } else if (videos.length === 1) {
+                // Real SINGLE layout
                 html = `
                     <div class="youtube-single-bubble">
                         <p>Found result for: "${this.currentSearchParams.query}"</p>
                         <div class="video-item">
                             <div class="button-thumb-group-SINGLE top-buttons">
                                 <a href="#" class="youtube-action-btn youtube-popup-btn" data-video-id="${videos[0].id}" role="button" tabindex="0">Play in Popup</a>
-                                
                                 <button class="youtube-action-btn view-playlists-SINGLE-btn" title="View My Playlists" style="font-size:18px;padding:0 10px;background:none;border:none;cursor:pointer;vertical-align:middle;">
                                   <span style="display:inline-block;vertical-align:middle;">&#9776;</span>
                                 </button>
                                 <button type="button" class="add-to-playlist-SINGLE-btn" data-video="${encodeURIComponent(JSON.stringify({videoId: videos[0].id, title: videos[0].title, thumbnail: videos[0].thumbnail}))}" title="Add to Playlist">+</button>
-                                
                             </div>
                             <span class="youtube-thumb-link youtube-popup-thumb" data-video-id="${videos[0].id}">
-                                <img src="https://img.youtube.com/vi/${videos[0].id}/hqdefault.jpg" alt="${videos[0].title}" title="Popup: ${videos[0].title}" />
+                                <img src="${videos[0].thumbnail}" alt="${videos[0].title}" title="Popup: ${videos[0].title}" />
                             </span>
-                            
                             <div class="button-thumb-group-SINGLE bottom-buttons">
                                 <a href="https://www.youtube.com/watch?v=${videos[0].id}" target="_blank" rel="noopener noreferrer" class="youtube-action-btn youtube-direct-link">Watch on YouTube</a>
                             </div>
-                            
                             <div class="video-title-SINGLE">${videos[0].title}</div>
+                            <div class="channel-info">${videos[0].channelTitle}</div>
                         </div>
                     </div>
                 `;
             } else if (videos.length > 1) {
-                // MULTI layout
+                // Real MULTI layout: show up to 12 videos
                 html = `
                     <div class="youtube-multi-bubble">
                         <p>Found results for: "${this.currentSearchParams.query}"</p>
-                        <div class="video-list">
-                            ${videos.map(video => `
+                        <div class="video-list" style="display:grid;grid-template-columns:repeat(4,1fr);gap:24px;">
+                            ${videos.slice(0, 12).map(video => `
                                 <div class="video-item">
                                     <div class="button-thumb-group-MULTI top-buttons">
                                         <a href="#" class="youtube-action-btn youtube-popup-btn" data-video-id="${video.id}" role="button" tabindex="0">Play in Popup</a>
-                                        
                                         <button class="youtube-action-btn view-playlists-MULTI-btn" title="View My Playlists" style="font-size:18px;padding:0 10px;background:none;border:none;cursor:pointer;vertical-align:middle;">
                                           <span style="display:inline-block;vertical-align:middle;">&#9776;</span>
                                         </button>
                                         <button type="button" class="add-to-playlist-MULTI-btn" data-video="${encodeURIComponent(JSON.stringify({videoId: video.id, title: video.title, thumbnail: video.thumbnail}))}" title="Add to Playlist">+</button>
-                                        
                                     </div>
                                     <span class="youtube-thumb-link youtube-popup-thumb" data-video-id="${video.id}">
-                                        <img src="https://img.youtube.com/vi/${video.id}/hqdefault.jpg" alt="${video.title}" title="Popup: ${video.title}" />
+                                        <img src="${video.thumbnail}" alt="${video.title}" title="Popup: ${video.title}" />
                                     </span>
                                     <div class="button-thumb-group-MULTI bottom-buttons">
                                         <a href="https://www.youtube.com/watch?v=${video.id}" target="_blank" rel="noopener noreferrer" class="youtube-action-btn youtube-direct-link">Watch on YouTube</a>
                                     </div>
-
                                     <div class="video-title-MULTI">${video.title}</div>
                                 </div>
                             `).join('')}
                         </div>
-                        ${this.currentPageToken ? `
-                            <div class="more-videos-container" style="text-align: center; margin-top: 15px;">
-                                <button class="more-videos-btn" style="padding: 8px 16px; border: 1px solid hsla(11, 100%, 62.2%, 1) ; background-color: #4caf50;box-shadow: rgba(0, 0, 0, 0.25) 0px 14px 28px, rgba(0, 0, 0, 0.22) 0px 7px 10px ;color: white; border: none; border-radius: 4px; cursor: pointer;">
-                                    More Videos...
-                                </button>
-                            </div>
-                        ` : ''}
                     </div>
                 `;
-            } else {
-                html = '<div>No results found.</div>';
             }
+
             const messageContent = { type: 'youtube', html };
-            addMessageToChat('assistant', messageContent, { type: 'youtube' });
+            addMessageToChat(messageRole, messageContent, messageType);
             
             // Add click handlers for popup and playlist buttons
             setTimeout(() => {
@@ -4533,7 +4637,12 @@ const handleYoutube = {
                     btn.addEventListener('click', (e) => {
                         e.preventDefault();
                         const videoId = btn.getAttribute('data-video-id');
+                        if (isMockQuery) {
+                            // For mock videos, show a mock player
+                            this.showMockPlayer(videoId);
+                        } else {
                         this.openYoutubePopup(videoId);
+                        }
                     });
                 });
 
@@ -4571,9 +4680,169 @@ const handleYoutube = {
         }
     },
 
+    showMockPlayer(videoId) {
+        // Create a mock player for testing
+        const mockPlayer = document.createElement('div');
+        mockPlayer.className = 'mock-player';
+        mockPlayer.innerHTML = `
+            <div class="mock-player-content">
+                <h3>Mock Video Player</h3>
+                <p>This is a mock player for development purposes.</p>
+                <p>Video ID: ${videoId}</p>
+                <img src="/assets/img/mock/thumb${parseInt(videoId.split('-')[2]) % 30 + 1}.png" alt="Mock Thumbnail" style="max-width: 100%;">
+                <button class="close-mock-player" style="margin-top: 10px; padding: 5px 10px;">Close</button>
+            </div>
+        `;
+
+        // Style the mock player
+        mockPlayer.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.3);
+            z-index: 1000;
+        `;
+
+        // Add close button functionality
+        mockPlayer.querySelector('.close-mock-player').onclick = () => {
+            mockPlayer.remove();
+        };
+
+        document.body.appendChild(mockPlayer);
+    },
+
+    async search(query) {
+        if (!query || this.isSearching) return;
+        
+        this.isSearching = true;
+        this.currentPage = 1;
+        this.nextPageToken = null;
+        this.prevPageToken = null;
+
+        try {
+            const response = await fetch('/api/youtube/search', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query, type: 'search' })
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                this.displayResults(data.videos);
+                this.nextPageToken = data.nextPageToken;
+                this.updatePaginationButtons();
+            } else {
+                console.error('YouTube search failed:', data.error);
+                this.showError('Search failed. Please try again.');
+            }
+        } catch (error) {
+            console.error('YouTube search error:', error);
+            this.showError('An error occurred while searching.');
+        } finally {
+            this.isSearching = false;
+        }
+    },
+
+    async changePage(direction) {
+        if (this.isSearching) return;
+
+        const searchInput = document.getElementById('youtube-search');
+        if (!searchInput || !searchInput.value) return;
+
+        this.isSearching = true;
+        try {
+            const pageToken = direction === 'next' ? this.nextPageToken : this.prevPageToken;
+            const response = await fetch('/api/youtube/search', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    query: searchInput.value,
+                    type: 'search',
+                    pageToken
+                })
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                this.displayResults(data.videos);
+                this.nextPageToken = data.nextPageToken;
+                this.prevPageToken = data.prevPageToken;
+                this.currentPage += direction === 'next' ? 1 : -1;
+                this.updatePaginationButtons();
+            }
+        } catch (error) {
+            console.error('YouTube pagination error:', error);
+            this.showError('Failed to load more results.');
+        } finally {
+            this.isSearching = false;
+        }
+    },
+
+    displayResults(videos) {
+        if (!this.searchResults) return;
+
+        this.searchResults.innerHTML = '';
+        videos.forEach(video => {
+            const videoElement = document.createElement('div');
+            videoElement.className = 'youtube-video-item';
+            videoElement.innerHTML = `
+                <div class="video-thumbnail">
+                    <img src="${video.thumbnail}" alt="${video.title}" loading="lazy">
+                    <span class="video-duration">${this.formatDuration(video.duration)}</span>
+                </div>
+                <div class="video-info">
+                    <h3 class="video-title">${video.title}</h3>
+                    <p class="video-channel">${video.channelTitle}</p>
+                    <p class="video-description">${video.description}</p>
+                </div>
+            `;
+
+            videoElement.addEventListener('click', () => this.playVideo(video.id));
+            this.searchResults.appendChild(videoElement);
+        });
+    },
+
+    async playVideo(videoId) {
+        if (!this.videoContainer) return;
+
+        try {
+            const response = await fetch('/api/youtube/search', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query: videoId, type: 'play' })
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                this.videoContainer.innerHTML = `
+                    <div class="video-player">
+                        <iframe
+                            src="https://www.youtube.com/embed/${data.video.id}?autoplay=1"
+                            frameborder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowfullscreen
+                        ></iframe>
+                    </div>
+                    <div class="video-details">
+                        <h2>${data.video.title}</h2>
+                        <p class="channel">${data.video.channelTitle}</p>
+                        <p class="description">${data.video.description}</p>
+                    </div>
+                `;
+            }
+        } catch (error) {
+            console.error('YouTube play error:', error);
+            this.showError('Failed to play video.');
+        }
+    },
+
     openYoutubePopup(videoId) {
         // Calculate dimensions for a wider window (90% of screen width, 16:9 aspect ratio)
-        const width = Math.floor(window.screen.width * 0.9);  // Increased from 0.8 to 0.9
+        const width = Math.floor(window.screen.width * 0.9);
         const height = Math.floor(width * (9/16));
         const left = Math.floor((window.screen.width - width) / 2);
         const top = Math.floor((window.screen.height - height) / 2);
@@ -4591,138 +4860,48 @@ const handleYoutube = {
         }
     },
 
-    createVideoContainer() {
-        if (!elements.videoContainer) {
-            const container = document.createElement('div');
-            container.id = 'youtube-container';
-            container.className = 'youtube-container hidden';
-
-            const closeBtn = document.createElement('button');
-            closeBtn.className = 'youtube-close-btn';
-            closeBtn.innerHTML = '×';
-            closeBtn.onclick = () => this.hideVideo();
-
-            const videoWrapper = document.createElement('div');
-            videoWrapper.id = 'youtube-video';
-            videoWrapper.className = 'youtube-video';
-
-            container.appendChild(closeBtn);
-            container.appendChild(videoWrapper);
-            document.body.appendChild(container);
-
-            elements.videoContainer = container;
+    updatePaginationButtons() {
+        const prevButton = document.getElementById('youtube-prev-page');
+        const nextButton = document.getElementById('youtube-next-page');
+        
+        if (prevButton) {
+            prevButton.disabled = !this.prevPageToken;
+            prevButton.style.opacity = this.prevPageToken ? '1' : '0.5';
+        }
+        
+        if (nextButton) {
+            nextButton.disabled = !this.nextPageToken;
+            nextButton.style.opacity = this.nextPageToken ? '1' : '0.5';
         }
     },
 
-    showVideo(videoId) {
-        this.createVideoContainer();
-        const videoWrapper = document.getElementById('youtube-video');
-        videoWrapper.innerHTML = '';
-
-        // Create iframe with enhanced parameters
-        const iframe = document.createElement('iframe');
-        iframe.width = "100%";
-        iframe.height = "100%";
+    formatDuration(duration) {
+        if (!duration) return 'N/A';
         
-        // Build URL with all necessary parameters
-        const params = new URLSearchParams({
-            autoplay: '1',
-            rel: '0',
-            modestbranding: '1',
-            enablejsapi: '1',
-            origin: window.location.origin,
-            widget_referrer: window.location.href,
-            hl: 'en',
-            controls: '1',
-            fs: '1',
-            playsinline: '1',
-            iv_load_policy: '3',
-            vq: 'hd1080',  // Request 1080p quality
-            hd: '1'        // Enable HD
-        });
-        
-        // Set proper sandbox attributes to allow necessary features while maintaining security
-        iframe.sandbox = 'allow-same-origin allow-scripts allow-popups allow-presentation allow-forms';
-        
-        // Set referrer policy
-        iframe.referrerPolicy = 'strict-origin-when-cross-origin';
-        
-        // Use nocookie domain with enhanced parameters
-        iframe.src = `https://www.youtube-nocookie.com/embed/${videoId}?${params.toString()}`;
-        iframe.frameBorder = "0";
-        iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
-        iframe.allowFullscreen = true;
+        const match = duration.match(/PT(\d+H)?(\d+M)?(\d+S)?/);
+        if (!match) return 'N/A';
 
-        // Add loading indicator
-        const loadingDiv = document.createElement('div');
-        loadingDiv.className = 'youtube-loading';
-        loadingDiv.innerHTML = 'Loading video...';
-        videoWrapper.appendChild(loadingDiv);
+        const hours = (match[1] || '').replace('H', '');
+        const minutes = (match[2] || '').replace('M', '');
+        const seconds = (match[3] || '').replace('S', '');
 
-        // Handle iframe load event
-        iframe.onload = () => {
-            loadingDiv.remove();
-            // Check if the video is actually playing after a short delay
-            setTimeout(() => {
-                try {
-                    // If we detect the verification message, show fallback
-                    if (iframe.contentDocument && 
-                        (iframe.contentDocument.body.innerHTML.includes('Sign in') || 
-                         iframe.contentDocument.body.innerHTML.includes('confirm you\'re not a bot'))) {
-                        this.showFallbackMessage(videoId);
-                    }
-                } catch (e) {
-                    // If we can't access the iframe content (due to CORS), assume it's working
-                    console.log('Cannot check iframe content due to CORS, continuing playback');
-                }
-            }, 2000);
-        };
+        let result = '';
+        if (hours) result += `${hours}:`;
+        result += `${minutes.padStart(2, '0')}:`;
+        result += seconds.padStart(2, '0');
 
-        // Handle load errors
-        iframe.onerror = () => {
-            this.showFallbackMessage(videoId);
-        };
-
-        videoWrapper.appendChild(iframe);
-        elements.videoContainer.classList.remove('hidden');
-        this.isPlaying = true;
-
-        // Update app state
-        if (state.isListening) {
-            stopListening();
-            state.isListening = false;
-        }
-        updateStatus(MESSAGES.STATUS.VIDEO_PLAYING);
+        return result;
     },
 
-    showFallbackMessage(videoId) {
-        const videoWrapper = document.getElementById('youtube-video');
-        videoWrapper.innerHTML = `
+    showError(message) {
+        if (!this.searchResults) return;
+        this.searchResults.innerHTML = `
             <div class="youtube-error">
-                <p>Unable to play video in embedded player.</p>
-                <p>You can watch it directly on YouTube:</p>
-                <a href="https://www.youtube.com/watch?v=${videoId}" 
-                   target="_blank" 
-                   rel="noopener noreferrer" 
-                   class="youtube-direct-link">
-                    Watch on YouTube
-                </a>
+                <p>${message}</p>
             </div>
         `;
-    },
-
-    hideVideo() {
-        if (elements.videoContainer) {
-            const videoWrapper = document.getElementById('youtube-video');
-            videoWrapper.innerHTML = '';
-            elements.videoContainer.classList.add('hidden');
-            this.isPlaying = false;
-            updateStatus(MESSAGES.STATUS.DEFAULT);
-        }
     }
 };
-window.handleYoutube = handleYoutube;
-
 
 // =====================================================
 // BING SEARCH MODULE
@@ -5235,6 +5414,217 @@ window.addEventListener('DOMContentLoaded', function() {
     modal.onclick = (e) => { if (e.target === modal) modal.classList.remove('show'); };
 });
 // ... existing code ...
+
+// YouTube functionality
+// const handleYoutube = {
+//     currentPage: 1,
+//     nextPageToken: null,
+//     prevPageToken: null,
+//     isSearching: false,
+//     searchTimeout: null,
+//     videoContainer: null,
+//     searchResults: null,
+
+//     init() {
+//         this.videoContainer = document.getElementById('youtube-container');
+//         this.searchResults = document.getElementById('youtube-search-results');
+//         this.setupEventListeners();
+//     },
+
+//     setupEventListeners() {
+//         const searchInput = document.getElementById('youtube-search');
+//         if (searchInput) {
+//             searchInput.addEventListener('input', (e) => {
+//                 clearTimeout(this.searchTimeout);
+//                 this.searchTimeout = setTimeout(() => {
+//                     this.search(e.target.value);
+//                 }, 500);
+//             });
+//         }
+
+//         // Add pagination event listeners
+//         const prevButton = document.getElementById('youtube-prev-page');
+//         const nextButton = document.getElementById('youtube-next-page');
+//         if (prevButton) {
+//             prevButton.addEventListener('click', () => this.changePage('prev'));
+//         }
+//         if (nextButton) {
+//             nextButton.addEventListener('click', () => this.changePage('next'));
+//         }
+//     },
+
+//     async search(query) {
+//         if (!query || this.isSearching) return;
+        
+//         this.isSearching = true;
+//         this.currentPage = 1;
+//         this.nextPageToken = null;
+//         this.prevPageToken = null;
+
+//         try {
+//             const response = await fetch('/api/youtube/search', {
+//                 method: 'POST',
+//                 headers: { 'Content-Type': 'application/json' },
+//                 body: JSON.stringify({ query, type: 'search' })
+//             });
+
+//             const data = await response.json();
+//             if (data.success) {
+//                 this.displayResults(data.videos);
+//                 this.nextPageToken = data.nextPageToken;
+//                 this.updatePaginationButtons();
+//             } else {
+//                 console.error('YouTube search failed:', data.error);
+//                 this.showError('Search failed. Please try again.');
+//             }
+//         } catch (error) {
+//             console.error('YouTube search error:', error);
+//             this.showError('An error occurred while searching.');
+//         } finally {
+//             this.isSearching = false;
+//         }
+//     },
+
+//     async changePage(direction) {
+//         if (this.isSearching) return;
+
+//         const searchInput = document.getElementById('youtube-search');
+//         if (!searchInput || !searchInput.value) return;
+
+//         this.isSearching = true;
+//         try {
+//             const pageToken = direction === 'next' ? this.nextPageToken : this.prevPageToken;
+//             const response = await fetch('/api/youtube/search', {
+//                 method: 'POST',
+//                 headers: { 'Content-Type': 'application/json' },
+//                 body: JSON.stringify({
+//                     query: searchInput.value,
+//                     type: 'search',
+//                     pageToken
+//                 })
+//             });
+
+//             const data = await response.json();
+//             if (data.success) {
+//                 this.displayResults(data.videos);
+//                 this.nextPageToken = data.nextPageToken;
+//                 this.prevPageToken = data.prevPageToken;
+//                 this.currentPage += direction === 'next' ? 1 : -1;
+//                 this.updatePaginationButtons();
+//             }
+//         } catch (error) {
+//             console.error('YouTube pagination error:', error);
+//             this.showError('Failed to load more results.');
+//         } finally {
+//             this.isSearching = false;
+//         }
+//     },
+
+//     displayResults(videos) {
+//         if (!this.searchResults) return;
+
+//         this.searchResults.innerHTML = '';
+//         videos.forEach(video => {
+//             const videoElement = document.createElement('div');
+//             videoElement.className = 'youtube-video-item';
+//             videoElement.innerHTML = `
+//                 <div class="video-thumbnail">
+//                     <img src="${video.thumbnail}" alt="${video.title}" loading="lazy">
+//                     <span class="video-duration">${this.formatDuration(video.duration)}</span>
+//                 </div>
+//                 <div class="video-info">
+//                     <h3 class="video-title">${video.title}</h3>
+//                     <p class="video-channel">${video.channelTitle}</p>
+//                     <p class="video-description">${video.description}</p>
+//                 </div>
+//             `;
+
+//             videoElement.addEventListener('click', () => this.playVideo(video.id));
+//             this.searchResults.appendChild(videoElement);
+//         });
+//     },
+
+//     async playVideo(videoId) {
+//         if (!this.videoContainer) return;
+
+//         try {
+//             const response = await fetch('/api/youtube/search', {
+//                 method: 'POST',
+//                 headers: { 'Content-Type': 'application/json' },
+//                 body: JSON.stringify({ query: videoId, type: 'play' })
+//             });
+
+//             const data = await response.json();
+//             if (data.success) {
+//                 this.videoContainer.innerHTML = `
+//                     <div class="video-player">
+//                         <iframe
+//                             src="https://www.youtube.com/embed/${data.video.id}?autoplay=1"
+//                             frameborder="0"
+//                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+//                             allowfullscreen
+//                         ></iframe>
+//                     </div>
+//                     <div class="video-details">
+//                         <h2>${data.video.title}</h2>
+//                         <p class="channel">${data.video.channelTitle}</p>
+//                         <p class="description">${data.video.description}</p>
+//                     </div>
+//                 `;
+//             }
+//         } catch (error) {
+//             console.error('YouTube play error:', error);
+//             this.showError('Failed to play video.');
+//         }
+//     },
+
+//     updatePaginationButtons() {
+//         const prevButton = document.getElementById('youtube-prev-page');
+//         const nextButton = document.getElementById('youtube-next-page');
+        
+//         if (prevButton) {
+//             prevButton.disabled = !this.prevPageToken;
+//             prevButton.style.opacity = this.prevPageToken ? '1' : '0.5';
+//         }
+        
+//         if (nextButton) {
+//             nextButton.disabled = !this.nextPageToken;
+//             nextButton.style.opacity = this.nextPageToken ? '1' : '0.5';
+//         }
+//     },
+
+//     formatDuration(duration) {
+//         if (!duration) return 'N/A';
+        
+//         const match = duration.match(/PT(\d+H)?(\d+M)?(\d+S)?/);
+//         if (!match) return 'N/A';
+
+//         const hours = (match[1] || '').replace('H', '');
+//         const minutes = (match[2] || '').replace('M', '');
+//         const seconds = (match[3] || '').replace('S', '');
+
+//         let result = '';
+//         if (hours) result += `${hours}:`;
+//         result += `${minutes.padStart(2, '0')}:`;
+//         result += seconds.padStart(2, '0');
+
+//         return result;
+//     },
+
+//     showError(message) {
+//         if (!this.searchResults) return;
+//         this.searchResults.innerHTML = `
+//             <div class="youtube-error">
+//                 <p>${message}</p>
+//             </div>
+//         `;
+//     }
+// };
+
+// Initialize YouTube functionality when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    handleYoutube.init();
+});
 
 
 
