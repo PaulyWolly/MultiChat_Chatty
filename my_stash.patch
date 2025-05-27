@@ -1,0 +1,2115 @@
+diff --git a/migrate_playlist_videos.js b/migrate_playlist_videos.js
+deleted file mode 100644
+index f713773..0000000
+--- a/migrate_playlist_videos.js
++++ /dev/null
+@@ -1,35 +0,0 @@
+-const mongoose = require('mongoose');
+-const { ObjectId } = require('mongodb');
+-require('dotenv').config();
+-
+-const Playlist = require('./server/models/Playlist');
+-
+-async function migrate() {
+-  await mongoose.connect(process.env.MONGODB_URI);
+-
+-  const playlists = await Playlist.find({});
+-  let updatedCount = 0;
+-
+-  for (const playlist of playlists) {
+-    let changed = false;
+-    for (const video of playlist.videos) {
+-      if (!video._id) {
+-        video._id = new ObjectId();
+-        changed = true;
+-      }
+-    }
+-    if (changed) {
+-      await playlist.save();
+-      updatedCount++;
+-      console.log(`Updated playlist: ${playlist.name} (${playlist._id})`);
+-    }
+-  }
+-
+-  console.log(`Migration complete. Updated ${updatedCount} playlists.`);
+-  await mongoose.disconnect();
+-}
+-
+-migrate().catch(err => {
+-  console.error('Migration failed:', err);
+-  process.exit(1);
+-});
+diff --git a/package-lock.json b/package-lock.json
+index 677dee0..48da5c4 100644
+--- a/package-lock.json
++++ b/package-lock.json
+@@ -14,7 +14,7 @@
+         "@google-cloud/vertexai": "^1.4.1",
+         "@google/generative-ai": "^0.17.0",
+         "@octokit/rest": "^21.1.1",
+-        "axios": "^1.7.7",
++        "axios": "^1.9.0",
+         "cheerio": "^1.0.0",
+         "cors": "^2.8.5",
+         "dotenv": "^16.5.0",
+@@ -611,9 +611,10 @@
+       "integrity": "sha512-Oei9OH4tRh0YqU3GxhX79dM/mwVgvbZJaSNaRk+bshkj0S5cfHcgYakreBjrHwatXKbz+IoIdYLxrKim2MjW0Q=="
+     },
+     "node_modules/axios": {
+-      "version": "1.7.7",
+-      "resolved": "https://registry.npmjs.org/axios/-/axios-1.7.7.tgz",
+-      "integrity": "sha512-S4kL7XrjgBmvdGut0sN3yJxqYzrDOnivkBiN0OFs6hLiUam3UPvswUo0kqGyhqUZGEOytHyumEdXsAkgCOUf3Q==",
++      "version": "1.9.0",
++      "resolved": "https://registry.npmjs.org/axios/-/axios-1.9.0.tgz",
++      "integrity": "sha512-re4CqKTJaURpzbLHtIi6XpDv20/CnpXOtjRY5/CU32L8gU8ek9UIivcfvSWvmKEngmVbrUtPpdDwWDWL7DNHvg==",
++      "license": "MIT",
+       "dependencies": {
+         "follow-redirects": "^1.15.6",
+         "form-data": "^4.0.0",
+diff --git a/package.json b/package.json
+index 4aca48b..819cce7 100644
+--- a/package.json
++++ b/package.json
+@@ -1,5 +1,5 @@
+ {
+-  "name": "multichat-v1",
++  "name": "multichat_v1",
+   "version": "1",
+   "description": "#\u0000 \u0000d\u0000p\u0000e\u0000-\u0000g\u0000e\u0000n\u0000e\u0000-\u0000a\u0000i\u0000-\u0000c\u0000h\u0000a\u0000t\u0000-\u0000S\u0000L\u0000M\u0000-\u0000A\u0000P\u0000I\u0000M\u0000\r\u0000 \u0000",
+   "main": "server.js",
+@@ -15,7 +15,7 @@
+     "@google-cloud/vertexai": "^1.4.1",
+     "@google/generative-ai": "^0.17.0",
+     "@octokit/rest": "^21.1.1",
+-    "axios": "^1.7.7",
++    "axios": "^1.9.0",
+     "cheerio": "^1.0.0",
+     "cors": "^2.8.5",
+     "dotenv": "^16.5.0",
+diff --git a/public/app.js b/public/app.js
+index 1f8fe36..9092129 100644
+--- a/public/app.js
++++ b/public/app.js
+@@ -1,8 +1,8 @@
+ /*
+   APP.JS
+   Version: 1
+-  AppName: MultiChat_Chatty [v1]
+-  Updated: 05/24/2025 @10:00AM
++  AppName: Multi-Chat [v1]
++  Updated: 05/26/2025 @06:30AM
+   Created by Paul Welby
+ */
+ 
+@@ -10,7 +10,9 @@
+ // IMPORTS NEEDED FOR NEW ES6 MODULES
+ // =====================================================
+ 
+-import playlistManager from './components/PlaylistManager.js';
++import playlistManager from '../components/PlaylistManager.js';
++
++console.log("LOADED APP.JS - TEST " + Math.random());
+ 
+ // Initialize PlaylistManager globally
+ console.log('Initializing PlaylistManager...');
+@@ -853,6 +855,7 @@ document.addEventListener('DOMContentLoaded', () => {
+     }
+ 
+     initializeApp();
++
+ });
+ 
+ 
+@@ -1355,6 +1358,7 @@ async function sendMessage(message, isGreeting = false) {
+ 
+         // Check for YouTube request
+         if (patterns.youtube.searchVideos.test(messageText) || patterns.youtube.playVideo.test(messageText)) {
++            addMessageToChat('user', messageText); // Ensure user bubble is always shown
+             await handleYoutube.handleYoutubeRequest(messageText);
+             return;
+         }
+@@ -2047,6 +2051,11 @@ function addMessageToChat(role, content, options = {}) {
+     const messageElement = document.createElement('div');
+     messageElement.className = `message ${role}`;
+     
++    // Add anchor tag at the top of the message
++    const anchor = document.createElement('a');
++    anchor.name = `msg-${Date.now()}`; // Unique anchor name using timestamp
++    messageElement.appendChild(anchor);
++    
+     // Add special bubble classes for greetings and exit messages
+     if (role === 'assistant') {
+         const type = options.type || options.messageType || '';
+@@ -2083,23 +2092,28 @@ function addMessageToChat(role, content, options = {}) {
+     // Handle different content types
+     if (typeof content === 'object' && content.type === 'youtube') {
+         contentElement.innerHTML = content.html;
+-    } else if (typeof content === 'string') {
+-        // Check for HTML-based search results
+-        if (
+-            content.includes('<h2>Web Results') ||
+-            content.includes('<h2>News Results') ||
+-            content.includes("<ol class='search-results-list'>") ||
+-            content.includes('<ol class="search-results-list">')
+-        ) {
+-            contentElement.innerHTML = content;
+-        }
+-        // For assistant recipe messages, format ingredients as dashed HTML list
+-        else if (role === 'assistant' && content.match(/Ingredients:/i) && content.match(/Instructions:|Directions:/i)) {
+-            content = formatIngredientsAsDashedList(content);
+-            contentElement.innerHTML = content;
+-        } else {
+-            contentElement.textContent = content;
++    } else if (role === 'assistant' && typeof content === 'string') {
++        // Split into paragraphs of 4-5 sentences for human-like output
++        const sentences = content.match(/[^.!?]+[.!?]+/g) || [content];
++        const paragraphs = [];
++        let current = '';
++        let count = 0;
++        for (let i = 0; i < sentences.length; i++) {
++            current += sentences[i].trim() + ' ';
++            count++;
++            if (count >= 4 || i === sentences.length - 1) {
++                paragraphs.push(current.trim());
++                current = '';
++                count = 0;
++            }
+         }
++        paragraphs.forEach(paragraph => {
++            const p = document.createElement('p');
++            p.textContent = paragraph;
++            contentElement.appendChild(p);
++        });
++    } else if (typeof content === 'string') {
++        contentElement.textContent = content;
+     }
+ 
+     elements.chatMessages.appendChild(messageElement);
+@@ -3176,14 +3190,29 @@ function insertAndStyleImages(images, messageElement, headingText) {
+         // Add error handling for images
+         const img = link.querySelector('img');
+         img.onerror = () => {
+-            img.src = img.getAttribute('data-thumbnail') || 'path/to/fallback-image.jpg';
+-            console.log('Image failed to load, falling back to thumbnail:', img.src);
++            const thumbnail = img.getAttribute('data-thumbnail');
++            if (thumbnail) {
++                img.src = thumbnail;
++                console.log('Image failed to load, falling back to thumbnail:', thumbnail);
++            } else {
++                // Create a placeholder element
++                const placeholder = document.createElement('div');
++                placeholder.className = 'image-placeholder';
++                placeholder.innerHTML = `
++                    <div class="placeholder-content">
++                        <i class="fas fa-image"></i>
++                        <span>Image not available</span>
++                    </div>
++                `;
++                img.parentNode.replaceChild(placeholder, img);
++                console.log('Image failed to load, no thumbnail available');
++            }
+         };
+ 
+         // Store thumbnail as backup
+-        if (image.thumbnail) {
+-            img.setAttribute('data-thumbnail', image.thumbnail);
+-        }
++        // if (image.thumbnail) {
++        //     img.setAttribute('data-thumbnail', image.thumbnail);
++        // }
+     });
+ }
+ 
+@@ -4152,7 +4181,7 @@ const handleMyJokes = {
+ 
+     // Add this new method to handleMyJokes
+     async listJokes(showAll = false, metadata = {}) {
+-        const startTime = performance.now();
++            const startTime = performance.now();
+         try {
+             state.isAISpeaking = true;
+             elements.stopAudioButton.style.display = 'block';
+@@ -4413,316 +4442,147 @@ const handleMyJokes = {
+ // =====================================================
+ 
+ const handleYoutube = {
+-    isPlaying: false,
+-    currentQuery: '',
+-    currentPageToken: null,
+-    currentSearchParams: null,  // Store complete search parameters
+-
+-    async handleYoutubeRequest(messageText) {
+-        console.log('handleYoutubeRequest received:', messageText);
+-
+-        // Reset pagination state for new searches
+-        if (!messageText.includes('more videos')) {
+-            this.currentQuery = messageText;
+-            this.currentPageToken = null;
+-            this.currentSearchParams = {
+-                query: messageText.replace(/^(play|search)\s+/i, '').trim(),
+-                type: messageText.toLowerCase().includes('play') ? 'play' : 'search'
+-            };
++    resultCount: 0,
++    currentSearchParams: null,
++    isMockYoutubeSearch: false,
++    mockThumbnailBase: '/mock/thumb',  // Base path for mock thumbnails
++
++    async handleYoutubeRequest(messageText, options = {}) {
++        const query = messageText.replace(/^youtube\s+/i, '').trim();
++        if (!query) {
++            addMessageToChat('error', 'Please provide a search query for YouTube');
++            return;
+         }
+ 
++        this.isMockYoutubeSearch = query.toLowerCase().includes('dummy') || query.toLowerCase().includes('mock');
++        this.currentSearchParams = { query, pageToken: null };
++        
+         try {
+-            const response = await fetch('/api/youtube/search', {
+-                method: 'POST',
+-                headers: { 'Content-Type': 'application/json' },
+-                body: JSON.stringify({
+-                    ...this.currentSearchParams,
+-                    pageToken: this.currentPageToken
+-                })
++            const response = await fetch('/api/youtube-search', {
++                    method: 'POST',
++                    headers: { 'Content-Type': 'application/json' },
++                body: JSON.stringify({ query })
+             });
+ 
+-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
++            if (!response.ok) {
++                throw new Error(`HTTP error! status: ${response.status}`);
++            }
++
+             const data = await response.json();
++            this.renderYoutubeResults(data, query);
++        } catch (error) {
++            console.error('YouTube search error:', error);
++            addMessageToChat('error', 'Failed to search YouTube. Please try again.');
++        }
++    },
+ 
+-            // Store the next page token
+-            this.currentPageToken = data.nextPageToken;
++    renderYoutubeResults(data, queryKey) {
++        const videos = data.videos || [];
++        const isMock = this.isMockYoutubeSearch;
++        
++        if (!videos.length) {
++            const html = `<div>No ${isMock ? 'mock ' : ''}results found for "${queryKey}"</div>`;
++            addMessageToChat('assistant', { type: 'youtube', html });
++            return;
++        }
+ 
+-            // Always treat a single video as a SINGLE layout
+-            let videos = [];
+-            if (data.video) {
+-                videos = [data.video];
+-            } else if (data.videos) {
+-                videos = data.videos;
+-            }
++        this.resultCount++;
++        const anchorName = isMock ? 
++            `youtube-${videos.length === 1 ? 'single' : 'multi'}-${this.resultCount}` :
++            `youtube-${videos.length === 1 ? 'single' : 'multi'}-${this.resultCount}`;
+ 
+             let html = '';
+-            if (videos.length === 1) {
+-                // SINGLE layout for any single video
+-                html = `
+-                    <div class="youtube-single-bubble">
+-                        <p>Found result for: "${this.currentSearchParams.query}"</p>
+-                        <div class="video-item">
+-                            <div class="button-thumb-group-SINGLE top-buttons">
+-                                <a href="#" class="youtube-action-btn youtube-popup-btn" data-video-id="${videos[0].id}" role="button" tabindex="0">Play in Popup</a>
+-                                
+-                                <button class="youtube-action-btn view-playlists-SINGLE-btn" title="View My Playlists" style="font-size:18px;padding:0 10px;background:none;border:none;cursor:pointer;vertical-align:middle;">
+-                                  <span style="display:inline-block;vertical-align:middle;">&#9776;</span>
+-                                </button>
+-                                <button type="button" class="add-to-playlist-SINGLE-btn" data-video="${encodeURIComponent(JSON.stringify({videoId: videos[0].id, title: videos[0].title, thumbnail: videos[0].thumbnail}))}" title="Add to Playlist">+</button>
+-                                
++                if (videos.length === 1) {
++            const video = videos[0];
++                    html = `
++                <div class="youtube-result" id="${anchorName}">
++                    <div class="youtube-header">
++                        <p>Found ${isMock ? 'mock ' : ''}result for: "${queryKey}"</p>
+                             </div>
+-                            <span class="youtube-thumb-link youtube-popup-thumb" data-video-id="${videos[0].id}">
+-                                <img src="https://img.youtube.com/vi/${videos[0].id}/hqdefault.jpg" alt="${videos[0].title}" title="Popup: ${videos[0].title}" />
+-                            </span>
+-                            
+-                            <div class="button-thumb-group-SINGLE bottom-buttons">
+-                                <a href="https://www.youtube.com/watch?v=${videos[0].id}" target="_blank" rel="noopener noreferrer" class="youtube-action-btn youtube-direct-link">Watch on YouTube</a>
++                    <div class="youtube-content">
++                        <div class="youtube-actions">
++                            <a href="${isMock ? '#' : `https://www.youtube.com/watch?v=${video.id}`}" 
++                               target="_blank" 
++                               class="youtube-action-btn">
++                                ${isMock ? 'Mock: Watch' : 'Watch on YouTube'}
++                            </a>
++                            <button class="youtube-action-btn add-to-playlist-btn" 
++                                    data-video='${JSON.stringify(video)}' 
++                                    title="Add to Playlist">+</button>
++                                </div>
++                        <div class="youtube-thumbnail">
++                            <span class="youtube-thumb-link ${isMock ? 'youtube-popup-thumb' : ''}" 
++                                  ${isMock ? `data-local-video="${video.localUrl}"` : ''}>
++                                <img src="${isMock ? this.mockThumbnailBase + '1.png' : video.thumbnail}" 
++                                     alt="${video.title}" 
++                                     title="${isMock ? 'Mock Video' : 'YouTube Video'}" />
++                                </span>
++                                </div>
++                        <div class="youtube-info">
++                            <div class="video-title">${video.title}</div>
++                            <div class="video-channel">${video.channelTitle}</div>
++                            <div class="video-description">${video.description}</div>
+                             </div>
+-                            
+-                            <div class="video-title-SINGLE">${videos[0].title}</div>
+                         </div>
+-                    </div>
+-                `;
+-            } else if (videos.length > 1) {
+-                // MULTI layout
+-                html = `
+-                    <div class="youtube-multi-bubble">
+-                        <p>Found results for: "${this.currentSearchParams.query}"</p>
+-                        <div class="video-list">
+-                            ${videos.map(video => `
+-                                <div class="video-item">
+-                                    <div class="button-thumb-group-MULTI top-buttons">
+-                                        <a href="#" class="youtube-action-btn youtube-popup-btn" data-video-id="${video.id}" role="button" tabindex="0">Play in Popup</a>
+-                                        
+-                                        <button class="youtube-action-btn view-playlists-MULTI-btn" title="View My Playlists" style="font-size:18px;padding:0 10px;background:none;border:none;cursor:pointer;vertical-align:middle;">
+-                                          <span style="display:inline-block;vertical-align:middle;">&#9776;</span>
+-                                        </button>
+-                                        <button type="button" class="add-to-playlist-MULTI-btn" data-video="${encodeURIComponent(JSON.stringify({videoId: video.id, title: video.title, thumbnail: video.thumbnail}))}" title="Add to Playlist">+</button>
+-                                        
+-                                    </div>
+-                                    <span class="youtube-thumb-link youtube-popup-thumb" data-video-id="${video.id}">
+-                                        <img src="https://img.youtube.com/vi/${video.id}/hqdefault.jpg" alt="${video.title}" title="Popup: ${video.title}" />
+-                                    </span>
+-                                    <div class="button-thumb-group-MULTI bottom-buttons">
+-                                        <a href="https://www.youtube.com/watch?v=${video.id}" target="_blank" rel="noopener noreferrer" class="youtube-action-btn youtube-direct-link">Watch on YouTube</a>
+-                                    </div>
+-
+-                                    <div class="video-title-MULTI">${video.title}</div>
++                        </div>
++                    `;
++                } else {
++                    html = `
++                <div class="youtube-results" id="${anchorName}">
++                    <div class="youtube-header">
++                        <p>Found ${videos.length} ${isMock ? 'mock ' : ''}results for: "${queryKey}"</p>
++                            </div>
++                    <div class="youtube-grid">
++                        ${videos.map((video, index) => `
++                            <div class="youtube-card">
++                                <div class="youtube-thumbnail">
++                                    <span class="youtube-thumb-link ${isMock ? 'youtube-popup-thumb' : ''}" 
++                                          ${isMock ? `data-local-video="${video.localUrl}"` : ''}>
++                                        <img src="${isMock ? this.mockThumbnailBase + (index + 1) + '.png' : video.thumbnail}" 
++                                             alt="${video.title}" 
++                                             title="${isMock ? 'Mock Video' : 'YouTube Video'}" />
++                                </span>
+                                 </div>
+-                            `).join('')}
++                                <div class="youtube-info">
++                                    <div class="video-title">${video.title}</div>
++                                    <div class="video-channel">${video.channelTitle}</div>
++                                    <div class="youtube-actions">
++                                        <a href="${isMock ? '#' : `https://www.youtube.com/watch?v=${video.id}`}" 
++                                           target="_blank" 
++                                           class="youtube-action-btn">
++                                            ${isMock ? 'Mock: Watch' : 'Watch'}
++                                        </a>
++                                        <button class="youtube-action-btn add-to-playlist-btn" 
++                                                data-video='${JSON.stringify(video)}' 
++                                                title="Add to Playlist">+</button>
++                            </div>
+                         </div>
+-                        ${this.currentPageToken ? `
+-                            <div class="more-videos-container" style="text-align: center; margin-top: 15px;">
+-                                <button class="more-videos-btn" style="padding: 8px 16px; border: 1px solid hsla(11, 100%, 62.2%, 1) ; background-color: #4caf50;box-shadow: rgba(0, 0, 0, 0.25) 0px 14px 28px, rgba(0, 0, 0, 0.22) 0px 7px 10px ;color: white; border: none; border-radius: 4px; cursor: pointer;">
+-                                    More Videos...
+-                                </button>
+                             </div>
+-                        ` : ''}
++                                `).join('')}
+                     </div>
+-                `;
+-            } else {
+-                html = '<div>No results found.</div>';
+-            }
+-            const messageContent = { type: 'youtube', html };
+-            addMessageToChat('assistant', messageContent, { type: 'youtube' });
+-            
+-            // Add click handlers for popup and playlist buttons
+-            setTimeout(() => {
+-                // Handle popup buttons
+-                document.querySelectorAll('.youtube-popup-btn').forEach(btn => {
+-                    btn.addEventListener('click', (e) => {
+-                        e.preventDefault();
+-                        const videoId = btn.getAttribute('data-video-id');
+-                        this.openYoutubePopup(videoId);
+-                    });
+-                });
+-
+-                // Handle "More Videos" button
+-                document.querySelectorAll('.more-videos-btn').forEach(btn => {
+-                    btn.addEventListener('click', () => {
+-                        this.handleYoutubeRequest('more videos');
+-                    });
+-                });
+-
+-                // Handle playlist buttons
+-                document.querySelectorAll('.view-playlists-SINGLE-btn, .view-playlists-MULTI-btn').forEach(btn => {
+-                    btn.addEventListener('click', (e) => {
+-                        e.preventDefault();
+-                        if (window.playlistManager) {
+-                            window.playlistManager.show();
+-                        }
+-                    });
+-                });
+-
+-                // Handle add to playlist buttons
+-                document.querySelectorAll('.add-to-playlist-SINGLE-btn, .add-to-playlist-MULTI-btn').forEach(btn => {
+-                    btn.addEventListener('click', (e) => {
+-                        e.preventDefault();
+-                        const videoData = JSON.parse(decodeURIComponent(btn.getAttribute('data-video')));
+-                        if (window.playlistManager) {
+-                            window.playlistManager.showAddToPlaylist(videoData);
+-                        }
+-                    });
+-                });
+-            }, 100);
+-        } catch (error) {
+-            console.error('Error handling YouTube request:', error);
+-            addMessageToChat('assistant', `Error: ${error.message}`);
+-        }
+-    },
+-
+-    openYoutubePopup(videoId) {
+-        // Calculate dimensions for a wider window (90% of screen width, 16:9 aspect ratio)
+-        const width = Math.floor(window.screen.width * 0.9);  // Increased from 0.8 to 0.9
+-        const height = Math.floor(width * (9/16));
+-        const left = Math.floor((window.screen.width - width) / 2);
+-        const top = Math.floor((window.screen.height - height) / 2);
+-    
+-        const popup = window.open(
+-            `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&vq=hd1080&hd=1`,
+-            'YouTubePlayer',
+-            `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=no,status=no`
+-        );
+-    
+-        if (popup) {
+-            popup.focus();
+-        } else {
+-            alert('Please allow popups for this site to play videos in a new window.');
++                        </div>
++                    `;
+         }
+-    },
+-
+-    createVideoContainer() {
+-        if (!elements.videoContainer) {
+-            const container = document.createElement('div');
+-            container.id = 'youtube-container';
+-            container.className = 'youtube-container hidden';
+-
+-            const closeBtn = document.createElement('button');
+-            closeBtn.className = 'youtube-close-btn';
+-            closeBtn.innerHTML = '×';
+-            closeBtn.onclick = () => this.hideVideo();
+ 
+-            const videoWrapper = document.createElement('div');
+-            videoWrapper.id = 'youtube-video';
+-            videoWrapper.className = 'youtube-video';
++        addMessageToChat('assistant', { type: 'youtube', html });
+ 
+-            container.appendChild(closeBtn);
+-            container.appendChild(videoWrapper);
+-            document.body.appendChild(container);
+-
+-            elements.videoContainer = container;
+-        }
+     },
+ 
+-    showVideo(videoId) {
+-        this.createVideoContainer();
+-        const videoWrapper = document.getElementById('youtube-video');
+-        videoWrapper.innerHTML = '';
+-
+-        // Create iframe with enhanced parameters
+-        const iframe = document.createElement('iframe');
+-        iframe.width = "100%";
+-        iframe.height = "100%";
+-        
+-        // Build URL with all necessary parameters
+-        const params = new URLSearchParams({
+-            autoplay: '1',
+-            rel: '0',
+-            modestbranding: '1',
+-            enablejsapi: '1',
+-            origin: window.location.origin,
+-            widget_referrer: window.location.href,
+-            hl: 'en',
+-            controls: '1',
+-            fs: '1',
+-            playsinline: '1',
+-            iv_load_policy: '3',
+-            vq: 'hd1080',  // Request 1080p quality
+-            hd: '1'        // Enable HD
++    fetchYoutubePage() {
++        const { query, pageToken } = this.currentSearchParams;
++        fetch('/api/youtube-search', {
++            method: 'POST',
++            headers: { 'Content-Type': 'application/json' },
++            body: JSON.stringify({ query, pageToken })
++        })
++        .then(res => res.json())
++        .then(data => this.renderYoutubeResults(data, query))
++        .catch(error => {
++            console.error('YouTube page fetch error:', error);
++            addMessageToChat('error', 'Failed to fetch YouTube page.');
+         });
+-        
+-        // Set proper sandbox attributes to allow necessary features while maintaining security
+-        iframe.sandbox = 'allow-same-origin allow-scripts allow-popups allow-presentation allow-forms';
+-        
+-        // Set referrer policy
+-        iframe.referrerPolicy = 'strict-origin-when-cross-origin';
+-        
+-        // Use nocookie domain with enhanced parameters
+-        iframe.src = `https://www.youtube-nocookie.com/embed/${videoId}?${params.toString()}`;
+-        iframe.frameBorder = "0";
+-        iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
+-        iframe.allowFullscreen = true;
+-
+-        // Add loading indicator
+-        const loadingDiv = document.createElement('div');
+-        loadingDiv.className = 'youtube-loading';
+-        loadingDiv.innerHTML = 'Loading video...';
+-        videoWrapper.appendChild(loadingDiv);
+-
+-        // Handle iframe load event
+-        iframe.onload = () => {
+-            loadingDiv.remove();
+-            // Check if the video is actually playing after a short delay
+-            setTimeout(() => {
+-                try {
+-                    // If we detect the verification message, show fallback
+-                    if (iframe.contentDocument && 
+-                        (iframe.contentDocument.body.innerHTML.includes('Sign in') || 
+-                         iframe.contentDocument.body.innerHTML.includes('confirm you\'re not a bot'))) {
+-                        this.showFallbackMessage(videoId);
+-                    }
+-                } catch (e) {
+-                    // If we can't access the iframe content (due to CORS), assume it's working
+-                    console.log('Cannot check iframe content due to CORS, continuing playback');
+-                }
+-            }, 2000);
+-        };
+-
+-        // Handle load errors
+-        iframe.onerror = () => {
+-            this.showFallbackMessage(videoId);
+-        };
+-
+-        videoWrapper.appendChild(iframe);
+-        elements.videoContainer.classList.remove('hidden');
+-        this.isPlaying = true;
+-
+-        // Update app state
+-        if (state.isListening) {
+-            stopListening();
+-            state.isListening = false;
+-        }
+-        updateStatus(MESSAGES.STATUS.VIDEO_PLAYING);
+     },
+-
+-    showFallbackMessage(videoId) {
+-        const videoWrapper = document.getElementById('youtube-video');
+-        videoWrapper.innerHTML = `
+-            <div class="youtube-error">
+-                <p>Unable to play video in embedded player.</p>
+-                <p>You can watch it directly on YouTube:</p>
+-                <a href="https://www.youtube.com/watch?v=${videoId}" 
+-                   target="_blank" 
+-                   rel="noopener noreferrer" 
+-                   class="youtube-direct-link">
+-                    Watch on YouTube
+-                </a>
+-            </div>
+-        `;
+-    },
+-
+-    hideVideo() {
+-        if (elements.videoContainer) {
+-            const videoWrapper = document.getElementById('youtube-video');
+-            videoWrapper.innerHTML = '';
+-            elements.videoContainer.classList.add('hidden');
+-            this.isPlaying = false;
+-            updateStatus(MESSAGES.STATUS.DEFAULT);
+-        }
+-    }
+ };
+-window.handleYoutube = handleYoutube;
+-
+ 
+ // =====================================================
+ // BING SEARCH MODULE
+@@ -4834,7 +4694,7 @@ async function playNextInQueue() {
+         if (audioBlob.size === 0) throw new Error('Empty audio response');
+ 
+         cleanup(state.currentAudio);
+-        
++
+         const audioUrl = URL.createObjectURL(audioBlob);
+         state.currentAudio = new Audio(audioUrl);
+         state.currentAudio.volume = AUDIO_CONFIG.volume;
+@@ -4847,7 +4707,7 @@ async function playNextInQueue() {
+         });
+ 
+         state.audioQueue.shift();
+-        
++
+         // Continue with next chunk after pause
+         if (state.audioQueue.length > 0 && !state.stopRequested) {
+             setTimeout(() => {
+@@ -5159,16 +5019,16 @@ function showToast(message) {
+ async function warmUpTTS() {
+     try {
+         await fetch(AUDIO_CONFIG.apiUrl, {
+-            method: 'POST',
+-            headers: { 'Content-Type': 'application/json' },
+-            body: JSON.stringify({
++                method: 'POST',
++                headers: { 'Content-Type': 'application/json' },
++                body: JSON.stringify({
+                 text: '\u200B', // zero-width space (silent)
+-                voice: AUDIO_CONFIG.defaultVoice,
+-                rate: AUDIO_CONFIG.rate,
+-                pitch: AUDIO_CONFIG.pitch,
++                    voice: AUDIO_CONFIG.defaultVoice,
++                    rate: AUDIO_CONFIG.rate,
++                    pitch: AUDIO_CONFIG.pitch,
+                 volume: AUDIO_CONFIG.volume
+-            })
+-        });
++                })
++            });
+         console.log('TTS engine warmed up.');
+     } catch (error) {
+         console.warn('TTS warm-up failed:', error);
+@@ -5204,9 +5064,7 @@ if (toggleHelpBtn && slideoutHelp) {
+     toggleHelpBtn.textContent = isOpen ? '+' : '–';
+   });
+ }
+-// ... existing code ...
+ 
+-// ... existing code ...
+ // Example Prompts toggle for prompt field
+ const examplePromptsLink = document.getElementById('example-prompts-link');
+ const examplePromptsHelp = document.getElementById('example-prompts-help');
+@@ -5220,11 +5078,7 @@ if (examplePromptsLink && examplePromptsHelp) {
+     }
+   });
+ }
+-// ... existing code ...
+-// Remove old toggle-help-btn and slideout-help logic
+-// ... existing code ...
+ 
+-// ... existing code ...
+ // Modal close logic
+ window.addEventListener('DOMContentLoaded', function() {
+     const modal = document.getElementById('image-analysis-modal');
+@@ -5234,7 +5088,312 @@ window.addEventListener('DOMContentLoaded', function() {
+     }
+     modal.onclick = (e) => { if (e.target === modal) modal.classList.remove('show'); };
+ });
++
++
++
++// ======= MODAL FOR VIDEO DESCRIPTION =======
++// Add modal HTML to the DOM if not present
++if (!document.getElementById('video-description-modal')) {
++    const modal = document.createElement('div');
++    modal.id = 'video-description-modal';
++    modal.style.display = 'none';
++    modal.innerHTML = `
++        <div class="modal-backdrop"></div>
++        <div class="modal-content">
++            <button class="modal-close" title="Close">&times;</button>
++            <div class="modal-description"></div>
++        </div>
++    `;
++    document.body.appendChild(modal);
++}
++
++// Add modal CSS (modern, clean look)
++(function addModalStyles() {
++    if (document.getElementById('video-description-modal-style')) return;
++    const style = document.createElement('style');
++    style.id = 'video-description-modal-style';
++    style.textContent = `
++#video-description-modal {
++  position: fixed;
++  top: 0; left: 0; width: 100vw; height: 100vh;
++  z-index: 99999;
++  display: flex; align-items: center; justify-content: center;
++  pointer-events: none;
++}
++#video-description-modal.active {
++  display: flex;
++  pointer-events: auto;
++}
++#video-description-modal .modal-backdrop {
++  position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
++  background: rgba(0,0,0,0.32);
++  z-index: 1;
++}
++#video-description-modal .modal-content {
++  position: relative;
++  background: #fff;
++  border-radius: 14px;
++  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
++  padding: 32px 28px 24px 28px;
++  min-width: 320px;
++  max-width: 96vw;
++  width: 420px;
++  max-height: 70vh;
++  min-height: 60px;
++  display: flex;
++  flex-direction: column;
++  align-items: flex-start;
++  z-index: 2;
++  transition: box-shadow 0.2s;
++}
++#video-description-modal .modal-close {
++  position: absolute;
++  top: 12px; right: 16px;
++  background: none; border: none;
++  font-size: 2em; color: #888;
++  cursor: pointer;
++  z-index: 3;
++  transition: color 0.2s;
++}
++#video-description-modal .modal-close:hover {
++  color: #1976d2;
++}
++#video-description-modal .modal-description {
++  font-size: 1.08em;
++  color: #222;
++  margin-top: 8px;
++  overflow-y: auto;
++  max-height: 52vh;
++  min-height: 32px;
++  line-height: 1.6;
++  word-break: break-word;
++  white-space: pre-line;
++}
++@media (max-width: 600px) {
++  #video-description-modal .modal-content {
++    width: 96vw;
++    min-width: 0;
++    padding: 18px 8px 12px 8px;
++  }
++}
++// Standardize YouTube thumbnail images
++.youtube-multi-bubble .youtube-thumb-link img,
++.youtube-single-bubble .youtube-thumb-link img {
++  width: 220px !important;
++  height: 124px !important;
++  object-fit: cover !important;
++  border-radius: 8px !important;
++  box-shadow: 0 1px 4px rgba(0,0,0,0.12);
++  display: block;
++  margin: 0 auto;
++}
++`;
++    document.head.appendChild(style);
++})();
++
++// ======= MODAL LOGIC =======
++(function setupDescriptionModal() {
++    const modal = document.getElementById('video-description-modal');
++    const modalContent = modal.querySelector('.modal-content');
++    const modalDesc = modal.querySelector('.modal-description');
++    const closeBtn = modal.querySelector('.modal-close');
++    let isPinned = false;
++    let closeTimeout = null;
++
++    function showModal(desc, pin = false) {
++        modalDesc.textContent = desc;
++        modal.classList.add('active');
++        isPinned = !!pin;
++        if (!isPinned) {
++            // Auto-close on mouseleave
++            modalContent.addEventListener('mouseleave', handleMouseLeave);
++        }
++    }
++    function hideModal() {
++        modal.classList.remove('active');
++        isPinned = false;
++        modalContent.removeEventListener('mouseleave', handleMouseLeave);
++    }
++    function handleMouseLeave() {
++        if (!isPinned) hideModal();
++    }
++    closeBtn.onclick = hideModal;
++    modal.querySelector('.modal-backdrop').onclick = hideModal;
++    // Prevent modal click from closing
++    modalContent.onclick = e => e.stopPropagation();
++    // Keyboard ESC closes modal
++    document.addEventListener('keydown', e => {
++        if (modal.classList.contains('active') && e.key === 'Escape') hideModal();
++    });
++    // Expose for use in video card logic
++    window.showVideoDescriptionModal = showModal;
++    window.hideVideoDescriptionModal = hideModal;
++})();
++
++// ======= YOUTUBE CARD DESCRIPTION LOGIC =======
++function getTruncatedDescription(desc, maxLen = 120) {
++    if (!desc) return '';
++    return desc.length > maxLen ? desc.substring(0, maxLen).trim() + '…' : desc;
++}
++
++// Patch the YouTube result rendering to use the new modal logic and standardized images
++// Find the section where video cards are rendered (both mock and real)
++// Replace the description rendering with a span that uses hover/click to show modal
+ // ... existing code ...
++// In the video card rendering (both mock and real):
++// Replace:
++// <div class="video-description">${video.description}</div>
++// With:
++// <div class="video-description" data-full-desc="${encodeURIComponent(video.description)}">${getTruncatedDescription(video.description)}</div>
++// And add event listeners after rendering:
++
++// After rendering video cards (inside handleYoutubeRequest):
++setTimeout(() => {
++    document.querySelectorAll('.video-description').forEach(descEl => {
++        const fullDesc = decodeURIComponent(descEl.getAttribute('data-full-desc') || '');
++        descEl.style.cursor = 'pointer';
++        descEl.title = 'Click or hover to view full description';
++        // Hover: show modal (not pinned)
++        descEl.onmouseenter = e => {
++            window.showVideoDescriptionModal(fullDesc, false);
++        };
++        // Mouseleave: hide modal (if not pinned)
++        descEl.onmouseleave = e => {
++            setTimeout(() => {
++                if (!document.getElementById('video-description-modal').classList.contains('active')) return;
++                if (!window.isPinned) window.hideVideoDescriptionModal();
++            }, 100);
++        };
++        // Click: show modal (pinned)
++        descEl.onclick = e => {
++            window.showVideoDescriptionModal(fullDesc, true);
++        };
++    });
++}, 200);
+ 
++// In the video card HTML, update the description rendering as described above.
++
++// Add CSS for scroll-margin-top to all anchors in response bubbles
++(function addAnchorScrollMarginStyle() {
++    if (document.getElementById('response-anchor-scroll-margin-style')) return;
++    const style = document.createElement('style');
++    style.id = 'response-anchor-scroll-margin-style';
++
++    // change the 'scroll-margin-top' value to account for header height (62px)
++    style.textContent = `
++        a.response-anchor, a[name^="youtube-"], a[name^="msg-"] {
++            scroll-margin-top: 45px !important; 
++        }
++    `;
++    document.head.appendChild(style);
++})();
++
++// Universal scroll-to-anchor function
++function scrollToAnchor(anchorName) {
++    // Find all anchors with this name
++    const anchors = document.querySelectorAll(`a[name="${anchorName}"]`);
++    if (anchors.length > 0) {
++        // Scroll to the last one (most recent in DOM)
++        anchors[anchors.length - 1].scrollIntoView({ behavior: 'smooth', block: 'start'});
++        console.log(`[${anchorName}] targeted`);
++    } else {
++        console.log(`[${anchorName}] not found`);
++    }
++}
++
++// Patch addMessageToChat to add a.response-anchor to all anchors
++const originalAddMessageToChat = window.addMessageToChat || addMessageToChat;
++window.addMessageToChat = function(role, content, options = {}, type) {
++    const messageElement = originalAddMessageToChat(role, content, options, type);
++    // Add .response-anchor to any anchor in the message
++    const anchor = messageElement.querySelector('a[name]');
++    if (anchor) anchor.classList.add('response-anchor');
++    return messageElement;
++};
++
++// In YouTube and other response bubble logic, use scrollToAnchor
++// For YouTube:
++// ...
++// REMOVE the following lines:
++// let anchorName;
++// if (handleYoutube.isMockYoutubeSearch) {
++//     anchorName = videos.length === 1 ? `youtube-single-dummy-${handleYoutube.resultCount}` : `youtube-multi-dummy-${handleYoutube.resultCount}`;
++// } else {
++//     anchorName = videos.length === 1 ? `youtube-single-${handleYoutube.resultCount}` : `youtube-multi-${handleYoutube.resultCount}`;
++// }
++// scrollToAnchor(anchorName);
++// ... existing code ...
++
++// For other response bubbles, use scrollToAnchor with the appropriate anchor name
++
++// Robustly attach modal event listeners after rendering
++function attachDescriptionModalListeners() {
++    setTimeout(() => {
++        const descEls = document.querySelectorAll('.video-description');
++        console.log('[Modal Debug] Attaching modal listeners to', descEls.length, 'elements');
++        descEls.forEach(descEl => {
++            const fullDesc = decodeURIComponent(descEl.getAttribute('data-full-desc') || '');
++            descEl.style.cursor = 'pointer';
++            descEl.title = 'Click or hover to view full description';
++            // Remove previous listeners
++            descEl.onmouseenter = null;
++            descEl.onmouseleave = null;
++            descEl.onclick = null;
++            // Hover: show modal (not pinned)
++            descEl.onmouseenter = e => {
++                window.showVideoDescriptionModal(fullDesc, false);
++            };
++            // Mouseleave: hide modal (if not pinned)
++            descEl.onmouseleave = e => {
++                setTimeout(() => {
++                    if (!document.getElementById('video-description-modal').classList.contains('active')) return;
++                    if (!window.isPinned) window.hideVideoDescriptionModal();
++                }, 100);
++            };
++            // Click: show modal (pinned)
++            descEl.onclick = e => {
++                window.showVideoDescriptionModal(fullDesc, true);
++            };
++        });
++    }, 200);
++}
++
++// Add YouTube cache manager
++const youtubeCacheManager = {
++    CACHE_PREFIX: 'yt_cache_',
++    MAX_AGE: 1000 * 60 * 60, // 1 hour cache
++
++    getCacheKey(query, type, pageToken) {
++        return `${this.CACHE_PREFIX}${query}-${type}-${pageToken || 'first'}`;
++    },
++
++    get(query, type, pageToken) {
++        const key = this.getCacheKey(query, type, pageToken);
++        const cached = localStorage.getItem(key);
++        if (!cached) return null;
++
++        const { data, timestamp } = JSON.parse(cached);
++        if (Date.now() - timestamp > this.MAX_AGE) {
++            localStorage.removeItem(key);
++            return null;
++        }
++        return data;
++    },
++
++    set(query, type, pageToken, data) {
++        const key = this.getCacheKey(query, type, pageToken);
++        const cacheEntry = {
++            data,
++            timestamp: Date.now()
++        };
++        localStorage.setItem(key, JSON.stringify(cacheEntry));
++    },
++
++    clear() {
++        Object.keys(localStorage)
++            .filter(key => key.startsWith(this.CACHE_PREFIX))
++            .forEach(key => localStorage.removeItem(key));
++    }
++};
+ 
+ 
+diff --git a/public/index.html b/public/index.html
+index 5eba4d0..69ca60b 100644
+--- a/public/index.html
++++ b/public/index.html
+@@ -2,7 +2,7 @@
+   INDEX.html
+   Version: 1
+   AppName: Multi-Chat [v1]
+-  Updated: 05/25/2025 @5:30AM
++  Updated: 05/26/2025 @06:30AM
+   Created by Paul Welby
+ -->
+ 
+@@ -15,6 +15,7 @@
+     <link rel="stylesheet" href="styles.css" />
+     <link rel="icon" type="image/png" href="chat-1.png" />
+     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
++    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+   </head>
+ 
+   <body>
+@@ -25,7 +26,7 @@
+           <option value="phi-3-mini-4k-instruct">Phi-3-mini-4k-instruct</option>
+         </select>
+ 
+-        <h3>Multi-Chat [v1] 05/25/2025 @5:30AM</h3>
++        <h3>Multi-Chat [v1] 05/26/2025 @06:30AM</h3>
+ 
+         <select id="voice-select">
+           <option value="">Default Voice</option>
+diff --git a/public/styles.css b/public/styles.css
+index 2509caa..a0b3276 100644
+--- a/public/styles.css
++++ b/public/styles.css
+@@ -1,8 +1,8 @@
+ /*
+   STYLES.CSS
+   Version: 1
+-  AppName: MultiChat_Chatty [v1]
+-  Updated: 05/24/2025 @10:00AM
++  AppName: Multi-Chat [v1]
++  Updated: 05/26/2025 @06:30AM
+   Created by Paul Welby
+ */
+ 
+@@ -32,8 +32,10 @@ body {
+     display: flex;
+     justify-content: space-between;
+     align-items: center;
+-    padding: 10px;
++    padding: 20px;
+     border-bottom: 1px solid #ccc;
++    box-sizing: border-box;
++    height: 62px;
+ }
+ 
+ 
+@@ -67,7 +69,7 @@ body {
+     display: flex;
+     padding: 10px;
+     border-top: 1px solid #ccc;
+-    height: 60px;
++    height: 45px;
+     align-items: center;
+ }
+ 
+@@ -77,7 +79,7 @@ body {
+     align-items: center;
+     gap: 20px;
+     max-width: 50vw;
+-    height: 100%;
++    height: 78%;
+ }
+ 
+ status {
+@@ -168,7 +170,7 @@ status {
+ 
+ #stop-audio-button {
+     position: fixed;
+-    bottom: 40px;
++    bottom: 33px;
+     right: 40px;
+     z-index: 99999;
+     padding: 5px 10px;
+@@ -407,18 +409,18 @@ button {
+ 
+ #stop-audio-button {
+     padding: 5px 10px;
+-    margin-left: 10px;
++    margin-left: 9px;
+     background-color: #dc3545;
+     color: white;
+     border: none;
+     border-radius: 4px;
+     cursor: pointer;
+     display: none;
+-    width: 100px;
++    width: 115px;
+     height: 40px;
+     font-size: .95em;
+     margin-right: 0px;
+-    margin-top: 42px;
++    margin-top: -3px;
+ }
+ 
+ #stop-audio-button:hover {
+@@ -444,7 +446,7 @@ button {
+     height: 22px;
+     line-height: 22px;
+     position: absolute;
+-    bottom: 24px;
++    bottom: 15px;
+     left: 55%;
+     z-index: 1000;
+     transform: translateX(-50%);
+@@ -616,7 +618,7 @@ button {
+     cursor: pointer;
+     font-size: 2.0rem;
+     margin-right: 18px !important;
+-    font-size: 38px !important;
++    font-size: 36px !important;
+ }
+ 
+ .icon-button:hover {
+@@ -1033,8 +1035,8 @@ button {
+ #input-container button,
+ #input-container .icon-button {
+     background: none;
+-    border: none;
+-    padding: 8px;
++    border: 2px solid #d0d0d0 !important;
++    padding: 4px 8px 8px 8px;
+     cursor: pointer;
+     color: #666;
+     transition: color 0.2s;
+@@ -1243,6 +1245,36 @@ button {
+     padding: 0 24px;
+ }
+ 
++.youtube-results.grid {
++    max-width: 1400px;
++    margin: 0 auto;
++    padding: 0 24px;
++    width: 100%;
++}
++
++.youtube-results.grid .video-list {
++    display: grid;
++    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
++    gap: 48px 32px;
++    justify-items: center;
++    margin: 0 auto;
++    justify-content: center;
++    width: 100%;
++}
++
++.youtube-results.grid .video-item {
++    display: flex;
++    flex-direction: column;
++    align-items: center;
++    background: #fff;
++    border-radius: 12px;
++    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
++    padding: 18px 8px 12px 8px;
++    position: relative;
++    min-width: 350px;
++    max-width: 350px;
++}
++
+ /* Remove or comment out global .video-list and .video-item rules to avoid conflicts with YouTube layouts */
+ /*
+ .video-list {
+@@ -1368,6 +1400,7 @@ button {
+     justify-items: center;
+     margin: 0 auto;
+     justify-content: center;
++    width: 100%;
+ }
+ 
+ /* For single video: center content horizontally */
+@@ -1717,7 +1750,7 @@ button {
+     padding: 0;
+     line-height: 1;
+     position: absolute;
+-    right: 25px;
++    right: 40px;
+     top: 4px;
+     z-index: 1000;
+     pointer-events: auto;
+@@ -2964,7 +2997,7 @@ button {
+ }
+ .user-input-textarea {
+     width: 85vw !important;
+-    height: 6vh;
++    /* height: 6vh; */
+     /* background: #000; */
+     display: flex;
+     align-items: center;
+@@ -3359,3 +3392,141 @@ button {
+ .playlist-sort-arrow:hover {
+   color: #1976d2;
+ }
++
++/* Pagination Bar Styles */
++.floating-pagination-bar {
++  position: absolute;
++  z-index: 9999;
++  display: flex;
++  align-items: center;
++  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
++  background: #fff;
++  border-radius: 8px;
++  padding: 6px 12px;
++  min-width: 220px;
++  /* Make room for the tab */
++  margin-left: 18px;
++}
++.pagination-bar-initial-pos {
++  right: 50px !important;
++  bottom: 100px !important;
++  left: auto !important;
++  top: auto !important;
++}
++.pagination-drag-handle {
++  cursor: grab;
++  user-select: none;
++  font-size: 1.6em;
++  margin-right: 10px;
++  color: #1976d2;
++  background: #e3eafc;
++  border-radius: 6px;
++  padding: 0 6px;
++  display: flex;
++  align-items: center;
++  height: 32px;
++}
++.pagination-buttons-container {
++  display: flex;
++  gap: 4px;
++  align-items: center;
++}
++.yt-pagination-btn {
++  background: #f5f5f5;
++  border: 1px solid #b0b0b0;
++  border-radius: 4px;
++  padding: 4px 10px;
++  font-size: 1em;
++  color: #1976d2;
++  cursor: pointer;
++  transition: background 0.2s, color 0.2s;
++}
++.yt-pagination-btn:disabled {
++  background: #e0e0e0;
++  color: #aaa;
++  cursor: not-allowed;
++}
++.yt-pagination-btn--more {
++  background: #1976d2;
++  color: #fff;
++  font-weight: bold;
++}
++
++.pagination-drag-handle-tab {
++  position: absolute;
++  top: -16px;
++  left: -18px;
++  width: 32px;
++  height: 32px;
++  background: #e3eafc;
++  border-radius: 8px 8px 8px 8px;
++  box-shadow: 0 2px 8px rgba(25, 118, 210, 0.10);
++  display: flex;
++  align-items: center;
++  justify-content: center;
++  cursor: grab;
++  color: #1976d2;
++  font-size: 1.5em;
++  z-index: 1;
++  border: 1.5px solid #b0c8e8;
++}
++
++.pagination-icon-backtotop {
++  font-size: 1.25em;
++  color: #1976d2;
++  vertical-align: middle;
++}
++.pagination-icon-prev {
++  font-size: 1.25em;
++  color: #1976d2;
++  vertical-align: middle;
++}
++.pagination-icon-next {
++  font-size: 1.25em;
++  color: #1976d2;
++  vertical-align: middle;
++}
++.pagination-btn-backtotop,
++.pagination-btn-prev,
++.pagination-btn-next {
++  padding: 4px 8px;
++  min-width: 32px;
++  min-height: 32px;
++  display: flex;
++  align-items: center;
++  justify-content: center;
++}
++.pagination-btn-backtotop:hover .pagination-icon-backtotop,
++.pagination-btn-prev:hover .pagination-icon-prev,
++.pagination-btn-next:hover .pagination-icon-next {
++  color: #0d47a1;
++}
++.pagination-btn-more {
++  font-weight: bold;
++  font-size: 1em;
++  padding: 4px 12px;
++}
++
++.image-placeholder {
++    width: 100%;
++    height: 180px;
++    background-color: #f5f5f5;
++    border-radius: 8px;
++    display: flex;
++    align-items: center;
++    justify-content: center;
++    color: #666;
++    font-size: 14px;
++    border: 1px dashed #ccc;
++}
++
++.image-placeholder .placeholder-content {
++    text-align: center;
++}
++
++.image-placeholder i {
++    font-size: 24px;
++    margin-bottom: 8px;
++    display: block;
++    color: #999;
++}
+diff --git a/server.js b/server.js
+index c1951ce..3756cf2 100644
+--- a/server.js
++++ b/server.js
+@@ -1,8 +1,8 @@
+ /*
+   SERVER.JS
+   Version: 1
+-  AppName: MultiChat_Chatty [v1]
+-  Updated: 05/24/2025 @10:00AM
++  AppName: Multi-Chat [v1]
++  Updated: 05/26/2025 @06:30AM
+   Created by Paul Welby
+ */
+ 
+@@ -1736,24 +1736,83 @@ app.post('/api/debug/add-test-joke', async (req, res) => {
+ // YOUTUBE API ENDPOINTS
+ // =====================================================
+ 
++// Add cache for YouTube search results
++const youtubeCache = {
++    results: new Map(),
++    maxAge: 1000 * 60 * 60, // 1 hour cache
++    maxSize: 100, // Maximum number of cached results
++
++    get(key) {
++        const cached = this.results.get(key);
++        if (!cached) return null;
++        if (Date.now() - cached.timestamp > this.maxAge) {
++            this.results.delete(key);
++            return null;
++        }
++        return cached.data;
++    },
++
++    set(key, data) {
++        // Remove oldest entry if cache is full
++        if (this.results.size >= this.maxSize) {
++            const oldestKey = this.results.keys().next().value;
++            this.results.delete(oldestKey);
++        }
++        this.results.set(key, {
++            data,
++            timestamp: Date.now()
++        });
++    }
++};
++
+ app.post('/api/youtube/search', async (req, res) => {
+-    console.log('YouTube Search POST body:', req.body);
+     try {
+-        const { query, type = 'search', pageToken } = req.body;
++        const { query, type = 'search', pageToken = null } = req.body;
+         console.log('YouTube search request:', { query, type, pageToken });
+ 
++        // Check for mock requests
++        if (query.toLowerCase().includes('dummy') || query.toLowerCase().includes('mock')) {
++            console.log('Using mock data for query:', query);
++            const mockVideos = Array.from({ length: 10 }, (_, i) => ({
++                id: `mock_video_${i + 1}`,
++                title: `Mock Video ${i + 1}`,
++                description: `This is a mock video description for testing purposes. Video ${i + 1}`,
++                channelTitle: 'Mock Channel',
++                publishedAt: new Date().toISOString(),
++                duration: 'PT10M30S',
++                thumbnail: `/mock/thumb${i + 1}.png`
++            }));
++
++            // Simulate pagination
++            let nextPageToken = null;
++            if (pageToken === 'PAGE_1') {
++                nextPageToken = 'PAGE_2';
++            } else if (pageToken === 'PAGE_2') {
++                nextPageToken = 'PAGE_3';
++            }
++
++            return res.json({
++                success: true,
++                videos: mockVideos,
++                nextPageToken
++            });
++        }
++
+         // Check if API key exists
+         if (!process.env.GOOGLE_API_KEY) {
+             console.error('Google API key is missing in environment variables');
+             throw new Error('Google API key is not configured');
+         }
+ 
+-        // Log the API key presence (safely)
+-        console.log('Google API key status:', {
+-            exists: !!process.env.GOOGLE_API_KEY,
+-            length: process.env.GOOGLE_API_KEY?.length,
+-            prefix: process.env.GOOGLE_API_KEY?.substring(0, 5) + '...'
+-        });
++        // Create cache key
++        const cacheKey = `${query}-${type}-${pageToken || 'first'}`;
++        
++        // Check cache first
++        const cachedResults = youtubeCache.get(cacheKey);
++        if (cachedResults) {
++            console.log('Returning cached YouTube results');
++            return res.json(cachedResults);
++        }
+ 
+         if (type === 'search') {
+             // First get the video IDs
+@@ -1763,14 +1822,11 @@ app.post('/api/youtube/search', async (req, res) => {
+                 q: query,
+                 maxResults: 10,
+                 type: 'video',
+-                pageToken: pageToken,
+-                order: 'relevance',
+-                regionCode: 'US',
+-                safeSearch: 'none'
++                pageToken: pageToken
+             });
+ 
+-            // Then get full video details including complete descriptions
+-            const videoIds = searchResponse.data.items.map(item => item.id.videoId);
++            // Only fetch full details for the first 3 videos to save quota
++            const videoIds = searchResponse.data.items.slice(0, 3).map(item => item.id.videoId);
+             console.log('Fetching full details for videos:', videoIds);
+ 
+             const videoDetails = await youtube.videos.list({
+@@ -1779,23 +1835,42 @@ app.post('/api/youtube/search', async (req, res) => {
+                 id: videoIds.join(',')
+             });
+ 
+-            const videos = videoDetails.data.items.map(video => ({
+-                id: video.id,
+-                title: video.snippet.title,
+-                description: video.snippet.description,
+-                channelTitle: video.snippet.channelTitle,
+-                publishedAt: video.snippet.publishedAt,
+-                duration: video.contentDetails.duration,
+-                thumbnail: video.snippet.thumbnails.high.url
+-            }));
++            // Combine search results with detailed info for first 3 videos
++            const videos = searchResponse.data.items.map((item, index) => {
++                if (index < 3) {
++                    const details = videoDetails.data.items[index];
++                    return {
++                        id: item.id.videoId,
++                        title: item.snippet.title,
++                        description: item.snippet.description,
++                        channelTitle: item.snippet.channelTitle,
++                        publishedAt: item.snippet.publishedAt,
++                        duration: details.contentDetails.duration,
++                        thumbnail: item.snippet.thumbnails.medium.url
++                    };
++                }
++                return {
++                    id: item.id.videoId,
++                    title: item.snippet.title,
++                    description: item.snippet.description,
++                    channelTitle: item.snippet.channelTitle,
++                    publishedAt: item.snippet.publishedAt,
++                    thumbnail: item.snippet.thumbnails.medium.url
++                };
++            });
+ 
+-            res.json({ 
+-                success: true, 
++            const response = {
++                success: true,
+                 videos,
+                 nextPageToken: searchResponse.data.nextPageToken
+-            });
+-        } else if (type === 'play') {
+-            // Handle single video playback
++            };
++
++            // Cache the results
++            youtubeCache.set(cacheKey, response);
++
++            res.json(response);
++        } else {
++            // Handle play request (single video)
+             const searchResponse = await youtube.search.list({
+                 auth: process.env.GOOGLE_API_KEY,
+                 part: ['snippet'],
+@@ -1804,19 +1879,30 @@ app.post('/api/youtube/search', async (req, res) => {
+                 type: 'video'
+             });
+ 
+-            if (searchResponse.data.items.length > 0) {
+-                const video = searchResponse.data.items[0];
+-                res.json({
+-                    success: true,
+-                    video: {
+-                        id: video.id.videoId,
+-                        title: video.snippet.title,
+-                        thumbnail: video.snippet.thumbnails.high.url
+-                    }
+-                });
+-            } else {
+-                res.json({ success: false, message: 'No videos found' });
++            if (!searchResponse.data.items.length) {
++                return res.json({ success: false, error: 'No videos found' });
+             }
++
++            const videoId = searchResponse.data.items[0].id.videoId;
++            const videoDetails = await youtube.videos.list({
++                auth: process.env.GOOGLE_API_KEY,
++                part: ['snippet', 'contentDetails'],
++                id: videoId
++            });
++
++            const video = {
++                id: videoId,
++                title: videoDetails.data.items[0].snippet.title,
++                description: videoDetails.data.items[0].snippet.description,
++                channelTitle: videoDetails.data.items[0].snippet.channelTitle,
++                publishedAt: videoDetails.data.items[0].snippet.publishedAt,
++                duration: videoDetails.data.items[0].contentDetails.duration,
++                thumbnail: videoDetails.data.items[0].snippet.thumbnails.medium.url
++            };
++
++            const response = { success: true, video };
++            youtubeCache.set(cacheKey, response);
++            res.json(response);
+         }
+     } catch (error) {
+         console.error('YouTube API error:', error);
+@@ -1824,6 +1910,92 @@ app.post('/api/youtube/search', async (req, res) => {
+     }
+ });
+ 
++// Mock YouTube search endpoint
++app.get('/api/mock-youtube-search', (req, res) => {
++    const mockVideos = Array.from({ length: 10 }, (_, i) => ({
++        id: { videoId: `mock_video_${i + 1}` },
++        snippet: {
++            title: `Mock Video ${i + 1}`,
++            thumbnails: { 
++                medium: { 
++                    url: `/mock/thumb${i + 1}.png`,
++                    width: 320,
++                    height: 180
++                }
++            },
++            description: `Mock video description - video ${i + 1}.`,
++            channelTitle: 'Mock Channel',
++            publishedAt: new Date().toISOString()
++        }
++    }));
++
++    res.json({
++        success: true,
++        videos: mockVideos,
++        nextPageToken: 'mock_next_page',
++        prevPageToken: null
++    });
++});
++
++// YouTube search endpoint
++app.post('/api/youtube-search', async (req, res) => {
++    try {
++        const { query, pageToken } = req.body;
++        
++        // Check for mock requests
++        if (query.toLowerCase().includes('dummy') || query.toLowerCase().includes('mock')) {
++            console.log('Using mock data for query:', query);
++            const mockVideos = Array.from({ length: 10 }, (_, i) => ({
++                id: `mock_video_${i + 1}`,
++                title: `Mock Video ${i + 1}`,
++                description: `This is a mock video description for testing purposes. Video ${i + 1}`,
++                channelTitle: 'Mock Channel',
++                publishedAt: new Date().toISOString(),
++                thumbnail: `/mock/thumb${i + 1}.png`,
++                localUrl: `/mock/video${i + 1}.mp4`
++            }));
++
++            return res.json({
++                success: true,
++                videos: mockVideos,
++                nextPageToken: 'mock_next_page',
++                prevPageToken: null
++            });
++        }
++
++        // Real YouTube API call
++        const response = await youtube.search.list({
++            part: 'snippet',
++            q: query,
++            maxResults: 10,
++            pageToken: pageToken,
++            type: 'video'
++        });
++
++        const videos = response.data.items.map(item => ({
++            id: item.id.videoId,
++            title: item.snippet.title,
++            description: item.snippet.description,
++            channelTitle: item.snippet.channelTitle,
++            publishedAt: item.snippet.publishedAt,
++            thumbnail: item.snippet.thumbnails.medium.url
++        }));
++
++        res.json({
++            success: true,
++            videos,
++            nextPageToken: response.data.nextPageToken,
++            prevPageToken: response.data.prevPageToken
++        });
++    } catch (error) {
++        console.error('YouTube search error:', error);
++        res.status(500).json({
++            success: false,
++            error: 'Failed to search YouTube'
++        });
++    }
++});
++
+ 
+ // =====================================================
+ // SERVER LISTENER
+diff --git a/update_headers.mjs b/update_headers.mjs
+deleted file mode 100644
+index bfe49c9..0000000
+--- a/update_headers.mjs
++++ /dev/null
+@@ -1,219 +0,0 @@
+-import fs from 'fs';
+-import path from 'path';
+-import pkg from 'enquirer';
+-const { prompt } = pkg;
+-
+-const FILES = [
+-  'public/app.js',
+-  'public/youtubeModule.js',
+-  'public/components/PlaylistManager.js',
+-  'public/services/playlist.service.js',
+-  'server.js',
+-  'public/styles.css',
+-  'public/index.html',
+-  'package.json'
+-];
+-
+-function getHeader(content) {
+-  const match = content.match(/\/\*[\s\S]*?\*\//);
+-  return match ? match[0] : null;
+-}
+-
+-function parseHeader(header) {
+-  return {
+-    Version: (header.match(/Version:\s*(.*)/) || [])[1]?.trim(),
+-    AppName: (header.match(/AppName:\s*(.*)/) || [])[1]?.trim(),
+-    Updated: (header.match(/Updated:\s*(.*)/) || [])[1]?.trim(),
+-    CreatedBy: (header.match(/Created by\s*:? (.*)/) || [])[1]?.trim(),
+-  };
+-}
+-
+-function sanitizeNpmName(name) {
+-  return name
+-    .toLowerCase()
+-    .replace(/[^a-z0-9-._~]/g, '-') // replace invalid chars with dash
+-    .replace(/-+/g, '-')            // collapse multiple dashes
+-    .replace(/^-+|-+$/g, '');       // trim leading/trailing dashes
+-}
+-
+-function makeExitValidator(field) {
+-  return (input) => {
+-    if (['q', 'x', 'quit', 'exit'].includes(input.trim().toLowerCase())) {
+-      console.log(`\nExiting gracefully from "${field}". No changes made to this or remaining files.`);
+-      process.exit(0);
+-    }
+-    return true;
+-  };
+-}
+-
+-async function promptForHeader(current) {
+-  // Prompt for Version first
+-  const { Version } = await prompt({
+-    type: 'input',
+-    name: 'Version',
+-    message: `Version: (type 'Q' or 'X' to exit)`,
+-    initial: current.Version || '23.0.0',
+-    validate: makeExitValidator('Version'),
+-  });
+-
+-  // Now use Version in the defaults for the other prompts
+-  const answers = await prompt([
+-    {
+-      type: 'input',
+-      name: 'AppName',
+-      message: `Display App Name (for UI, headers, etc.): (type 'Q' or 'X' to exit)`,
+-      initial: `Multi-Chat [v${Version}]`,
+-      validate: makeExitValidator('AppName'),
+-    },
+-    {
+-      type: 'input',
+-      name: 'NpmName',
+-      message: `npm package name (for package.json): (type 'Q' or 'X' to exit)`,
+-      initial: sanitizeNpmName(`multichat-v${Version}-working`),
+-      validate: input =>
+-        /^[a-z0-9-._~]+$/.test(input.trim()) ||
+-        'Invalid npm package name! Use only lowercase letters, numbers, dashes, dots, underscores, or tildes.',
+-    },
+-    {
+-      type: 'input',
+-      name: 'Date',
+-      message: `Date (MM/DD/YYYY): (type 'Q' or 'X' to exit)`,
+-      initial: current.Updated ? current.Updated.split('@')[0].trim() : '5/16/2025',
+-      validate: input => {
+-        if (makeExitValidator('Date')(input) !== true) return false;
+-        const dateRegex = /^(0?[1-9]|1[0-2])\/(0?[1-9]|[12][0-9]|3[01])\/\d{4}$/;
+-        return dateRegex.test(input) || 'Please enter a valid date in MM/DD/YYYY format';
+-      }
+-    },
+-    {
+-      type: 'input',
+-      name: 'Time',
+-      message: `Time (HH:MM[AM|PM]): (type 'Q' or 'X' to exit)`,
+-      initial: current.Updated ? current.Updated.split('@')[1].trim() : '1:00PM',
+-      validate: input => {
+-        input = input.trim();
+-        if (makeExitValidator('Time')(input) !== true) return false;
+-        const timeRegex = /^(1[0-2]|0?[1-9]):[0-5][0-9](AM|PM)$/i;
+-        if (!timeRegex.test(input)) {
+-          return 'Please enter a valid time in HH:MMAM or HH:MMPM format (e.g., 1:00PM, 2:30AM).';
+-        }
+-        return true;
+-      },
+-      result: input => {
+-        input = input.trim();
+-        const [time, meridiem] = input.split(/(?=[AP]M)/i);
+-        return time + meridiem.toUpperCase();
+-      }
+-    },
+-    {
+-      type: 'input',
+-      name: 'CreatedBy',
+-      message: `Created by: (type 'Q' or 'X' to exit)`,
+-      initial: current.CreatedBy || 'Paul Welby',
+-      validate: makeExitValidator('Created by'),
+-    },
+-  ]);
+-
+-  // Combine date and time
+-  const Updated = `${answers.Date} @${answers.Time}`;
+-  return { ...answers, Version, Updated };
+-}
+-
+-function updateHeaderInText(content, newHeader) {
+-  const oldHeader = getHeader(content);
+-  if (!oldHeader) return content; // No header found
+-  return content.replace(oldHeader, newHeader);
+-}
+-
+-function updateIndexHtml(content, { AppName, Version, Updated }) {
+-  const newHeader = [
+-    '<!--',
+-    `  INDEX.html`,
+-    `  Version: ${Version}`,
+-    `  AppName: ${AppName}`,
+-    `  Updated: ${Updated}`,
+-    '  Created by Paul Welby',
+-    '-->'
+-  ].join('\n');
+-
+-  // If an HTML comment header exists, replace it; otherwise, insert at the top
+-  if (/<!--[\s\S]*?Created by Paul Welby[\s\S]*?-->/.test(content)) {
+-    content = content.replace(/<!--[\s\S]*?Created by Paul Welby[\s\S]*?-->/, newHeader);
+-  } else {
+-    content = newHeader + '\n\n' + content;
+-  }
+-
+-  // Update <title>
+-  content = content.replace(/<title>.*?<\/title>/i, `<title>${AppName}</title>`);
+-
+-  // Update <h3> (first one found)
+-  content = content.replace(
+-    /<h3>.*?<\/h3>/i,
+-    `<h3>${AppName.replace(/\[v[^\]]+\]/, `[v${Version}]`)} ${Updated.replace('@', '@')}</h3>`
+-  );
+-
+-  return content;
+-}
+-
+-async function main() {
+-  console.log("=== Interactive Header Updater ===");
+-  console.log("Type 'Q' or 'X' at any prompt to exit gracefully.\n");
+-
+-  // Use the first file with a header as the template for defaults
+-  let firstHeader = { Version: '', AppName: '', Updated: '', CreatedBy: '' };
+-  for (const filePath of FILES) {
+-    if (fs.existsSync(filePath)) {
+-      const content = fs.readFileSync(filePath, 'utf8');
+-      const header = getHeader(content);
+-      if (header) {
+-        firstHeader = parseHeader(header);
+-        break;
+-      }
+-    }
+-  }
+-
+-  // Prompt ONCE for all values
+-  const updated = await promptForHeader(firstHeader);
+-
+-  const changes = [];
+-  for (const filePath of FILES) {
+-    if (!fs.existsSync(filePath)) continue;
+-    let content = fs.readFileSync(filePath, 'utf8');
+-    let oldHeader = getHeader(content);
+-
+-    if (filePath.endsWith('.js') || filePath.endsWith('.css') || filePath.endsWith('server.js')) {
+-      // Build new header
+-      const newHeader = [
+-        '/*',
+-        `  ${path.basename(filePath).toUpperCase()}`,
+-        `  Version: ${updated.Version}`,
+-        `  AppName: ${updated.AppName}`,
+-        `  Updated: ${updated.Updated}`,
+-        `  Created by ${updated.CreatedBy}`,
+-        '*/'
+-      ].join('\n');
+-      content = updateHeaderInText(content, newHeader);
+-      fs.writeFileSync(filePath, content, 'utf8');
+-      changes.push({ file: filePath, old: oldHeader, new: newHeader });
+-    } else if (filePath.endsWith('index.html')) {
+-      const newContent = updateIndexHtml(content, updated);
+-      fs.writeFileSync(filePath, newContent, 'utf8');
+-      changes.push({ file: filePath, old: oldHeader, new: getHeader(newContent) });
+-    } else if (filePath.endsWith('package.json')) {
+-      const pkg = JSON.parse(content);
+-      pkg.version = updated.Version;
+-      pkg.name = updated.NpmName;
+-      fs.writeFileSync(filePath, JSON.stringify(pkg, null, 2), 'utf8');
+-      changes.push({ file: filePath, old: `name: ${pkg.name}, version: ${pkg.version}`, new: `name: ${pkg.name}, version: ${pkg.version}` });
+-    }
+-  }
+-
+-  // Report
+-  console.log('\n=== Update Summary ===');
+-  changes.forEach(({ file, old, new: n }) => {
+-    console.log(`\nFile: ${file}\n--- Old Header ---\n${old}\n--- New Header ---\n${n}`);
+-  });
+-  console.log('\nAll headers and metadata updated!');
+-}
+-
+-main();
+diff --git a/update_release-notes_readme.mjs b/update_release-notes_readme.mjs
+deleted file mode 100644
+index b742dcd..0000000
+--- a/update_release-notes_readme.mjs
++++ /dev/null
+@@ -1,183 +0,0 @@
+-import 'dotenv/config';
+-import { Octokit } from '@octokit/rest';
+-import inquirer from 'inquirer';
+-import { execSync } from 'child_process';
+-import fs from 'fs';
+-import path from 'path';
+-
+-const GITHUB_TOKEN = process.env.MULTICHAT_ACCESS_TOKEN;
+-
+-const REPO_OWNER = 'PaulyWolly'; // TODO: Replace with your GitHub username or org
+-const REPO_NAME = 'MultiChat_Chatty'; // TODO: Replace with your repo name
+-
+-const RELEASE_NOTES_PATH = path.resolve('./RELEASE-NOTES.md');
+-const README_PATH = path.resolve('./README.md');
+-
+-if (!GITHUB_TOKEN) {
+-  console.error('GITHUB_TOKEN not found in .env');
+-  process.exit(1);
+-}
+-
+-const octokit = new Octokit({ auth: GITHUB_TOKEN });
+-
+-function getLastReleaseDate() {
+-  if (!fs.existsSync(RELEASE_NOTES_PATH)) return null;
+-  const content = fs.readFileSync(RELEASE_NOTES_PATH, 'utf-8');
+-  const dateMatch = content.match(/\d{4}-\d{2}-\d{2}/); // ISO date
+-  return dateMatch ? new Date(dateMatch[0]) : null;
+-}
+-
+-function getLocalCommits(since) {
+-  let cmd = 'git log --pretty=format:"%H|%ad|%s" --date=iso';
+-  if (since) cmd += ` --since=\"${since.toISOString()}\"`;
+-  const output = execSync(cmd, { encoding: 'utf-8' });
+-  return output.split('\n').map(line => {
+-    const [hash, date, message] = line.split('|');
+-    return { hash, date: date.trim(), message: message.trim() };
+-  });
+-}
+-
+-async function getGitHubData(since) {
+-  // Fetch PRs
+-  const prs = await octokit.paginate(octokit.pulls.list, {
+-    owner: REPO_OWNER,
+-    repo: REPO_NAME,
+-    state: 'closed',
+-    sort: 'updated',
+-    direction: 'desc',
+-    per_page: 100,
+-  });
+-  const newPRs = prs.filter(pr => new Date(pr.merged_at || pr.closed_at) > since);
+-
+-  // Fetch Issues
+-  const issues = await octokit.paginate(octokit.issues.listForRepo, {
+-    owner: REPO_OWNER,
+-    repo: REPO_NAME,
+-    state: 'closed',
+-    sort: 'updated',
+-    direction: 'desc',
+-    per_page: 100,
+-  });
+-  const newIssues = issues.filter(issue => !issue.pull_request && new Date(issue.closed_at) > since);
+-
+-  // Fetch Commits
+-  const commits = await octokit.paginate(octokit.repos.listCommits, {
+-    owner: REPO_OWNER,
+-    repo: REPO_NAME,
+-    since: since.toISOString(),
+-    per_page: 100,
+-  });
+-  return { newPRs, newIssues, commits };
+-}
+-
+-function dedupeAndFormat(commits, prs, issues, version) {
+-  const seen = new Set();
+-  const bullets = [];
+-  
+-  // Get the current date for the version header
+-  const today = new Date();
+-  const dateStr = today.toISOString().split('T')[0];
+-  
+-  // Add version header
+-  bullets.push(`## v${version} (${dateStr})`);
+-  bullets.push('');  // Empty line after header
+-  
+-  for (const c of commits) {
+-    const key = c.message || c.commit && c.commit.message;
+-    if (!seen.has(key)) {
+-      bullets.push(`- [${c.date || c.commit.author.date.split('T')[0]}] Commit: ${key}`);
+-      seen.add(key);
+-    }
+-  }
+-  for (const pr of prs) {
+-    const key = pr.title;
+-    if (!seen.has(key)) {
+-      bullets.push(`- [${(pr.merged_at || pr.closed_at).split('T')[0]}] PR: ${key}`);
+-      seen.add(key);
+-    }
+-  }
+-  for (const issue of issues) {
+-    const key = issue.title;
+-    if (!seen.has(key)) {
+-      bullets.push(`- [${issue.closed_at.split('T')[0]}] Issue: ${key}`);
+-      seen.add(key);
+-    }
+-  }
+-  return bullets.join('\n');
+-}
+-
+-function prependToFile(filePath, content) {
+-  const old = fs.existsSync(filePath) ? fs.readFileSync(filePath, 'utf-8') : '';
+-  fs.writeFileSync(filePath, `${content}\n\n${old}`);
+-}
+-
+-function appendToWhatsNew(filePath, content) {
+-  let file = fs.existsSync(filePath) ? fs.readFileSync(filePath, 'utf-8') : '';
+-  const whatsNewHeader = '## What\'s new';
+-  if (!file.includes(whatsNewHeader)) {
+-    file += `\n\n${whatsNewHeader}\n`;
+-  }
+-  file = file.replace(
+-    /(## What\'s new[\s\S]*?)(\n## |$)/,
+-    (match, p1, p2) => `${p1}\n${content}${p2}`
+-  );
+-  fs.writeFileSync(filePath, file);
+-}
+-
+-async function main() {
+-  const lastDate = getLastReleaseDate() || new Date(0);
+-  const localCommits = getLocalCommits(lastDate);
+-  const { newPRs, newIssues, commits } = await getGitHubData(lastDate);
+-  
+-  // Prompt for version number
+-  const { version } = await inquirer.prompt([
+-    {
+-      type: 'input',
+-      name: 'version',
+-      message: 'Enter version number (e.g., 1.0.0):',
+-      default: '1.0.0',
+-      validate: input => /^\d+\.\d+\.\d+$/.test(input) || 'Please enter a valid version number (e.g., 1.0.0)'
+-    }
+-  ]);
+-  
+-  // Update the version in dedupeAndFormat
+-  const bullets = dedupeAndFormat(localCommits, newPRs, newIssues, version);
+-  
+-  if (!bullets.trim()) {
+-    console.log('No new changes found since last release note.');
+-    return;
+-  }
+-  console.log("DEBUG: About to prompt for editing release notes...");
+-
+-  const { userEdit } = await inquirer.prompt([
+-    {
+-      type: 'editor',
+-      name: 'userEdit',
+-      message: 'Review and edit the following release notes:',
+-      default: bullets,
+-      editor: "notepad.exe"
+-    },
+-  ]);
+-
+-  console.log("DEBUG: Editor prompt finished. userEdit:", userEdit);
+-  const { confirm } = await inquirer.prompt([
+-    {
+-      type: 'confirm',
+-      name: 'confirm',
+-      message: 'Does this look okay?',
+-      default: true,
+-    },
+-  ]);
+-  if (!confirm) {
+-    console.log('Aborted by user.');
+-    return;
+-  }
+-  prependToFile(RELEASE_NOTES_PATH, userEdit);
+-  appendToWhatsNew(README_PATH, userEdit);
+-  console.log('RELEASE-NOTES.md and README.md updated!');
+-}
+-
+-main().catch(e => {
+-  console.error(e);
+-  process.exit(1);
+-}); 
+\ No newline at end of file
