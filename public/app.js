@@ -2045,7 +2045,11 @@ async function getAIResponse(message, selectedModel, history, systemPrompt, sess
 // Add message to chat function
 function addMessageToChat(role, content, options = {}) {
     const messageElement = document.createElement('div');
+    if (options.mock) {
+        messageElement.className = 'message assistant-mock';
+    } else {
     messageElement.className = `message ${role}`;
+    }
     
     // Add special bubble classes for greetings and exit messages
     if (role === 'assistant') {
@@ -4419,6 +4423,109 @@ const handleYoutube = {
     currentSearchParams: null,  // Store complete search parameters
 
     async handleYoutubeRequest(messageText) {
+        // Always show the user query bubble first
+        addMessageToChat('user', messageText);
+
+        // Extract the search subject (remove 'youtube play', 'youtube search', 'play', 'search')
+        let subject = messageText
+            .replace(/youtube\s+play\s*/i, '')
+            .replace(/youtube\s+search\s*/i, '')
+            .replace(/^play\s*/i, '')
+            .replace(/^search\s*/i, '')
+            .replace(/dummy/gi, '')
+            .trim();
+        if (!subject) subject = 'dummy';
+
+        // Always check for mock query first
+        if (messageText && messageText.toLowerCase().includes('dummy')) {
+            const isSearch = messageText.toLowerCase().includes('search');
+            const isPlay = messageText.toLowerCase().includes('play');
+
+            // --- MOCK CODE START ---
+            if (!this.mockPagination) {
+                this.mockPagination = {
+                    currentPage: 1,
+                    totalPages: 3,
+                    videos: Array.from({ length: 36 }, (_, i) => ({
+                        id: `mock_video_${i + 1}`,
+                        title: `Mock Video ${i + 1}`,
+                        description: `This is a mock video description for testing purposes. Video ${i + 1}`,
+                        channelTitle: 'Mock Channel',
+                        publishedAt: new Date().toISOString(),
+                        duration: 'PT10M30S',
+                        thumbnail: `/assets/img/mock/thumb${(i % 36) + 1}.png`
+                    })),
+                };
+            }
+
+            // If user requests a specific page, update currentPage
+            const pageMatch = messageText.match(/page\s*(\d+)/i);
+            if (pageMatch) {
+                this.mockPagination.currentPage = Math.max(1, Math.min(parseInt(pageMatch[1]), this.mockPagination.totalPages));
+            }
+
+            if (isSearch) {
+                // MULTI-MOCK: 12 per page
+                const startIdx = (this.mockPagination.currentPage - 1) * 12;
+                const endIdx = startIdx + 12;
+                const currentPageVideos = this.mockPagination.videos.slice(startIdx, endIdx);
+                const html = `
+                    <div class="youtube-multi-bubble-mock">
+                        <div class="page-info">Page ${this.mockPagination.currentPage} of many results</div>
+                        <p>Found results for: \"${subject}\"</p>
+                        <div class="video-list-mock">
+                            ${currentPageVideos.map(video => `
+                                <div class="video-item-mock">
+                                    <div class="button-thumb-group-MULTI-MOCK top-buttons">
+                                        <a href=\"#\" class=\"youtube-action-btn youtube-popup-btn\" data-video-id=\"${video.id}\" role=\"button\" tabindex=\"0\">Play in Popup</a>
+                                        <button class=\"youtube-action-btn view-playlists-MULTI-MOCK-btn\" title=\"View My Playlists\" style=\"font-size:18px;padding:0 10px;background:none;border:none;cursor:pointer;vertical-align:middle;\">
+                                            <span style=\"display:inline-block;vertical-align:middle;\">&#9776;</span>
+                                        </button>
+                                        <button type=\"button\" class=\"add-to-playlist-MULTI-MOCK-btn\" data-video=\"${encodeURIComponent(JSON.stringify({videoId: video.id, title: video.title, thumbnail: video.thumbnail}))}\" title=\"Add to Playlist\">+</button>
+                                    </div>
+                                    <span class=\"youtube-thumb-link youtube-popup-thumb\" data-video-id=\"${video.id}\">\n                                    <img src=\"${video.thumbnail}\" alt=\"${video.title}\" title=\"Popup: ${video.title}\" />\n                                </span>
+                                    <div class=\"button-thumb-group-MULTI-MOCK bottom-buttons\">\n                                    <a href=\"#\" class=\"youtube-action-btn youtube-direct-link\">Watch on YouTube</a>\n                                </div>
+                                    <div class=\"video-title-MULTI-MOCK\">${video.title}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                        
+                    </div>
+                `;
+                const messageContent = { type: 'youtube', html };
+                console.log('Adding mock MULTI-MOCK response');
+                addMessageToChat('mock-assistant', messageContent, { type: 'youtube', mock: true });
+                return; // Prevents duplicate response bubbles
+            } else if (isPlay) {
+                // SINGLE-MOCK: Only 1 result
+                const video = this.mockPagination.videos[0];
+                const html = `
+                    <div class="youtube-single-bubble-single-mock">
+                        <p>Found result for: \"${subject}\"</p>
+                        <ul class="video-list-single-mock">
+                            <li class="video-item-single-mock">
+                                <div class="button-thumb-group-single-mock top-buttons">
+                                    <a href=\"#\" class=\"youtube-action-btn youtube-popup-btn-single-mock\" data-video-id=\"${video.id}\" role=\"button\" tabindex=\"0\">Play in Popup</a>
+                                    <button class=\"youtube-action-btn view-playlists-SINGLE-mock-btn\" title=\"View My Playlists\" style=\"font-size:18px;padding:0 10px;background:none;border:none;cursor:pointer;vertical-align:middle;\">
+                                        <span style=\"display:inline-block;vertical-align:middle;\">&#9776;</span>
+                                    </button>
+                                    <button type=\"button\" class=\"add-to-playlist-SINGLE-mock-btn\" data-video=\"${encodeURIComponent(JSON.stringify({videoId: video.id, title: video.title, thumbnail: video.thumbnail}))}\" title=\"Add to Playlist\">+</button>
+                                </div>
+                                <span class=\"youtube-thumb-link-single-mock youtube-popup-thumb-single-mock\" data-video-id=\"${video.id}\">\n                                    <img src=\"${video.thumbnail}\" alt=\"${video.title}\" title=\"Popup: ${video.title}\" />\n                                </span>
+                                <div class=\"button-thumb-group-single-mock bottom-buttons\">\n                                    <a href=\"#\" class=\"youtube-action-btn youtube-direct-link-single-mock\">Watch on YouTube (Disabled)</a>\n                                </div>
+                                <div class=\"video-title-single-mock\">${video.title}</div>
+                                <div class=\"channel-info-single-mock\" style=\"color: #b36a00;\">${video.channelTitle}</div>
+                            </li>
+                        </ul>
+                    </div>
+                `;
+                const messageContent = { type: 'youtube', html };
+                console.log('Adding mock SINGLE-MOCK response');
+                addMessageToChat('mock-assistant', messageContent, { type: 'youtube', mock: true });
+                return; // Prevents duplicate response bubbles
+            }
+        }
+
         console.log('handleYoutubeRequest received:', messageText);
 
         // Reset pagination state for new searches
@@ -4426,9 +4533,12 @@ const handleYoutube = {
             this.currentQuery = messageText;
             this.currentPageToken = null;
             this.currentSearchParams = {
-                query: messageText.replace(/^(play|search)\s+/i, '').trim(),
+                query: subject,
                 type: messageText.toLowerCase().includes('play') ? 'play' : 'search'
             };
+            this.currentPage = 1;
+        } else {
+            this.currentPage = (this.currentPage || 1) + 1;
         }
 
         try {
@@ -4460,7 +4570,7 @@ const handleYoutube = {
                 // SINGLE layout for any single video
                 html = `
                     <div class="youtube-single-bubble">
-                        <p>Found result for: "${this.currentSearchParams.query}"</p>
+                        <p>Found result for: "${subject}"</p>
                         <div class="video-item">
                             <div class="button-thumb-group-SINGLE top-buttons">
                                 <a href="#" class="youtube-action-btn youtube-popup-btn" data-video-id="${videos[0].id}" role="button" tabindex="0">Play in Popup</a>
@@ -4480,14 +4590,20 @@ const handleYoutube = {
                             </div>
                             
                             <div class="video-title-SINGLE">${videos[0].title}</div>
+                            
                         </div>
                     </div>
                 `;
             } else if (videos.length > 1) {
                 // MULTI layout
+                // Calculate page info
+                const perPage = 12;
+                const currentPage = this.currentPageToken ? Math.floor(videos.length / perPage) + 1 : 1;
+                const totalPages = Math.ceil(videos.length / perPage) || 1;
                 html = `
                     <div class="youtube-multi-bubble">
-                        <p>Found results for: "${this.currentSearchParams.query}"</p>
+                        <div class="page-info">Page ${currentPage} of many results</div>
+                        <p>Found results for: "${subject}"</p>
                         <div class="video-list">
                             ${videos.map(video => `
                                 <div class="video-item">
@@ -4508,23 +4624,44 @@ const handleYoutube = {
                                     </div>
 
                                     <div class="video-title-MULTI">${video.title}</div>
+                                    
                                 </div>
                             `).join('')}
                         </div>
-                        ${this.currentPageToken ? `
-                            <div class="more-videos-container" style="text-align: center; margin-top: 15px;">
-                                <button class="more-videos-btn" style="padding: 8px 16px; border: 1px solid hsla(11, 100%, 62.2%, 1) ; background-color: #4caf50;box-shadow: rgba(0, 0, 0, 0.25) 0px 14px 28px, rgba(0, 0, 0, 0.22) 0px 7px 10px ;color: white; border: none; border-radius: 4px; cursor: pointer;">
-                                    More Videos...
-                                </button>
-                            </div>
-                        ` : ''}
+                       
                     </div>
                 `;
             } else {
                 html = '<div>No results found.</div>';
             }
+
+            // Remove any existing bar
+            const existingBar = document.getElementById('pagination-bar');
+            if (existingBar) existingBar.remove();
+
+            // Create and append the new bar
+            const bar = document.createElement('div');
+            bar.className = 'pagination-bar';
+            bar.id = 'pagination-bar';
+            bar.innerHTML = `
+                <div class="drag-tab" id="pagination-drag-tab" style="position:absolute;top:0;left:0;z-index:2;">
+                    <img src="/assets/img/drag-handle-svgrepo-com.svg" alt="Drag" class="drag-icon" />
+                </div>
+                <div class="pagination-bar-content" style="display:flex;align-items:center;width:100%;">
+                    <button class="first-page-btn">|<</button>
+                    <button class="prev-page-btn"><<</button>
+                    <button class="step-back-btn"><</button>
+                    <button class="more-page-btn">MORE</button>
+                    <button class="next-page-btn">></button>
+                </div>
+            `;
+            bar.style.position = 'fixed';
+            bar.style.paddingLeft = '40px'; // Make space for drag tab
+            document.body.appendChild(bar);
+            setTimeout(() => setupPaginationBar(isMock), 0);
+
             const messageContent = { type: 'youtube', html };
-            addMessageToChat('assistant', messageContent, { type: 'youtube' });
+            addMessageToChat('assistant', messageContent, { type: 'youtube', mock: true });
             
             // Add click handlers for popup and playlist buttons
             setTimeout(() => {
@@ -5236,5 +5373,107 @@ window.addEventListener('DOMContentLoaded', function() {
 });
 // ... existing code ...
 
+// ... existing code ...
+// === PAGINATION STATE ===
+window.youtubePagination = {
+    history: [], // Array of {videos, pageToken, subject, type}
+    currentIndex: 0,
+    isMock: false,
+};
 
+// === PAGINATION BAR LOGIC ===
+function setupPaginationBar(isMock) {
+    const bar = document.getElementById('pagination-bar');
+    const dragTab = document.getElementById('pagination-drag-tab');
+    if (!bar || !dragTab) return;
+
+    // DRAGGABLE LOGIC
+    let offsetX = 0, offsetY = 0, isDragging = false;
+    dragTab.onmousedown = function(e) {
+        isDragging = true;
+        offsetX = e.clientX - bar.getBoundingClientRect().left;
+        offsetY = e.clientY - bar.getBoundingClientRect().top;
+    };
+    document.onmousemove = function(e) {
+        if (!isDragging) return;
+        bar.style.left = (e.clientX - offsetX) + 'px';
+        bar.style.top = (e.clientY - offsetY) + 'px';
+    };
+    document.onmouseup = function() {
+        isDragging = false;
+    };
+
+    // BUTTON EVENT LISTENERS
+    const btnFirst = bar.querySelector('.first-page-btn');
+    const btnPrev = bar.querySelector('.prev-page-btn');
+    const btnStepBack = bar.querySelector('.step-back-btn');
+    const btnMore = bar.querySelector('.more-page-btn');
+    const btnNext = bar.querySelector('.next-page-btn');
+
+    btnFirst.onclick = function() {
+        if (window.youtubePagination.currentIndex > 0) {
+            window.youtubePagination.currentIndex = 0;
+            updateResults(window.youtubePagination.currentIndex);
+        }
+    };
+    btnPrev.onclick = function() {
+        if (window.youtubePagination.currentIndex >= 12) {
+            window.youtubePagination.currentIndex -= 12;
+            updateResults(window.youtubePagination.currentIndex);
+        }
+    };
+    btnStepBack.onclick = function() {
+        if (window.youtubePagination.currentIndex > 0) {
+            window.youtubePagination.currentIndex--;
+            updateResults(window.youtubePagination.currentIndex);
+        }
+    };
+    btnMore.onclick = function() {
+        if (isMock) {
+            window.youtubePagination.currentIndex++;
+            updateResults(window.youtubePagination.currentIndex);
+        } else {
+            handleYoutubeRequest('more videos');
+        }
+    };
+    btnNext.onclick = function() {
+        if (window.youtubePagination.currentIndex < window.youtubePagination.history.length - 1) {
+            window.youtubePagination.currentIndex++;
+            updateResults(window.youtubePagination.currentIndex);
+        }
+    };
+
+    // DISABLE BUTTONS IF AT START/END OF HISTORY
+    function updateButtonStates() {
+        btnFirst.disabled = window.youtubePagination.currentIndex === 0;
+        btnPrev.disabled = window.youtubePagination.currentIndex < 12;
+        btnStepBack.disabled = window.youtubePagination.currentIndex === 0;
+        btnNext.disabled = window.youtubePagination.currentIndex >= window.youtubePagination.history.length - 1;
+    }
+    updateButtonStates();
+}
+
+// === UPDATE PAGINATION HISTORY ===
+function updatePaginationHistory(videos, pageToken, subject, type) {
+    window.youtubePagination.history.push({ videos, pageToken, subject, type });
+    window.youtubePagination.currentIndex = window.youtubePagination.history.length - 1;
+}
+
+// === UPDATE RESULTS ===
+function updateResults(index) {
+    const entry = window.youtubePagination.history[index];
+    if (!entry) return;
+
+    if (window.youtubePagination.isMock) {
+        handleYoutubeRequest(`YouTube search dummy page ${index + 1}`);
+    } else {
+        this.currentPageToken = entry.pageToken;
+        this.currentPage = index + 1;
+        this.currentSearchParams = {
+            query: entry.subject,
+            type: entry.type
+        };
+        handleYoutubeRequest(entry.subject);
+    }
+}
 
