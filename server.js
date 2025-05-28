@@ -1761,7 +1761,7 @@ app.post('/api/youtube/search', async (req, res) => {
                 auth: process.env.GOOGLE_API_KEY,
                 part: ['snippet'],
                 q: query,
-                maxResults: 10,
+                maxResults: 12,
                 type: 'video',
                 pageToken: pageToken,
                 order: 'relevance',
