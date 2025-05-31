@@ -6,6 +6,18 @@
 # Reference repositories
 ref_repo-DEBUG_778400e_MultiChat/
 ref_repo-MultiChat_v2/
+perfect_styles_99764aa/
 
 # Archive folder
 archive/
+
+# Backup files with potential secrets
+backups/*.env*
+backups/.env*
+*.env.backup*
+.env.backup*
+
+# Any files containing API keys or tokens
+*api*key*
+*token*
+*secret*
