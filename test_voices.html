@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Voice Preview Test App</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; }
+    label, select, button { font-size: 1.1em; margin: 8px 0; }
+    textarea { width: 100%; height: 60px; margin: 8px 0; }
+  </style>
+</head>
+<body>
+  <h2>System Voice Preview (Web Speech API)</h2>
+  <label for="voiceSelect">Choose a voice:</label>
+  <select id="voiceSelect"></select>
+  <br>
+  <label for="text">Text to speak:</label>
+  <textarea id="text">Hello! This is a test of your system voices.</textarea>
+  <br>
+  <button onclick="speak()">Speak</button>
+  <button onclick="window.speechSynthesis.cancel()">Stop</button>
+  <p id="info"></p>
+  <script>
+    const voiceSelect = document.getElementById('voiceSelect');
+    const info = document.getElementById('info');
+    let voices = [];
+
+    function populateVoices() {
+      voices = window.speechSynthesis.getVoices();
+      voiceSelect.innerHTML = '';
+      voices.forEach((voice, i) => {
+        const option = document.createElement('option');
+        option.value = i;
+        option.textContent = `${voice.name} (${voice.lang})${voice.default ? ' [default]' : ''}${voice.localService ? ' [local]' : ''}`;
+        voiceSelect.appendChild(option);
+      });
+      info.textContent = `Found ${voices.length} voices.`;
+    }
+
+    populateVoices();
+    if (typeof speechSynthesis !== 'undefined' && speechSynthesis.onvoiceschanged !== undefined) {
+      speechSynthesis.onvoiceschanged = populateVoices;
+    }
+
+    function speak() {
+      const text = document.getElementById('text').value;
+      const utter = new SpeechSynthesisUtterance(text);
+      const selectedVoice = voices[voiceSelect.value];
+      if (selectedVoice) utter.voice = selectedVoice;
+      window.speechSynthesis.cancel(); // Stop any current speech
+      window.speechSynthesis.speak(utter);
+    }
+
+    // Warm up the speech synthesis engine
+    function warmUpSpeechSynthesis() {
+      const warmUpUtterance = new SpeechSynthesisUtterance('');
+      warmUpUtterance.volume = 0; // Make it silent
+      window.speechSynthesis.speak(warmUpUtterance);
+      window.speechSynthesis.cancel(); // Immediately cancel the silent utterance
+    }
+
+    // Call warm-up when the page loads
+    window.addEventListener('load', warmUpSpeechSynthesis);
+  </script>
+</body>
+</html>
