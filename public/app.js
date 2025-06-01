@@ -1,8 +1,8 @@
 /*
   APP.JS
   Version: 1
-  AppName: Multi-Chat [v1]
-  Updated: 05/31/2025 @9:00AM
+  AppName: MultiChat_Chatty [v1]
+  Updated: 05/31/2025 @7:00PM
   Created by Paul Welby
 */
 
@@ -2090,6 +2090,9 @@ function addMessageToChat(role, content, options = {}) {
     // Don't auto-scroll to bottom if this is YouTube pagination
     if (!options.isYoutubePagination) {
         elements.chatMessages.scrollTop = elements.chatMessages.scrollHeight;
+    } else {
+        // For YouTube pagination, scroll to bring the YouTube results into view
+        scrollToYouTubeResults();
     }
 
     return messageElement;
@@ -5818,6 +5821,14 @@ function renderRealYoutubePaginationBar(page, totalPages, subject) {
     realBar.innerHTML = `
         <div id="pagination-drag-tab" class="drag-tab">
             <img src="/assets/img/drag-me.png" class="drag-me-icon" alt="Drag Me" title="Drag to move pagination bar">
+            <button class="query-history-btn" title="View Query History">
+                <span class="query-history-icon">📚</span>
+                <span class="query-history-text">History</span>
+            </button>
+            <div class="query-history-dropdown">
+                <div class="query-history-header">Query History</div>
+                <div class="query-history-list"></div>
+            </div>
         </div>
         <div class="pagination-bar-content">
             <button class="back-to-top-btn" title="Back to TOP (First Query)">
@@ -5841,29 +5852,30 @@ function renderRealYoutubePaginationBar(page, totalPages, subject) {
     document.body.appendChild(realBar);
 
     // Add dragging functionality to the real pagination bar
-    const realDragTab = realBar.querySelector('#pagination-drag-tab');
-    if (realDragTab) {
-        let isDragging = false;
+    const dragTab = realBar.querySelector('#pagination-drag-tab'); // Fix: Use ID selector instead of class
+    
+    // Add safety check to prevent null reference error
+    if (dragTab) {
         let offsetX = 0, offsetY = 0;
         
-        realDragTab.onmousedown = function(e) {
+        dragTab.onmousedown = function(e) {
             e.preventDefault();
-            isDragging = true;
             offsetX = e.clientX - realBar.getBoundingClientRect().left;
             offsetY = e.clientY - realBar.getBoundingClientRect().top;
             realBar.classList.add('dragging');
             
             function onMouseMove(e) {
-                if (!isDragging) return;
                 const newLeft = e.clientX - offsetX;
                 const newTop = e.clientY - offsetY;
-                realBar.style.left = Math.max(0, Math.min(newLeft, window.innerWidth - realBar.offsetWidth)) + 'px';
-                realBar.style.top = Math.max(0, Math.min(newTop, window.innerHeight - realBar.offsetHeight)) + 'px';
-                realBar.style.transform = 'none';
+                const clampedLeft = Math.max(0, Math.min(newLeft, window.innerWidth - realBar.offsetWidth));
+                const clampedTop = Math.max(0, Math.min(newTop, window.innerHeight - realBar.offsetHeight));
+                realBar.style.left = clampedLeft + 'px';
+                realBar.style.top = clampedTop + 'px';
+                realBar.style.right = 'auto';
+                realBar.style.bottom = 'auto';
             }
             
             function onMouseUp() {
-                isDragging = false;
                 realBar.classList.remove('dragging');
                 document.removeEventListener('mousemove', onMouseMove);
                 document.removeEventListener('mouseup', onMouseUp);
@@ -5872,6 +5884,8 @@ function renderRealYoutubePaginationBar(page, totalPages, subject) {
             document.addEventListener('mousemove', onMouseMove);
             document.addEventListener('mouseup', onMouseUp);
         };
+    } else {
+        console.warn('⚠️ Drag tab element not found - pagination bar will not be draggable');
     }
     
     // Add event listeners
@@ -5932,11 +5946,12 @@ function renderRealYoutubePaginationBar(page, totalPages, subject) {
                 }
 
                 if (data.isMock) {
-                    if (data.resultType === 'MULTI-MOCK') {
-                        window.youtubePagination.isActive = true;
-                        renderMockYoutubeResults(videos, data.page, data.totalPages, subject, 'search');
-                        renderMockPaginationBar(data.page, data.totalPages, subject);
-                    }
+                    // REAL system should never receive mock data - this indicates a server configuration error
+                    console.error('❌ [SEGREGATION-ERROR] REAL system received mock data from MORE button API call');
+                    addMessageToChat('assistant', 'Error: Server returned invalid data format. Please try your search again.');
+                    // Rollback the page counter on error
+                    window.youtubePagination.currentPage--;
+                    return;
                 } else {
                     if (data.resultType === 'MULTI') {
                         window.youtubePagination.isActive = true;
@@ -5946,15 +5961,62 @@ function renderRealYoutubePaginationBar(page, totalPages, subject) {
                 
             } catch (error) {
                 console.error('+++ [REAL]🌐 [REAL] ❌ Error fetching more results:', error);
-                toastManager.show('Error loading more results', 'error');
+                window.showToast('Error loading more results', 'error');
                 // Rollback the page counter on error
                 window.youtubePagination.currentPage--;
             }
         } else {
-            console.log('+++ [REAL]🌐 [REAL] ⚠️ No nextPageToken available - cannot load more');
-            toastManager.show('No more results available', 'info');
-            // Rollback the page counter if no token
-            window.youtubePagination.currentPage--;
+            console.log('+++ [REAL]🌐 [REAL] ⚠️ No nextPageToken available - trying page-based fallback');
+            
+            // Fallback: Try page-based pagination without token
+            try {
+                const fetchBody = { 
+                    query: subject, 
+                    type: 'search', 
+                    page: window.youtubePagination.currentPage
+                    // No pageToken - let API use page-based pagination
+                };
+
+                console.log('🌐 [REAL] 📞 Making fallback API call for MORE with page-based pagination:', fetchBody);
+                const response = await fetch('/api/youtube/search', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(fetchBody)
+                });
+                
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const data = await response.json();
+                
+                // Check if we got new results
+                if (data.videos && data.videos.length > 0) {
+                    // Success! Update token for next time
+                    if (data.nextPageToken) {
+                        sessionStorage.setItem('youtube_nextPageToken', data.nextPageToken);
+                        console.log('+++ [REAL]🔑 Updated nextPageToken from fallback:', data.nextPageToken);
+                    } else {
+                        sessionStorage.removeItem('youtube_nextPageToken');
+                    }
+                    
+                    // Cache and render the new results
+                    const cacheKey = `yt_${subject}_search_${window.youtubePagination.currentPage}`;
+                    localStorage.setItem(cacheKey, JSON.stringify(data));
+                    console.log('+++ [REAL]💾 Cached fallback results with key:', cacheKey);
+                    
+                    let videos = data.videos;
+                    renderRealYoutubeResults(videos, window.youtubePagination.currentPage, 'many', subject, 'search', true);
+                    
+                    window.showToast('✅ Loaded more results!', 'success');
+                } else {
+                    // No more results available
+                    window.showToast('No more results available', 'info');
+                    window.youtubePagination.currentPage--;
+                }
+                
+            } catch (error) {
+                console.error('+++ [REAL]🌐 [REAL] ❌ Error in fallback pagination:', error);
+                window.showToast('Error loading more results', 'error');
+                window.youtubePagination.currentPage--;
+            }
         }
     });
 
@@ -5981,6 +6043,9 @@ function renderRealYoutubePaginationBar(page, totalPages, subject) {
                 
                 // Render the cached results
                 renderRealYoutubeResults(videos, window.youtubePagination.currentPage, 'many', subject, 'search', true);
+                
+                // Update button states after successful navigation
+                setInitialButtonStates();
             } else {
                 console.log('🌐 [REAL] ❌ No cached results found for page', window.youtubePagination.currentPage);
                 // Rollback the page counter
@@ -5992,14 +6057,17 @@ function renderRealYoutubePaginationBar(page, totalPages, subject) {
 
     realBar.querySelector('.next-btn').addEventListener('click', () => {
         console.log('+++ [REAL]🌐 [REAL] ➡️ Next button clicked');
-        window.youtubePagination.currentPage++;
         
-        // Load cached results directly instead of calling deprecated 3-parameter system
-        const cacheKey = `yt_${subject}_search_${window.youtubePagination.currentPage}`;
-        console.log('🌐 [REAL] 🔍 Looking for cached results with key:', cacheKey);
+        // CRITICAL: Only proceed if we have cached results for next page
+        const nextPageNumber = window.youtubePagination.currentPage + 1;
+        const cacheKey = `yt_${subject}_search_${nextPageNumber}`;
+        console.log('🌐 [REAL] 🔍 Checking for cached page:', nextPageNumber, 'with key:', cacheKey);
         
         const cachedResult = localStorage.getItem(cacheKey);
         if (cachedResult) {
+            // ONLY proceed if cache exists - increment page and render
+            window.youtubePagination.currentPage = nextPageNumber;
+            
             const data = JSON.parse(cachedResult);
             console.log('🌐 [REAL] 🎯 Found cached results for next navigation');
             
@@ -6012,46 +6080,231 @@ function renderRealYoutubePaginationBar(page, totalPages, subject) {
             
             // Render the cached results
             renderRealYoutubeResults(videos, window.youtubePagination.currentPage, 'many', subject, 'search', true);
+            
+            // Update button states after successful navigation
+            setInitialButtonStates();
         } else {
-            console.log('🌐 [REAL] ❌ No cached results found for page', window.youtubePagination.currentPage);
-            // Rollback the page counter
-            window.youtubePagination.currentPage--;
-            toastManager?.show('No cached results for this page', 'warning');
+            // NO CACHED RESULTS - Do NOT increment page, just show warning
+            console.log('🌐 [REAL] ❌ No cached results found for page', nextPageNumber);
+            console.log('🔒 NEXT button should be disabled - no cached page available');
+            
+            toastManager?.show('No more cached pages available - click MORE for new results', 'warning');
+            
+            // Disable NEXT button since no more cached pages
+            const nextBtn = realBar.querySelector('.next-btn');
+            if (nextBtn) {
+                nextBtn.disabled = true;
+                nextBtn.style.opacity = '0.5';
+                nextBtn.style.cursor = 'not-allowed';
+                nextBtn.title = 'No more cached pages - click MORE for new results';
+                console.log('🔒 NEXT button disabled - no cached results available');
+            }
         }
     });
     
-    // Make draggable (using the WORKING pattern from setupPaginationBar)
-    const dragTab = realBar.querySelector('.pagination-drag-tab');
-    let offsetX = 0, offsetY = 0;
-    
-    dragTab.onmousedown = function(e) {
-        e.preventDefault();
-        offsetX = e.clientX - realBar.getBoundingClientRect().left;
-        offsetY = e.clientY - realBar.getBoundingClientRect().top;
-        realBar.classList.add('dragging');
-        
-        function onMouseMove(e) {
-            const newLeft = e.clientX - offsetX;
-            const newTop = e.clientY - offsetY;
-            const clampedLeft = Math.max(0, Math.min(newLeft, window.innerWidth - realBar.offsetWidth));
-            const clampedTop = Math.max(0, Math.min(newTop, window.innerHeight - realBar.offsetHeight));
-            realBar.style.left = clampedLeft + 'px';
-            realBar.style.top = clampedTop + 'px';
-            realBar.style.right = 'auto';
-            realBar.style.bottom = 'auto';
-        }
-        
-        function onMouseUp() {
-            realBar.classList.remove('dragging');
-            document.removeEventListener('mousemove', onMouseMove);
-            document.removeEventListener('mouseup', onMouseUp);
-        }
-        
-        document.addEventListener('mousemove', onMouseMove);
-        document.addEventListener('mouseup', onMouseUp);
-    };
 
     console.log('+++ [REAL]🌐 ✅ REAL YouTube pagination bar created and functional');
+    
+    // CRITICAL FIX: Set proper initial button states
+    function setInitialButtonStates() {
+        const currentPage = window.youtubePagination?.currentPage || 1;
+        const backToTopBtn = realBar.querySelector('.back-to-top-btn');
+        const queryStartBtn = realBar.querySelector('.query-start-btn'); 
+        const backBtn = realBar.querySelector('.back-btn');
+        const nextBtn = realBar.querySelector('.next-btn');
+        const historyBtn = realBar.querySelector('.drag-tab .query-history-btn');
+        
+        // Back to top button - disable if only one query in history or on first query
+        if (backToTopBtn) {
+            const queryHistory = window.youtubePagination.allQueriesHistory || [];
+            if (queryHistory.length <= 1) {
+                backToTopBtn.disabled = true;
+                backToTopBtn.style.opacity = '0.5';
+                backToTopBtn.title = 'No previous queries to go back to';
+            }
+        }
+        
+        // Query start button - disable if on page 1
+        if (queryStartBtn) {
+            if (currentPage === 1) {
+                queryStartBtn.disabled = true;
+                queryStartBtn.style.opacity = '0.5';
+                queryStartBtn.title = 'Already on page 1';
+            }
+        }
+        
+        // Back button - disable if on page 1
+        if (backBtn) {
+            if (currentPage === 1) {
+                backBtn.disabled = true;
+                backBtn.style.opacity = '0.5';
+                backBtn.title = 'Already on first page';
+            }
+        }
+        
+        // Next button - disable if no cached next page
+        if (nextBtn) {
+            const nextPageKey = `yt_${subject}_search_${currentPage + 1}`;
+            const hasNextPage = localStorage.getItem(nextPageKey) !== null;
+            if (!hasNextPage) {
+                nextBtn.disabled = true;
+                nextBtn.style.opacity = '0.2';
+                nextBtn.title = 'No more cached pages - click MORE for new results';
+            }
+        }
+        
+        // Query history button - disable if no query history
+        if (historyBtn) {
+            let queryHistory = window.youtubePagination.allQueriesHistory || [];
+            
+            // If history is empty, try to auto-populate from localStorage cache
+            if (queryHistory.length === 0) {
+                console.log('🔍 [BUTTON-STATE] History empty, checking localStorage for cached queries');
+                const cachedQueries = [];
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key && key.startsWith('yt_') && key.includes('_search_1')) {
+                        const query = key.replace('yt_', '').replace('_search_1', '');
+                        const cachedData = localStorage.getItem(key);
+                        if (cachedData) {
+                            try {
+                                const data = JSON.parse(cachedData);
+                                if (data.timestamp) {
+                                    cachedQueries.push({
+                                        query: query,
+                                        timestamp: data.timestamp
+                                    });
+                                }
+                            } catch (e) {
+                                console.log('🔍 [BUTTON-STATE] Failed to parse cached data for key:', key);
+                            }
+                        }
+                    }
+                }
+                if (cachedQueries.length > 0) {
+                    window.youtubePagination.allQueriesHistory = cachedQueries.sort((a, b) => b.timestamp - a.timestamp);
+                    queryHistory = window.youtubePagination.allQueriesHistory;
+                    console.log('🔍 [BUTTON-STATE] Auto-populated history for button state:', queryHistory.length, 'queries');
+                }
+            }
+            
+            if (queryHistory.length === 0) {
+                historyBtn.disabled = true;
+                historyBtn.style.opacity = '0.5';
+                historyBtn.title = 'No query history available';
+                console.log('🔒 History button disabled - no history available');
+            } else {
+                historyBtn.disabled = false;
+                historyBtn.style.opacity = '1';
+                historyBtn.title = `View Query History (${queryHistory.length} queries)`;
+                console.log('✅ History button enabled -', queryHistory.length, 'queries available');
+            }
+        }
+    }
+    
+    // Apply initial button states
+    setInitialButtonStates();
+    
+    // ADDITIONAL FIX: Ensure buttons are properly disabled with a slight delay for DOM rendering
+    setTimeout(() => {
+        const currentPage = window.youtubePagination?.currentPage || 1;
+        const nextBtn = realBar.querySelector('.next-btn');
+        const backBtn = realBar.querySelector('.back-btn');
+        const queryStartBtn = realBar.querySelector('.query-start-btn');
+        const backToTopBtn = realBar.querySelector('.back-to-top-btn');
+        const historyBtn = realBar.querySelector('.drag-tab .query-history-btn');
+        
+        // Force disable NEXT button on initial search (page 1 with no cached next page)
+        if (nextBtn && currentPage === 1) {
+            const nextPageKey = `yt_${subject}_search_${currentPage + 1}`;
+            const hasNextPage = localStorage.getItem(nextPageKey) !== null;
+            if (!hasNextPage) {
+                nextBtn.disabled = true;
+                nextBtn.style.opacity = '0.5';
+                nextBtn.style.cursor = 'not-allowed';
+                nextBtn.title = 'No more cached pages - click MORE for new results';
+                console.log('🔒 NEXT button disabled - no cached page 2');
+            }
+        }
+        
+        // Force disable BACK button on page 1  
+        if (backBtn && currentPage === 1) {
+            backBtn.disabled = true;
+            backBtn.style.opacity = '0.5';
+            backBtn.style.cursor = 'not-allowed';
+            backBtn.title = 'Already on first page';
+            console.log('🔒 BACK button disabled - on page 1');
+        }
+        
+        // Force disable query start button on page 1
+        if (queryStartBtn && currentPage === 1) {
+            queryStartBtn.disabled = true;
+            queryStartBtn.style.opacity = '0.5';
+            queryStartBtn.style.cursor = 'not-allowed';
+            queryStartBtn.title = 'Already on page 1';
+            console.log('🔒 Query start button disabled - on page 1');
+        }
+        
+        // Force disable back to top if only one query
+        if (backToTopBtn) {
+            const queryHistory = window.youtubePagination.allQueriesHistory || [];
+            if (queryHistory.length <= 1) {
+                backToTopBtn.disabled = true;
+                backToTopBtn.style.opacity = '0.5';
+                backToTopBtn.style.cursor = 'not-allowed';
+                backToTopBtn.title = 'No previous queries to go back to';
+                console.log('🔒 Back to top button disabled - no query history');
+            }
+        }
+        
+        // Query history button - disable if no query history
+        if (historyBtn) {
+            let queryHistory = window.youtubePagination.allQueriesHistory || [];
+            
+            // If history is empty, try to auto-populate from localStorage cache
+            if (queryHistory.length === 0) {
+                console.log('🔍 [BUTTON-STATE] History empty, checking localStorage for cached queries');
+                const cachedQueries = [];
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key && key.startsWith('yt_') && key.includes('_search_1')) {
+                        const query = key.replace('yt_', '').replace('_search_1', '');
+                        const cachedData = localStorage.getItem(key);
+                        if (cachedData) {
+                            try {
+                                const data = JSON.parse(cachedData);
+                                if (data.timestamp) {
+                                    cachedQueries.push({
+                                        query: query,
+                                        timestamp: data.timestamp
+                                    });
+                                }
+                            } catch (e) {
+                                console.log('🔍 [BUTTON-STATE] Failed to parse cached data for key:', key);
+                            }
+                        }
+                    }
+                }
+                if (cachedQueries.length > 0) {
+                    window.youtubePagination.allQueriesHistory = cachedQueries.sort((a, b) => b.timestamp - a.timestamp);
+                    queryHistory = window.youtubePagination.allQueriesHistory;
+                    console.log('🔍 [BUTTON-STATE] Auto-populated history for button state:', queryHistory.length, 'queries');
+                }
+            }
+            
+            if (queryHistory.length === 0) {
+                historyBtn.disabled = true;
+                historyBtn.style.opacity = '0.5';
+                historyBtn.title = 'No query history available';
+                console.log('🔒 History button disabled - no history available');
+            } else {
+                historyBtn.disabled = false;
+                historyBtn.style.opacity = '1';
+                historyBtn.title = `View Query History (${queryHistory.length} queries)`;
+                console.log('✅ History button enabled -', queryHistory.length, 'queries available');
+            }
+        }
+    }, 100); // Small delay to ensure DOM is ready
     
     // Add missing event listeners for back-to-top and query-start buttons
     realBar.querySelector('.back-to-top-btn').addEventListener('click', () => {
@@ -6059,97 +6312,326 @@ function renderRealYoutubePaginationBar(page, totalPages, subject) {
         console.log('🔍 allQueriesHistory:', window.youtubePagination.allQueriesHistory);
         const firstQuery = window.youtubePagination.allQueriesHistory?.[0];
         if (firstQuery) {
-            console.log('🌐 [REAL] 🔍 Going back to first query:', firstQuery.query);
-            handleYoutube.handleYoutubeRequest(firstQuery.query, false, null);
+            console.log('🌐 [REAL] 🔍 Navigating to first query (no new bubble):', firstQuery.query);
+            
+            // Navigate directly to cached results without creating user bubble
+            const cacheKey = `yt_${firstQuery.query}_search_1`;
+            const cachedResult = localStorage.getItem(cacheKey);
+            if (cachedResult) {
+                const data = JSON.parse(cachedResult);
+                console.log('🌐 [REAL] 🎯 Found cached results for navigation');
+                
+                // Reset pagination to first query/page
+                window.youtubePagination.currentPage = 1;
+                window.youtubePagination.originalQuery = firstQuery.query;
+                
+                let videos = [];
+                if (data.video) {
+                    videos = [data.video];
+                } else if (data.videos) {
+                    videos = data.videos;
+                }
+                
+                // Render without creating user bubble
+                renderRealYoutubeResults(videos, 1, 'many', firstQuery.query, 'search', true);
+                
+                window.showToast('⬆️ Jumped to first query', 'info');
+            } else {
+                console.log('🌐 [REAL] ❌ No cached results found for first query');
+                window.showToast('No cached results for first query', 'warning');
+            }
         } else {
             console.log('🌐 [REAL] ❌ No queries in history');
-            // Use window.showToast from ToastManager
-            if (window.showToast) {
-                window.showToast('No previous queries found', 'warning');
-            } else if (typeof showToast === 'function') {
-                showToast('No previous queries found');
-            } else {
-                console.log('⚠️ No toast function available');
-            }
+            window.showToast('No queries in history', 'warning');
         }
     });
-
+    
     realBar.querySelector('.query-start-btn').addEventListener('click', () => {
         console.log('+++ [REAL] Query start button clicked');
-        console.log('🔍 originalQuery:', window.youtubePagination.originalQuery);
         if (window.youtubePagination.originalQuery) {
-            window.youtubePagination.currentPage = 1;
-            console.log('🌐 [REAL] 🔄 Going to page 1 of current query:', window.youtubePagination.originalQuery);
-            handleYoutube.handleYoutubeRequest(window.youtubePagination.originalQuery, false, null);
-        } else {
-            console.log('🌐 [REAL] ❌ No current query found');
-            // Use window.showToast from ToastManager
-            if (window.showToast) {
-                window.showToast('No current query found', 'warning');
-            } else if (typeof showToast === 'function') {
-                showToast('No current query found');
+            console.log('🌐 [REAL] 🔍 Navigating to original query (no new bubble):', window.youtubePagination.originalQuery);
+            
+            // Navigate directly to cached results without creating user bubble
+            const cacheKey = `yt_${window.youtubePagination.originalQuery}_search_1`;
+            const cachedResult = localStorage.getItem(cacheKey);
+            if (cachedResult) {
+                const data = JSON.parse(cachedResult);
+                console.log('🌐 [REAL] 🎯 Found cached results for navigation');
+                
+                // Reset pagination to page 1
+                window.youtubePagination.currentPage = 1;
+                
+                let videos = [];
+                if (data.video) {
+                    videos = [data.video];
+                } else if (data.videos) {
+                    videos = data.videos;
+                }
+                
+                // Render without creating user bubble
+                renderRealYoutubeResults(videos, 1, 'many', window.youtubePagination.originalQuery, 'search', true);
+                
+                window.showToast('🏠 Back to page 1', 'info');
             } else {
-                console.log('⚠️ No toast function available');
+                console.log('🌐 [REAL] ❌ No cached results found for original query');
+                window.showToast('No cached results for original query', 'warning');
             }
+        } else {
+            console.log('🌐 [REAL] ❌ No original query stored');
+            window.showToast('No original query stored', 'warning');
         }
     });
+
+    // Query History Selector functionality
+    const historyBtn = realBar.querySelector('.query-history-btn');
+    const historyDropdown = realBar.querySelector('.query-history-dropdown');
+    const historyList = realBar.querySelector('.query-history-list');
+
+    // Toggle dropdown visibility
+    historyBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        e.preventDefault(); // Prevent drag functionality when clicking history button
+        const isVisible = historyDropdown.classList.contains('show');
+        
+        if (isVisible) {
+            historyDropdown.classList.remove('show');
+        } else {
+            updateQueryHistoryDisplay();
+            historyDropdown.classList.add('show');
+        }
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!realBar.contains(e.target) || (!historyBtn.contains(e.target) && !historyDropdown.contains(e.target))) {
+            historyDropdown.classList.remove('show');
+        }
+    });
+
+    // Prevent drag functionality when interacting with history elements
+    historyBtn.addEventListener('mousedown', (e) => {
+        e.stopPropagation();
+    });
+
+    historyDropdown.addEventListener('mousedown', (e) => {
+        e.stopPropagation();
+    });
+
+    // Function to update the query history display
+    function updateQueryHistoryDisplay() {
+        console.log('🔍 [HISTORY] Scanning ALL cached queries in localStorage...');
+        
+        // Always scan localStorage for ALL cached queries instead of relying on allQueriesHistory
+        const cachedQueries = [];
+        
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith('yt_') && key.includes('_search_1')) {
+                const query = key.replace('yt_', '').replace('_search_1', '');
+                const cachedData = localStorage.getItem(key);
+                if (cachedData) {
+                    try {
+                        const data = JSON.parse(cachedData);
+                        if (data.timestamp) {
+                            cachedQueries.push({
+                                query: query,
+                                timestamp: data.timestamp
+                            });
+                            console.log('🔍 [HISTORY] Found cached query:', query, 'from', new Date(data.timestamp).toLocaleString());
+                        }
+                    } catch (e) {
+                        console.log('🔍 [HISTORY] Failed to parse cached data for key:', key);
+                    }
+                }
+            }
+        }
+        
+        console.log('🔍 [HISTORY] Total cached queries found:', cachedQueries.length);
+        
+        if (cachedQueries.length === 0) {
+            historyList.innerHTML = '<div class="query-history-empty">No query history available</div>';
+            return;
+        }
+        
+        // Sort queries by timestamp (newest first)
+        const sortedHistory = cachedQueries.sort((a, b) => b.timestamp - a.timestamp);
+        
+        // Helper function to extract just the subject from query
+        function extractSubject(query) {
+            // Remove common YouTube search prefixes to show just the core subject
+            const cleanQuery = query
+                .replace(/^youtube\s+search\s+/i, '')
+                .replace(/^youtube\s+/i, '')
+                .replace(/^search\s+/i, '')
+                .trim();
+            return cleanQuery || query; // Fallback to original if cleaning results in empty string
+        }
+        
+        historyList.innerHTML = sortedHistory.map((item, index) => {
+            const cachedPages = countCachedPages(item.query);
+            const timeAgo = formatTimeAgo(item.timestamp);
+            const isCurrentQuery = window.youtubePagination.originalQuery === item.query;
+            const displaySubject = extractSubject(item.query);
+            
+            return `
+                <div class="query-history-item ${isCurrentQuery ? 'current' : ''}" data-query="${item.query}">
+                    <div class="query-history-query">${displaySubject}</div>
+                    <div class="query-history-pages">${cachedPages} page${cachedPages !== 1 ? 's' : ''}</div>
+                    <div class="query-history-meta">
+                        <span class="query-history-time">${timeAgo}</span>
+                        <button class="query-history-delete" onclick="deleteQueryFromHistory('${item.query.replace(/'/g, "\\'")}'); event.stopPropagation();" title="Delete this query and all cached data">🗑️</button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        
+        // Add click handlers for history navigation
+        historyList.querySelectorAll('.query-history-item').forEach(item => {
+            item.addEventListener('click', (event) => {
+                // Don't navigate if delete button was clicked
+                if (event.target.classList.contains('query-history-delete')) {
+                    return;
+                }
+                const query = item.dataset.query;
+                navigateToQuery(query);
+                historyDropdown.classList.remove('show');
+            });
+        });
+    }
+
+    // Function to navigate to a specific query
+    function navigateToQuery(query) {
+        console.log('🔍 [HISTORY] Navigating to query:', query);
+        
+        // Check if we have cached results for page 1 of this query
+        const cacheKey = `yt_${query}_search_1`;
+        const cachedResult = localStorage.getItem(cacheKey);
+        
+        if (cachedResult) {
+            const data = JSON.parse(cachedResult);
+            console.log('🌐 [HISTORY] 🎯 Found cached results for query navigation');
+            
+            // Update pagination state
+            window.youtubePagination.currentPage = 1;
+            window.youtubePagination.originalQuery = query;
+            
+            let videos = [];
+            if (data.video) {
+                videos = [data.video];
+            } else if (data.videos) {
+                videos = data.videos;
+            }
+            
+            // Render without creating user bubble
+            renderRealYoutubeResults(videos, 1, 'many', query, 'search', true);
+            
+            // Update button states
+            setInitialButtonStates();
+            
+            window.showToast(`📚 Switched to: ${query}`, 'info');
+        } else {
+            console.log('🌐 [HISTORY] ❌ No cached results found for query:', query);
+            window.showToast('No cached results for this query', 'warning');
+        }
+    }
+
+    // Helper function to count cached pages for a query
+    function countCachedPages(query) {
+        let count = 0;
+        let page = 1;
+        
+        while (page <= 10) { // Check up to 10 pages max
+            const cacheKey = `yt_${query}_search_${page}`;
+            if (localStorage.getItem(cacheKey)) {
+                count++;
+                page++;
+            } else {
+                break;
+            }
+        }
+        
+        return count;
+    }
+
+    // Helper function to format time ago
+    function formatTimeAgo(timestamp) {
+        const now = Date.now();
+        const diff = now - timestamp;
+        const minutes = Math.floor(diff / (1000 * 60));
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        
+        if (minutes < 1) return 'Just now';
+        if (minutes < 60) return `${minutes}m ago`;
+        if (hours < 24) return `${hours}h ago`;
+        if (days < 7) return `${days}d ago`;
+        return new Date(timestamp).toLocaleDateString();
+    }
+
+    // Function to delete query from history and cached data
+    function deleteQueryFromHistory(query) {
+        console.log('🗑️ [DELETE] Deleting query and cached data for:', query);
+        
+        // Find and remove all cached pages for this query
+        let deletedCount = 0;
+        const keysToDelete = [];
+        
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith(`yt_${query}_search_`)) {
+                keysToDelete.push(key);
+                deletedCount++;
+            }
+        }
+        
+        // Remove all found keys
+        keysToDelete.forEach(key => {
+            localStorage.removeItem(key);
+            console.log('🗑️ [DELETE] Removed cached data:', key);
+        });
+        
+        // Remove from allQueriesHistory if it exists
+        if (window.youtubePagination.allQueriesHistory) {
+            window.youtubePagination.allQueriesHistory = window.youtubePagination.allQueriesHistory.filter(
+                item => item.query !== query
+            );
+        }
+        
+        // Show success message
+        const displaySubject = extractSubject(query);
+        window.showToast(`🗑️ Deleted "${displaySubject}" and ${deletedCount} cached page${deletedCount !== 1 ? 's' : ''}`, 'success');
+        
+        // Refresh the display
+        updateQueryHistoryDisplay();
+        
+        // Helper function to extract just the subject from query
+        function extractSubject(query) {
+            const cleanQuery = query
+                .replace(/^youtube\s+search\s+/i, '')
+                .replace(/^youtube\s+/i, '')
+                .replace(/^search\s+/i, '')
+                .trim();
+            return cleanQuery || query;
+        }
+    }
+
+    // Make deleteQueryFromHistory globally accessible
+    window.deleteQueryFromHistory = deleteQueryFromHistory;
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════════════
-// REAL YOUTUBE API HANDLER OBJECT
-// ═══════════════════════════════════════════════════════════════════════════════════════
-
-// =====================================================
-// YOUTUBE MODULE - taken from perfect_styles_99764aa
-// =====================================================
-
+// YouTube Handler Object
 const handleYoutube = {
-    isPlaying: false,
-    currentQuery: '',
-    currentPageToken: null,
-    currentSearchParams: null,  // Store complete search parameters
-
-    async handleYoutubeRequest(messageText, isPagination = false, pageToken = undefined) {
-        console.log('🌐 [REAL] handleYoutubeRequest received:', messageText);
-
-        // SIMPLIFIED: Remove complex 3-parameter handling - use only the new system
-        // OLD 3-parameter logic removed to eliminate confusion and conflicts
+    async handleYoutubeRequest(subject, isPagination = false, messageText = null) {
+        const type = 'search';
+        const currentPage = window.youtubePagination?.currentPage || 1;
+        const pageToken = null;
         
-        // Initialize pagination state if needed
-        if (!this.paginationState) {
-            this.paginationState = {
-                currentPage: 1,
-                totalPages: 1,
-                query: '',
-                pageTokens: [''], // Start with empty token for page 1
-                prevPageTokens: []
-            };
-        }
-
-        // ENHANCED: ALWAYS CHECK CACHE FIRST - regardless of call type
-        // This dramatically reduces YouTube API calls and prevents hitting limits
-        
-        // Determine the subject and type for cache key generation
-        let subject = messageText;
-        let type = 'search';
-        
-        if (messageText.toLowerCase().includes('play ')) {
-            type = 'play';
-            subject = messageText.replace(/play\s+/i, '').trim();
-        }
-
-        // Clean the subject to match cache format
-        if (subject.toLowerCase().includes('youtube search ')) {
-            subject = subject.replace(/youtube search /i, '').trim();
-        }
-
         // Track this query for navigation history (for back-to-top button)
         if (!isPagination) {
             addToQueriesHistory(subject);
+            // CRITICAL FIX: Set originalQuery for navigation buttons
+            window.youtubePagination.originalQuery = subject;
         }
-
-        // Determine current page for cache key
-        const currentPage = window.youtubePagination?.currentPage || 1;
         
         // Generate cache key - ALWAYS check cache first
         const cacheKey = `yt_${subject}_${type}_${currentPage}`;
@@ -6176,14 +6658,10 @@ const handleYoutube = {
 
             // Route cached results to proper rendering
             if (cachedData.isMock) {
-                if (cachedData.resultType === 'MULTI-MOCK') {
-                    window.youtubePagination.isActive = true;
-                    renderMockYoutubeResults(videos, cachedData.page, cachedData.totalPages, subject, 'search');
-                    renderMockPaginationBar(cachedData.page, cachedData.totalPages, subject);
-                } else if (cachedData.resultType === 'SINGLE-MOCK') {
-                    window.youtubePagination.isActive = false;
-                    renderMockSingleYoutubeResult(videos[0], subject, 'search');
-                }
+                // REAL system should never receive mock data - this indicates an error
+                console.error('❌ [SEGREGATION-ERROR] REAL system received mock data from cache');
+                addMessageToChat('assistant', 'Error: Invalid data format received. Please try your search again.');
+                return;
             } else {
                 if (cachedData.resultType === 'MULTI') {
                     window.youtubePagination.isActive = true;
@@ -6193,18 +6671,22 @@ const handleYoutube = {
             return; // Exit early - no API call needed!
         }
 
-        // STEP 2: NO CACHE FOUND - Make API call (but cache the result)
-        console.log('❌ [CACHE-MISS] No cached results found - making API call');
-        console.log('🌐 [API-CALL] Fetching from YouTube API for:', subject, 'page:', currentPage);
+        // STEP 2: NO CACHE FOUND - Check quota before making API call
+        console.log('❌ [CACHE-MISS] No cached results found - checking quota limits');
+        
+        // Check if we should block the API call due to quota limits
+        if (window.QuotaMonitor && window.QuotaMonitor.shouldBlockAPICall()) {
+            addMessageToChat('assistant', 'Search blocked to preserve YouTube API quota. Please try searching for previously searched terms which may be cached.');
+            return;
+        }
+        
+        console.log('🌐 [API-CALL] Quota check passed - fetching from YouTube API for:', subject, 'page:', currentPage);
 
         // Show BLUE API call toast notification
         if (window.showToast) {
             window.showToast('🌐 Making YouTube API call...', 'api', 3000);
         }
 
-        // Allow all valid calls - cache-first system handles efficiency
-        // The 3-parameter system (messageText, isPagination, pageToken) is essential for proper caching
-        
         // STEP 3: Make fresh API call and cache the result
         try {
             const fetchBody = { query: subject, type, page: currentPage };
@@ -6219,9 +6701,24 @@ const handleYoutube = {
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             const data = await response.json();
             
-            // STEP 4: IMMEDIATELY cache the fresh result with timestamp for future use
+            // STEP 4: INCREMENT QUOTA COUNTER after successful API call
+            if (window.QuotaMonitor) {
+                const usage = window.QuotaMonitor.incrementUsage();
+                console.log(`📊 [QUOTA] API call successful - updated usage: ${usage.used}/${usage.limit}`);
+            }
+            
+            // STEP 5: IMMEDIATELY cache the fresh result with timestamp for future use
             setCacheWithTimestamp(cacheKey, data);
             console.log('⚡ [FUTURE-SAVINGS] This search will use cache next time!');
+            
+            // CRITICAL FIX: Store nextPageToken for MORE button functionality
+            if (data.nextPageToken) {
+                sessionStorage.setItem('youtube_nextPageToken', data.nextPageToken);
+                console.log('🔑 [PAGINATION] Stored nextPageToken for MORE button:', data.nextPageToken);
+            } else {
+                sessionStorage.removeItem('youtube_nextPageToken');
+                console.log('🔑 [PAGINATION] No nextPageToken in response - removed from storage');
+            }
             
             let videos = [];
             if (data.video) {
@@ -6232,14 +6729,10 @@ const handleYoutube = {
 
             // Route fresh results to proper rendering
             if (data.isMock) {
-                if (data.resultType === 'MULTI-MOCK') {
-                    window.youtubePagination.isActive = true;
-                    renderMockYoutubeResults(videos, data.page, data.totalPages, subject, 'search');
-                    renderMockPaginationBar(data.page, data.totalPages, subject);
-                } else if (data.resultType === 'SINGLE-MOCK') {
-                    window.youtubePagination.isActive = false;
-                    renderMockSingleYoutubeResult(videos[0], subject, 'search');
-                }
+                // REAL system should never receive mock data - this indicates a server configuration error
+                console.error('❌ [SEGREGATION-ERROR] REAL system received mock data from API');
+                addMessageToChat('assistant', 'Error: Server returned invalid data format. Please try your search again.');
+                return;
             } else {
                 if (data.resultType === 'MULTI') {
                     window.youtubePagination.isActive = true;
@@ -6421,7 +6914,7 @@ const handleYoutube = {
     renderMultiVideoLayout(videos, page, totalPages, subject, type = 'search') {
         const displayTitle = type === 'play' ? `📺 Found results for "${subject.replace(/youtube\s+/i, "").trim()}"` : '📺 YouTube Results';
         return `<div class="youtube-multi-bubble"><h3>${displayTitle}</h3><span>Page ${page}${totalPages ? ` of ${totalPages}` : ' of many'}</span><ul class="video-list">${videos.map(video => `<li class="video-item"><div>${video.title}</div><img src="${video.thumbnail}" alt="${video.title}"><div>${video.channelTitle}</div></li>`).join('')}</ul></div>`;
-    },
+    }
 };
 window.handleYoutube = handleYoutube;
 
@@ -6492,3 +6985,46 @@ function addToQueriesHistory(query) {
 }
 
 // === MOCK YOUTUBE RESULTS RENDERING ===
+
+// Helper function to scroll to YouTube results
+function scrollToYouTubeResults() {
+    // Small delay to ensure DOM is rendered
+    setTimeout(() => {
+        // Look for the most recent YouTube results bubble
+        const youtubeElements = document.querySelectorAll('.youtube-multi-bubble, .youtube-single-bubble');
+        if (youtubeElements.length > 0) {
+            // Get the most recent (last) YouTube bubble
+            const latestYoutubeBubble = youtubeElements[youtubeElements.length - 1];
+            
+            // Find the parent message container
+            const messageContainer = latestYoutubeBubble.closest('.message');
+            
+            if (messageContainer) {
+                // Calculate position with some offset for better visibility
+                const rect = messageContainer.getBoundingClientRect();
+                const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                const targetPosition = rect.top + scrollTop - 100; // 100px offset from top
+                
+                console.log('📍 [SCROLL] Scrolling to YouTube results at position:', targetPosition);
+                
+                // Smooth scroll to the YouTube results
+                window.scrollTo({
+                    top: Math.max(0, targetPosition), // Ensure we don't scroll above page top
+                    behavior: 'smooth'
+                });
+                
+                // Optional: Add a subtle highlight effect
+                messageContainer.style.transition = 'box-shadow 0.3s ease';
+                messageContainer.style.boxShadow = '0 0 20px rgba(66, 165, 245, 0.3)';
+                setTimeout(() => {
+                    messageContainer.style.boxShadow = '';
+                }, 1500);
+            } else {
+                console.log('📍 [SCROLL] Could not find message container for YouTube bubble');
+            }
+        } else {
+            console.log('📍 [SCROLL] No YouTube results found to scroll to');
+        }
+    }, 300); // Wait for DOM rendering and any animations
+}
+
