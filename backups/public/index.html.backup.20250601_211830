@@ -1,8 +1,8 @@
 <!--
   INDEX.html
   Version: 1
-  AppName: Multi-Chat [v1]
-  Updated: 05/31/2025 @9:00AM
+  AppName: MultiChat_Chatty [v1]
+  Updated: 05/31/2025 @7:00PM
   Created by Paul Welby
 -->
 
@@ -11,7 +11,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Multi-Chat [v1]</title>
+    <title>MultiChat_Chatty [v1]</title>
     <link rel="stylesheet" href="styles.css" />
     <link rel="icon" type="image/png" href="chat-1.png" />
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -25,7 +25,7 @@
           <option value="phi-3-mini-4k-instruct">Phi-3-mini-4k-instruct</option>
         </select>
 
-        <h3>Multi-Chat [v1] 05/31/2025 @9:00AM</h3>
+        <h3>MultiChat_Chatty [v1] 05/31/2025 @7:00PM</h3>
 
         <select id="voice-select">
           <option value="">Default Voice</option>
@@ -126,6 +126,7 @@
 
     <script type="module" src="components/ToastManager.js"></script>
     <script type="module" src="components/PlaylistManager.js"></script>
+    <script src="quota-monitor.js"></script>
     <script type="module" src="app.js"></script>
     <script>
       function enforceImageStyles() {

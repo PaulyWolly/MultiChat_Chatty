@@ -1,8 +1,8 @@
 /*
   SERVER.JS
   Version: 1
-  AppName: Multi-Chat [v1]
-  Updated: 05/31/2025 @9:00AM
+  AppName: MultiChat_Chatty [v1]
+  Updated: 05/31/2025 @7:00PM
   Created by Paul Welby
 */
 
@@ -1806,8 +1806,7 @@ async function getCachedOrFetch(cacheKey, fetchFunction, quotaCost) {
 
     // Check if we have enough quota
     if (getRemainingQuota() < quotaCost) {
-        console.log('⚠️ Quota exceeded, using mock data');
-        return null; // Will trigger mock fallback
+        throw new Error(`Quota exceeded: ${dailyQuotaUsed}/10000 calls used. Resets at ${quotaResetTime.toISOString()}`);
     }
 
     // Check for pending identical request (deduplication)
@@ -1832,8 +1831,8 @@ async function getCachedOrFetch(cacheKey, fetchFunction, quotaCost) {
         
         return result;
     } catch (error) {
-        console.error('API request failed:', error);
-        return null; // Will trigger mock fallback
+        console.error('YouTube API request failed:', error);
+        throw error; // Propagate the actual error instead of returning null
     } finally {
         pendingRequests.delete(cacheKey);
     }
@@ -1844,115 +1843,73 @@ app.post('/api/youtube/search', async (req, res) => {
     console.log('YouTube Search POST body:', req.body);
     console.log('Query received:', query, '| Type received:', type, '| Page:', page);
 
-    const isMock = /\b(mock|dummy)\b/i.test(query);
-    
-    // Always serve mock content for mock queries (no API usage)
-    if (isMock) {
-        console.log('🎭 Serving mock content for:', query);
-        
-        if (type === 'play') {
-            const mockVideo = {
-                id: `mock1`,
-                title: `Mock Video 1`,
-                description: `This is mock video number 1 for testing purposes only.`,
-                channelTitle: `Mock Channel 1`,
-                publishedAt: `2023-01-01T00:00:00Z`,
-                duration: `PT2M30S`,
-                thumbnail: `/assets/img/mock/thumb1.png`
-            };
-            
-            return res.json({
-                success: true,
-                videos: [mockVideo],
-                resultType: 'SINGLE-MOCK',
-                isMock: true
-            });
-        }
-        
-        if (type === 'search') {
-            const mockThumbnails = Array.from({ length: 60 }, (_, i) => `/assets/img/mock/thumb${i+1}.png`);
-            const videos = Array.from({ length: 60 }, (_, i) => ({
-                id: `mockid${i+1}`,
-                title: `Mock Video Title ${i+1}`,
-                description: `This is a mock description for video ${i+1}.`,
-                channelTitle: `Mock Channel ${i+1}`,
-                publishedAt: `2023-01-${(i%30+1).toString().padStart(2,'0')}T12:00:00Z`,
-                duration: 'PT2M30S',
-                thumbnail: mockThumbnails[i % mockThumbnails.length]
-            }));
-            
-            const perPage = 12;
-            const pageNum = Math.max(1, Number(page) || 1);
-            const totalPages = Math.ceil(videos.length / perPage);
-            const pagedVideos = videos.slice((pageNum-1)*perPage, pageNum*perPage);
-            
-            return res.json({
-                success: true,
-                videos: pagedVideos,
-                resultType: 'MULTI-MOCK',
-                isMock: true,
-                page: pageNum,
-                totalPages: totalPages
-            });
-        }
-    }
-
     // Real YouTube API with caching and optimization
     if (!process.env.GOOGLE_API_KEY) {
-        console.log('⚠️ No API key, serving mock content');
-        // Fallback to mock content when no API key
-        return handleMockFallback(type, page, query, res);
+        console.log('⚠️ No API key available');
+        return res.status(500).json({ 
+            success: false, 
+            error: 'YouTube API key not configured',
+            videos: [],
+            isMock: false
+        });
     }
 
     const cacheKey = generateCacheKey(query, type, page, req.body.pageToken);
     
     if (type === 'play') {
         // SINGLE video search with optimization
-        const result = await getCachedOrFetch(cacheKey, async () => {
-            console.log('🔍 Real API: Searching for single video:', query);
-            
-            const searchResponse = await youtube.search.list({
-                part: ['snippet'],
-                q: query,
-                maxResults: 1,
-                type: 'video'
+        try {
+            const result = await getCachedOrFetch(cacheKey, async () => {
+                console.log('🔍 Real API: Searching for single video:', query);
+                
+                const searchResponse = await youtube.search.list({
+                    part: ['snippet'],
+                    q: query,
+                    maxResults: 1,
+                    type: 'video'
+                });
+
+                if (!searchResponse?.data?.items?.length) {
+                    return { success: false, videos: [], error: 'No videos found for this query' };
+                }
+
+                const videoIds = searchResponse.data.items.map(item => item.id.videoId);
+                
+                // Get full video details in single batch call
+                const videoDetails = await youtube.videos.list({
+                    part: ['snippet', 'contentDetails'],
+                    id: videoIds.join(',')
+                });
+
+                const videos = videoDetails.data.items.map(video => ({
+                    id: video.id,
+                    title: video.snippet.title,
+                    description: video.snippet.description,
+                    channelTitle: video.snippet.channelTitle,
+                    publishedAt: video.snippet.publishedAt,
+                    duration: video.contentDetails.duration,
+                    thumbnail: video.snippet.thumbnails?.high?.url || ''
+                }));
+
+                return { 
+                    success: true, 
+                    videos, 
+                    resultType: 'SINGLE', 
+                    isMock: false 
+                };
+            }, 101); // search.list (100) + videos.list (1)
+
+            return res.json(result);
+        } catch (error) {
+            console.error('YouTube API error for single video search:', error);
+            return res.status(500).json({ 
+                success: false, 
+                error: 'YouTube API request failed',
+                details: error.message,
+                videos: [],
+                isMock: false
             });
-
-            if (!searchResponse?.data?.items?.length) {
-                return { success: false, videos: [] };
-            }
-
-            const videoIds = searchResponse.data.items.map(item => item.id.videoId);
-            
-            // Get full video details in single batch call
-            const videoDetails = await youtube.videos.list({
-                part: ['snippet', 'contentDetails'],
-                id: videoIds.join(',')
-            });
-
-            const videos = videoDetails.data.items.map(video => ({
-                id: video.id,
-                title: video.snippet.title,
-                description: video.snippet.description,
-                channelTitle: video.snippet.channelTitle,
-                publishedAt: video.snippet.publishedAt,
-                duration: video.contentDetails.duration,
-                thumbnail: video.snippet.thumbnails?.high?.url || ''
-            }));
-
-            return { 
-                success: true, 
-                videos, 
-                resultType: 'SINGLE', 
-                isMock: false 
-            };
-        }, 101); // search.list (100) + videos.list (1)
-
-        if (!result) {
-            return handleMockFallback(type, page, query, res);
         }
-
-        return res.json(result);
     }
     
     if (type === 'search') {
@@ -1960,108 +1917,67 @@ app.post('/api/youtube/search', async (req, res) => {
         const perPage = 12;
         const pageNum = Math.max(1, Number(page) || 1);
         
-        const result = await getCachedOrFetch(cacheKey, async () => {
-            console.log('🔍 Real API: Multi-search:', query, 'page:', pageNum);
-            
-            const searchResponse = await youtube.search.list({
-                part: ['snippet'],
-                q: query,
-                maxResults: perPage,
-                type: 'video',
-                pageToken: req.body.pageToken || undefined
+        try {
+            const result = await getCachedOrFetch(cacheKey, async () => {
+                console.log('🔍 Real API: Multi-search:', query, 'page:', pageNum);
+                
+                const searchResponse = await youtube.search.list({
+                    part: ['snippet'],
+                    q: query,
+                    maxResults: perPage,
+                    type: 'video',
+                    pageToken: req.body.pageToken || undefined
+                });
+
+                if (!searchResponse?.data?.items?.length) {
+                    return { success: false, videos: [], error: 'No videos found for this query' };
+                }
+
+                const videoIds = searchResponse.data.items.map(item => item.id.videoId);
+                
+                // Get full video details in single batch call  
+                const videoDetails = await youtube.videos.list({
+                    part: ['snippet', 'contentDetails'],
+                    id: videoIds.join(',')
+                });
+
+                const videos = videoDetails.data.items.map(video => ({
+                    id: video.id,
+                    title: video.snippet.title,
+                    description: video.snippet.description,
+                    channelTitle: video.snippet.channelTitle,
+                    publishedAt: video.snippet.publishedAt,
+                    duration: video.contentDetails.duration,
+                    thumbnail: video.snippet.thumbnails?.high?.url || ''
+                }));
+
+                return { 
+                    success: true, 
+                    videos, 
+                    resultType: 'MULTI', 
+                    isMock: false, 
+                    page: pageNum,
+                    nextPageToken: searchResponse.data.nextPageToken,
+                    fromCache: false
+                };
+            }, 101); // search.list (100) + videos.list (1)
+
+            return res.json(result);
+        } catch (error) {
+            console.error('YouTube API error for multi-search:', error);
+            return res.status(500).json({ 
+                success: false, 
+                error: 'YouTube API request failed',
+                details: error.message,
+                videos: [],
+                isMock: false
             });
-
-            if (!searchResponse?.data?.items?.length) {
-                return { success: false, videos: [] };
-            }
-
-            const videoIds = searchResponse.data.items.map(item => item.id.videoId);
-            
-            // Get full video details in single batch call  
-            const videoDetails = await youtube.videos.list({
-                part: ['snippet', 'contentDetails'],
-                id: videoIds.join(',')
-            });
-
-            const videos = videoDetails.data.items.map(video => ({
-                id: video.id,
-                title: video.snippet.title,
-                description: video.snippet.description,
-                channelTitle: video.snippet.channelTitle,
-                publishedAt: video.snippet.publishedAt,
-                duration: video.contentDetails.duration,
-                thumbnail: video.snippet.thumbnails?.high?.url || ''
-            }));
-
-            return { 
-                success: true, 
-                videos, 
-                resultType: 'MULTI', 
-                isMock: false, 
-                page: pageNum,
-                nextPageToken: searchResponse.data.nextPageToken,
-                fromCache: false
-            };
-        }, 101); // search.list (100) + videos.list (1)
-
-        if (!result) {
-            return handleMockFallback(type, page, query, res);
         }
-
-        return res.json(result);
     }
 
     // Fallback for unrecognized types
     return res.json({ success: false, videos: [], resultType: 'NONE', isMock: false });
 });
-
-// Helper function for mock fallback
-function handleMockFallback(type, page, query, res) {
-    console.log('🎭 Fallback: Serving mock content for real query');
-    
-    if (type === 'play') {
-        const mockVideo = {
-            id: `fallback1`,
-            title: `[DEMO] ${query}`,
-            description: `Demo video for "${query}" - API quota exceeded or unavailable.`,
-            channelTitle: `Demo Channel`,
-            publishedAt: new Date().toISOString(),
-            duration: `PT3M15S`,
-            thumbnail: `/assets/img/mock/thumb1.png`
-        };
-        
-        return res.json({
-            success: true,
-            videos: [mockVideo],
-            resultType: 'SINGLE-MOCK',
-            isMock: true,
-            quotaExceeded: true
-        });
-    }
-    
-    // Multi search fallback
-    const mockVideos = Array.from({ length: 12 }, (_, i) => ({
-        id: `fallback${i+1}`,
-        title: `[DEMO] ${query} - Video ${i+1}`,
-        description: `Demo video ${i+1} for "${query}" - API quota exceeded or unavailable.`,
-        channelTitle: `Demo Channel ${(i % 3) + 1}`,
-        publishedAt: new Date(Date.now() - i * 86400000).toISOString(),
-        duration: `PT${2 + (i % 3)}M${10 + (i % 50)}S`,
-        thumbnail: `/assets/img/mock/thumb${(i % 36) + 1}.png`
-    }));
-    
-    const pageNum = Math.max(1, Number(page) || 1);
-    
-    return res.json({
-        success: true,
-        videos: mockVideos,
-        resultType: 'MULTI-MOCK',
-        isMock: true,
-        page: pageNum,
-        totalPages: 5,
-        quotaExceeded: true
-    });
-}
 
 // Add quota status and cache management endpoints
 app.get('/api/youtube/quota-status', (req, res) => {
