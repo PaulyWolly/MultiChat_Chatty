@@ -1,8 +1,8 @@
 /*
   APP.JS
   Version: 1
-  AppName: Multi-Chat [v1]
-  Updated: 05/31/2025 @9:00AM
+  AppName: MultiChat_Chatty - audio playback [v1]
+  Updated: 05/27/2025 @04:00AM
   Created by Paul Welby
 */
 
@@ -11,32 +11,22 @@
 // =====================================================
 
 import playlistManager from './components/PlaylistManager.js';
-import toastManager from './components/ToastManager.js';
 
 // Initialize PlaylistManager globally
 console.log('Initializing PlaylistManager...');
 window.playlistManager = playlistManager;
 console.log('PlaylistManager initialized:', window.playlistManager);
 
-// Initialize ToastManager globally
-console.log('Initializing ToastManager...');
-window.toastManager = toastManager;
-console.log('ToastManager initialized:', window.toastManager);
-
 // =====================================================
 // GLOBAL SCOPED CONSTANTS
 // =====================================================
 
 // SERVER URL
-const SERVER_URL = 'http://localhost:5300';
+const SERVER_URL = 'http://localhost:5302';
 
 // Time constants
 const INTERVAL = 10;  // Set timeout duration in minutes
 const CONVERSATION_INACTIVITY_TIMEOUT = INTERVAL * 60 * 1000;  // Convert minutes to milliseconds
-
-// YouTube pagination constants
-const YOUTUBE_HEADER_HEIGHT = 20;  // Controls how far below the header results appear
-const YOUTUBE_SCROLL_PADDING = 20; // Extra padding below the header
 
 // Memory categories
 const MEMORY_CATEGORIES = {
@@ -218,9 +208,6 @@ REGARDING GENERAL QUERIES:
         Enjoy your [recipe name]!
 
 6. When asked for a response, ALWAYS provide at least 2-4 paragraphs of text.
-7. When telling a story or providing a longer response, break the response into paragraphs of 4-5 sentences each. 
-8. Always add a blank line between paragraphs.
-9. When telling a story or providing a longer response, use expressive language, varied punctuation (such as !, ?, …), and include relevant emojis to convey emotion, action, or mood. Make the output engaging and lively.
 
 CRITICAL INSTRUCTIONS FOR IMAGE REQUESTS:
 1. When users ask for images, respond with: "Here are some relevant images for [topic]" at the end of your response.
@@ -232,7 +219,6 @@ CRITICAL INSTRUCTIONS FOR IMAGE REQUESTS:
 SPECIAL ABBREVIATION INSTRUCTIONS:
 1. Whenever you would output "U.S." or "U.S.A." in a response, instead output "United States" or "United States of America" respectively.
 2. Do not use the abbreviations "U.S." or "U.S.A." in your answers; always use the full country name.
-
 `;
 
 // Append custom prompt if present
@@ -348,7 +334,6 @@ function isRecipe(text) {
 }
 
 async function handleCommand(text) {
-
     // Set lastRequestTime for non-system commands
     if (!text.match(/^(what time|what date|what.*date.*time|hi|hello|hey|bye|goodbye|exit|quit)/i)) {
         state.lastRequestTime = Date.now();
@@ -639,38 +624,33 @@ function formatIngredientsAsDashedList(text) {
     return formatted;
 }
 
-function hidePaginationBar() {
-    const bar = document.getElementById('pagination-bar');
-    if (bar) bar.remove();
-}
+// // Handle time-related queries
+// function handleTimeQuery(messageText) {
+//     const currentTime = new Date();
+//     let response;
 
-// Handle time-related queries
-function handleTimeQuery(messageText) {
-    const currentTime = new Date();
-    let response;
+//     if (messageText.toLowerCase().includes('date and time')) {
+//         response = `Today's date is ${currentTime.toLocaleDateString()} and the local time is ${currentTime.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })} PST`;
+//         const messageElement = document.createElement('div');
+//         messageElement.className = 'message system-bubble datetime-response';
+//         messageElement.textContent = response;
+//         elements.chatMessages.appendChild(messageElement);
+//     } else if (messageText.toLowerCase().includes('time')) {
+//         response = `The local time is ${currentTime.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })} PST`;
+//         const messageElement = document.createElement('div');
+//         messageElement.className = 'message system-bubble time-response';
+//         messageElement.textContent = response;
+//         elements.chatMessages.appendChild(messageElement);
+//     } else if (messageText.toLowerCase().includes('date')) {
+//         response = `Today's date is ${currentTime.toLocaleDateString()}`;
+//         const messageElement = document.createElement('div');
+//         messageElement.className = 'message system-bubble date-response';
+//         messageElement.textContent = response;
+//         elements.chatMessages.appendChild(messageElement);
+//     }
 
-    if (messageText.toLowerCase().includes('date and time')) {
-        response = `Today's date is ${currentTime.toLocaleDateString()} and the local time is ${currentTime.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })} PST`;
-        const messageElement = document.createElement('div');
-        messageElement.className = 'message system-bubble datetime-response';
-        messageElement.textContent = response;
-        elements.chatMessages.appendChild(messageElement);
-    } else if (messageText.toLowerCase().includes('time')) {
-        response = `The local time is ${currentTime.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })} PST`;
-        const messageElement = document.createElement('div');
-        messageElement.className = 'message system-bubble time-response';
-        messageElement.textContent = response;
-        elements.chatMessages.appendChild(messageElement);
-    } else if (messageText.toLowerCase().includes('date')) {
-        response = `Today's date is ${currentTime.toLocaleDateString()}`;
-        const messageElement = document.createElement('div');
-        messageElement.className = 'message system-bubble date-response';
-        messageElement.textContent = response;
-        elements.chatMessages.appendChild(messageElement);
-    }
-
-    return response;
-}
+//     return response;
+// }
 
 
 // =====================================================
@@ -770,8 +750,8 @@ function getPatterns() {
             }
         },
         youtube: {
-            // Broadened pattern: match any query containing both 'youtube' and 'search' in any order
-            searchVideos: /youtube.*search|search.*youtube/i,
+            // Match any query that starts with youtube or contains youtube search
+            searchVideos: /(^youtube|youtube search|search youtube|search on youtube)/i,
             // Match any play request that includes youtube
             playVideo: /(^play|youtube play|play.*youtube|youtube.*play)/i  // Updated pattern
         },
@@ -792,6 +772,13 @@ function getPatterns() {
     };
 }
 
+// Add these helper functions near getGreeting
+// function getTimeOfDay() {
+//     const hour = new Date().getHours();
+//     if (hour < 12) return 'morning';
+//     if (hour < 17) return 'afternoon';
+//     return 'evening';
+// }
 
 function getHoliday(date) {
     const month = date.getMonth() + 1; // JavaScript months are 0-based
@@ -1192,11 +1179,6 @@ async function fetchWithRetry(url, options, maxRetries = 3) {
 
 // Send message function
 async function sendMessage(message, isGreeting = false) {
-    // Hide pagination bars for any new message that isn't a YouTube search
-    if (!message.toLowerCase().includes('youtube')) {
-        hideAllPaginationBars();
-        // Note: We keep the YouTube results visible but disable pagination interactions
-    }
     try {
         const messageText = message;  // Initialize properly
         const patterns = getPatterns();
@@ -1818,6 +1800,33 @@ async function sendMessage(message, isGreeting = false) {
             // For all other messages, add user message before processing
             addMessageToChat('user', messageText);
 
+            // // Update the time/date check to be more specific
+            // const hasDate = messageText.toLowerCase().includes('date') || messageText.toLowerCase().includes('today');
+            // const hasTime = messageText.toLowerCase().includes('time');
+            // const isDateTimeRequest = hasDate || hasTime;
+
+            // if (isDateTimeRequest) {
+            //     const today = new Date();
+            //     let response;
+
+            //     // Check if asking for date, time, or both
+            //     if (hasTime && !hasDate) {
+            //         response = `The local time is ${today.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })} PST`;
+            //     } else if (hasDate && !hasTime) {
+            //         response = `Today's date is ${today.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`;
+            //     } else {
+            //         response = `Today's date is ${today.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} and the local time is ${today.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })} PST`;
+            //     }
+
+            //     // const messageElement = addMessageToChat('assistant', response);
+            //     addMessageToChat('system', response);
+
+            //     // Queue audio for date/time response
+            //     await queueAudioChunk(response);
+
+            //     return;
+            // }
+
             // Check if the user is asking for a joke
             const isJokeRequest = messageText.toLowerCase().includes('joke');
             const adjustedSystemPrompt = isJokeRequest
@@ -1857,7 +1866,6 @@ async function sendMessage(message, isGreeting = false) {
                 }
 
                 console.log('Queueing audio for response:', response.response);
-                await queueAudioChunk(response.response);
             } catch (error) {
                 console.error(`Error getting AI response:`, error);
                 updateStatus('Error: ' + error.message);
@@ -1942,10 +1950,8 @@ async function getAIResponse(message, selectedModel, history, systemPrompt, sess
 
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
-    const messageElement = addMessageToChat('assistant', '...', { model: selectedModel, startTime, tokenCount });
-    if (messageElement) {
-        messageElement.dataset.startTime = startTime;
-    }
+    const messageElement = addMessageToChat('assistant', '', { model: selectedModel, startTime, tokenCount });
+    messageElement.dataset.startTime = startTime;
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
     let buffer = '';
@@ -1983,15 +1989,54 @@ async function getAIResponse(message, selectedModel, history, systemPrompt, sess
                         messageElement.querySelector('.message-content').innerHTML = `<div class="bing-search-results">${responseText}</div>`;
                         continue; // Skip all other processing for Bing results
                     }
-                }
-            }
-        }
-    }
 
+                    // Only process image search if NOT a Bing result
+                    if (!isBingWebResult && responseText.toLowerCase().includes('here are some relevant images for')) {
+                        // Always extract and remove the heading from the text
+                        const { heading, cleanedText } = extractImageHeading(responseText);
+                        // Always update the message content with the cleaned text (no phrase)
+                        updateMessageContent(messageElement, cleanedText);
+                        // Now use the heading for the image section only
+                        const imageMatch = cleanedText.match(/Here are some relevant images for (.*?)[.!\n]/i);
+                        const searchQuery = (imageMatch && imageMatch[1]) ? imageMatch[1].trim() : (heading ? heading.replace(/Here are some relevant images for |\.$/gi, '').trim() : null);
+                        if (searchQuery) {
+                            console.log('Detected image request for:', searchQuery);
+                            try {
+                                const imageResponse = await fetch(`/api/google-image-search?q=${encodeURIComponent(searchQuery)}`);
+                                if (!imageResponse.ok) {
+                                    throw new Error(`HTTP error! status: ${imageResponse.status}`);
+                                }
+                                const imageData = await imageResponse.json();
+                                console.log('Received image data:', imageData);
+                                if (imageData.images && imageData.images.length > 0) {
+                                    console.log('Inserting images into chat');
+                                    insertAndStyleImages(imageData.images, messageElement, heading);
+                                }
+                            } catch (error) {
+                                console.error('Error fetching images:', error);
+                            }
+                        }
+                    }
+
+                    // Queue audio for complete sentences
+                    const sentences = currentChunk.match(/[^.!?]+[.!?]+/g);
+                    if (sentences) {
+                        queueAudioChunk(sentences.join(' '));
+                        currentChunk = currentChunk.replace(sentences.join(''), '');
+                    }
+                }
+                if (data.done) {
+                    if (currentChunk) queueAudioChunk(currentChunk.trim());
                     state.isRendering = false;
                     if (!state.isAISpeaking) {
                         // updateStatus('Ready');
                         console.log('Ready');
+                    }
+                    break;
+                }
+                if (data.error) throw new Error(data.error);
+            }
+        }
     }
 
     return { response: responseText, tokenCount, messageElement, startTime };
@@ -1999,32 +2044,8 @@ async function getAIResponse(message, selectedModel, history, systemPrompt, sess
 
 // Add message to chat function
 function addMessageToChat(role, content, options = {}) {
-    // Prevent empty assistant bubbles
-    if (
-        role === 'assistant' &&
-        (!content || (typeof content === 'string' && content.trim() === ''))
-    ) {
-        return null; // Don't create empty assistant bubbles
-    }
-    
-    if (options.mock) {
-        // Only create the mock message if there is actual content
-        if (!content || (typeof content === 'string' && content.trim() === '')) {
-            return null; // Don't create empty mock bubbles
-        }
-    }
-    
     const messageElement = document.createElement('div');
-    if (options.mock) {
-        messageElement.className = 'message assistant-mock';
-    } else {
-        messageElement.className = `message ${role}`;
-    }
-
-    // Add special styling for YouTube query messages
-    if (role === 'user' && options.isYoutubeQuery) {
-        messageElement.setAttribute('data-youtube-query', 'true');
-    }
+    messageElement.className = `message ${role}`;
     
     // Add special bubble classes for greetings and exit messages
     if (role === 'assistant') {
@@ -2040,14 +2061,14 @@ function addMessageToChat(role, content, options = {}) {
     contentElement.className = 'message-content';
 
     // Only add metadata for assistant messages that are not greeting, exit, or time/date/datetime
-    // Also skip metadata for YouTube query messages
     let metadataElement = null;
-    if (role === 'assistant' && !options.isYoutubeQuery) {
+    if (role === 'assistant') {
         const type = options.type || options.messageType || '';
         const excludedTypes = ['greeting', 'exit', 'time', 'date', 'datetime'];
         if (!excludedTypes.includes(type)) {
             metadataElement = document.createElement('div');
             metadataElement.className = 'metadata';
+            // Insert metadata before contentElement
             messageElement.appendChild(metadataElement);
         }
     }
@@ -2076,33 +2097,19 @@ function addMessageToChat(role, content, options = {}) {
         else if (role === 'assistant' && content.match(/Ingredients:/i) && content.match(/Instructions:|Directions:/i)) {
             content = formatIngredientsAsDashedList(content);
             contentElement.innerHTML = content;
-        }
-        // Force story formatting for all long assistant responses
-        else if (role === 'assistant' && content.length > 400) {
-            contentElement.innerHTML = formatStoryParagraphs(content);
         } else {
             contentElement.textContent = content;
         }
     }
 
     elements.chatMessages.appendChild(messageElement);
-    
-    // Don't auto-scroll to bottom if this is YouTube pagination
-    if (!options.isYoutubePagination) {
-        elements.chatMessages.scrollTop = elements.chatMessages.scrollHeight;
-    }
+    elements.chatMessages.scrollTop = elements.chatMessages.scrollHeight;
 
     return messageElement;
 }
 
 // Update message content function
 function updateMessageContent(messageElement, content, tokenCount) {
-    // Add null check to prevent errors
-    if (!messageElement) {
-        console.error('updateMessageContent called with null messageElement');
-        return;
-    }
-    
     const contentElement = messageElement.querySelector('.message-content');
     const metadataElement = messageElement.querySelector('.metadata');
 
@@ -2115,9 +2122,6 @@ function updateMessageContent(messageElement, content, tokenCount) {
             content.includes('<ol class="search-results-list">')
         ) {
             contentElement.innerHTML = content;
-        } else if (messageElement.classList.contains('assistant') && content.length > 400) {
-            // For long assistant responses, use innerHTML with formatted paragraphs
-            contentElement.innerHTML = formatStoryParagraphs(content);
         } else {
             // For regular text content
             contentElement.textContent = content;
@@ -2374,55 +2378,6 @@ function splitTextIntoChunks(text, maxLength = 200, forTTS = false) {
     return chunks;
 }
 
-// Format long text content into HTML paragraphs
-function formatStoryParagraphs(text) {
-    if (!text || typeof text !== 'string') {
-        return text;
-    }
-    
-    // Split text into paragraphs based on double line breaks or sentences
-    const paragraphs = text
-        .split(/\n\s*\n|\r\n\s*\r\n/) // Split on double line breaks
-        .map(p => p.trim())
-        .filter(p => p.length > 0);
-    
-    // If no natural paragraph breaks, split long text by sentences
-    if (paragraphs.length === 1 && text.length > 400) {
-        const sentences = text
-            .split(/(?<=[.!?])\s+/) // Split on sentence endings
-            .map(s => s.trim())
-            .filter(s => s.length > 0);
-        
-        // Group sentences into paragraphs of reasonable length
-        const groupedParagraphs = [];
-        let currentParagraph = '';
-        
-        for (const sentence of sentences) {
-            if (currentParagraph.length + sentence.length > 300) {
-                if (currentParagraph) {
-                    groupedParagraphs.push(currentParagraph.trim());
-                }
-                currentParagraph = sentence;
-            } else {
-                currentParagraph += (currentParagraph ? ' ' : '') + sentence;
-            }
-        }
-        
-        if (currentParagraph) {
-            groupedParagraphs.push(currentParagraph.trim());
-        }
-        
-        return groupedParagraphs
-            .map(p => `<p>${p}</p>`)
-            .join('\n');
-    }
-    
-    // Format natural paragraphs
-    return paragraphs
-        .map(p => `<p>${p}</p>`)
-        .join('\n');
-}
-
 // Populate voice list function
 async function populateVoiceList() {
     try {
@@ -2473,46 +2428,13 @@ async function populateVoiceList() {
 async function playAudio(text) {
     if (!text) return;
     text = preprocessForTTS(text);
-    
     try {
         state.isAISpeaking = true;
         state.isPlaying = true;
         updateStatus('AI is speaking...');
-        elements.stopAudioButton.style.display = 'inline-block';
+        elements.stopAudioButton.style.display = 'inline-block';  // Show the button
 
-        const response = await fetch(AUDIO_CONFIG.apiUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                text: text,
-                voice: AUDIO_CONFIG.defaultVoice,
-                rate: AUDIO_CONFIG.rate,
-                pitch: AUDIO_CONFIG.pitch,
-                volume: AUDIO_CONFIG.volume
-            })
-        });
-
-        if (!response.ok) throw new Error(`TTS API error: ${response.status}`);
-        
-        const audioBlob = await response.blob();
-        if (audioBlob.size === 0) throw new Error('Empty audio response');
-
-        if (state.currentAudio) {
-            state.currentAudio.pause();
-            state.currentAudio = null;
-        }
-        
-        const audioUrl = URL.createObjectURL(audioBlob);
-        state.currentAudio = new Audio(audioUrl);
-        state.currentAudio.volume = AUDIO_CONFIG.volume;
-
-        await new Promise((resolve, reject) => {
-            state.currentAudio.onended = resolve;
-            state.currentAudio.onerror = reject;
-            state.currentAudio.play().catch(reject);
-        });
-
-        URL.revokeObjectURL(audioUrl);
+        // ... rest of playAudio function ...
 
     } catch (error) {
         console.error('Error playing audio:', error);
@@ -2522,12 +2444,90 @@ async function playAudio(text) {
         elements.stopAudioButton.style.display = 'none';
         if (state.isConversationMode) {
             updateStatus('Listening...');
-            safeStartListening();
         } else {
-            updateStatus('Ready');
+            // updateStatus('Ready');
+            console.log('Ready');
         }
     }
 }
+
+// Update the playNextInQueue function
+// async function playNextInQueue() {
+//     if (!state.audioQueue.length || state.isPlaying || state.stopRequested) {
+//         if (!state.audioQueue.length || state.stopRequested) {
+//             updateStatus(state.isConversationMode ? MESSAGES.STATUS.LISTENING : MESSAGES.STATUS.READY);
+//             state.isAISpeaking = false;
+//         }
+//         return;
+//     }
+
+//     try {
+//         state.isPlaying = true;
+//         state.isAISpeaking = true;
+//         updateStatus(MESSAGES.STATUS.SPEAKING);
+
+//         const text = state.audioQueue[0];
+//         console.log('Playing chunk:', text);
+
+//         // Track last TTS time
+//         state.lastTTS = Date.now();
+
+//         const response = await fetch(AUDIO_CONFIG.apiUrl, {
+//             method: 'POST',
+//             headers: { 'Content-Type': 'application/json' },
+//             body: JSON.stringify({
+//                 text: text,
+//                 voice: AUDIO_CONFIG.defaultVoice,
+//                 rate: AUDIO_CONFIG.rate,
+//                 pitch: AUDIO_CONFIG.pitch,
+//                 volume: AUDIO_CONFIG.volume
+//             })
+//         });
+
+//         if (!response.ok) throw new Error(`TTS API error: ${response.status}`);
+        
+//         const audioBlob = await response.blob();
+//         if (audioBlob.size === 0) throw new Error('Empty audio response');
+
+//         if (state.currentAudio) {
+//             state.currentAudio.pause();
+//             state.currentAudio = null;
+//         }
+        
+//         const audioUrl = URL.createObjectURL(audioBlob);
+//         state.currentAudio = new Audio(audioUrl);
+//         state.currentAudio.volume = AUDIO_CONFIG.volume;
+
+//         // Wait for current chunk to finish before moving to next
+//         await new Promise((resolve, reject) => {
+//             state.currentAudio.onended = resolve;
+//             state.currentAudio.onerror = reject;
+//             state.currentAudio.play().catch(reject);
+//         });
+
+//         URL.revokeObjectURL(audioUrl);
+//         state.audioQueue.shift();  // Remove played chunk
+//         state.isPlaying = false;
+
+//         // Process next chunk if available
+//         if (state.audioQueue.length > 0 && !state.stopRequested) {
+//             setTimeout(() => playNextInQueue(), AUDIO_CONFIG.pauseDuration);
+//         } else {
+//             state.isAISpeaking = false;
+//             updateStatus(state.isConversationMode ? MESSAGES.STATUS.LISTENING : MESSAGES.STATUS.READY);
+//         }
+
+//     } catch (error) {
+//         console.error('Audio playback error:', error);
+//         state.isPlaying = false;
+//         state.isAISpeaking = false;
+//         updateStatus(state.isConversationMode ? MESSAGES.STATUS.LISTENING : MESSAGES.STATUS.READY);
+        
+//         if (state.audioQueue.length > 0) {
+//             setTimeout(() => playNextInQueue(), AUDIO_CONFIG.retryDelay);
+//         }
+//     }
+// }
 
 // Stop listening function
 function stopListening() {
@@ -2564,27 +2564,34 @@ function safeStartListening() {
 
     try {
         console.log('Attempting to start recognition');
-        
-        // Double-check that recognition is not already running
-        if (state.recognition && !state.isListening) {
         state.recognition.start();
         elements.micButton.textContent = '🔴';
-        } else {
-            console.log('Recognition already active or not available');
-        }
     } catch (error) {
         console.error('Failed to start recognition:', error);
         state.isListening = false;
         elements.micButton.textContent = '🎤';
         updateStatus('Error starting speech recognition');
-        
-        // Reset recognition instance on error
-        state.recognition = null;
-        setTimeout(() => {
-            initializeSpeechRecognition();
-        }, 1000);
     }
 }
+
+// Start listening function
+// function startListening() {
+//     console.log('Starting listening. Current state:', {
+//         isListening: state.isListening,
+//         isProcessing: state.isProcessing,
+//         isAISpeaking: state.isAISpeaking
+//     });
+
+//     if (state.isProcessing || state.isAISpeaking) {
+//         console.log('Cannot start listening while processing or speaking');
+//         return;
+//     }
+
+//     // Always create a fresh instance
+//     safeStartListening();
+//     state.lastAudioInput = Date.now();
+//     startInactivityTimer();
+// }
 
 // Reset audio state function
 function resetAudioState() {
@@ -2910,10 +2917,6 @@ function formatMinutesPlural(minutes) {
 
 // Image request function
 async function handleImageRequest(query) {
-
-    // Hide the pagination bar
-    // hidePaginationBar();
-
     try {
         const response = await fetch(`/api/google-image-search?q=${encodeURIComponent(query)}`);
         const data = await response.json();
@@ -3214,10 +3217,6 @@ async function fetchDateTimeData(timezone, type) {
 
 // Rename checkDateTime to handleDateTimeResponse (handles UI and audio)
 async function handleDateTimeResponse(type) {
-
-    // Hide the pagination bar
-    //hidePaginationBar();
-
     try {
         const timeData = await fetchDateTimeData(
             Intl.DateTimeFormat().resolvedOptions().timeZone,
@@ -3376,10 +3375,6 @@ async function handleResponse(response) {
 // =====================================================
 
 window.printRecipe = async function(recipeText, messageElement) {
-
-    // Hide the pagination bar
-    //hidePaginationBar();
-
     try {
         console.log('Recipe text sent to server:', recipeText.substring(0, 200));
 
@@ -3545,10 +3540,6 @@ window.printRecipe = async function(recipeText, messageElement) {
 
 // Add validation before storing personal info
 async function storePersonalInfo(info) {
-
-    // Hide the pagination bar
-    //hidePaginationBar();
-
     try {
         state.isAISpeaking = true;
         elements.stopAudioButton.style.display = 'block';
@@ -3750,10 +3741,6 @@ const handleMyJokes = {
 
     // Handle incoming messages
     async handleJokeRequest(messageText) {
-
-        // Hide the pagination bar
-        //hidePaginationBar();
-
         const startTime = performance.now();
         console.log('handleJokeRequest received:', messageText);
 
@@ -4421,8 +4408,500 @@ const handleMyJokes = {
 };
 
 
+// =====================================================
+// YOUTUBE MODULE
+// =====================================================
 
+const handleYoutube = {
+    isPlaying: false,
+    currentQuery: '',
+    currentPageToken: null,
+    currentSearchParams: null,
+    currentPage: 1,
+    nextPageToken: null,
+    prevPageToken: null,
+    isSearching: false,
+    searchTimeout: null,
+    videoContainer: null,
+    searchResults: null,
 
+    init() {
+        this.videoContainer = document.getElementById('youtube-container');
+        this.searchResults = document.getElementById('youtube-search-results');
+        this.setupEventListeners();
+    },
+
+    setupEventListeners() {
+        const searchInput = document.getElementById('youtube-search');
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                clearTimeout(this.searchTimeout);
+                this.searchTimeout = setTimeout(() => {
+                    this.search(e.target.value);
+                }, 500);
+            });
+        }
+
+        // Add pagination event listeners
+        const prevButton = document.getElementById('youtube-prev-page');
+        const nextButton = document.getElementById('youtube-next-page');
+        if (prevButton) {
+            prevButton.addEventListener('click', () => this.changePage('prev'));
+        }
+        if (nextButton) {
+            nextButton.addEventListener('click', () => this.changePage('next'));
+        }
+    },
+
+    async handleYoutubeRequest(messageText) {
+        addMessageToChat('user', messageText);
+        console.log('handleYoutubeRequest received:', messageText);
+
+        // Check for mock queries
+        const isMockQuery = messageText.toLowerCase().includes('mock') || messageText.toLowerCase().includes('dummy');
+        const isPlayQuery = messageText.toLowerCase().includes('play');
+
+        // Reset pagination state for new searches
+        if (!messageText.includes('more videos')) {
+            this.currentQuery = messageText;
+            this.currentPageToken = null;
+            this.currentSearchParams = {
+                query: messageText.replace(/^youtube\s+(?:search|play)\s+/i, '').trim(),
+                type: messageText.toLowerCase().includes('play') ? 'play' : 'search'
+            };
+        }
+
+        try {
+            const response = await fetch('/api/youtube/search', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    ...this.currentSearchParams,
+                    pageToken: this.currentPageToken
+                })
+            });
+
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            const data = await response.json();
+
+            // Store the next page token
+            this.currentPageToken = data.nextPageToken;
+
+            // Always treat a single video as a SINGLE layout
+            let videos = [];
+            if (data.video) {
+                videos = [data.video];
+            } else if (data.videos) {
+                videos = data.videos;
+            }
+
+            let html = '';
+            let messageRole = 'assistant';
+            let messageType = { type: 'youtube' };
+            if (isMockQuery && isPlayQuery) {
+                // SINGLE-MOCK: Only one mock video
+                const video = {
+                    id: 'mock_video_1',
+                    title: 'Mock Video 1',
+                    description: 'This is a mock video description for testing purposes. Video 1',
+                    channelTitle: 'Mock Channel',
+                    publishedAt: new Date().toISOString(),
+                    duration: 'PT10M30S',
+                    thumbnail: '/assets/img/mock/thumb1.png'
+                };
+                html = `
+                    <div class="youtube-single-bubble-mock">\n                        
+                        <p class="youtube-single-mock-title">Found result for: "${this.currentSearchParams.query}"</p>\n                        
+                        <div class="video-item-mock">\n                            
+                            <div class="button-thumb-group-single-mock top-buttons-mock">\n                                
+                                <a href="#" class="youtube-action-btn-mock youtube-popup-btn-mock" data-video-id="${video.id}" role="button" tabindex="0">Play in Popup</a>\n                                
+                                <button class="youtube-action-btn-mock view-playlists-single-btn-mock" title="View My Playlists"><span>&#9776;</span></button>\n                                
+                                <button type="button" class="add-to-playlist-single-btn-mock" data-video="${encodeURIComponent(
+                                    JSON.stringify({
+                                        videoId: video.id,
+                                        title: video.title,
+                                        thumbnail: video.thumbnail,
+                                    })
+                                    )}\" title="Add to Playlist">+</button>\n                            
+                            </div>\n                            
+                            <span class="youtube-thumb-link-mock youtube-popup-thumb-mock" data-video-id="${video.id}">\n                                
+                                <img src="${video.thumbnail}\" alt="${video.title}\" title="Popup: ${video.title}" />\n
+                            </span>\n                            
+                            <div class="button-thumb-group-single-mock bottom-buttons-mock">\n                                
+                            <button class="youtube-action-btn-mock youtube-direct-link-mock" disabled>Watch on YouTube (Disabled)</button>\n                            
+                        </div>\n                            
+                            <div class="video-title-single-mock">${video.title}</div>\n                            
+                            <div class="channel-info-single-mock">${video.channelTitle}</div>\n                        
+                        </div>\n                    
+                    </div>\n                
+                `;
+                messageRole = 'mock-assistant';
+                messageType = { type: 'youtube-mock' };
+            } else if (isMockQuery && !isPlayQuery) {
+                // MULTI-MOCK: 12 mock videos
+                const mockVideos = Array.from({ length: 12 }, (_, i) => ({
+                    id: `mock_video_${i + 1}`,
+                    title: `Mock Video ${i + 1}`,
+                    description: `This is a mock video description for testing purposes. Video ${i + 1}`,
+                    channelTitle: 'Mock Channel',
+                    publishedAt: new Date().toISOString(),
+                    duration: 'PT10M30S',
+                    thumbnail: `/assets/img/mock/thumb${(i % 30) + 1}.png`
+                }));
+                html = `
+                    <div class="youtube-multi-bubble-mock" style="width:80%;max-width:80vw;">
+                        <p class="youtube-multi-mock-title">Found results for: "${this.currentSearchParams.query}"</p>
+                        <div class="video-list-mock" style="display:grid;grid-template-columns:repeat(4,1fr);gap:24px;">
+                            ${mockVideos.map(video => `
+                                <div class="video-item-mock">
+                                    <div class="button-thumb-group-single-mock top-buttons-mock">
+                                        <a href="#" class="youtube-action-btn-mock youtube-popup-btn-mock" data-video-id="${video.id}" role="button" tabindex="0">Play in Popup</a>
+                                        <button class="youtube-action-btn-mock view-playlists-single-btn-mock" title="View My Playlists"><span>&#9776;</span></button>
+                                        <button type="button" class="add-to-playlist-single-btn-mock" data-video="${encodeURIComponent(JSON.stringify({videoId: video.id, title: video.title, thumbnail: video.thumbnail}))}" title="Add to Playlist">+</button>
+                                    </div>
+                                    <span class="youtube-thumb-link-mock youtube-popup-thumb-mock" data-video-id="${video.id}">
+                                        <img src="${video.thumbnail}" alt="${video.title}" title="Popup: ${video.title}" />
+                                    </span>
+                                    <div class="button-thumb-group-single-mock bottom-buttons-mock">
+                                        <button class="youtube-action-btn-mock youtube-direct-link-mock" disabled>Watch on YouTube (Disabled)</button>
+                                    </div>
+                                    <div class="video-title-single-mock">${video.title}</div>
+                                    <div class="channel-info-single-mock">${video.channelTitle}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+                messageRole = 'mock-assistant';
+                messageType = { type: 'youtube-mock' };
+            } else if (videos.length === 1) {
+                // Real SINGLE layout
+                html = `
+                    <div class="youtube-single-bubble">
+                        <p>Found result for: "${this.currentSearchParams.query}"</p>
+                        <div class="video-item">
+                            <div class="button-thumb-group-SINGLE top-buttons">
+                                <a href="#" class="youtube-action-btn youtube-popup-btn" data-video-id="${videos[0].id}" role="button" tabindex="0">Play in Popup</a>
+                                <button class="youtube-action-btn view-playlists-SINGLE-btn" title="View My Playlists" style="font-size:18px;padding:0 10px;background:none;border:none;cursor:pointer;vertical-align:middle;">
+                                  <span style="display:inline-block;vertical-align:middle;">&#9776;</span>
+                                </button>
+                                <button type="button" class="add-to-playlist-SINGLE-btn" data-video="${encodeURIComponent(JSON.stringify({videoId: videos[0].id, title: videos[0].title, thumbnail: videos[0].thumbnail}))}" title="Add to Playlist">+</button>
+                            </div>
+                            <span class="youtube-thumb-link youtube-popup-thumb" data-video-id="${videos[0].id}">
+                                <img src="${videos[0].thumbnail}" alt="${videos[0].title}" title="Popup: ${videos[0].title}" />
+                            </span>
+                            <div class="button-thumb-group-SINGLE bottom-buttons">
+                                <a href="https://www.youtube.com/watch?v=${videos[0].id}" target="_blank" rel="noopener noreferrer" class="youtube-action-btn youtube-direct-link">Watch on YouTube</a>
+                            </div>
+                            <div class="video-title-SINGLE">${videos[0].title}</div>
+                            <div class="channel-info">${videos[0].channelTitle}</div>
+                        </div>
+                    </div>
+                `;
+            } else if (videos.length > 1) {
+                // Real MULTI layout: show up to 12 videos
+                html = `
+                    <div class="youtube-multi-bubble">
+                        <p>Found results for: "${this.currentSearchParams.query}"</p>
+                        <div class="video-list" style="display:grid;grid-template-columns:repeat(4,1fr);gap:24px;">
+                            ${videos.slice(0, 12).map(video => `
+                                <div class="video-item">
+                                    <div class="button-thumb-group-MULTI top-buttons">
+                                        <a href="#" class="youtube-action-btn youtube-popup-btn" data-video-id="${video.id}" role="button" tabindex="0">Play in Popup</a>
+                                        <button class="youtube-action-btn view-playlists-MULTI-btn" title="View My Playlists" style="font-size:18px;padding:0 10px;background:none;border:none;cursor:pointer;vertical-align:middle;">
+                                          <span style="display:inline-block;vertical-align:middle;">&#9776;</span>
+                                        </button>
+                                        <button type="button" class="add-to-playlist-MULTI-btn" data-video="${encodeURIComponent(JSON.stringify({videoId: video.id, title: video.title, thumbnail: video.thumbnail}))}" title="Add to Playlist">+</button>
+                                    </div>
+                                    <span class="youtube-thumb-link youtube-popup-thumb" data-video-id="${video.id}">
+                                        <img src="${video.thumbnail}" alt="${video.title}" title="Popup: ${video.title}" />
+                                    </span>
+                                    <div class="button-thumb-group-MULTI bottom-buttons">
+                                        <a href="https://www.youtube.com/watch?v=${video.id}" target="_blank" rel="noopener noreferrer" class="youtube-action-btn youtube-direct-link">Watch on YouTube</a>
+                                    </div>
+                                    <div class="video-title-MULTI">${video.title}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            const messageContent = { type: 'youtube', html };
+            addMessageToChat(messageRole, messageContent, messageType);
+            
+            // Add click handlers for popup and playlist buttons
+            setTimeout(() => {
+                // Handle popup buttons
+                document.querySelectorAll('.youtube-popup-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const videoId = btn.getAttribute('data-video-id');
+                        if (isMockQuery) {
+                            // For mock videos, show a mock player
+                            this.showMockPlayer(videoId);
+                        } else {
+                        this.openYoutubePopup(videoId);
+                        }
+                    });
+                });
+
+                // Handle "More Videos" button
+                document.querySelectorAll('.more-videos-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        this.handleYoutubeRequest('more videos');
+                    });
+                });
+
+                // Handle playlist buttons
+                document.querySelectorAll('.view-playlists-SINGLE-btn, .view-playlists-MULTI-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        if (window.playlistManager) {
+                            window.playlistManager.show();
+                        }
+                    });
+                });
+
+                // Handle add to playlist buttons
+                document.querySelectorAll('.add-to-playlist-SINGLE-btn, .add-to-playlist-MULTI-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const videoData = JSON.parse(decodeURIComponent(btn.getAttribute('data-video')));
+                        if (window.playlistManager) {
+                            window.playlistManager.showAddToPlaylist(videoData);
+                        }
+                    });
+                });
+            }, 100);
+        } catch (error) {
+            console.error('Error handling YouTube request:', error);
+            addMessageToChat('assistant', `Error: ${error.message}`);
+        }
+    },
+
+    showMockPlayer(videoId) {
+        // Create a mock player for testing
+        const mockPlayer = document.createElement('div');
+        mockPlayer.className = 'mock-player';
+        mockPlayer.innerHTML = `
+            <div class="mock-player-content">
+                <h3>Mock Video Player</h3>
+                <p>This is a mock player for development purposes.</p>
+                <p>Video ID: ${videoId}</p>
+                <img src="/assets/img/mock/thumb${parseInt(videoId.split('-')[2]) % 30 + 1}.png" alt="Mock Thumbnail" style="max-width: 100%;">
+                <button class="close-mock-player" style="margin-top: 10px; padding: 5px 10px;">Close</button>
+            </div>
+        `;
+
+        // Style the mock player
+        mockPlayer.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.3);
+            z-index: 1000;
+        `;
+
+        // Add close button functionality
+        mockPlayer.querySelector('.close-mock-player').onclick = () => {
+            mockPlayer.remove();
+        };
+
+        document.body.appendChild(mockPlayer);
+    },
+
+    async search(query) {
+        if (!query || this.isSearching) return;
+        
+        this.isSearching = true;
+        this.currentPage = 1;
+        this.nextPageToken = null;
+        this.prevPageToken = null;
+
+        try {
+            const response = await fetch('/api/youtube/search', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query, type: 'search' })
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                this.displayResults(data.videos);
+                this.nextPageToken = data.nextPageToken;
+                this.updatePaginationButtons();
+            } else {
+                console.error('YouTube search failed:', data.error);
+                this.showError('Search failed. Please try again.');
+            }
+        } catch (error) {
+            console.error('YouTube search error:', error);
+            this.showError('An error occurred while searching.');
+        } finally {
+            this.isSearching = false;
+        }
+    },
+
+    async changePage(direction) {
+        if (this.isSearching) return;
+
+        const searchInput = document.getElementById('youtube-search');
+        if (!searchInput || !searchInput.value) return;
+
+        this.isSearching = true;
+        try {
+            const pageToken = direction === 'next' ? this.nextPageToken : this.prevPageToken;
+            const response = await fetch('/api/youtube/search', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    query: searchInput.value,
+                    type: 'search',
+                    pageToken
+                })
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                this.displayResults(data.videos);
+                this.nextPageToken = data.nextPageToken;
+                this.prevPageToken = data.prevPageToken;
+                this.currentPage += direction === 'next' ? 1 : -1;
+                this.updatePaginationButtons();
+            }
+        } catch (error) {
+            console.error('YouTube pagination error:', error);
+            this.showError('Failed to load more results.');
+        } finally {
+            this.isSearching = false;
+        }
+    },
+
+    displayResults(videos) {
+        if (!this.searchResults) return;
+
+        this.searchResults.innerHTML = '';
+        videos.forEach(video => {
+            const videoElement = document.createElement('div');
+            videoElement.className = 'youtube-video-item';
+            videoElement.innerHTML = `
+                <div class="video-thumbnail">
+                    <img src="${video.thumbnail}" alt="${video.title}" loading="lazy">
+                    <span class="video-duration">${this.formatDuration(video.duration)}</span>
+                </div>
+                <div class="video-info">
+                    <h3 class="video-title">${video.title}</h3>
+                    <p class="video-channel">${video.channelTitle}</p>
+                    <p class="video-description">${video.description}</p>
+                </div>
+            `;
+
+            videoElement.addEventListener('click', () => this.playVideo(video.id));
+            this.searchResults.appendChild(videoElement);
+        });
+    },
+
+    async playVideo(videoId) {
+        if (!this.videoContainer) return;
+
+        try {
+            const response = await fetch('/api/youtube/search', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query: videoId, type: 'play' })
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                this.videoContainer.innerHTML = `
+                    <div class="video-player">
+                        <iframe
+                            src="https://www.youtube.com/embed/${data.video.id}?autoplay=1"
+                            frameborder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowfullscreen
+                        ></iframe>
+                    </div>
+                    <div class="video-details">
+                        <h2>${data.video.title}</h2>
+                        <p class="channel">${data.video.channelTitle}</p>
+                        <p class="description">${data.video.description}</p>
+                    </div>
+                `;
+            }
+        } catch (error) {
+            console.error('YouTube play error:', error);
+            this.showError('Failed to play video.');
+        }
+    },
+
+    openYoutubePopup(videoId) {
+        // Calculate dimensions for a wider window (90% of screen width, 16:9 aspect ratio)
+        const width = Math.floor(window.screen.width * 0.9);
+        const height = Math.floor(width * (9/16));
+        const left = Math.floor((window.screen.width - width) / 2);
+        const top = Math.floor((window.screen.height - height) / 2);
+    
+        const popup = window.open(
+            `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&vq=hd1080&hd=1`,
+            'YouTubePlayer',
+            `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=no,status=no`
+        );
+    
+        if (popup) {
+            popup.focus();
+        } else {
+            alert('Please allow popups for this site to play videos in a new window.');
+        }
+    },
+
+    updatePaginationButtons() {
+        const prevButton = document.getElementById('youtube-prev-page');
+        const nextButton = document.getElementById('youtube-next-page');
+        
+        if (prevButton) {
+            prevButton.disabled = !this.prevPageToken;
+            prevButton.style.opacity = this.prevPageToken ? '1' : '0.5';
+        }
+        
+        if (nextButton) {
+            nextButton.disabled = !this.nextPageToken;
+            nextButton.style.opacity = this.nextPageToken ? '1' : '0.5';
+        }
+    },
+
+    formatDuration(duration) {
+        if (!duration) return 'N/A';
+        
+        const match = duration.match(/PT(\d+H)?(\d+M)?(\d+S)?/);
+        if (!match) return 'N/A';
+
+        const hours = (match[1] || '').replace('H', '');
+        const minutes = (match[2] || '').replace('M', '');
+        const seconds = (match[3] || '').replace('S', '');
+
+        let result = '';
+        if (hours) result += `${hours}:`;
+        result += `${minutes.padStart(2, '0')}:`;
+        result += seconds.padStart(2, '0');
+
+        return result;
+    },
+
+    showError(message) {
+        if (!this.searchResults) return;
+        this.searchResults.innerHTML = `
+            <div class="youtube-error">
+                <p>${message}</p>
+            </div>
+        `;
+    }
+};
 
 // =====================================================
 // BING SEARCH MODULE
@@ -4663,7 +5142,6 @@ async function requestMicrophonePermission() {
 // Update startListening function
 async function startListening() {
     if (state.isListening || state.isProcessing || state.isAISpeaking) {
-        console.log('Cannot start listening - already active or processing');
         return;
     }
 
@@ -4671,23 +5149,12 @@ async function startListening() {
         if (!state.recognition) {
             initializeSpeechRecognition();
         }
-
-        // Check if recognition is already active before starting
-        if (state.recognition && !state.isListening) {
         state.recognition.start();
         startInactivityTimer();
-        }
     } catch (error) {
         console.error('Failed to start listening:', error);
-        
-        // Reset recognition state and create new instance
-        state.isListening = false;
         state.recognition = null;
-        
-        // Try to reinitialize after a short delay
-        setTimeout(() => {
-            initializeSpeechRecognition();
-        }, 1000);
+        setTimeout(initializeSpeechRecognition, 1000);
     }
 }
 
@@ -4791,7 +5258,7 @@ function restoreHonorifics(text) {
 
 // Add event listener for Add to Playlist buttons
 document.addEventListener('click', async (e) => {
-  const button = e.target.closest('.add-to-playlist-SINGLE-btn, .add-to-playlist-MULTI-btn, .add-to-playlist-MULTI-MOCK-btn');
+  const button = e.target.closest('.add-to-playlist-SINGLE-btn, .add-to-playlist-MULTI-btn');
   if (button) {
     try {
       const videoData = JSON.parse(decodeURIComponent(button.dataset.video));
@@ -4838,14 +5305,15 @@ function showLocalVideoModal(videoUrl, title) {
     modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
 }
 
+// ... existing code ...
 // Add click handlers for YouTube popup images (SINGLE and MULTI)
 document.addEventListener('click', function(e) {
   console.log('Global click detected on:', e.target);
-  // Look for both the span and the img elements, and also the popup button
-  const thumb = e.target.closest('.youtube-thumb-link.youtube-popup-thumb, .youtube-popup-thumb, .youtube-popup-btn');
-  console.log('Found youtube-popup element:', !!thumb);
+  // Look for both the span and the img elements
+  const thumb = e.target.closest('.youtube-thumb-link.youtube-popup-thumb, .youtube-popup-thumb');
+  console.log('Found youtube-popup-thumb:', !!thumb);
   if (thumb) {
-    console.log('Element classes:', thumb.className);
+    console.log('Thumb classes:', thumb.className);
     console.log('Has video-id:', thumb.hasAttribute('data-video-id'));
     console.log('Video ID:', thumb.getAttribute('data-video-id'));
   }
@@ -4859,41 +5327,30 @@ document.addEventListener('click', function(e) {
     }
   }
 });
+// ... existing code ...
 
+// Add showToast function to app.js:
+function showToast(message) {
+  alert(message);
+}
 
 // Add TTS warm-up function
 async function warmUpTTS() {
-    const warmUpPayloads = [
-        '\u200B', // zero-width space
-        ' ',      // regular space
-        '.',      // period
-        ',',      // comma
-    ];
-    for (let i = 0; i < warmUpPayloads.length; i++) {
-        try {
-            const response = await fetch(AUDIO_CONFIG.apiUrl, {
+    try {
+        await fetch(AUDIO_CONFIG.apiUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                    text: warmUpPayloads[i],
+                text: '\u200B', // zero-width space (silent)
                 voice: AUDIO_CONFIG.defaultVoice,
                 rate: AUDIO_CONFIG.rate,
                 pitch: AUDIO_CONFIG.pitch,
-                    volume: 0 // always silent
+                volume: AUDIO_CONFIG.volume
             })
         });
-            if (!response.ok) continue;
-            const audioBlob = await response.blob();
-            if (audioBlob.size === 0) continue;
-            const audioUrl = URL.createObjectURL(audioBlob);
-            const audio = new Audio(audioUrl);
-            await new Promise((resolve) => { audio.onloadeddata = resolve; });
-            URL.revokeObjectURL(audioUrl);
-            // Small delay between requests to avoid rate limiting
-            await new Promise(resolve => setTimeout(resolve, 100));
-        } catch (e) {
-            // Silent fail, continue to next
-        }
+        console.log('TTS engine warmed up.');
+    } catch (error) {
+        console.warn('TTS warm-up failed:', error);
     }
 }
 
@@ -4915,7 +5372,7 @@ function preprocessForTTS(text) {
     return processed;
 }
 
-
+// ... existing code ...
 // Slideout help/examples toggle
 const toggleHelpBtn = document.getElementById('toggle-help-btn');
 const slideoutHelp = document.getElementById('slideout-help');
@@ -4926,7 +5383,9 @@ if (toggleHelpBtn && slideoutHelp) {
     toggleHelpBtn.textContent = isOpen ? '+' : '–';
   });
 }
+// ... existing code ...
 
+// ... existing code ...
 // Example Prompts toggle for prompt field
 const examplePromptsLink = document.getElementById('example-prompts-link');
 const examplePromptsHelp = document.getElementById('example-prompts-help');
@@ -4940,7 +5399,11 @@ if (examplePromptsLink && examplePromptsHelp) {
     }
   });
 }
+// ... existing code ...
+// Remove old toggle-help-btn and slideout-help logic
+// ... existing code ...
 
+// ... existing code ...
 // Modal close logic
 window.addEventListener('DOMContentLoaded', function() {
     const modal = document.getElementById('image-analysis-modal');
@@ -4950,1467 +5413,218 @@ window.addEventListener('DOMContentLoaded', function() {
     }
     modal.onclick = (e) => { if (e.target === modal) modal.classList.remove('show'); };
 });
+// ... existing code ...
 
-// === PAGINATION STATE ===
-window.youtubePagination = {
-    history: [], // Array of {videos, pageToken, subject, type}
-    currentIndex: 0,
-    currentPage: 1, // Add currentPage initialization to prevent NaN
-    isMock: false,
-    isActive: false, // New flag to track if we're in an active YouTube search
-    pageTokens: [], // Store pageTokens for each page
-    navigationHistory: [], // Track user navigation for NEXT button
-    currentHistoryIndex: 0, // Track current position in navigation history
-    allQueriesHistory: [], // Track all YouTube queries ever made
-    currentQueryStartIndex: 0, // Track where current query started in navigation history
-    lastNextPageToken: null // Store the nextPageToken for MORE button
-};
+// YouTube functionality
+// const handleYoutube = {
+//     currentPage: 1,
+//     nextPageToken: null,
+//     prevPageToken: null,
+//     isSearching: false,
+//     searchTimeout: null,
+//     videoContainer: null,
+//     searchResults: null,
 
-// Add this new function to hide all pagination bars
-function hideAllPaginationBars() {
-    // Hide REAL YouTube pagination bars  
-    document.querySelectorAll('.real-youtube-pagination-bar').forEach(el => el.remove());
-    
-    // Hide MOCK pagination bars
-    document.querySelectorAll('.mock-pagination-bar').forEach(el => el.remove());
-    
-    // Reset the active state
-    window.youtubePagination.isActive = false;
-}
+//     init() {
+//         this.videoContainer = document.getElementById('youtube-container');
+//         this.searchResults = document.getElementById('youtube-search-results');
+//         this.setupEventListeners();
+//     },
 
-// === PAGINATION BAR LOGIC ===
-function updateButtonStates() {
-    // Only check for the TWO proper pagination bars: mock and real YouTube
-    const bar = document.querySelector('.mock-pagination-bar') || 
-                document.querySelector('.real-youtube-pagination-bar');
-    
-    if (!bar) {
-        console.log('🔍 No pagination bar found in updateButtonStates');
-        return;
-    }
-    
-    const isMockBar = bar.classList.contains('mock-pagination-bar');
-    const isRealYoutubeBar = bar.classList.contains('real-youtube-pagination-bar');
-    
-    const btnBackToTop = bar.querySelector('.back-to-top-btn');
-    const btnQueryStart = bar.querySelector('.query-start-btn');
-    const btnBack = bar.querySelector('.back-btn');
-    const btnMore = bar.querySelector('.more-page-btn');
-    const btnNext = bar.querySelector('.next-btn');
+//     setupEventListeners() {
+//         const searchInput = document.getElementById('youtube-search');
+//         if (searchInput) {
+//             searchInput.addEventListener('input', (e) => {
+//                 clearTimeout(this.searchTimeout);
+//                 this.searchTimeout = setTimeout(() => {
+//                     this.search(e.target.value);
+//                 }, 500);
+//             });
+//         }
 
-    const currentPage = window.youtubePagination.currentPage || 1;
-    const totalPages = window.youtubePagination.totalPages || 1;
-    const navigationHistory = window.youtubePagination.navigationHistory || [];
-    const currentHistoryIndex = window.youtubePagination.currentHistoryIndex || 0;
-    const allQueriesHistory = window.youtubePagination.allQueriesHistory || [];
-    
-    // Check if we have a nextPageToken from the YouTube API
-    const hasNextPageToken = window.youtubePagination.lastNextPageToken || 
-                             (handleYoutube && handleYoutube.paginationState?.lastNextPageToken);
-    
-    console.log('🔍 updateButtonStates:', { 
-        isMockBar,
-        isRealYoutubeBar,
-        currentPage, 
-        totalPages,
-        hasNextPageToken: !!hasNextPageToken,
-        lastNextPageToken: window.youtubePagination.lastNextPageToken,
-        navigationHistory: navigationHistory.length,
-        currentHistoryIndex,
-        allQueriesHistory: allQueriesHistory.length
-    });
+//         // Add pagination event listeners
+//         const prevButton = document.getElementById('youtube-prev-page');
+//         const nextButton = document.getElementById('youtube-next-page');
+//         if (prevButton) {
+//             prevButton.addEventListener('click', () => this.changePage('prev'));
+//         }
+//         if (nextButton) {
+//             nextButton.addEventListener('click', () => this.changePage('next'));
+//         }
+//     },
 
-    // Disable all buttons by default
-    if (btnBackToTop) btnBackToTop.disabled = true;
-    if (btnQueryStart) btnQueryStart.disabled = true;
-    if (btnBack) btnBack.disabled = true;
-    if (btnMore) btnMore.disabled = true;
-    if (btnNext) btnNext.disabled = true;
-
-    // Enable BACK TO TOP button if we have multiple queries in history
-    if (allQueriesHistory.length > 1) {
-        if (btnBackToTop) btnBackToTop.disabled = false;
-    }
-
-    // Enable QUERY START button if we're not on the first page of current query
-    if (currentPage > 1) {
-        if (btnQueryStart) btnQueryStart.disabled = false;
-    }
-
-    // Enable BACK button if we're not on the first page
-    if (currentPage > 1) {
-        if (btnBack) btnBack.disabled = false;
-    }
-
-    // Enable MORE button based on bar type
-    if (isMockBar) {
-        // MOCK pagination bar - use totalPages logic for mock data
-        console.log('🎭 MOCK BAR - Checking MORE button condition:', {
-            currentPage,
-            totalPages,
-            condition: currentPage < totalPages
-        });
-        if (currentPage < totalPages) {
-            if (btnMore) {
-                btnMore.disabled = false;
-                console.log('✅ MOCK MORE button ENABLED');
-            }
-        } else {
-            console.log('❌ MOCK MORE button stays DISABLED');
-        }
-    } else if (isRealYoutubeBar) {
-        // REAL YouTube pagination bar - use nextPageToken logic for real data
-        console.log('🌐 REAL YOUTUBE BAR - Checking MORE button condition:', {
-            hasNextPageToken: !!window.youtubePagination.lastNextPageToken,
-            lastNextPageToken: window.youtubePagination.lastNextPageToken
-        });
-        if (window.youtubePagination.lastNextPageToken) {
-            if (btnMore) {
-                btnMore.disabled = false;
-                console.log('✅ REAL YOUTUBE MORE button ENABLED');
-            }
-        } else {
-            console.log('❌ REAL YOUTUBE MORE button stays DISABLED');
-        }
-    }
-
-    // Enable NEXT button only if user can navigate forward in history
-    const canGoForward = navigationHistory.length > 0 && currentHistoryIndex < navigationHistory.length - 1;
-    if (canGoForward) {
-        if (btnNext) btnNext.disabled = false;
-    }
-    
-    console.log('🔍 Button states updated:', {
-        barType: isMockBar ? 'MOCK' : isRealYoutubeBar ? 'REAL_YOUTUBE' : 'UNKNOWN',
-        backToTop: btnBackToTop?.disabled,
-        queryStart: btnQueryStart?.disabled,
-        back: btnBack?.disabled,
-        more: btnMore?.disabled,
-        next: btnNext?.disabled,
-        canGoForward,
-        hasNextPageToken
-    });
-}
-
-// === SHOW PAGINATION BAR === (Missing function that was causing querySelector errors)
-function showPaginationBar(page, totalPages, isMock, subject) {
-    console.log('showPaginationBar called with:', { page, totalPages, isMock, subject });
-    console.log('🔍 DEBUG totalPages:', totalPages, 'type:', typeof totalPages);
-    
-    // For mock requests, don't show the real pagination bar
-    if (isMock) {
-        console.log('Mock request - not showing real pagination bar');
-        return;
-    }
-    
-    // Fix totalPages if it's undefined or not a number
-    if (!totalPages || isNaN(totalPages)) {
-        totalPages = 1;
-        console.log('🔧 Fixed totalPages to 1');
-    }
-    
-    // Update pagination state
-    window.youtubePagination.currentPage = page;
-    window.youtubePagination.totalPages = totalPages;
-    window.youtubePagination.originalQuery = subject;
-    
-    // SYNC: Copy pagination state from handleYoutube if it exists
-    if (handleYoutube && handleYoutube.paginationState) {
-        if (!window.youtubePagination.pageTokens) {
-            window.youtubePagination.pageTokens = [];
-        }
-        // Copy pageTokens if they exist in handleYoutube
-        if (handleYoutube.paginationState.pageTokens && handleYoutube.paginationState.pageTokens.length > 0) {
-            window.youtubePagination.pageTokens = [...handleYoutube.paginationState.pageTokens];
-        }
-        // SYNC lastNextPageToken for MORE button (critical for real YouTube results)
-        if (handleYoutube.paginationState.lastNextPageToken) {
-            window.youtubePagination.lastNextPageToken = handleYoutube.paginationState.lastNextPageToken;
-            console.log('🔍 Synced lastNextPageToken for MORE button:', handleYoutube.paginationState.lastNextPageToken);
-        }
-    }
-    
-    console.log('🔍 Updated pagination state:', { 
-        currentPage: window.youtubePagination.currentPage, 
-        totalPages: window.youtubePagination.totalPages,
-        pageTokens: window.youtubePagination.pageTokens
-    });
-    
-    // Check if pagination bar already exists in DOM
-    let bar = document.getElementById('pagination-bar');
-    
-    // If bar doesn't exist, create it
-    if (!bar) {
-        console.log('Creating new pagination bar');
-        bar = document.createElement('div');
-        bar.id = 'pagination-bar';
-        bar.className = 'pagination-bar';
-        bar.style.bottom = '125px'; // Position it properly
+//     async search(query) {
+//         if (!query || this.isSearching) return;
         
-        bar.innerHTML = `
+//         this.isSearching = true;
+//         this.currentPage = 1;
+//         this.nextPageToken = null;
+//         this.prevPageToken = null;
 
-            <div class="pagination-bar-content">
-                <button class="back-to-top-btn" title="Back to TOP (First Query)">
-                    <img src="/assets/img/first-page.svg" alt="|<<" class="btn-icon">
-                </button>
-                <button class="query-start-btn" title="Back to Query Start">
-                    <img src="/assets/img/prev-page.svg" alt="<<" class="btn-icon">
-                </button>
-                <button class="back-btn" title="Back One Page">
-                    <img src="/assets/img/back.svg" alt="<" class="btn-icon">
-                </button>
-                <button class="more-page-btn" title="More Results">MORE</button>
-                <button class="next-btn" title="Next Page">
-                    <img src="/assets/img/forward.svg" alt=">" class="btn-icon">
-                </button>
-            </div>
-        `;
+//         try {
+//             const response = await fetch('/api/youtube/search', {
+//                 method: 'POST',
+//                 headers: { 'Content-Type': 'application/json' },
+//                 body: JSON.stringify({ query, type: 'search' })
+//             });
 
-        // <div id="pagination-drag-tab" class="drag-tab">
-        //     <img src="/assets/img/drag-me.png" class="drag-me-icon" alt="Drag Me" title="Drag to move pagination bar">
-        // </div>
+//             const data = await response.json();
+//             if (data.success) {
+//                 this.displayResults(data.videos);
+//                 this.nextPageToken = data.nextPageToken;
+//                 this.updatePaginationButtons();
+//             } else {
+//                 console.error('YouTube search failed:', data.error);
+//                 this.showError('Search failed. Please try again.');
+//             }
+//         } catch (error) {
+//             console.error('YouTube search error:', error);
+//             this.showError('An error occurred while searching.');
+//         } finally {
+//             this.isSearching = false;
+//         }
+//     },
+
+//     async changePage(direction) {
+//         if (this.isSearching) return;
+
+//         const searchInput = document.getElementById('youtube-search');
+//         if (!searchInput || !searchInput.value) return;
+
+//         this.isSearching = true;
+//         try {
+//             const pageToken = direction === 'next' ? this.nextPageToken : this.prevPageToken;
+//             const response = await fetch('/api/youtube/search', {
+//                 method: 'POST',
+//                 headers: { 'Content-Type': 'application/json' },
+//                 body: JSON.stringify({
+//                     query: searchInput.value,
+//                     type: 'search',
+//                     pageToken
+//                 })
+//             });
+
+//             const data = await response.json();
+//             if (data.success) {
+//                 this.displayResults(data.videos);
+//                 this.nextPageToken = data.nextPageToken;
+//                 this.prevPageToken = data.prevPageToken;
+//                 this.currentPage += direction === 'next' ? 1 : -1;
+//                 this.updatePaginationButtons();
+//             }
+//         } catch (error) {
+//             console.error('YouTube pagination error:', error);
+//             this.showError('Failed to load more results.');
+//         } finally {
+//             this.isSearching = false;
+//         }
+//     },
+
+//     displayResults(videos) {
+//         if (!this.searchResults) return;
+
+//         this.searchResults.innerHTML = '';
+//         videos.forEach(video => {
+//             const videoElement = document.createElement('div');
+//             videoElement.className = 'youtube-video-item';
+//             videoElement.innerHTML = `
+//                 <div class="video-thumbnail">
+//                     <img src="${video.thumbnail}" alt="${video.title}" loading="lazy">
+//                     <span class="video-duration">${this.formatDuration(video.duration)}</span>
+//                 </div>
+//                 <div class="video-info">
+//                     <h3 class="video-title">${video.title}</h3>
+//                     <p class="video-channel">${video.channelTitle}</p>
+//                     <p class="video-description">${video.description}</p>
+//                 </div>
+//             `;
+
+//             videoElement.addEventListener('click', () => this.playVideo(video.id));
+//             this.searchResults.appendChild(videoElement);
+//         });
+//     },
+
+//     async playVideo(videoId) {
+//         if (!this.videoContainer) return;
+
+//         try {
+//             const response = await fetch('/api/youtube/search', {
+//                 method: 'POST',
+//                 headers: { 'Content-Type': 'application/json' },
+//                 body: JSON.stringify({ query: videoId, type: 'play' })
+//             });
+
+//             const data = await response.json();
+//             if (data.success) {
+//                 this.videoContainer.innerHTML = `
+//                     <div class="video-player">
+//                         <iframe
+//                             src="https://www.youtube.com/embed/${data.video.id}?autoplay=1"
+//                             frameborder="0"
+//                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+//                             allowfullscreen
+//                         ></iframe>
+//                     </div>
+//                     <div class="video-details">
+//                         <h2>${data.video.title}</h2>
+//                         <p class="channel">${data.video.channelTitle}</p>
+//                         <p class="description">${data.video.description}</p>
+//                     </div>
+//                 `;
+//             }
+//         } catch (error) {
+//             console.error('YouTube play error:', error);
+//             this.showError('Failed to play video.');
+//         }
+//     },
+
+//     updatePaginationButtons() {
+//         const prevButton = document.getElementById('youtube-prev-page');
+//         const nextButton = document.getElementById('youtube-next-page');
         
-        document.body.appendChild(bar);
-        console.log('Pagination bar created and added to DOM');
-    } else {
-        // Update page display if bar already exists
-        const pageDisplay = bar.querySelector('.page-display');
-        if (pageDisplay) {
-            pageDisplay.textContent = `Page ${page}`;
-        }
-    }
-    
-    // Set up the pagination bar functionality
-    // OLD SYSTEM REMOVED: setupPaginationBar(false); 
-    // Now using renderRealYoutubePaginationBar system instead
-    
-    // Update button states
-    updateButtonStates();
-    
-    // Make sure it's visible
-    bar.style.display = 'flex';
-    bar.style.visibility = 'visible';
-    bar.style.opacity = '1';
-    
-    console.log('Pagination bar is now visible and functional');
-}
-
-// Function to completely clean up broken YouTube elements
-function cleanupBrokenYouTubeElements() {
-    console.log('🧹 Starting cleanup of YouTube elements...');
-    
-    // STEP 1: Remove all existing YouTube containers
-    const youtubeContainers = document.querySelectorAll('.youtube-multi-bubble-mock, .mock-youtube-results, .youtube-results-wrapper-mock, .youtube-multi-bubble, .youtube-single-bubble');
-    console.log('🗑️ Found YouTube containers to remove:', youtubeContainers.length);
-    youtubeContainers.forEach((el, index) => {
-        console.log(`🗑️ Removing container ${index + 1}: ${el.className}`);
-        el.remove();
-    });
-    
-    // STEP 2: Remove any assistant-mock messages
-    const assistantMockMessages = document.querySelectorAll('.message.assistant-mock');
-    console.log('🗑️ Found assistant-mock messages to remove:', assistantMockMessages.length);
-    assistantMockMessages.forEach(el => el.remove());
-    
-    // Remove any assistant messages that contain YouTube content (for real YouTube cleanup)
-    const allMessages = document.querySelectorAll('.message.assistant');
-    console.log('🔍 Checking assistant messages for YouTube content:', allMessages.length);
-    let removedCount = 0;
-    for (let msg of allMessages) {
-        // Check if message contains YouTube-related content
-        const hasYouTubeContent = msg.innerHTML.includes('Found results for') || 
-            msg.innerHTML.includes('YouTube Results') || 
-            msg.innerHTML.includes('video-list') || 
-            msg.innerHTML.includes('youtube-multi-bubble') ||
-            msg.innerHTML.includes('📺');
+//         if (prevButton) {
+//             prevButton.disabled = !this.prevPageToken;
+//             prevButton.style.opacity = this.prevPageToken ? '1' : '0.5';
+//         }
         
-        // Check if message is now empty or only contains whitespace/basic structure
-        const messageContent = msg.querySelector('.message-content');
-        const isEmptyOrBasic = !messageContent || 
-            messageContent.innerHTML.trim() === '' || 
-            messageContent.innerHTML.trim().length < 20 ||
-            messageContent.textContent.trim() === '' ||
-            messageContent.textContent.trim().length < 5;
+//         if (nextButton) {
+//             nextButton.disabled = !this.nextPageToken;
+//             nextButton.style.opacity = this.nextPageToken ? '1' : '0.5';
+//         }
+//     },
+
+//     formatDuration(duration) {
+//         if (!duration) return 'N/A';
         
-        if (hasYouTubeContent || isEmptyOrBasic) {
-            console.log('🗑️ Removing assistant message:', hasYouTubeContent ? 'has YouTube content' : 'empty/basic content');
-            msg.remove();
-            removedCount++;
-        }
-    }
-    console.log('🗑️ Removed', removedCount, 'assistant messages with YouTube content or empty content');
-    
-    // Remove any text nodes or elements that contain broken HTML
-    const brokenPatterns = [
-        'data-video-id="mockid',
-        'role="button">Play in Popup',
-        'class="youtube-action-btn',
-        'view-playlists-MULTI-MOCK-btn',
-        'style="font-size:18px',
-        'tabindex="0">',
-        'class="button-thumb-group'
-    ];
-    
-    let brokenElementsRemoved = 0;
-    document.querySelectorAll('*').forEach(el => {
-        if (el.textContent) {
-            for (let pattern of brokenPatterns) {
-                if (el.textContent.includes(pattern)) {
-                    console.log('🗑️ Removing broken element containing:', pattern);
-                    el.remove();
-                    brokenElementsRemoved++;
-                    break;
-                }
-            }
-        }
-    });
-    console.log('🗑️ Removed', brokenElementsRemoved, 'broken elements');
-    console.log('✅ Cleanup complete');
-}
+//         const match = duration.match(/PT(\d+H)?(\d+M)?(\d+S)?/);
+//         if (!match) return 'N/A';
 
-// Helper function to add user query bubble before YouTube response
-function addYouTubeUserQuery(originalQuery) {
-    // Just pass the clean text - let addMessageToChat handle the HTML structure
-    addMessageToChat('user', originalQuery, { isUserQuery: true });
-}
+//         const hours = (match[1] || '').replace('H', '');
+//         const minutes = (match[2] || '').replace('M', '');
+//         const seconds = (match[3] || '').replace('S', '');
 
-// ═══════════════════════════════════════════════════════════════════════════════════════
-// ████████████████████████████████ YOUTUBE MODULES ████████████████████████████████████
-// ═══════════════════════════════════════════════════════════════════════════════════════
+//         let result = '';
+//         if (hours) result += `${hours}:`;
+//         result += `${minutes.padStart(2, '0')}:`;
+//         result += seconds.padStart(2, '0');
 
-// ═══════════════════════════════════════════════════════════════════════════════════════
-// ██████████████████████████ MOCK YOUTUBE MODULE ██████████████████████████████████████
-// ═══════════════════════════════════════════════════════════════════════════════════════
-// This module handles all MOCK YouTube functionality (SINGLE-MOCK, MULTI-MOCK)
-// Uses demo data, mock pagination, and totalPages logic
-// Complete segregation from REAL YouTube module - NO BLEEDING ALLOWED
-// ═══════════════════════════════════════════════════════════════════════════════════════
+//         return result;
+//     },
 
-function renderMockYoutubeResults(videos, page, totalPages, subject, type = 'search', isRealData = false) {
-    console.log('🎭 [MOCK] renderMockYoutubeResults called with:', { videos, page, totalPages, subject, type, isRealData });
-    
-    // When using real data, sync the nextPageToken properly
-    if (isRealData && handleYoutube && handleYoutube.paginationState) {
-        window.youtubePagination.lastNextPageToken = handleYoutube.paginationState.lastNextPageToken;
-        console.log('🎭 [MOCK] Synced nextPageToken for pagination:', handleYoutube.paginationState.lastNextPageToken);
-    }
-    
-    // Use the comprehensive cleanup function
-    cleanupBrokenYouTubeElements();
-    
-    // Validate and clean video data
-    const validVideos = videos.filter(video => {
-        if (!video || !video.id || !video.title || !video.thumbnail) {
-            console.warn('Invalid video object:', video);
-            return false;
-        }
-        return true;
-    }).map((video, index) => {
-        try {
-            return {
-                id: String(video.id).replace(/[^a-zA-Z0-9-_]/g, ''), // Clean ID
-                title: String(video.title).replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;'),
-                description: String(video.description || '').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;'),
-                channelTitle: String(video.channelTitle || 'Unknown').replace(/"/g, '&quot;'),
-                thumbnail: String(video.thumbnail || '/assets/img/youtube-placeholder.png')
-            };
-        } catch (error) {
-            console.error('Error processing video:', video, error);
-            return null;
-        }
-    }).filter(video => video !== null);
+//     showError(message) {
+//         if (!this.searchResults) return;
+//         this.searchResults.innerHTML = `
+//             <div class="youtube-error">
+//                 <p>${message}</p>
+//             </div>
+//         `;
+//     }
+// };
 
-    console.log('Valid videos after processing:', validVideos.length);
+// Initialize YouTube functionality when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    handleYoutube.init();
+});
 
-    if (validVideos.length === 0) {
-        addMessageToChat('assistant', '❌ No valid YouTube videos found for your search.', { mock: !isRealData, isYoutubePagination: true });
-        return;
-    }
 
-    // Create main bubble container
-    const youtubeMultiBubble = document.createElement('div');
-    youtubeMultiBubble.className = 'youtube-multi-bubble-mock';
 
-    // Create header section with clean CSS classes only
-    const headerSection = document.createElement('div');
-    headerSection.className = 'youtube-header-section-mock';
-        
-    // Determine header title and badge based on whether this is real or mock data
-    let headerTitle, cacheBadge;
-    if (isRealData) {
-        headerTitle = type === 'play' ? `📺 Found results for "${subject.replace(/youtube\s+/i, "").trim()}"` : '📺 YouTube Results';
-        cacheBadge = '<span class="youtube-cache-badge" style="background: #2196f3;">🌐 Real API</span>';
-    } else {
-        headerTitle = type === 'play' ? `🎭 Found results for "${subject.replace(/youtube\s+/i, "").trim()}"` : '🎭 Mock YouTube Results';
-        cacheBadge = '<span class="youtube-cache-badge">⚡ Cached</span>';
-    }
-        
-    headerSection.innerHTML = `
-        <div class="youtube-header-container">
-            <div class="youtube-header-left">
-                <h3 class="youtube-header-title">${headerTitle}</h3>
-            </div>
-            <div class="youtube-header-right">
-                <button class="view-playlists-btn" onclick="window.playlistManager?.openPlaylistManager(); return false;" title="View Playlists">
-                    <span class="view-playlists-btn-icon">📋</span><span class="view-playlists-btn-text">View Playlists</span>
-                </button>
-                <span class="youtube-page-info">Page ${page} of ${totalPages}</span>
-                ${cacheBadge}
-            </div>
-        </div>
-    `;
-
-    // Create video list container (grid)
-    const videoList = document.createElement('ul');
-    videoList.className = 'video-list-mock';
-
-    // Add each video as a list item
-    validVideos.forEach((video, index) => {
-        const videoItem = document.createElement('li');
-        videoItem.className = 'video-item-mock';
-        
-        const videoDataEncoded = encodeURIComponent(JSON.stringify({
-            id: video.id,
-            title: video.title,
-            channelTitle: video.channelTitle,
-            thumbnail: video.thumbnail
-        }));
-
-        // For 'play' requests, show title format
-        const displayTitle = video.title;
-
-        // Use different button behavior for real vs mock data
-        const buttonBehavior = isRealData ? 
-            `onclick="window.open('https://www.youtube.com/watch?v=${video.id}', '_blank'); return false;"` : 
-            'onclick="return false;"';
-
-        videoItem.innerHTML = `
-            <div class="button-thumb-group-MULTI-MOCK top-buttons">
-                <button class="youtube-action-btn popup-btn-mock" onclick="return false;" title="Play in Popup">Play in Popup</button>
-                <button class="add-to-playlist-MULTI-MOCK-btn" data-video="${videoDataEncoded}" title="Add to Playlist"><span class="plus-sign">+</span></button>
-            </div>
-            <span class="youtube-thumb-link-mock youtube-popup-thumb" onclick="return false;" title="Demo thumbnail">
-                <img class="youtube-thumb-img-mock" src="${video.thumbnail}" alt="${video.title}" loading="lazy" />
-            </span>
-            <div class="video-title-mock">${displayTitle}</div>
-            <div class="button-thumb-group-MULTI-MOCK bottom-buttons">
-                <button class="youtube-action-btn youtube-direct-link-improved" ${buttonBehavior} title="Watch on YouTube">
-                    <span class="watch-on-youtube-icon">🎬</span>
-                    <span class="watch-on-youtube-text">Watch on YouTube</span>
-                </button>
-            </div>
-            <div class="video-channel-mock">${video.channelTitle}</div>
-        `;
-        
-        videoList.appendChild(videoItem);
-    });
-
-    // Assemble the complete structure
-    youtubeMultiBubble.appendChild(headerSection);
-    youtubeMultiBubble.appendChild(videoList);
-
-    // Add the assistant response 
-    addMessageToChat('assistant', youtubeMultiBubble.outerHTML, { 
-        mock: !isRealData, 
-        isYoutubePagination: true,
-        subject: subject
-    });
-}
-
-// Mock YouTube single result rendering function
-function renderMockSingleYoutubeResult(video, subject, type = 'search') {
-    console.log('🎭 [MOCK] renderMockSingleYoutubeResult called with:', { video, subject, type });
-    
-    // For 'play' requests, show simplified title format (singular for single)
-    const displayTitle = type === 'play' ? `Found result for "${subject.replace(/youtube\s+/i, "").trim()}"` : video.title;
-    
-    const mockSingleBubble = `
-        <div class="youtube-single-bubble-mock">
-            <div class="video-title-mock">${displayTitle}</div>
-            <div class="button-thumb-group-SINGLE-mock top-buttons">
-                <button class="youtube-action-btn popup-btn-mock" onclick="return false;" title="Play in Popup">Play in Popup</button>
-                <button class="add-to-playlist-SINGLE-mock-btn" data-video="${encodeURIComponent(JSON.stringify({id: video.id, title: video.title, channelTitle: video.channelTitle, thumbnail: video.thumbnail}))}" title="Add to Playlist">
-                    <span class="plus-sign">+</span>
-                </button>
-            </div>
-            <span class="youtube-thumb-link-mock youtube-popup-thumb" onclick="return false;" title="Demo thumbnail">
-                <img class="youtube-thumb-img-mock" src="${video.thumbnail}" alt="${video.title}" loading="lazy" />
-            </span>
-            <div class="button-thumb-group-SINGLE-mock bottom-buttons">
-                <button class="youtube-action-btn youtube-direct-link-improved" onclick="return false;" title="Watch on YouTube">
-                    <span class="watch-on-youtube-icon">🎬</span>
-                    <span class="watch-on-youtube-text">Watch on YouTube</span>
-                </button>
-            </div>
-            <div class="video-channel-mock">${video.channelTitle}</div>
-        </div>
-    `;
-    
-    // Add to chat with proper options
-    addMessageToChat('assistant', mockSingleBubble, { 
-        mock: true, 
-        isYoutubePagination: false,
-        subject: subject
-    });
-}
-
-// === MOCK PAGINATION BAR FUNCTION ===
-function renderMockPaginationBar(page, totalPages, subject) {
-    console.log('🎭 [MOCK] renderMockPaginationBar called with:', { page, totalPages, subject });
-    
-    // Update pagination state
-    window.youtubePagination.currentPage = page;
-    window.youtubePagination.totalPages = totalPages;
-    window.youtubePagination.originalQuery = subject;
-    
-    // Remove any existing pagination bars first
-    document.querySelectorAll('.mock-pagination-bar, #pagination-bar').forEach(el => el.remove());
-    
-    // Create mock pagination bar
-    const mockBar = document.createElement('div');
-    mockBar.className = 'mock-pagination-bar';
-    
-    mockBar.innerHTML = `
-
-        <div class="pagination-bar-content">
-            <button class="back-to-top-btn" title="Back to TOP (First Query)">
-                <img src="/assets/img/first-page.svg" alt="|<<" class="btn-icon">
-            </button>
-            <button class="query-start-btn" title="Back to Query Start">
-                <img src="/assets/img/prev-page.svg" alt="<<" class="btn-icon">
-            </button>
-            <button class="back-btn" title="Back One Page">
-                <img src="/assets/img/back.svg" alt="<" class="btn-icon">
-            </button>
-            <button class="more-page-btn" title="More Results">MORE</button>
-            <button class="next-btn" title="Next Page">
-                <img src="/assets/img/forward.svg" alt=">" class="btn-icon">
-            </button>
-        </div>
-    `;
-
-    // <div id="pagination-drag-tab" class="drag-tab">
-    //     <img src="/assets/img/drag-me.png" class="drag-me-icon" alt="Drag Me" title="Drag to move pagination bar">
-    // </div>
-    
-    document.body.appendChild(mockBar);
-    
-    // Style the buttons
-    const buttons = mockBar.querySelectorAll('button');
-    buttons.forEach(btn => {
-        btn.style.cssText = `
-            padding: 8px 12px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            background: white;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        `;
-        
-        btn.addEventListener('mouseenter', () => {
-            btn.style.transform = 'scale(1.05)';
-            btn.style.boxShadow = '0 2px 8px rgba(0,0,0,0.2)';
-        });
-        
-        btn.addEventListener('mouseleave', () => {
-            btn.style.transform = 'scale(1)';
-            btn.style.boxShadow = 'none';
-        });
-    });
-    
-    // Style the MORE button specifically for mock (orange)
-    const moreBtn = mockBar.querySelector('.more-page-btn');
-    if (moreBtn) {
-        moreBtn.style.background = '#ff9800';
-        moreBtn.style.color = 'white';
-        moreBtn.style.fontWeight = 'bold';
-    }
-    
-    // Add dragging functionality (without inline styles)
-    const dragTab = mockBar.querySelector('.pagination-drag-tab');
-    let isDragging = false;
-    let offsetX = 0, offsetY = 0;
-    
-    dragTab.onmousedown = function(e) {
-        e.preventDefault();
-        isDragging = true;
-        offsetX = e.clientX - mockBar.getBoundingClientRect().left;
-        offsetY = e.clientY - mockBar.getBoundingClientRect().top;
-        mockBar.classList.add('dragging');
-        
-        function onMouseMove(e) {
-            if (!isDragging) return;
-            const newLeft = e.clientX - offsetX;
-            const newTop = e.clientY - offsetY;
-            mockBar.style.left = Math.max(0, Math.min(newLeft, window.innerWidth - mockBar.offsetWidth)) + 'px';
-            mockBar.style.top = Math.max(0, Math.min(newTop, window.innerHeight - mockBar.offsetHeight)) + 'px';
-            mockBar.style.transform = 'none';
-        }
-        
-        function onMouseUp() {
-            isDragging = false;
-            mockBar.classList.remove('dragging');
-            document.removeEventListener('mousemove', onMouseMove);
-            document.removeEventListener('mouseup', onMouseUp);
-        }
-        
-        document.addEventListener('mousemove', onMouseMove);
-        document.addEventListener('mouseup', onMouseUp);
-    };
-    
-    // Add button functionality
-    mockBar.querySelector('.back-to-top-btn').onclick = function() {
-        const firstQuery = window.youtubePagination.allQueriesHistory[0];
-        if (firstQuery) {
-            handleYoutube.handleYoutubeRequest(firstQuery.query, false, null);
-        }
-    };
-    
-    mockBar.querySelector('.query-start-btn').onclick = function() {
-        window.youtubePagination.currentPage = 1;
-        handleYoutube.handleYoutubeRequest(window.youtubePagination.originalQuery, false, null);
-    };
-    
-    mockBar.querySelector('.back-btn').onclick = function() {
-        console.log('🎭 [MOCK] BACK button clicked in MOCK pagination bar');
-        
-        // For MOCK data, use traditional page logic
-        if (window.youtubePagination.currentPage > 1) {
-            console.log('🎭 [MOCK] Going back one page in MOCK data');
-            window.youtubePagination.currentPage--;
-            const pageToken = window.youtubePagination.pageTokens[window.youtubePagination.currentPage - 2];
-            handleYoutube.handleYoutubeRequest(window.youtubePagination.originalQuery, true, pageToken);
-        } else {
-            console.log('🎭 [MOCK] Already on page 1, cannot go back further');
-        }
-    };
-    
-    mockBar.querySelector('.more-page-btn').onclick = function() {
-        console.log('🎭 [MOCK] 🚀 MORE button clicked for MOCK data');
-        console.log('🎭 [MOCK] 📊 Current MOCK pagination state:', {
-            currentPage: window.youtubePagination.currentPage,
-            totalPages: window.youtubePagination.totalPages,
-            originalQuery: window.youtubePagination.originalQuery
-        });
-        
-        // For MOCK data, use traditional totalPages logic
-        if (window.youtubePagination.currentPage < window.youtubePagination.totalPages) {
-            window.youtubePagination.currentPage++;
-            const pageToken = window.youtubePagination.pageTokens[window.youtubePagination.currentPage - 1];
-            handleYoutube.handleYoutubeRequest(window.youtubePagination.originalQuery, true, pageToken);
-        } else {
-            console.log('🎭 [MOCK] No more MOCK pages available');
-        }
-    };
-    
-    mockBar.querySelector('.next-btn').onclick = function() {
-        const nextState = window.youtubePagination.navigationHistory[window.youtubePagination.currentHistoryIndex + 1];
-        if (nextState) {
-            window.youtubePagination.currentHistoryIndex++;
-            handleYoutube.handleYoutubeRequest(nextState.query, false, nextState.pageToken);
-        }
-    };
-    
-    // Update button states
-    updateButtonStates();
-    
-    console.log('🎭 [MOCK] pagination bar created and functional');
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════════════
-// ██████████████████████████ REAL YOUTUBE MODULE ██████████████████████████████████████
-// ═══════════════════════════════════════════════════════════════════════════════════════
-// This module handles all REAL YouTube functionality (live API calls)
-// Uses real YouTube API data, nextPageToken logic, and live results
-// Complete segregation from MOCK YouTube module - NO BLEEDING ALLOWED
-// ═══════════════════════════════════════════════════════════════════════════════════════
-
-// Real YouTube results rendering function
-function renderRealYoutubeResults(videos, page, totalPages, subject, type = 'search', isPagination = false, originalMessageText = null) {
-    console.log('🌐 [REAL] renderRealYoutubeResults called with:', { videos, page, totalPages, subject, type, isPagination, originalMessageText });
-    
-    if (!videos || !Array.isArray(videos)) {
-        console.log('🌐 [REAL] ❌ No valid videos array provided to renderRealYoutubeResults, skipping render');
-        return;
-    }
-    
-    // Additional validation - check if videos have required properties
-    const validVideos = videos.filter(video => video && video.id && video.title);
-    if (validVideos.length === 0) {
-        console.log('🌐 [REAL] ❌ No videos with valid properties (id, title) found, skipping render');
-        return;
-    }
-    
-    console.log('🌐 [REAL] ✅ Valid videos to render:', validVideos.length);
-    
-    // For initial search: Add user query bubble first
-    if (!isPagination) {
-        // Use originalMessageText if provided, otherwise fallback to subject
-        addYouTubeUserQuery(originalMessageText || subject);
-    }
-    
-    // Standard YouTube layout system for ALL real results
-    console.log('🌐 [REAL] Using standard YouTube layout for real results (page', page, ')');
-    
-    // Note: Token synchronization is now handled in the API handler, no need to sync here
-    
-    // Clean up any existing empty bubbles before rendering (SINGLE cleanup call)
-    cleanupBrokenYouTubeElements();
-    
-    // Use setTimeout to ensure user query renders first (or immediate for pagination)
-    setTimeout(() => {
-        console.log('🌐 [REAL] 🚀 Starting renderYoutubeResults (no duplicate cleanup)');
-        // Use the standard rendering system for real data
-        renderYoutubeResults(validVideos, page, 'many', subject, type, true);
-        
-        // Show pagination bar for multi-video results - use BOTH systems for now
-        if (validVideos.length > 1) {
-            // 1. The enhanced pagination bar (future)
-            renderRealYoutubePaginationBar(page, 'many', subject);
-            
-        }
-    }, isPagination ? 0 : 100);
-}
-
-// Standard YouTube results rendering (used by real data)
-function renderYoutubeResults(videos, page, totalPages, subject, type = 'search', isRealData = false) {
-    console.log('+++ [REAL] renderYoutubeResults called with:', { videos, page, totalPages, subject, type, isRealData });
-    
-    // REMOVED: Duplicate cleanup call that was causing empty bubbles
-    // cleanupBrokenYouTubeElements(); // This was creating race conditions
-    
-    // Validate and clean video data
-    const validVideos = videos.filter(video => {
-        if (!video || !video.id || !video.title || !video.thumbnail) {
-            console.warn('Invalid video object:', video);
-            return false;
-        }
-        return true;
-    }).map((video, index) => {
-        try {
-            return {
-                id: String(video.id).replace(/[^a-zA-Z0-9-_]/g, ''), // Clean ID
-                title: String(video.title).replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;'),
-                description: String(video.description || '').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;'),
-                channelTitle: String(video.channelTitle || 'Unknown').replace(/"/g, '&quot;'),
-                thumbnail: String(video.thumbnail || '/assets/img/youtube-placeholder.png')
-            };
-        } catch (error) {
-            console.error('Error processing video:', video, error);
-            return null;
-        }
-    }).filter(video => video !== null);
-
-    console.log('+++ [REAL] Valid videos after processing:', validVideos.length);
-
-    if (validVideos.length === 0) {
-        addMessageToChat('assistant', '❌ No valid YouTube videos found for your search.', { mock: false, isYoutubePagination: true });
-        return;
-    }
-
-    // Create main bubble container
-    const youtubeMultiBubble = document.createElement('div');
-    youtubeMultiBubble.className = 'youtube-multi-bubble';
-
-    // Create header section with clean CSS classes only
-    const headerSection = document.createElement('div');
-    headerSection.className = 'youtube-header-section';
-        
-    // Real data header
-    const headerTitle = type === 'play' ? `📺 Found results for "${subject.replace(/youtube\s+/i, "").trim()}"` : '📺 YouTube Results';
-    const cacheBadge = '<span class="youtube-cache-badge" style="background: #2196f3;">🌐 Real API</span>';
-        
-    headerSection.innerHTML = `
-        <div class="youtube-header-container">
-            <div class="youtube-header-left">
-                <h3 class="youtube-header-title">${headerTitle}</h3>
-            </div>
-            <div class="youtube-header-right">
-                <button class="view-playlists-btn" onclick="window.playlistManager?.openPlaylistManager(); return false;" title="View Playlists">
-                    <span class="view-playlists-btn-icon">📋</span><span class="view-playlists-btn-text">View Playlists</span>
-                </button>
-                <span class="youtube-page-info">Page ${page}${totalPages !== 'many' ? ` of ${totalPages}` : ' of many'}</span>
-                ${cacheBadge}
-            </div>
-        </div>
-    `;
-
-    // Create video list container (grid)
-    const videoList = document.createElement('ul');
-    videoList.className = 'video-list';
-
-    // Add each video as a list item
-    validVideos.forEach((video, index) => {
-        const videoItem = document.createElement('li');
-        videoItem.className = 'video-item';
-        
-        const videoDataEncoded = encodeURIComponent(JSON.stringify({
-            id: video.id,
-            title: video.title,
-            channelTitle: video.channelTitle,
-            thumbnail: video.thumbnail
-        }));
-
-        const displayTitle = video.title;
-
-        videoItem.innerHTML = `
-            <div class="button-thumb-group-MULTI top-buttons">
-                <button class="youtube-action-btn popup-btn" onclick="handleYoutube.openYoutubePopup('${video.id}'); return false;" title="Play in Popup">Play in Popup</button>
-                <button class="add-to-playlist-MULTI-btn" data-video="${videoDataEncoded}" title="Add to Playlist"><span class="plus-sign">+</span></button>
-            </div>
-            <span class="youtube-thumb-link youtube-popup-thumb" onclick="handleYoutube.openYoutubePopup('${video.id}'); return false;" title="Play video">
-                <img class="youtube-thumb-img" src="${video.thumbnail}" alt="${video.title}" loading="lazy" />
-            </span>
-            <div class="video-title">${displayTitle}</div>
-            <div class="button-thumb-group-MULTI bottom-buttons">
-                <button class="youtube-action-btn youtube-direct-link-improved" onclick="window.open('https://www.youtube.com/watch?v=${video.id}', '_blank'); return false;" title="Watch on YouTube">
-                    <span class="watch-on-youtube-icon">🎬</span>
-                    <span class="watch-on-youtube-text">Watch on YouTube</span>
-                </button>
-            </div>
-            <div class="video-channel">${video.channelTitle}</div>
-        `;
-        
-        videoList.appendChild(videoItem);
-    });
-
-    // Assemble the complete structure
-    youtubeMultiBubble.appendChild(headerSection);
-    youtubeMultiBubble.appendChild(videoList);
-
-    // Add the assistant response 
-    addMessageToChat('assistant', youtubeMultiBubble.outerHTML, { 
-        mock: false, 
-        isYoutubePagination: true,
-        subject: subject
-    });
-}
-
-// Real YouTube pagination bar function
-function renderRealYoutubePaginationBar(page, totalPages, subject) {
-    console.log('🌐 [REAL] 📊 renderRealYoutubePaginationBar called with:', { page, totalPages, subject });
-
-    // Check if real pagination bar already exists
-    const existingRealBar = document.querySelector('.real-youtube-pagination-bar');
-    if (existingRealBar) {
-        console.log('🌐 [REAL] ♻️ Real pagination bar already exists - keeping it to preserve event listeners and tokens');
-        // Just update the page display if needed, but don't recreate the bar
-        // return;
-    }
-
-    // FIRST: Remove any other existing REAL pagination bars (just in case)
-    const existingRealBars = document.querySelectorAll('.real-youtube-pagination-bar');
-    console.log('🌐 [REAL] 🗑️ Removing existing real pagination bars:', existingRealBars.length);
-    existingRealBars.forEach(bar => bar.remove());
-
-    // SECOND: Hide all other pagination bars (mock, etc.)
-    hideAllPaginationBars();
-
-    console.log('🌐 [REAL] 🆕 Creating NEW real pagination bar with current token:', window.youtubePagination.lastNextPageToken);
-
-    // Create the real YouTube pagination bar
-    const realBar = document.createElement('div');
-    realBar.className = 'real-youtube-pagination-bar';
-    realBar.innerHTML = `
-        <div id="pagination-drag-tab" class="drag-tab">
-            <img src="/assets/img/drag-me.png" class="drag-me-icon" alt="Drag Me" title="Drag to move pagination bar">
-        </div>
-        <div class="pagination-bar-content">
-            <button class="back-to-top-btn" title="Back to TOP (First Query)">
-                <img src="/assets/img/first-page.svg" alt="|<<" class="btn-icon">
-            </button>
-            <button class="query-start-btn" title="Back to Query Start">
-                <img src="/assets/img/prev-page.svg" alt="<<" class="btn-icon">
-            </button>
-            <button class="back-btn" title="Back One Page">
-                <img src="/assets/img/back.svg" alt="<" class="btn-icon">
-            </button>
-            <button class="more-page-btn" title="More Results">MORE</button>
-            <button class="next-btn" title="Next Page">
-                <img src="/assets/img/forward.svg" alt="Next" class="forward-icon">
-            </button>
-        </div>
-    `;
-
-
-    // Remove all the inline styling code
-    document.body.appendChild(realBar);
-
-    // Add dragging functionality to the real pagination bar
-    const realDragTab = realBar.querySelector('#pagination-drag-tab');
-    if (realDragTab) {
-        let isDragging = false;
-        let offsetX = 0, offsetY = 0;
-        
-        realDragTab.onmousedown = function(e) {
-            e.preventDefault();
-            isDragging = true;
-            offsetX = e.clientX - realBar.getBoundingClientRect().left;
-            offsetY = e.clientY - realBar.getBoundingClientRect().top;
-            realBar.classList.add('dragging');
-            
-            function onMouseMove(e) {
-                if (!isDragging) return;
-                const newLeft = e.clientX - offsetX;
-                const newTop = e.clientY - offsetY;
-                realBar.style.left = Math.max(0, Math.min(newLeft, window.innerWidth - realBar.offsetWidth)) + 'px';
-                realBar.style.top = Math.max(0, Math.min(newTop, window.innerHeight - realBar.offsetHeight)) + 'px';
-                realBar.style.transform = 'none';
-            }
-            
-            function onMouseUp() {
-                isDragging = false;
-                realBar.classList.remove('dragging');
-                document.removeEventListener('mousemove', onMouseMove);
-                document.removeEventListener('mouseup', onMouseUp);
-            }
-            
-            document.addEventListener('mousemove', onMouseMove);
-            document.addEventListener('mouseup', onMouseUp);
-        };
-    }
-    
-    // Add event listeners
-    realBar.querySelector('.more-page-btn').addEventListener('click', async () => {
-        console.log('🌐 [REAL] 🚀 MORE button clicked for REAL data');
-        
-        // Fix 1: Initialize currentPage if undefined, then increment
-        if (!window.youtubePagination.currentPage) {
-            window.youtubePagination.currentPage = 1;
-        }
-        window.youtubePagination.currentPage++;
-        
-        // Fix 2: Always get the LATEST nextPageToken at the TIME OF CLICK
-        const lastToken = sessionStorage.getItem('youtube_nextPageToken');
-        console.log('🌐 [REAL] 🔑 Using nextPageToken:', lastToken);
-        console.log('🌐 [REAL] 📄 Target page:', window.youtubePagination.currentPage);
-        
-        if (lastToken) {
-            // Make FRESH API call for next page - don't use cache for MORE button
-            try {
-                const fetchBody = { 
-                    query: subject, 
-                    type: 'search', 
-                    page: window.youtubePagination.currentPage,
-                    pageToken: lastToken 
-                };
-
-                console.log('🌐 [REAL] 📞 Making fresh API call for MORE with:', fetchBody);
-                const response = await fetch('/api/youtube/search', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(fetchBody)
-                });
-                
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                const data = await response.json();
-                
-                // CRITICAL FIX: Update the nextPageToken IMMEDIATELY for future MORE clicks
-                if (data.nextPageToken) {
-                    sessionStorage.setItem('youtube_nextPageToken', data.nextPageToken);
-                    console.log('+++ [REAL]🔑 Updated nextPageToken for next MORE click:', data.nextPageToken);
-                } else {
-                    sessionStorage.removeItem('youtube_nextPageToken');
-                    console.log('+++ [REAL]🔍 No more pages available');
-                }
-                
-                // Cache the NEW results for this page
-                const cacheKey = `yt_${subject}_search_${window.youtubePagination.currentPage}`;
-                localStorage.setItem(cacheKey, JSON.stringify(data));
-                console.log('+++ [REAL]💾 Cached new results with key:', cacheKey);
-                
-                // Render the NEW page results
-                let videos = [];
-                if (data.video) {
-                    videos = [data.video];
-                } else if (data.videos) {
-                    videos = data.videos;
-                }
-
-                if (data.isMock) {
-                    if (data.resultType === 'MULTI-MOCK') {
-                        window.youtubePagination.isActive = true;
-                        renderMockYoutubeResults(videos, data.page, data.totalPages, subject, 'search');
-                        renderMockPaginationBar(data.page, data.totalPages, subject);
-                    }
-                } else {
-                    if (data.resultType === 'MULTI') {
-                        window.youtubePagination.isActive = true;
-                        renderRealYoutubeResults(videos, window.youtubePagination.currentPage, 'many', subject, 'search', true);
-                    }
-                }
-                
-            } catch (error) {
-                console.error('+++ [REAL]🌐 [REAL] ❌ Error fetching more results:', error);
-                toastManager.show('Error loading more results', 'error');
-                // Rollback the page counter on error
-                window.youtubePagination.currentPage--;
-            }
-        } else {
-            console.log('+++ [REAL]🌐 [REAL] ⚠️ No nextPageToken available - cannot load more');
-            toastManager.show('No more results available', 'info');
-            // Rollback the page counter if no token
-            window.youtubePagination.currentPage--;
-        }
-    });
-
-    realBar.querySelector('.back-btn').addEventListener('click', () => {
-        console.log('+++ [REAL]🌐 [REAL] ⬅️ Back button clicked');
-        if (window.youtubePagination.currentPage > 1) {
-            window.youtubePagination.currentPage--;
-            
-            // Load cached results directly instead of calling deprecated 3-parameter system
-            const cacheKey = `yt_${subject}_search_${window.youtubePagination.currentPage}`;
-            console.log('🌐 [REAL] 🔍 Looking for cached results with key:', cacheKey);
-            
-            const cachedResult = localStorage.getItem(cacheKey);
-            if (cachedResult) {
-                const data = JSON.parse(cachedResult);
-                console.log('🌐 [REAL] 🎯 Found cached results for back navigation');
-                
-                let videos = [];
-                if (data.video) {
-                    videos = [data.video];
-                } else if (data.videos) {
-                    videos = data.videos;
-                }
-                
-                // Render the cached results
-                renderRealYoutubeResults(videos, window.youtubePagination.currentPage, 'many', subject, 'search', true);
-            } else {
-                console.log('🌐 [REAL] ❌ No cached results found for page', window.youtubePagination.currentPage);
-                // Rollback the page counter
-                window.youtubePagination.currentPage++;
-                toastManager?.show('No cached results for this page', 'warning');
-            }
-        }
-    });
-
-    realBar.querySelector('.next-btn').addEventListener('click', () => {
-        console.log('+++ [REAL]🌐 [REAL] ➡️ Next button clicked');
-        window.youtubePagination.currentPage++;
-        
-        // Load cached results directly instead of calling deprecated 3-parameter system
-        const cacheKey = `yt_${subject}_search_${window.youtubePagination.currentPage}`;
-        console.log('🌐 [REAL] 🔍 Looking for cached results with key:', cacheKey);
-        
-        const cachedResult = localStorage.getItem(cacheKey);
-        if (cachedResult) {
-            const data = JSON.parse(cachedResult);
-            console.log('🌐 [REAL] 🎯 Found cached results for next navigation');
-            
-            let videos = [];
-            if (data.video) {
-                videos = [data.video];
-            } else if (data.videos) {
-                videos = data.videos;
-            }
-            
-            // Render the cached results
-            renderRealYoutubeResults(videos, window.youtubePagination.currentPage, 'many', subject, 'search', true);
-        } else {
-            console.log('🌐 [REAL] ❌ No cached results found for page', window.youtubePagination.currentPage);
-            // Rollback the page counter
-            window.youtubePagination.currentPage--;
-            toastManager?.show('No cached results for this page', 'warning');
-        }
-    });
-    
-    // Make draggable (using the WORKING pattern from setupPaginationBar)
-    const dragTab = realBar.querySelector('.pagination-drag-tab');
-    let offsetX = 0, offsetY = 0;
-    
-    dragTab.onmousedown = function(e) {
-        e.preventDefault();
-        offsetX = e.clientX - realBar.getBoundingClientRect().left;
-        offsetY = e.clientY - realBar.getBoundingClientRect().top;
-        realBar.classList.add('dragging');
-        
-        function onMouseMove(e) {
-            const newLeft = e.clientX - offsetX;
-            const newTop = e.clientY - offsetY;
-            const clampedLeft = Math.max(0, Math.min(newLeft, window.innerWidth - realBar.offsetWidth));
-            const clampedTop = Math.max(0, Math.min(newTop, window.innerHeight - realBar.offsetHeight));
-            realBar.style.left = clampedLeft + 'px';
-            realBar.style.top = clampedTop + 'px';
-            realBar.style.right = 'auto';
-            realBar.style.bottom = 'auto';
-        }
-        
-        function onMouseUp() {
-            realBar.classList.remove('dragging');
-            document.removeEventListener('mousemove', onMouseMove);
-            document.removeEventListener('mouseup', onMouseUp);
-        }
-        
-        document.addEventListener('mousemove', onMouseMove);
-        document.addEventListener('mouseup', onMouseUp);
-    };
-
-    console.log('+++ [REAL]🌐 ✅ REAL YouTube pagination bar created and functional');
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════════════
-// REAL YOUTUBE API HANDLER OBJECT
-// ═══════════════════════════════════════════════════════════════════════════════════════
-
-// =====================================================
-// YOUTUBE MODULE - taken from perfect_styles_99764aa
-// =====================================================
-
-const handleYoutube = {
-    isPlaying: false,
-    currentQuery: '',
-    currentPageToken: null,
-    currentSearchParams: null,  // Store complete search parameters
-
-    async handleYoutubeRequest(messageText, isPagination = false, pageToken = undefined) {
-        console.log('🌐 [REAL] handleYoutubeRequest received:', messageText);
-
-        // SIMPLIFIED: Remove complex 3-parameter handling - use only the new system
-        // OLD 3-parameter logic removed to eliminate confusion and conflicts
-        
-        // Initialize pagination state if needed
-        if (!this.paginationState) {
-            this.paginationState = {
-                currentPage: 1,
-                totalPages: 1,
-                query: '',
-                pageTokens: [''], // Start with empty token for page 1
-                prevPageTokens: []
-            };
-        }
-
-        // ENHANCED: ALWAYS CHECK CACHE FIRST - regardless of call type
-        // This dramatically reduces YouTube API calls and prevents hitting limits
-        
-        // Determine the subject and type for cache key generation
-        let subject = messageText;
-        let type = 'search';
-        
-        if (messageText.toLowerCase().includes('play ')) {
-            type = 'play';
-            subject = messageText.replace(/play\s+/i, '').trim();
-        }
-
-        // Clean the subject to match cache format
-        if (subject.toLowerCase().includes('youtube search ')) {
-            subject = subject.replace(/youtube search /i, '').trim();
-        }
-
-        // Determine current page for cache key
-        const currentPage = window.youtubePagination?.currentPage || 1;
-        
-        // Generate cache key - ALWAYS check cache first
-        const cacheKey = `yt_${subject}_${type}_${currentPage}`;
-        console.log('🔍 [CACHE-FIRST] Checking cache with key:', cacheKey);
-        
-        // STEP 1: CHECK CACHE FIRST (for ALL requests - new searches AND pagination)
-        const cachedData = getCacheWithAgeCheck(cacheKey, 24); // 24 hour cache expiry
-        if (cachedData) {
-            console.log('💰 [API-SAVINGS] Saved YouTube API call for:', subject, 'page:', currentPage);
-            
-            let videos = [];
-            if (cachedData.video) {
-                videos = [cachedData.video];
-            } else if (cachedData.videos) {
-                videos = cachedData.videos;
-            }
-
-            // Route cached results to proper rendering
-            if (cachedData.isMock) {
-                if (cachedData.resultType === 'MULTI-MOCK') {
-                    window.youtubePagination.isActive = true;
-                    renderMockYoutubeResults(videos, cachedData.page, cachedData.totalPages, subject, 'search');
-                    renderMockPaginationBar(cachedData.page, cachedData.totalPages, subject);
-                } else if (cachedData.resultType === 'SINGLE-MOCK') {
-                    window.youtubePagination.isActive = false;
-                    renderMockSingleYoutubeResult(videos[0], subject, 'search');
-                }
-            } else {
-                if (cachedData.resultType === 'MULTI') {
-                    window.youtubePagination.isActive = true;
-                    renderRealYoutubeResults(videos, cachedData.page || currentPage, cachedData.totalPages, subject, 'search', isPagination, messageText);
-                }
-            }
-            return; // Exit early - no API call needed!
-        }
-
-        // STEP 2: NO CACHE FOUND - Make API call (but cache the result)
-        console.log('❌ [CACHE-MISS] No cached results found - making API call');
-        console.log('🌐 [API-CALL] Fetching from YouTube API for:', subject, 'page:', currentPage);
-
-        // Allow all valid calls - cache-first system handles efficiency
-        // The 3-parameter system (messageText, isPagination, pageToken) is essential for proper caching
-        
-        // STEP 3: Make fresh API call and cache the result
-        try {
-            const fetchBody = { query: subject, type, page: currentPage };
-            if (pageToken) fetchBody.pageToken = pageToken;
-
-            const response = await fetch('/api/youtube/search', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(fetchBody)
-            });
-            
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            const data = await response.json();
-            
-            // STEP 4: IMMEDIATELY cache the fresh result with timestamp for future use
-            setCacheWithTimestamp(cacheKey, data);
-            console.log('⚡ [FUTURE-SAVINGS] This search will use cache next time!');
-            
-            let videos = [];
-            if (data.video) {
-                videos = [data.video];
-            } else if (data.videos) {
-                videos = data.videos;
-            }
-
-            // Route fresh results to proper rendering
-            if (data.isMock) {
-                if (data.resultType === 'MULTI-MOCK') {
-                    window.youtubePagination.isActive = true;
-                    renderMockYoutubeResults(videos, data.page, data.totalPages, subject, 'search');
-                    renderMockPaginationBar(data.page, data.totalPages, subject);
-                } else if (data.resultType === 'SINGLE-MOCK') {
-                    window.youtubePagination.isActive = false;
-                    renderMockSingleYoutubeResult(videos[0], subject, 'search');
-                }
-            } else {
-                if (data.resultType === 'MULTI') {
-                    window.youtubePagination.isActive = true;
-                    renderRealYoutubeResults(videos, data.page || currentPage, data.totalPages, subject, 'search', isPagination, messageText);
-                }
-            }
-            return;
-        } catch (error) {
-            console.error('❌ [API-ERROR] Error handling YouTube request:', error);
-            addMessageToChat('assistant', `Error: ${error.message}`);
-            return;
-        }
-    },
-
-    renderPaginationControls() {
-        // Pagination is now handled by renderRealYoutubePaginationBar() and renderMockPaginationBar() functions
-        return '';
-    },
-
-    openYoutubePopup(videoId) {
-        // Calculate dimensions for a wider window (90% of screen width, 16:9 aspect ratio)
-        const width = Math.floor(window.screen.width * 0.9);  // Increased from 0.8 to 0.9
-        const height = Math.floor(width * (9/16));
-        const left = Math.floor((window.screen.width - width) / 2);
-        const top = Math.floor((window.screen.height - height) / 2);
-    
-        const popup = window.open(
-            `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&vq=hd1080&hd=1`,
-            'YouTubePlayer',
-            `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=no,status=no`
-        );
-    
-        if (popup) {
-            popup.focus();
-        } else {
-            alert('Please allow popups for this site to play videos in a new window.');
-        }
-    },
-
-    createVideoContainer() {
-        if (!elements.videoContainer) {
-            const container = document.createElement('div');
-            container.id = 'youtube-container';
-            container.className = 'youtube-container hidden';
-
-            const closeBtn = document.createElement('button');
-            closeBtn.className = 'youtube-close-btn';
-            closeBtn.innerHTML = '×';
-            closeBtn.onclick = () => this.hideVideo();
-
-            const videoWrapper = document.createElement('div');
-            videoWrapper.id = 'youtube-video';
-            videoWrapper.className = 'youtube-video';
-
-            container.appendChild(closeBtn);
-            container.appendChild(videoWrapper);
-            document.body.appendChild(container);
-
-            elements.videoContainer = container;
-        }
-    },
-
-    showVideo(videoId) {
-        this.createVideoContainer();
-        const videoWrapper = document.getElementById('youtube-video');
-        videoWrapper.innerHTML = '';
-
-        // Create iframe with enhanced parameters
-        const iframe = document.createElement('iframe');
-        iframe.width = "100%";
-        iframe.height = "100%";
-        
-        // Build URL with all necessary parameters
-        const params = new URLSearchParams({
-            autoplay: '1',
-            rel: '0',
-            modestbranding: '1',
-            enablejsapi: '1',
-            origin: window.location.origin,
-            widget_referrer: window.location.href,
-            hl: 'en',
-            controls: '1',
-            fs: '1',
-            playsinline: '1',
-            iv_load_policy: '3',
-            vq: 'hd1080',  // Request 1080p quality
-            hd: '1'        // Enable HD
-        });
-        
-        // Set proper sandbox attributes to allow necessary features while maintaining security
-        iframe.sandbox = 'allow-same-origin allow-scripts allow-popups allow-presentation allow-forms';
-        
-        // Set referrer policy
-        iframe.referrerPolicy = 'strict-origin-when-cross-origin';
-        
-        // Use nocookie domain with enhanced parameters
-        iframe.src = `https://www.youtube-nocookie.com/embed/${videoId}?${params.toString()}`;
-        iframe.frameBorder = "0";
-        iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
-        iframe.allowFullscreen = true;
-
-        // Add loading indicator
-        const loadingDiv = document.createElement('div');
-        loadingDiv.className = 'youtube-loading';
-        loadingDiv.innerHTML = 'Loading video...';
-        videoWrapper.appendChild(loadingDiv);
-
-        // Handle iframe load event
-        iframe.onload = () => {
-            loadingDiv.remove();
-            // Check if the video is actually playing after a short delay
-            setTimeout(() => {
-                try {
-                    // If we detect the verification message, show fallback
-                    if (iframe.contentDocument && 
-                        (iframe.contentDocument.body.innerHTML.includes('Sign in') || 
-                         iframe.contentDocument.body.innerHTML.includes('confirm you\'re not a bot'))) {
-                        this.showFallbackMessage(videoId);
-                    }
-                } catch (e) {
-                    // If we can't access the iframe content (due to CORS), assume it's working
-                    console.log('Cannot check iframe content due to CORS, continuing playback');
-                }
-            }, 2000);
-        };
-
-        // Handle load errors
-        iframe.onerror = () => {
-            this.showFallbackMessage(videoId);
-        };
-
-        videoWrapper.appendChild(iframe);
-        elements.videoContainer.classList.remove('hidden');
-        this.isPlaying = true;
-
-        // Update app state
-        if (state.isListening) {
-            stopListening();
-            state.isListening = false;
-        }
-        updateStatus(MESSAGES.STATUS.VIDEO_PLAYING);
-    },
-
-    showFallbackMessage(videoId) {
-        const videoWrapper = document.getElementById('youtube-video');
-        videoWrapper.innerHTML = `
-            <div class="youtube-error">
-                <p>Unable to play video in embedded player.</p>
-                <p>You can watch it directly on YouTube:</p>
-                <a href="https://www.youtube.com/watch?v=${videoId}" 
-                   target="_blank" 
-                   rel="noopener noreferrer" 
-                   class="youtube-direct-link">
-                    Watch on YouTube
-                </a>
-            </div>
-        `;
-    },
-
-    hideVideo() {
-        if (elements.videoContainer) {
-            const videoWrapper = document.getElementById('youtube-video');
-            videoWrapper.innerHTML = '';
-            elements.videoContainer.classList.add('hidden');
-            this.isPlaying = false;
-            updateStatus(MESSAGES.STATUS.DEFAULT);
-        }
-    },
-
-    paginationState: {
-        currentPage: 1,
-        totalPages: 1,
-        query: '',
-        pageTokens: [''], // Start with empty token for page 1
-        prevPageTokens: [],
-        lastNextPageToken: null
-    },
-
-    renderMultiVideoLayout(videos, page, totalPages, subject, type = 'search') {
-        const displayTitle = type === 'play' ? `📺 Found results for "${subject.replace(/youtube\s+/i, "").trim()}"` : '📺 YouTube Results';
-        return `<div class="youtube-multi-bubble"><h3>${displayTitle}</h3><span>Page ${page}${totalPages ? ` of ${totalPages}` : ' of many'}</span><ul class="video-list">${videos.map(video => `<li class="video-item"><div>${video.title}</div><img src="${video.thumbnail}" alt="${video.title}"><div>${video.channelTitle}</div></li>`).join('')}</ul></div>`;
-    },
-};
-window.handleYoutube = handleYoutube;
-
-// ENHANCED CACHE SYSTEM - Utility Functions
-function isCacheExpired(cachedData, maxAgeHours = 24) {
-    if (!cachedData.timestamp) return true; // No timestamp = expired
-    const now = Date.now();
-    const maxAge = maxAgeHours * 60 * 60 * 1000; // Convert hours to milliseconds
-    const age = now - cachedData.timestamp;
-    const ageHours = (age / (60 * 60 * 1000)).toFixed(1);
-    
-    console.log(`⏰ [CACHE-AGE] Cache is ${ageHours} hours old (max: ${maxAgeHours}h)`);
-    return age > maxAge;
-}
-
-function setCacheWithTimestamp(key, data) {
-    const timestampedData = {
-        ...data,
-        timestamp: Date.now()
-    };
-    localStorage.setItem(key, JSON.stringify(timestampedData));
-    console.log('💾 [CACHE-STORE] Stored with timestamp:', new Date().toLocaleTimeString());
-}
-
-function getCacheWithAgeCheck(key, maxAgeHours = 24) {
-    const cachedResult = localStorage.getItem(key);
-    if (!cachedResult) {
-        console.log('❌ [CACHE-MISS] No cache found for key:', key);
-        return null;
-    }
-    
-    const data = JSON.parse(cachedResult);
-    if (isCacheExpired(data, maxAgeHours)) {
-        console.log('🗑️ [CACHE-EXPIRED] Removing stale cache for key:', key);
-        localStorage.removeItem(key);
-        return null;
-    }
-    
-    const ageHours = ((Date.now() - data.timestamp) / (60 * 60 * 1000)).toFixed(1);
-    console.log(`✅ [CACHE-HIT] Fresh cache found (${ageHours}h old)`);
-    return data;
-}
-
-window.youtubeManager = {
-    // This object can be used for future YouTube manager functionality
-    // For now, we use the existing handleYoutube.handleYoutubeRequest method
-};
-
-// Apply the enhanced cache system to the existing handleYoutubeRequest
-// The cache utility functions are already defined above
