@@ -2,7 +2,7 @@
   APP.JS
   Version: 1
   AppName: MultiChat_Chatty [v1]
-  Updated: 05/28/2025 @6:00AM
+  Updated: 05/31/2025 @7:00PM
   Created by Paul Welby
 */
 
@@ -1592,17 +1592,17 @@ async function sendMessage(message, isGreeting = false) {
                     const endTime = Date.now();
                     const durationInSeconds = Math.max(0.01, ((endTime - startTime) / 1000)).toFixed(2);  // Minimum 0.01s
 
-                updateMetadata(messageElement, {
-                    model: 'memory',
-                    metrics: {
+                    updateMetadata(messageElement, {
                         model: 'memory',
-                        totalTokens: response.length,
-                        startTime: startTime,
-                        endTime: endTime,
+                        metrics: {
+                            model: 'memory',
+                            totalTokens: response.length,
+                            startTime: startTime,
+                            endTime: endTime,
+                            durationInSeconds: durationInSeconds
+                        },
+                        duration: `${durationInSeconds}s`,  // Add formatted duration
                         durationInSeconds: durationInSeconds
-                    },
-                    duration: `${durationInSeconds}s`,  // Add formatted duration
-                    durationInSeconds: durationInSeconds
                     });
 
                     await queueAudioChunk(response);
@@ -1857,6 +1857,7 @@ async function sendMessage(message, isGreeting = false) {
                 }
 
                 console.log('Queueing audio for response:', response.response);
+                await queueAudioChunk(response.response);
             } catch (error) {
                 console.error(`Error getting AI response:`, error);
                 updateStatus('Error: ' + error.message);
@@ -1941,7 +1942,7 @@ async function getAIResponse(message, selectedModel, history, systemPrompt, sess
 
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
-    const messageElement = addMessageToChat('assistant', ' ', { model: selectedModel, startTime, tokenCount });
+    const messageElement = addMessageToChat('assistant', '...', { model: selectedModel, startTime, tokenCount });
     if (messageElement) {
         messageElement.dataset.startTime = startTime;
     }
@@ -1982,21 +1983,27 @@ async function getAIResponse(message, selectedModel, history, systemPrompt, sess
                         messageElement.querySelector('.message-content').innerHTML = `<div class="bing-search-results">${responseText}</div>`;
                         continue; // Skip all other processing for Bing results
                     }
+
+                    // 🎯 Queue audio for complete sentences - STREAMING AUDIO
+                    const sentences = currentChunk.match(/[^.!?]+[.!?]+/g);
+                    if (sentences && state.selectedVoice) {
+                        queueAudioChunk(sentences.join(' '));
+                        currentChunk = currentChunk.replace(sentences.join(''), '');
+                    }
                 }
             }
         }
     }
 
-    state.isRendering = false;
+    // 🎯 Handle any remaining text for audio
+    if (currentChunk && currentChunk.trim() && state.selectedVoice) {
+        queueAudioChunk(currentChunk.trim());
+    }
+
+                    state.isRendering = false;
                     if (!state.isAISpeaking) {
                         // updateStatus('Ready');
                         console.log('Ready');
-                    }
-                    break;
-                }
-                if (data.error) throw new Error(data.error);
-            }
-        }
     }
 
     return { response: responseText, tokenCount, messageElement, startTime };
@@ -2025,6 +2032,11 @@ function addMessageToChat(role, content, options = {}) {
     } else {
         messageElement.className = `message ${role}`;
     }
+
+    // Add special styling for YouTube query messages
+    if (role === 'user' && options.isYoutubeQuery) {
+        messageElement.setAttribute('data-youtube-query', 'true');
+    }
     
     // Add special bubble classes for greetings and exit messages
     if (role === 'assistant') {
@@ -2040,8 +2052,9 @@ function addMessageToChat(role, content, options = {}) {
     contentElement.className = 'message-content';
 
     // Only add metadata for assistant messages that are not greeting, exit, or time/date/datetime
+    // Also skip metadata for YouTube query messages
     let metadataElement = null;
-    if (role === 'assistant') {
+    if (role === 'assistant' && !options.isYoutubeQuery) {
         const type = options.type || options.messageType || '';
         const excludedTypes = ['greeting', 'exit', 'time', 'date', 'datetime'];
         if (!excludedTypes.includes(type)) {
@@ -2089,6 +2102,9 @@ function addMessageToChat(role, content, options = {}) {
     // Don't auto-scroll to bottom if this is YouTube pagination
     if (!options.isYoutubePagination) {
         elements.chatMessages.scrollTop = elements.chatMessages.scrollHeight;
+    } else {
+        // For YouTube pagination, scroll to bring the YouTube results into view
+        scrollToYouTubeResults();
     }
 
     return messageElement;
@@ -2096,6 +2112,12 @@ function addMessageToChat(role, content, options = {}) {
 
 // Update message content function
 function updateMessageContent(messageElement, content, tokenCount) {
+    // Add null check to prevent errors
+    if (!messageElement) {
+        console.error('updateMessageContent called with null messageElement');
+        return;
+    }
+    
     const contentElement = messageElement.querySelector('.message-content');
     const metadataElement = messageElement.querySelector('.metadata');
 
@@ -2466,13 +2488,46 @@ async function populateVoiceList() {
 async function playAudio(text) {
     if (!text) return;
     text = preprocessForTTS(text);
+    
     try {
         state.isAISpeaking = true;
         state.isPlaying = true;
         updateStatus('AI is speaking...');
-        elements.stopAudioButton.style.display = 'inline-block';  // Show the button
+        elements.stopAudioButton.style.display = 'inline-block';
 
-        // ... rest of playAudio function ...
+        const response = await fetch(AUDIO_CONFIG.apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                text: text,
+                voice: AUDIO_CONFIG.defaultVoice,
+                rate: AUDIO_CONFIG.rate,
+                pitch: AUDIO_CONFIG.pitch,
+                volume: AUDIO_CONFIG.volume
+            })
+        });
+
+        if (!response.ok) throw new Error(`TTS API error: ${response.status}`);
+        
+        const audioBlob = await response.blob();
+        if (audioBlob.size === 0) throw new Error('Empty audio response');
+
+        if (state.currentAudio) {
+            state.currentAudio.pause();
+            state.currentAudio = null;
+        }
+        
+        const audioUrl = URL.createObjectURL(audioBlob);
+        state.currentAudio = new Audio(audioUrl);
+        state.currentAudio.volume = AUDIO_CONFIG.volume;
+
+        await new Promise((resolve, reject) => {
+            state.currentAudio.onended = resolve;
+            state.currentAudio.onerror = reject;
+            state.currentAudio.play().catch(reject);
+        });
+
+        URL.revokeObjectURL(audioUrl);
 
     } catch (error) {
         console.error('Error playing audio:', error);
@@ -2482,90 +2537,12 @@ async function playAudio(text) {
         elements.stopAudioButton.style.display = 'none';
         if (state.isConversationMode) {
             updateStatus('Listening...');
+            safeStartListening();
         } else {
-            // updateStatus('Ready');
-            console.log('Ready');
+            updateStatus('Ready');
         }
     }
 }
-
-// Update the playNextInQueue function
-// async function playNextInQueue() {
-//     if (!state.audioQueue.length || state.isPlaying || state.stopRequested) {
-//         if (!state.audioQueue.length || state.stopRequested) {
-//             updateStatus(state.isConversationMode ? MESSAGES.STATUS.LISTENING : MESSAGES.STATUS.READY);
-//             state.isAISpeaking = false;
-//         }
-//         return;
-//     }
-
-//     try {
-//         state.isPlaying = true;
-//         state.isAISpeaking = true;
-//         updateStatus(MESSAGES.STATUS.SPEAKING);
-
-//         const text = state.audioQueue[0];
-//         console.log('Playing chunk:', text);
-
-//         // Track last TTS time
-//         state.lastTTS = Date.now();
-
-//         const response = await fetch(AUDIO_CONFIG.apiUrl, {
-//             method: 'POST',
-//             headers: { 'Content-Type': 'application/json' },
-//             body: JSON.stringify({
-//                 text: text,
-//                 voice: AUDIO_CONFIG.defaultVoice,
-//                 rate: AUDIO_CONFIG.rate,
-//                 pitch: AUDIO_CONFIG.pitch,
-//                 volume: AUDIO_CONFIG.volume
-//             })
-//         });
-
-//         if (!response.ok) throw new Error(`TTS API error: ${response.status}`);
-        
-//         const audioBlob = await response.blob();
-//         if (audioBlob.size === 0) throw new Error('Empty audio response');
-
-//         if (state.currentAudio) {
-//             state.currentAudio.pause();
-//             state.currentAudio = null;
-//         }
-        
-//         const audioUrl = URL.createObjectURL(audioBlob);
-//         state.currentAudio = new Audio(audioUrl);
-//         state.currentAudio.volume = AUDIO_CONFIG.volume;
-
-//         // Wait for current chunk to finish before moving to next
-//         await new Promise((resolve, reject) => {
-//             state.currentAudio.onended = resolve;
-//             state.currentAudio.onerror = reject;
-//             state.currentAudio.play().catch(reject);
-//         });
-
-//         URL.revokeObjectURL(audioUrl);
-//         state.audioQueue.shift();  // Remove played chunk
-//         state.isPlaying = false;
-
-//         // Process next chunk if available
-//         if (state.audioQueue.length > 0 && !state.stopRequested) {
-//             setTimeout(() => playNextInQueue(), AUDIO_CONFIG.pauseDuration);
-//         } else {
-//             state.isAISpeaking = false;
-//             updateStatus(state.isConversationMode ? MESSAGES.STATUS.LISTENING : MESSAGES.STATUS.READY);
-//         }
-
-//     } catch (error) {
-//         console.error('Audio playback error:', error);
-//         state.isPlaying = false;
-//         state.isAISpeaking = false;
-//         updateStatus(state.isConversationMode ? MESSAGES.STATUS.LISTENING : MESSAGES.STATUS.READY);
-        
-//         if (state.audioQueue.length > 0) {
-//             setTimeout(() => playNextInQueue(), AUDIO_CONFIG.retryDelay);
-//         }
-//     }
-// }
 
 // Stop listening function
 function stopListening() {
@@ -2602,13 +2579,25 @@ function safeStartListening() {
 
     try {
         console.log('Attempting to start recognition');
+        
+        // Double-check that recognition is not already running
+        if (state.recognition && !state.isListening) {
         state.recognition.start();
         elements.micButton.textContent = '🔴';
+        } else {
+            console.log('Recognition already active or not available');
+        }
     } catch (error) {
         console.error('Failed to start recognition:', error);
         state.isListening = false;
         elements.micButton.textContent = '🎤';
         updateStatus('Error starting speech recognition');
+        
+        // Reset recognition instance on error
+        state.recognition = null;
+        setTimeout(() => {
+            initializeSpeechRecognition();
+        }, 1000);
     }
 }
 
@@ -3707,7 +3696,7 @@ function extractTimeReference(text) {
     for (const [type, pattern] of Object.entries(timePatterns)) {
         const match = text.match(pattern);
         if (match) {
-    return {
+            return {
                 type,
                 value: match[1] || match[0],
                 original: match[0]
@@ -4447,654 +4436,7 @@ const handleMyJokes = {
 };
 
 
-// =====================================================
-// YOUTUBE MODULE
-// =====================================================
 
-// YouTube localStorage Cache System for Frontend
-const YouTubeCache = {
-    // Configuration
-    CACHE_PREFIX: 'yt_cache_',
-    CACHE_DURATION: 24 * 60 * 60 * 1000, // 24 hours in milliseconds
-    STATS_KEY: 'yt_cache_stats',
-    
-    // Statistics tracking
-    stats: {
-        hits: 0,
-        misses: 0,
-        totalRequests: 0,
-        cacheSize: 0,
-        lastCleanup: Date.now()
-    },
-
-    // Initialize cache system
-    init() {
-        this.loadStats();
-        this.cleanup(); // Clean expired entries on startup
-        console.log('🚀 YouTube localStorage cache initialized');
-    },
-
-    // Generate cache key for a request
-    generateCacheKey(subject, type = 'search', pageToken = null) {
-        const baseKey = `${subject.toLowerCase().trim()}_${type}`;
-        return pageToken ? `${baseKey}_page_${pageToken}` : baseKey;
-    },
-
-    // Store data in localStorage with metadata
-    store(key, data) {
-        try {
-            const cacheEntry = {
-                data: data,
-                timestamp: Date.now(),
-                key: key
-            };
-            
-            const cacheKey = this.CACHE_PREFIX + key;
-            localStorage.setItem(cacheKey, JSON.stringify(cacheEntry));
-            
-            this.updateStats();
-            console.log('💾 Cached to localStorage:', key);
-            return true;
-        } catch (error) {
-            console.error('❌ Failed to cache to localStorage:', error);
-            return false;
-        }
-    },
-
-    // Retrieve data from localStorage
-    get(key) {
-        try {
-            const cacheKey = this.CACHE_PREFIX + key;
-            const cached = localStorage.getItem(cacheKey);
-            
-            if (!cached) {
-                this.trackCacheMiss();
-                return null;
-            }
-
-            const cacheEntry = JSON.parse(cached);
-            const age = Date.now() - cacheEntry.timestamp;
-
-            // Check if expired
-            if (age > this.CACHE_DURATION) {
-                localStorage.removeItem(cacheKey);
-                this.trackCacheMiss();
-                console.log('🗑️  Removed expired cache:', key);
-                return null;
-            }
-
-            // Add cache metadata
-            const result = {
-                ...cacheEntry.data,
-                cacheAge: age,
-                fromCache: true
-            };
-
-            this.trackCacheHit();
-            return result;
-        } catch (error) {
-            console.error('❌ Cache retrieval error:', error);
-            this.trackCacheMiss();
-            return null;
-        }
-    },
-
-    // Track cache hit
-    trackCacheHit() {
-        this.stats.hits++;
-        this.stats.totalRequests++;
-        this.saveStats();
-    },
-
-    // Track cache miss
-    trackCacheMiss() {
-        this.stats.misses++;
-        this.stats.totalRequests++;
-        this.saveStats();
-    },
-
-    // Update cache size and stats
-    updateStats() {
-        let cacheSize = 0;
-        let cacheCount = 0;
-        
-        for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (key && key.startsWith(this.CACHE_PREFIX)) {
-                const value = localStorage.getItem(key);
-                if (value) {
-                    cacheSize += value.length;
-                    cacheCount++;
-                }
-            }
-        }
-        
-        this.stats.cacheSize = cacheSize;
-        this.stats.cacheCount = cacheCount;
-        this.saveStats();
-    },
-
-    // Save stats to localStorage
-    saveStats() {
-        try {
-            localStorage.setItem(this.STATS_KEY, JSON.stringify(this.stats));
-        } catch (error) {
-            console.error('❌ Failed to save cache stats:', error);
-        }
-    },
-
-    // Load stats from localStorage
-    loadStats() {
-        try {
-            const saved = localStorage.getItem(this.STATS_KEY);
-            if (saved) {
-                this.stats = { ...this.stats, ...JSON.parse(saved) };
-            }
-        } catch (error) {
-            console.error('❌ Failed to load cache stats:', error);
-        }
-    },
-
-    // Clean up expired cache entries
-    cleanup() {
-        let cleanedCount = 0;
-        const keysToRemove = [];
-        
-        for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (key && key.startsWith(this.CACHE_PREFIX)) {
-                try {
-                    const cached = localStorage.getItem(key);
-                    if (cached) {
-                        const cacheEntry = JSON.parse(cached);
-                        const age = Date.now() - cacheEntry.timestamp;
-                        
-                        if (age > this.CACHE_DURATION) {
-                            keysToRemove.push(key);
-                            cleanedCount++;
-                        }
-                    }
-                } catch (error) {
-                    // Invalid cache entry, mark for removal
-                    keysToRemove.push(key);
-                    cleanedCount++;
-                }
-            }
-        }
-        
-        // Remove expired/invalid entries
-        keysToRemove.forEach(key => localStorage.removeItem(key));
-        
-        if (cleanedCount > 0) {
-            console.log(`🧹 Cleaned up ${cleanedCount} expired cache entries`);
-        }
-        
-        this.stats.lastCleanup = Date.now();
-        this.updateStats();
-    },
-
-    // Clear all cache
-    clear() {
-        let clearedCount = 0;
-        const keysToRemove = [];
-        
-        for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (key && key.startsWith(this.CACHE_PREFIX)) {
-                keysToRemove.push(key);
-                clearedCount++;
-            }
-        }
-        
-        keysToRemove.forEach(key => localStorage.removeItem(key));
-        
-        // Reset stats
-        this.stats = {
-            hits: 0,
-            misses: 0,
-            totalRequests: 0,
-            cacheSize: 0,
-            lastCleanup: Date.now()
-        };
-        this.saveStats();
-        
-        console.log(`🗑️  Cleared ${clearedCount} cache entries`);
-        return clearedCount;
-    },
-
-    // Get cache statistics
-    getStats() {
-        this.updateStats();
-        const hitRate = this.stats.totalRequests > 0 ? 
-            ((this.stats.hits / this.stats.totalRequests) * 100).toFixed(1) : 0;
-        
-        return {
-            ...this.stats,
-            hitRate: `${hitRate}%`,
-            sizeMB: (this.stats.cacheSize / 1024 / 1024).toFixed(2)
-        };
-    },
-
-    // List all cached keys
-    listKeys() {
-        const keys = [];
-        for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (key && key.startsWith(this.CACHE_PREFIX)) {
-                const cacheKey = key.substring(this.CACHE_PREFIX.length);
-                keys.push(cacheKey);
-            }
-        }
-        return keys.sort();
-    }
-};
-
-// Initialize YouTube cache
-YouTubeCache.init();
-
-// Expose cache utilities globally for debugging
-window.ytCache = {
-    stats: () => console.table(YouTubeCache.getStats()),
-    clear: () => YouTubeCache.clear(),
-    list: () => console.log('Cached keys:', YouTubeCache.listKeys()),
-    quota: () => console.log('Cache can help avoid YouTube API quota limits!')
-};
-
-const handleYoutube = {
-    isPlaying: false,
-    currentQuery: '',
-    currentPageToken: null,
-    currentSearchParams: null,  // Store complete search parameters
-
-    // Layout functions for consistent rendering
-    renderSingleVideoLayout(video, subject, type = 'search') {
-        // For 'play' requests, show simplified title format
-        const displayTitle = type === 'play' ? `Found result for "${subject.replace(/youtube\s+/i, "").trim()}"` : video.title;
-        
-        const displayTitle = type === 'play' ? `Found result for "${subject.replace(/youtube\s+/i, "").trim()}"` : video.title;
-        
-        return `
-            <p>${displayTitle}</p>
-            <div class="youtube-single-bubble">
-                
-                <div class="button-thumb-group top-buttons">
-                    <a href="#video-${video.id}" class="youtube-action-btn youtube-popup-btn" data-video-id="${video.id}" role="button" tabindex="0">Play in Popup</a>
-                    <button class="youtube-action-btn view-playlists-SINGLE-btn" title="View My Playlists" style="font-size:18px;padding:0 10px;background:none;border:none;cursor:pointer;vertical-align:middle;">
-                        <span style="display:inline-block;vertical-align:middle;">&#9776;</span>
-                    </button>
-                    <button type="button" class="add-to-playlist-SINGLE-btn" data-video="${encodeURIComponent(JSON.stringify({videoId: video.id, title: video.title, thumbnail: video.thumbnail}))}" title="Add to Playlist">+</button>
-                </div>
-                <span class="youtube-thumb-link youtube-popup-thumb" data-video-id="${video.id}">
-                    <img src="${video.thumbnail}" alt="${video.title}" title="Popup: ${video.title}" />
-                </span>
-                <div class="button-thumb-group bottom-buttons">
-                    <a href="https://www.youtube.com/watch?v=${video.id}" class="youtube-action-btn youtube-direct-link" target="_blank">Watch on YouTube</a>
-                </div>
-            </div>
-        `;
-    },
-
-    renderMultiVideoLayout(videos, page, totalPages, subject, type = 'search') {
-        // For 'play' requests, show simplified title format (plural for multi)
-        const displayTitle = type === 'play' ? `Found results for "${subject.replace(/youtube\s+/i, "").trim()}"` : `Found results for: "${subject.replace(/youtube\s+/i, "").trim()}"`;
-        
-        const displayTitle = type === 'play' ? `Found result for "${subject.replace(/youtube\s+/i, "").trim()}"` : video.title;
-        
-        return `
-            <p>${displayTitle}</p>
-            <p>${displayTitle}</p>
-            <div class="youtube-multi-bubble" id="youtube-results-${Date.now()}">  
-                <div class="page-info">Page ${page} of ${totalPages}</div>
-                <div class="video-list">
-                    ${videos.map((video) => `
-                        <div class="video-item" id="video-${video.id}">
-                            <div class="button-thumb-group-MULTI top-buttons">
-                                <a href="#video-${video.id}" class="youtube-action-btn youtube-popup-btn" data-video-id="${video.id}" role="button">Play in Popup</a>
-                                <button class="youtube-action-btn view-playlists-MULTI-btn" title="View My Playlists" style="font-size:18px;padding:0 10px;background:none;border:none;cursor:pointer;vertical-align:middle;">
-                                    <span style="display:inline-block;vertical-align:middle;">&#9776;</span>
-                                </button>
-                                <button type="button" class="add-to-playlist-MULTI-btn" data-video="${encodeURIComponent(JSON.stringify({videoId: video.id, title: video.title, thumbnail: video.thumbnail}))}" title="Add to Playlist">+</button>
-                            </div>
-                            <span class="youtube-thumb-link youtube-popup-thumb" data-video-id="${video.id}">
-                                <img src="${video.thumbnail}" alt="${video.title}" title="Popup: ${video.title}" />
-                            </span>
-                            <div class="button-thumb-group-MULTI bottom-buttons">
-                                <a href="https://www.youtube.com/watch?v=${video.id}" class="youtube-action-btn youtube-direct-link" target="_blank">Watch on YouTube</a>
-                            </div>
-                            <div class="video-title-MULTI">${video.title}</div>
-                        </div>
-                    `).join('')}
-                </div>
-            </div>
-        `;
-    },
-
-    async handleYoutubeRequest(messageText, isPagination = false, pageToken = undefined) {
-        // Add user query bubble for new searches (not pagination)
-        if (!isPagination) {
-            addMessageToChat('user', messageText);
-            window.youtubePagination.originalQuery = messageText;
-            window.youtubePagination.currentPage = 1;
-        }
-
-        const currentPage = window.youtubePagination.currentPage;
-        console.log('[YouTube] handleYoutubeRequest called with:', { messageText, isPagination, pageToken, currentPage });
-
-        // Determine the subject and type
-        let subject = messageText;
-        let type = 'search';
-        
-        if (messageText.toLowerCase().includes('play ')) {
-            type = 'play';
-            subject = messageText.replace(/play\s+/i, '').trim();
-        }
-
-        // Generate cache key for this request
-        const cacheKey = YouTubeCache.generateCacheKey(subject, type, pageToken);
-        console.log('🔍 Checking cache for:', cacheKey);
-
-        // CHECK LOCALSTORAGE FIRST - This is the key optimization!
-        const cachedResult = YouTubeCache.get(cacheKey);
-        if (cachedResult) {
-            console.log('🎯 Using cached YouTube results - NO API CALL!');
-            YouTubeCache.trackCacheHit();
-            
-            // Show cache toast notification
-            const ageMinutes = Math.round(cachedResult.cacheAge / 1000 / 60);
-            showToast(`⚡ Loaded from cache (${ageMinutes}m old) - No API call needed!`, 'cache', 4000);
-            
-            // Process cached data exactly like API response
-            window.youtubePagination.isMock = !!cachedResult.isMock;
-            let videos = [];
-            if (cachedResult.video) {
-                videos = [cachedResult.video];
-            } else if (cachedResult.videos) {
-                videos = cachedResult.videos;
-            }
-
-            // Handle page tokens from cache
-            if (cachedResult.nextPageToken) {
-                window.youtubePagination.pageTokens[currentPage] = cachedResult.nextPageToken;
-                console.log('📝 Restored nextPageToken for page', currentPage, ':', cachedResult.nextPageToken);
-            }
-
-            // Render results from cache
-            if (cachedResult.isMock) {
-                if (cachedResult.resultType === 'MULTI-MOCK') {
-                    window.youtubePagination.isActive = true;
-                    renderMockYoutubeResults(videos, cachedResult.page, cachedResult.totalPages, subject, type);
-                    renderMockPaginationBar(cachedResult.page, cachedResult.totalPages, subject);
-                } else if (cachedResult.resultType === 'SINGLE-MOCK') {
-                    window.youtubePagination.isActive = false;
-                    renderMockSingleYoutubeResult(videos[0], subject, type);
-                }
-            } else {
-                if (cachedResult.resultType === 'SINGLE' && videos.length > 0) {
-                    window.youtubePagination.isActive = false;
-                    document.querySelectorAll('.youtube-multi-bubble, .youtube-single-bubble').forEach(el => el.parentNode && el.parentNode.removeChild(el));
-                    addMessageToChat('assistant', this.renderSingleVideoLayout(videos[0], subject, type), { isYoutubePagination: isPagination });
-                } else if (cachedResult.resultType === 'MULTI') {
-                    window.youtubePagination.isActive = true;
-                    document.querySelectorAll('.youtube-multi-bubble, .youtube-single-bubble').forEach(el => el.parentNode && el.parentNode.removeChild(el));
-                    window.youtubePagination.videos = videos;
-                    if (videos.length > 0) {
-                        renderRealYoutubeResults(videos, cachedResult.page || currentPage, cachedResult.totalPages || Math.ceil(videos.length / 12), subject, type);
-                        setTimeout(() => {
-                            const bubble = document.querySelector('.youtube-multi-bubble');
-                            if (bubble) {
-                                const headerHeight = YOUTUBE_HEADER_HEIGHT;
-                                const bubbleTop = bubble.getBoundingClientRect().top + window.scrollY;
-                                console.log('📍 Scrolling to cached results:', bubbleTop - headerHeight);
-                                window.scrollTo({
-                                    top: Math.max(0, bubbleTop - headerHeight),
-                                    behavior: 'smooth'
-                                });
-                            }
-                        }, 100);
-                    }
-                    showPaginationBar(cachedResult.page, cachedResult.totalPages, false, subject);
-                }
-            }
-            
-            return; // Exit early - no API call needed!
-        }
-
-        // CACHE MISS - Make API call and cache the result
-        console.log('❌ Cache miss - making API call to YouTube');
-        YouTubeCache.trackCacheMiss();
-        
-        // Show API call toast notification
-        showToast('🌐 Making YouTube API call...', 'api', 3000);
-
-        const fetchBody = { query: subject, type, page: currentPage };
-        if (pageToken) fetchBody.pageToken = pageToken;
-
-        try {
-            const response = await fetch('/api/youtube/search', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(fetchBody)
-            });
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            const data = await response.json();
-            console.log('[YouTube] API Response:', data);
-
-            // CACHE THE API RESPONSE for future use
-            YouTubeCache.store(cacheKey, data);
-            console.log('💾 Cached YouTube API response for future use');
-
-            window.youtubePagination.isMock = !!data.isMock;
-            let videos = [];
-            if (data.video) {
-                videos = [data.video];
-            } else if (data.videos) {
-                videos = data.videos;
-            }
-            // Store page tokens for navigation
-            // Always store the nextPageToken at index currentPage (so page 2's token is at [1], page 3 at [2], etc)
-            if (data.nextPageToken) {
-                window.youtubePagination.pageTokens[currentPage] = data.nextPageToken;
-                console.log('Stored nextPageToken for page', currentPage, ':', data.nextPageToken);
-            }
-            console.log('All pageTokens:', window.youtubePagination.pageTokens);
-            
-            // For mock results, always use mock rendering
-            if (data.isMock) {
-                if (data.resultType === 'MULTI-MOCK') {
-                    window.youtubePagination.isActive = true;
-                    renderMockYoutubeResults(videos, data.page, data.totalPages, subject, type);
-                    renderMockPaginationBar(data.page, data.totalPages, subject);
-                } else if (data.resultType === 'SINGLE-MOCK') {
-                    window.youtubePagination.isActive = false;
-                    renderMockSingleYoutubeResult(videos[0], subject, type);
-                }
-                return;
-            }
-            
-            if (data.resultType === 'SINGLE' && videos.length > 0) {
-                window.youtubePagination.isActive = false;
-                document.querySelectorAll('.youtube-multi-bubble, .youtube-single-bubble').forEach(el => el.parentNode && el.parentNode.removeChild(el));
-                addMessageToChat('assistant', this.renderSingleVideoLayout(videos[0], subject, type), { isYoutubePagination: isPagination });
-            } else if (data.resultType === 'MULTI') {
-                window.youtubePagination.isActive = true;
-                document.querySelectorAll('.youtube-multi-bubble, .youtube-single-bubble').forEach(el => el.parentNode && el.parentNode.removeChild(el));
-                window.youtubePagination.videos = videos;
-                if (videos.length > 0) {
-                    renderRealYoutubeResults(videos, data.page || currentPage, data.totalPages || Math.ceil(videos.length / 12), subject, type);
-                    setTimeout(() => {
-                        const bubble = document.querySelector('.youtube-multi-bubble');
-                        if (bubble) {
-                            const headerHeight = YOUTUBE_HEADER_HEIGHT;
-                            const bubbleTop = bubble.getBoundingClientRect().top + window.scrollY;
-                            console.log('Scrolling to:', bubbleTop - headerHeight, 'with headerHeight:', headerHeight);
-                            window.scrollTo({
-                                top: Math.max(0, bubbleTop - headerHeight),
-                                behavior: 'smooth'
-                            });
-                        }
-                    }, 100);
-                }
-                showPaginationBar(data.page, data.totalPages, false, subject);
-            } else {
-                window.youtubePagination.isActive = false;
-            }
-        } catch (error) {
-            console.error('Error in handleYoutubeRequest:', error);
-            addMessageToChat('assistant', `❌ YouTube search failed: ${error.message}`);
-        }
-    },
-
-    openYoutubePopup(videoId) {
-        // Calculate dimensions for a wider window (90% of screen width, 16:9 aspect ratio)
-        const width = Math.floor(window.screen.width * 0.9);  // Increased from 0.8 to 0.9
-        const height = Math.floor(width * (9/16));
-        const left = Math.floor((window.screen.width - width) / 2);
-        const top = Math.floor((window.screen.height - height) / 2);
-    
-        const popup = window.open(
-            `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&vq=hd1080&hd=1`,
-            'YouTubePlayer',
-            `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=no,status=no`
-        );
-    
-        if (popup) {
-            popup.focus();
-        } else {
-            alert('Please allow popups for this site to play videos in a new window.');
-        }
-    },
-
-    createVideoContainer() {
-        if (!elements.videoContainer) {
-            const container = document.createElement('div');
-            container.id = 'youtube-container';
-            container.className = 'youtube-container hidden';
-
-            const closeBtn = document.createElement('button');
-            closeBtn.className = 'youtube-close-btn';
-            closeBtn.innerHTML = '×';
-            closeBtn.onclick = () => this.hideVideo();
-
-            const videoWrapper = document.createElement('div');
-            videoWrapper.id = 'youtube-video';
-            videoWrapper.className = 'youtube-video';
-
-            container.appendChild(closeBtn);
-            container.appendChild(videoWrapper);
-            document.body.appendChild(container);
-
-            elements.videoContainer = container;
-        }
-    },
-
-    showVideo(videoId) {
-        this.createVideoContainer();
-        const videoWrapper = document.getElementById('youtube-video');
-        videoWrapper.innerHTML = '';
-
-        // Create iframe with enhanced parameters
-        const iframe = document.createElement('iframe');
-        iframe.width = "100%";
-        iframe.height = "100%";
-        
-        // Build URL with all necessary parameters
-        const params = new URLSearchParams({
-            autoplay: '1',
-            rel: '0',
-            modestbranding: '1',
-            enablejsapi: '1',
-            origin: window.location.origin,
-            widget_referrer: window.location.href,
-            hl: 'en',
-            controls: '1',
-            fs: '1',
-            playsinline: '1',
-            iv_load_policy: '3',
-            vq: 'hd1080',  // Request 1080p quality
-            hd: '1'        // Enable HD
-        });
-        
-        // Set proper sandbox attributes to allow necessary features while maintaining security
-        iframe.sandbox = 'allow-same-origin allow-scripts allow-popups allow-presentation allow-forms';
-        
-        // Set referrer policy
-        iframe.referrerPolicy = 'strict-origin-when-cross-origin';
-        
-        // Use nocookie domain with enhanced parameters
-        iframe.src = `https://www.youtube-nocookie.com/embed/${videoId}?${params.toString()}`;
-        iframe.frameBorder = "0";
-        iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
-        iframe.allowFullscreen = true;
-
-        // Add loading indicator
-        const loadingDiv = document.createElement('div');
-        loadingDiv.className = 'youtube-loading';
-        loadingDiv.innerHTML = 'Loading video...';
-        videoWrapper.appendChild(loadingDiv);
-
-        // Handle iframe load event
-        iframe.onload = () => {
-            loadingDiv.remove();
-            // Check if the video is actually playing after a short delay
-            setTimeout(() => {
-                try {
-                    // If we detect the verification message, show fallback
-                    if (iframe.contentDocument && 
-                        (iframe.contentDocument.body.innerHTML.includes('Sign in') || 
-                         iframe.contentDocument.body.innerHTML.includes('confirm you\'re not a bot'))) {
-                        this.showFallbackMessage(videoId);
-                    }
-                } catch (e) {
-                    // If we can't access the iframe content (due to CORS), assume it's working
-                    console.log('Cannot check iframe content due to CORS, continuing playback');
-                }
-            }, 2000);
-        };
-
-        // Handle load errors
-        iframe.onerror = () => {
-            this.showFallbackMessage(videoId);
-        };
-
-        videoWrapper.appendChild(iframe);
-        elements.videoContainer.classList.remove('hidden');
-        this.isPlaying = true;
-
-        // Update app state
-        if (state.isListening) {
-            stopListening();
-            state.isListening = false;
-        }
-        updateStatus(MESSAGES.STATUS.VIDEO_PLAYING);
-    },
-
-    showFallbackMessage(videoId) {
-        const videoWrapper = document.getElementById('youtube-video');
-        videoWrapper.innerHTML = `
-            <div class="youtube-error">
-                <p>Unable to play video in embedded player.</p>
-                <p>You can watch it directly on YouTube:</p>
-                <a href="https://www.youtube.com/watch?v=${videoId}" 
-                   target="_blank" 
-                   rel="noopener noreferrer" 
-                   class="youtube-direct-link">
-                    Watch on YouTube
-                </a>
-            </div>
-        `;
-    },
-
-    hideVideo() {
-        if (elements.videoContainer) {
-            const videoWrapper = document.getElementById('youtube-video');
-            videoWrapper.innerHTML = '';
-            elements.videoContainer.classList.add('hidden');
-            this.isPlaying = false;
-            updateStatus(MESSAGES.STATUS.DEFAULT);
-        }
-    }
-};
-window.handleYoutube = handleYoutube;
 
 
 // =====================================================
@@ -5336,6 +4678,7 @@ async function requestMicrophonePermission() {
 // Update startListening function
 async function startListening() {
     if (state.isListening || state.isProcessing || state.isAISpeaking) {
+        console.log('Cannot start listening - already active or processing');
         return;
     }
 
@@ -5343,12 +4686,23 @@ async function startListening() {
         if (!state.recognition) {
             initializeSpeechRecognition();
         }
+
+        // Check if recognition is already active before starting
+        if (state.recognition && !state.isListening) {
         state.recognition.start();
         startInactivityTimer();
+        }
     } catch (error) {
         console.error('Failed to start listening:', error);
+        
+        // Reset recognition state and create new instance
+        state.isListening = false;
         state.recognition = null;
-        setTimeout(initializeSpeechRecognition, 1000);
+        
+        // Try to reinitialize after a short delay
+        setTimeout(() => {
+            initializeSpeechRecognition();
+        }, 1000);
     }
 }
 
@@ -5502,11 +4856,11 @@ function showLocalVideoModal(videoUrl, title) {
 // Add click handlers for YouTube popup images (SINGLE and MULTI)
 document.addEventListener('click', function(e) {
   console.log('Global click detected on:', e.target);
-  // Look for both the span and the img elements
-  const thumb = e.target.closest('.youtube-thumb-link.youtube-popup-thumb, .youtube-popup-thumb');
-  console.log('Found youtube-popup-thumb:', !!thumb);
+  // Look for both the span and the img elements, and also the popup button
+  const thumb = e.target.closest('.youtube-thumb-link.youtube-popup-thumb, .youtube-popup-thumb, .youtube-popup-btn');
+  console.log('Found youtube-popup element:', !!thumb);
   if (thumb) {
-    console.log('Thumb classes:', thumb.className);
+    console.log('Element classes:', thumb.className);
     console.log('Has video-id:', thumb.hasAttribute('data-video-id'));
     console.log('Video ID:', thumb.getAttribute('data-video-id'));
   }
@@ -5616,18 +4970,23 @@ window.addEventListener('DOMContentLoaded', function() {
 window.youtubePagination = {
     history: [], // Array of {videos, pageToken, subject, type}
     currentIndex: 0,
+    currentPage: 1, // Add currentPage initialization to prevent NaN
     isMock: false,
     isActive: false, // New flag to track if we're in an active YouTube search
     pageTokens: [], // Store pageTokens for each page
+    navigationHistory: [], // Track user navigation for NEXT button
+    currentHistoryIndex: 0, // Track current position in navigation history
+    allQueriesHistory: [], // Track all YouTube queries ever made
+    currentQueryStartIndex: 0, // Track where current query started in navigation history
+    lastNextPageToken: null // Store the nextPageToken for MORE button
 };
 
 // Add this new function to hide all pagination bars
 function hideAllPaginationBars() {
-    // Hide real pagination bar
-    const realBar = document.getElementById('pagination-bar');
-    if (realBar) realBar.remove();
+    // Hide REAL YouTube pagination bars  
+    document.querySelectorAll('.real-youtube-pagination-bar').forEach(el => el.remove());
     
-    // Hide mock pagination bar
+    // Hide MOCK pagination bars
     document.querySelectorAll('.mock-pagination-bar').forEach(el => el.remove());
     
     // Reset the active state
@@ -5635,148 +4994,266 @@ function hideAllPaginationBars() {
 }
 
 // === PAGINATION BAR LOGIC ===
-function setupPaginationBar(isMock) {
-    // If this is a mock request, use the mock pagination bar instead
-    if (isMock) {
-        return; // Don't set up real pagination for mock requests
-    }
-
-    const bar = document.getElementById('pagination-bar');
-    const dragTab = document.getElementById('pagination-drag-tab');
-    if (!bar || !dragTab) return;
-
-    // DRAGGABLE LOGIC
-    let offsetX = 0, offsetY = 0;
-    dragTab.onmousedown = function(e) {
-        e.preventDefault();
-        offsetX = e.clientX - bar.getBoundingClientRect().left;
-        offsetY = e.clientY - bar.getBoundingClientRect().top;
-        function onMouseMove(e) {
-            const barWidth = bar.offsetWidth;
-            const barHeight = bar.offsetHeight;
-            const minLeft = 0;
-            const minTop = 0;
-            const maxLeft = window.innerWidth - barWidth;
-            const maxTop = window.innerHeight - barHeight;
-            let newLeft = e.clientX - offsetX;
-            let newTop = e.clientY - offsetY;
-            newLeft = Math.max(minLeft, Math.min(newLeft, maxLeft));
-            newTop = Math.max(minTop, Math.min(newTop, maxTop));
-            bar.style.left = newLeft + 'px';
-            bar.style.top = newTop + 'px';
-        }
-        function onMouseUp() {
-            document.removeEventListener('mousemove', onMouseMove);
-            document.removeEventListener('mouseup', onMouseUp);
-        }
-        document.addEventListener('mousemove', onMouseMove);
-        document.addEventListener('mouseup', onMouseUp);
-    };
-
-    // BUTTON EVENT LISTENERS
-    const btnFirst = bar.querySelector('.first-page-btn');
-    const btnPrev = bar.querySelector('.prev-page-btn');
-    const btnStepBack = bar.querySelector('.step-back-btn');
-    const btnMore = bar.querySelector('.more-page-btn');
-    const btnNext = bar.querySelector('.next-page-btn');
-
-    btnFirst.onclick = function() {
-        if (window.youtubePagination.currentIndex > 0) {
-            window.youtubePagination.currentIndex = 0;
-            window.youtubePagination.currentPage = 1;
-            updateResults(window.youtubePagination.currentIndex);
-        }
-    };
-    btnPrev.onclick = function() {
-        if (window.youtubePagination.currentIndex >= 12) {
-            window.youtubePagination.currentIndex -= 12;
-            window.youtubePagination.currentPage = Math.max(1, window.youtubePagination.currentPage - 1);
-            updateResults(window.youtubePagination.currentIndex);
-        }
-    };
-    btnStepBack.onclick = function() {
-        if (window.youtubePagination.currentPage > 1) {
-            window.youtubePagination.currentPage--;
-            handleYoutube.handleYoutubeRequest(window.youtubePagination.originalQuery);
-        }
-    };
-    btnMore.onclick = function() {
-        if (currentPage < totalPages) {
-            window.youtubePagination.currentPage = currentPage + 1;
-            const pageToken = window.youtubePagination.pageTokens[window.youtubePagination.currentPage - 1];
-            handleYoutube.handleYoutubeRequest(window.youtubePagination.originalQuery, true, pageToken);
-            
-            // Scroll to top of page or new YouTube results after content loads
-            setTimeout(() => {
-                // First try to find the latest mock bubble
-                const bubbles = document.querySelectorAll('.youtube-multi-bubble-mock');
-                const latestBubble = bubbles[bubbles.length - 1];
-                
-                if (latestBubble) {
-                    const headerHeight = 120; // Account for page header
-                    const bubbleTop = latestBubble.getBoundingClientRect().top + window.scrollY;
-                    window.scrollTo({
-                        top: Math.max(0, bubbleTop - headerHeight),
-                        behavior: 'smooth'
-                    });
-                } else {
-                    // Fallback: scroll to top of page
-                    window.scrollTo({
-                        top: 0,
-                        behavior: 'smooth'
-                    });
-                }
-            }, 300);
-        }
-    };
-    btnNext.onclick = function() {
-        if (window.youtubePagination.currentPage < Math.ceil(window.youtubePagination.videos.length / 12)) {
-            window.youtubePagination.currentPage++;
-            handleYoutube.handleYoutubeRequest(window.youtubePagination.originalQuery);
-        }
-    };
-
-    // Initial button state update
-    updateButtonStates();
-}
-
-// === UPDATE PAGINATION HISTORY ===
-function updatePaginationHistory(videos, pageToken, subject, type) {
-    window.youtubePagination.history.push({ videos, pageToken, subject, type });
-    window.youtubePagination.currentPage = window.youtubePagination.history.length;
-    updateButtonStates();
-}
-
-// === UPDATE BUTTON STATES ===
 function updateButtonStates() {
-    const bar = document.getElementById('pagination-bar');
-    if (!bar) return;
+    // Only check for the TWO proper pagination bars: mock and real YouTube
+    const bar = document.querySelector('.mock-pagination-bar') || 
+                document.querySelector('.real-youtube-pagination-bar');
     
-    const btnFirst = bar.querySelector('.first-page-btn');
-    const btnPrev = bar.querySelector('.prev-page-btn');
-    const btnStepBack = bar.querySelector('.step-back-btn');
+    if (!bar) {
+        console.log('🔍 No pagination bar found in updateButtonStates');
+        return;
+    }
+    
+    const isMockBar = bar.classList.contains('mock-pagination-bar');
+    const isRealYoutubeBar = bar.classList.contains('real-youtube-pagination-bar');
+    
+    const btnBackToTop = bar.querySelector('.back-to-top-btn');
+    const btnQueryStart = bar.querySelector('.query-start-btn');
+    const btnBack = bar.querySelector('.back-btn');
     const btnMore = bar.querySelector('.more-page-btn');
-    const btnNext = bar.querySelector('.next-page-btn');
+    const btnNext = bar.querySelector('.next-btn');
 
     const currentPage = window.youtubePagination.currentPage || 1;
-    const totalPages = window.youtubePagination.pageTokens.length > 1 ? window.youtubePagination.pageTokens.length : (window.youtubePagination.totalPages || 1);
+    const totalPages = window.youtubePagination.totalPages || 1;
+    const navigationHistory = window.youtubePagination.navigationHistory || [];
+    const currentHistoryIndex = window.youtubePagination.currentHistoryIndex || 0;
+    const allQueriesHistory = window.youtubePagination.allQueriesHistory || [];
+    
+    // Check if we have a nextPageToken from the YouTube API
+    const hasNextPageToken = window.youtubePagination.lastNextPageToken || 
+                             (handleYoutube && handleYoutube.paginationState?.lastNextPageToken);
+    
+    console.log('🔍 updateButtonStates:', { 
+        isMockBar,
+        isRealYoutubeBar,
+        currentPage, 
+        totalPages,
+        hasNextPageToken: !!hasNextPageToken,
+        lastNextPageToken: window.youtubePagination.lastNextPageToken,
+        navigationHistory: navigationHistory.length,
+        currentHistoryIndex,
+        allQueriesHistory: allQueriesHistory.length
+    });
 
-    if (btnFirst) btnFirst.disabled = currentPage <= 1;
-    if (btnPrev) btnPrev.disabled = currentPage <= 1;
-    if (btnStepBack) btnStepBack.disabled = currentPage <= 1;
-    if (btnNext) btnNext.disabled = currentPage >= totalPages;
-    if (btnMore) btnMore.disabled = currentPage >= totalPages;
+    // Disable all buttons by default
+    if (btnBackToTop) btnBackToTop.disabled = true;
+    if (btnQueryStart) btnQueryStart.disabled = true;
+    if (btnBack) btnBack.disabled = true;
+    if (btnMore) btnMore.disabled = true;
+    if (btnNext) btnNext.disabled = true;
+
+    // Enable BACK TO TOP button if we have multiple queries in history
+    if (allQueriesHistory.length > 1) {
+        if (btnBackToTop) btnBackToTop.disabled = false;
+    }
+
+    // Enable QUERY START button if we're not on the first page of current query
+    if (currentPage > 1) {
+        if (btnQueryStart) btnQueryStart.disabled = false;
+    }
+
+    // Enable BACK button if we're not on the first page
+    if (currentPage > 1) {
+        if (btnBack) btnBack.disabled = false;
+    }
+
+    // Enable MORE button based on bar type
+    if (isMockBar) {
+        // MOCK pagination bar - use totalPages logic for mock data
+        console.log('🎭 MOCK BAR - Checking MORE button condition:', {
+            currentPage,
+            totalPages,
+            condition: currentPage < totalPages
+        });
+        if (currentPage < totalPages) {
+            if (btnMore) {
+                btnMore.disabled = false;
+                console.log('✅ MOCK MORE button ENABLED');
+            }
+        } else {
+            console.log('❌ MOCK MORE button stays DISABLED');
+        }
+    } else if (isRealYoutubeBar) {
+        // REAL YouTube pagination bar - use nextPageToken logic for real data
+        console.log('🌐 REAL YOUTUBE BAR - Checking MORE button condition:', {
+            hasNextPageToken: !!window.youtubePagination.lastNextPageToken,
+            lastNextPageToken: window.youtubePagination.lastNextPageToken
+        });
+        if (window.youtubePagination.lastNextPageToken) {
+            if (btnMore) {
+                btnMore.disabled = false;
+                console.log('✅ REAL YOUTUBE MORE button ENABLED');
+            }
+        } else {
+            console.log('❌ REAL YOUTUBE MORE button stays DISABLED');
+        }
+    }
+
+    // Enable NEXT button only if user can navigate forward in history
+    const canGoForward = navigationHistory.length > 0 && currentHistoryIndex < navigationHistory.length - 1;
+    if (canGoForward) {
+        if (btnNext) btnNext.disabled = false;
+    }
+    
+    console.log('🔍 Button states updated:', {
+        barType: isMockBar ? 'MOCK' : isRealYoutubeBar ? 'REAL_YOUTUBE' : 'UNKNOWN',
+        backToTop: btnBackToTop?.disabled,
+        queryStart: btnQueryStart?.disabled,
+        back: btnBack?.disabled,
+        more: btnMore?.disabled,
+        next: btnNext?.disabled,
+        canGoForward,
+        hasNextPageToken
+    });
+}
+
+// === SHOW PAGINATION BAR === (Missing function that was causing querySelector errors)
+function showPaginationBar(page, totalPages, isMock, subject) {
+    console.log('showPaginationBar called with:', { page, totalPages, isMock, subject });
+    console.log('🔍 DEBUG totalPages:', totalPages, 'type:', typeof totalPages);
+    
+    // For mock requests, don't show the real pagination bar
+    if (isMock) {
+        console.log('Mock request - not showing real pagination bar');
+        return;
+    }
+    
+    // Fix totalPages if it's undefined or not a number
+    if (!totalPages || isNaN(totalPages)) {
+        totalPages = 1;
+        console.log('🔧 Fixed totalPages to 1');
+    }
+    
+    // Update pagination state
+    window.youtubePagination.currentPage = page;
+    window.youtubePagination.totalPages = totalPages;
+    window.youtubePagination.originalQuery = subject;
+    
+    // SYNC: Copy pagination state from handleYoutube if it exists
+    if (handleYoutube && handleYoutube.paginationState) {
+        if (!window.youtubePagination.pageTokens) {
+            window.youtubePagination.pageTokens = [];
+        }
+        // Copy pageTokens if they exist in handleYoutube
+        if (handleYoutube.paginationState.pageTokens && handleYoutube.paginationState.pageTokens.length > 0) {
+            window.youtubePagination.pageTokens = [...handleYoutube.paginationState.pageTokens];
+        }
+        // SYNC lastNextPageToken for MORE button (critical for real YouTube results)
+        if (handleYoutube.paginationState.lastNextPageToken) {
+            window.youtubePagination.lastNextPageToken = handleYoutube.paginationState.lastNextPageToken;
+            console.log('🔍 Synced lastNextPageToken for MORE button:', handleYoutube.paginationState.lastNextPageToken);
+        }
+    }
+    
+    console.log('🔍 Updated pagination state:', { 
+        currentPage: window.youtubePagination.currentPage, 
+        totalPages: window.youtubePagination.totalPages,
+        pageTokens: window.youtubePagination.pageTokens
+    });
+    
+    // Check if pagination bar already exists in DOM
+    let bar = document.getElementById('pagination-bar');
+    
+    // If bar doesn't exist, create it
+    if (!bar) {
+        console.log('Creating new pagination bar');
+        bar = document.createElement('div');
+        bar.id = 'pagination-bar';
+        bar.className = 'pagination-bar';
+        bar.style.bottom = '125px'; // Position it properly
+        
+        bar.innerHTML = `
+
+            <div class="pagination-bar-content">
+                <button class="back-to-top-btn" title="Back to TOP (First Query)">
+                    <img src="/assets/img/first-page.svg" alt="|<<" class="btn-icon">
+                </button>
+                <button class="query-start-btn" title="Back to Query Start">
+                    <img src="/assets/img/prev-page.svg" alt="<<" class="btn-icon">
+                </button>
+                <button class="back-btn" title="Back One Page">
+                    <img src="/assets/img/back.svg" alt="<" class="btn-icon">
+                </button>
+                <button class="more-page-btn" title="More Results">MORE</button>
+                <button class="next-btn" title="Next Page">
+                    <img src="/assets/img/forward.svg" alt=">" class="btn-icon">
+                </button>
+            </div>
+        `;
+
+        // <div id="pagination-drag-tab" class="drag-tab">
+        //     <img src="/assets/img/drag-me.png" class="drag-me-icon" alt="Drag Me" title="Drag to move pagination bar">
+        // </div>
+        
+        document.body.appendChild(bar);
+        console.log('Pagination bar created and added to DOM');
+    } else {
+        // Update page display if bar already exists
+        const pageDisplay = bar.querySelector('.page-display');
+        if (pageDisplay) {
+            pageDisplay.textContent = `Page ${page}`;
+        }
+    }
+    
+    // Set up the pagination bar functionality
+    // OLD SYSTEM REMOVED: setupPaginationBar(false); 
+    // Now using renderRealYoutubePaginationBar system instead
+    
+    // Update button states
+    updateButtonStates();
+    
+    // Make sure it's visible
+    bar.style.display = 'flex';
+    bar.style.visibility = 'visible';
+    bar.style.opacity = '1';
+    
+    console.log('Pagination bar is now visible and functional');
 }
 
 // Function to completely clean up broken YouTube elements
 function cleanupBrokenYouTubeElements() {
-    console.log('Cleaning up broken YouTube elements...');
+    console.log('🧹 Starting cleanup of YouTube elements...');
     
-    // Remove all existing YouTube containers
-    document.querySelectorAll('.youtube-multi-bubble-mock, .mock-youtube-results, .youtube-results-wrapper-mock, .youtube-multi-bubble, .youtube-single-bubble').forEach(el => el.remove());
+    // STEP 1: Remove all existing YouTube containers
+    const youtubeContainers = document.querySelectorAll('.youtube-multi-bubble-mock, .mock-youtube-results, .youtube-results-wrapper-mock, .youtube-multi-bubble, .youtube-single-bubble');
+    console.log('🗑️ Found YouTube containers to remove:', youtubeContainers.length);
+    youtubeContainers.forEach((el, index) => {
+        console.log(`🗑️ Removing container ${index + 1}: ${el.className}`);
+        el.remove();
+    });
     
-    // Remove any assistant-mock messages
-    document.querySelectorAll('.message.assistant-mock').forEach(el => el.remove());
+    // STEP 2: Remove any assistant-mock messages
+    const assistantMockMessages = document.querySelectorAll('.message.assistant-mock');
+    console.log('🗑️ Found assistant-mock messages to remove:', assistantMockMessages.length);
+    assistantMockMessages.forEach(el => el.remove());
+    
+    // Remove any assistant messages that contain YouTube content (for real YouTube cleanup)
+    const allMessages = document.querySelectorAll('.message.assistant');
+    console.log('🔍 Checking assistant messages for YouTube content:', allMessages.length);
+    let removedCount = 0;
+    for (let msg of allMessages) {
+        // Check if message contains YouTube-related content
+        const hasYouTubeContent = msg.innerHTML.includes('Found results for') || 
+            msg.innerHTML.includes('YouTube Results') || 
+            msg.innerHTML.includes('video-list') || 
+            msg.innerHTML.includes('youtube-multi-bubble') ||
+            msg.innerHTML.includes('📺');
+        
+        // Check if message is now empty or only contains whitespace/basic structure
+        const messageContent = msg.querySelector('.message-content');
+        const isEmptyOrBasic = !messageContent || 
+            messageContent.innerHTML.trim() === '' || 
+            messageContent.innerHTML.trim().length < 20 ||
+            messageContent.textContent.trim() === '' ||
+            messageContent.textContent.trim().length < 5;
+        
+        if (hasYouTubeContent || isEmptyOrBasic) {
+            console.log('🗑️ Removing assistant message:', hasYouTubeContent ? 'has YouTube content' : 'empty/basic content');
+            msg.remove();
+            removedCount++;
+        }
+    }
+    console.log('🗑️ Removed', removedCount, 'assistant messages with YouTube content or empty content');
     
     // Remove any text nodes or elements that contain broken HTML
     const brokenPatterns = [
@@ -5789,21 +5266,49 @@ function cleanupBrokenYouTubeElements() {
         'class="button-thumb-group'
     ];
     
+    let brokenElementsRemoved = 0;
     document.querySelectorAll('*').forEach(el => {
         if (el.textContent) {
             for (let pattern of brokenPatterns) {
                 if (el.textContent.includes(pattern)) {
-                    console.log('Removing broken element containing:', pattern);
+                    console.log('🗑️ Removing broken element containing:', pattern);
                     el.remove();
+                    brokenElementsRemoved++;
                     break;
                 }
             }
         }
     });
+    console.log('🗑️ Removed', brokenElementsRemoved, 'broken elements');
+    console.log('✅ Cleanup complete');
 }
 
-function renderMockYoutubeResults(videos, page, totalPages, subject, type = 'search') {
-    console.log('renderMockYoutubeResults called with:', { videos, page, totalPages, subject, type });
+// Helper function to add user query bubble before YouTube response
+function addYouTubeUserQuery(originalQuery) {
+    // Just pass the clean text - let addMessageToChat handle the HTML structure
+    addMessageToChat('user', originalQuery, { isUserQuery: true });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════════════
+// ████████████████████████████████ YOUTUBE MODULES ████████████████████████████████████
+// ═══════════════════════════════════════════════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════════════════════════════════════════════
+// ██████████████████████████ MOCK YOUTUBE MODULE ██████████████████████████████████████
+// ═══════════════════════════════════════════════════════════════════════════════════════
+// This module handles all MOCK YouTube functionality (SINGLE-MOCK, MULTI-MOCK)
+// Uses demo data, mock pagination, and totalPages logic
+// Complete segregation from REAL YouTube module - NO BLEEDING ALLOWED
+// ═══════════════════════════════════════════════════════════════════════════════════════
+
+function renderMockYoutubeResults(videos, page, totalPages, subject, type = 'search', isRealData = false) {
+    console.log('🎭 [MOCK] renderMockYoutubeResults called with:', { videos, page, totalPages, subject, type, isRealData });
+    
+    // When using real data, sync the nextPageToken properly
+    if (isRealData && handleYoutube && handleYoutube.paginationState) {
+        window.youtubePagination.lastNextPageToken = handleYoutube.paginationState.lastNextPageToken;
+        console.log('🎭 [MOCK] Synced nextPageToken for pagination:', handleYoutube.paginationState.lastNextPageToken);
+    }
     
     // Use the comprehensive cleanup function
     cleanupBrokenYouTubeElements();
@@ -5833,7 +5338,7 @@ function renderMockYoutubeResults(videos, page, totalPages, subject, type = 'sea
     console.log('Valid videos after processing:', validVideos.length);
 
     if (validVideos.length === 0) {
-        addMessageToChat('assistant', '❌ No valid YouTube videos found for your search.', { mock: true, isYoutubePagination: true });
+        addMessageToChat('assistant', '❌ No valid YouTube videos found for your search.', { mock: !isRealData, isYoutubePagination: true });
         return;
     }
 
@@ -5844,21 +5349,28 @@ function renderMockYoutubeResults(videos, page, totalPages, subject, type = 'sea
     // Create header section with clean CSS classes only
     const headerSection = document.createElement('div');
     headerSection.className = 'youtube-header-section-mock';
-    
-    // Determine header title based on type
-    const headerTitle = type === 'play' ? `🎭 Found results for "${subject.replace(/youtube\s+/i, "").trim()}"` : '🎭 Mock YouTube Results';
-    
+        
+    // Determine header title and badge based on whether this is real or mock data
+    let headerTitle, cacheBadge;
+    if (isRealData) {
+        headerTitle = type === 'play' ? `📺 Found results for "${subject.replace(/youtube\s+/i, "").trim()}"` : '📺 YouTube Results';
+        cacheBadge = '<span class="youtube-cache-badge" style="background: #2196f3;">🌐 Real API</span>';
+    } else {
+        headerTitle = type === 'play' ? `🎭 Found results for "${subject.replace(/youtube\s+/i, "").trim()}"` : '🎭 Mock YouTube Results';
+        cacheBadge = '<span class="youtube-cache-badge">⚡ Cached</span>';
+    }
+        
     headerSection.innerHTML = `
         <div class="youtube-header-container">
             <div class="youtube-header-left">
                 <h3 class="youtube-header-title">${headerTitle}</h3>
             </div>
             <div class="youtube-header-right">
-                <button class="view-playlists-btn" onclick="window.playlistManager?.openPlaylistManager(); return false;" title="View Playlists">
+                <button class="view-playlists-btn" onclick="window.playlistManager?.show(); return false;" title="View Playlists">
                     <span class="view-playlists-btn-icon">📋</span><span class="view-playlists-btn-text">View Playlists</span>
                 </button>
                 <span class="youtube-page-info">Page ${page} of ${totalPages}</span>
-                <span class="youtube-cache-badge">⚡ Cached</span>
+                ${cacheBadge}
             </div>
         </div>
     `;
@@ -5882,22 +5394,27 @@ function renderMockYoutubeResults(videos, page, totalPages, subject, type = 'sea
         // For 'play' requests, show title format
         const displayTitle = video.title;
 
+        // Use different button behavior for real vs mock data
+        const buttonBehavior = isRealData ? 
+            `onclick="window.open('https://www.youtube.com/watch?v=${video.id}', '_blank'); return false;"` : 
+            'onclick="return false;"';
+
         videoItem.innerHTML = `
-                <div class="button-thumb-group-MULTI-MOCK top-buttons">
-                    <button class="youtube-action-btn popup-btn-mock" onclick="return false;" title="Play in Popup">Play in Popup</button>
+            <div class="button-thumb-group-MULTI-MOCK top-buttons">
+                <button class="youtube-action-btn popup-btn-mock" onclick="return false;" title="Play in Popup">Play in Popup</button>
                 <button class="add-to-playlist-MULTI-MOCK-btn" data-video="${videoDataEncoded}" title="Add to Playlist"><span class="plus-sign">+</span></button>
             </div>
             <span class="youtube-thumb-link-mock youtube-popup-thumb" onclick="return false;" title="Demo thumbnail">
                 <img class="youtube-thumb-img-mock" src="${video.thumbnail}" alt="${video.title}" loading="lazy" />
             </span>
             <div class="video-title-mock">${displayTitle}</div>
-            <div class="video-channel-mock">${video.channelTitle}</div>
             <div class="button-thumb-group-MULTI-MOCK bottom-buttons">
-                <button class="youtube-action-btn youtube-direct-link-improved" onclick="return false;" title="Watch on YouTube">
-                <span class="watch-on-youtube-icon">🎬</span>
-                <span class="watch-on-youtube-text">Watch on YouTube</span>
-            </button>
+                <button class="youtube-action-btn youtube-direct-link-improved" ${buttonBehavior} title="Watch on YouTube">
+                    <span class="watch-on-youtube-icon">🎬</span>
+                    <span class="watch-on-youtube-text">Watch on YouTube</span>
+                </button>
             </div>
+            <div class="video-channel-mock">${video.channelTitle}</div>
         `;
         
         videoList.appendChild(videoItem);
@@ -5907,29 +5424,17 @@ function renderMockYoutubeResults(videos, page, totalPages, subject, type = 'sea
     youtubeMultiBubble.appendChild(headerSection);
     youtubeMultiBubble.appendChild(videoList);
 
-    // Add to chat with proper options
+    // Add the assistant response 
     addMessageToChat('assistant', youtubeMultiBubble.outerHTML, { 
-        mock: true, 
+        mock: !isRealData, 
         isYoutubePagination: true,
         subject: subject
     });
 }
 
-// Real YouTube results rendering function
-function renderRealYoutubeResults(videos, page, totalPages, subject, type = 'search') {
-    console.log('renderRealYoutubeResults called with:', { videos, page, totalPages, subject, type });
-    
-    // Use the handleYoutube context to call renderMultiVideoLayout
-    const layout = handleYoutube.renderMultiVideoLayout(videos, page, totalPages, subject, type);
-    addMessageToChat('assistant', layout, { 
-        isYoutubePagination: true,
-        subject: subject
-    });
-}
-
-// Mock single YouTube result rendering function
+// Mock YouTube single result rendering function
 function renderMockSingleYoutubeResult(video, subject, type = 'search') {
-    console.log('renderMockSingleYoutubeResult called with:', { video, subject, type });
+    console.log('🎭 [MOCK] renderMockSingleYoutubeResult called with:', { video, subject, type });
     
     // For 'play' requests, show simplified title format (singular for single)
     const displayTitle = type === 'play' ? `Found result for "${subject.replace(/youtube\s+/i, "").trim()}"` : video.title;
@@ -5946,16 +5451,17 @@ function renderMockSingleYoutubeResult(video, subject, type = 'search') {
             <span class="youtube-thumb-link-mock youtube-popup-thumb" onclick="return false;" title="Demo thumbnail">
                 <img class="youtube-thumb-img-mock" src="${video.thumbnail}" alt="${video.title}" loading="lazy" />
             </span>
-            <div class="video-channel-mock">${video.channelTitle}</div>
             <div class="button-thumb-group-SINGLE-mock bottom-buttons">
                 <button class="youtube-action-btn youtube-direct-link-improved" onclick="return false;" title="Watch on YouTube">
                     <span class="watch-on-youtube-icon">🎬</span>
                     <span class="watch-on-youtube-text">Watch on YouTube</span>
                 </button>
             </div>
+            <div class="video-channel-mock">${video.channelTitle}</div>
         </div>
     `;
     
+    // Add to chat with proper options
     addMessageToChat('assistant', mockSingleBubble, { 
         mock: true, 
         isYoutubePagination: false,
@@ -5963,60 +5469,1589 @@ function renderMockSingleYoutubeResult(video, subject, type = 'search') {
     });
 }
 
-// === SHOW PAGINATION BAR === (Missing function that was causing querySelector errors)
-function showPaginationBar(page, totalPages, isMock, subject) {
-    console.log('showPaginationBar called with:', { page, totalPages, isMock, subject });
-    
-    // For mock requests, don't show the real pagination bar
-    if (isMock) {
-        console.log('Mock request - not showing real pagination bar');
-        return;
-    }
+// === MOCK PAGINATION BAR FUNCTION ===
+function renderMockPaginationBar(page, totalPages, subject) {
+    console.log('🎭 [MOCK] renderMockPaginationBar called with:', { page, totalPages, subject });
     
     // Update pagination state
     window.youtubePagination.currentPage = page;
     window.youtubePagination.totalPages = totalPages;
     window.youtubePagination.originalQuery = subject;
     
-    // Check if pagination bar already exists in DOM
-    let bar = document.getElementById('pagination-bar');
+    // Remove any existing pagination bars first
+    document.querySelectorAll('.mock-pagination-bar, #pagination-bar').forEach(el => el.remove());
     
-    // If bar doesn't exist, create it
-    if (!bar) {
-        console.log('Creating new pagination bar');
-        bar = document.createElement('div');
-        bar.id = 'pagination-bar';
-        bar.className = 'pagination-bar';
-        bar.style.bottom = '125px'; // Position it properly
-        
-        bar.innerHTML = `
-            <div id="pagination-drag-tab" class="drag-tab">
-                <img src="/assets/img/drag-icon.png" alt="Drag" class="drag-icon">
-            </div>
-            <div class="pagination-bar-content">
-                <button class="first-page-btn" title="First Page">⏮</button>
-                <button class="prev-page-btn" title="Previous Page">⏪</button>
-                <button class="step-back-btn" title="Step Back">◀</button>
-                <button class="more-page-btn" title="More Results">▶</button>
-                <button class="next-page-btn" title="Next Page">⏩</button>
-            </div>
+    // Create mock pagination bar
+    const mockBar = document.createElement('div');
+    mockBar.className = 'mock-pagination-bar';
+    
+    mockBar.innerHTML = `
+
+        <div class="pagination-bar-content">
+            <button class="back-to-top-btn" title="Back to TOP (First Query)">
+                <img src="/assets/img/first-page.svg" alt="|<<" class="btn-icon">
+            </button>
+            <button class="query-start-btn" title="Back to Query Start">
+                <img src="/assets/img/prev-page.svg" alt="<<" class="btn-icon">
+            </button>
+            <button class="back-btn" title="Back One Page">
+                <img src="/assets/img/back.svg" alt="<" class="btn-icon">
+            </button>
+            <button class="more-page-btn" title="More Results">MORE</button>
+            <button class="next-btn" title="Next Page">
+                <img src="/assets/img/forward.svg" alt=">" class="btn-icon">
+            </button>
+        </div>
+    `;
+
+    // <div id="pagination-drag-tab" class="drag-tab">
+    //     <img src="/assets/img/drag-me.png" class="drag-me-icon" alt="Drag Me" title="Drag to move pagination bar">
+    // </div>
+    
+    document.body.appendChild(mockBar);
+    
+    // Style the buttons
+    const buttons = mockBar.querySelectorAll('button');
+    buttons.forEach(btn => {
+        btn.style.cssText = `
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         `;
         
-        document.body.appendChild(bar);
-        console.log('Pagination bar created and added to DOM');
+        btn.addEventListener('mouseenter', () => {
+            btn.style.transform = 'scale(1.05)';
+            btn.style.boxShadow = '0 2px 8px rgba(0,0,0,0.2)';
+        });
+        
+        btn.addEventListener('mouseleave', () => {
+            btn.style.transform = 'scale(1)';
+            btn.style.boxShadow = 'none';
+        });
+    });
+    
+    // Style the MORE button specifically for mock (orange)
+    const moreBtn = mockBar.querySelector('.more-page-btn');
+    if (moreBtn) {
+        moreBtn.style.background = '#ff9800';
+        moreBtn.style.color = 'white';
+        moreBtn.style.fontWeight = 'bold';
     }
     
-    // Set up the pagination bar functionality
-    setupPaginationBar(false); // Not a mock request
+    // Add dragging functionality (without inline styles)
+    const dragTab = mockBar.querySelector('.pagination-drag-tab');
+    let isDragging = false;
+    let offsetX = 0, offsetY = 0;
+    
+    dragTab.onmousedown = function(e) {
+        e.preventDefault();
+        isDragging = true;
+        offsetX = e.clientX - mockBar.getBoundingClientRect().left;
+        offsetY = e.clientY - mockBar.getBoundingClientRect().top;
+        mockBar.classList.add('dragging');
+        
+        function onMouseMove(e) {
+            if (!isDragging) return;
+            const newLeft = e.clientX - offsetX;
+            const newTop = e.clientY - offsetY;
+            mockBar.style.left = Math.max(0, Math.min(newLeft, window.innerWidth - mockBar.offsetWidth)) + 'px';
+            mockBar.style.top = Math.max(0, Math.min(newTop, window.innerHeight - mockBar.offsetHeight)) + 'px';
+            mockBar.style.transform = 'none';
+        }
+        
+        function onMouseUp() {
+            isDragging = false;
+            mockBar.classList.remove('dragging');
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+        }
+        
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+    };
+    
+    // Add button functionality
+    mockBar.querySelector('.back-to-top-btn').onclick = function() {
+        const firstQuery = window.youtubePagination.allQueriesHistory[0];
+        if (firstQuery) {
+            handleYoutube.handleYoutubeRequest(firstQuery.query, false, null);
+        }
+    };
+    
+    mockBar.querySelector('.query-start-btn').onclick = function() {
+        window.youtubePagination.currentPage = 1;
+        handleYoutube.handleYoutubeRequest(window.youtubePagination.originalQuery, false, null);
+    };
+    
+    mockBar.querySelector('.back-btn').onclick = function() {
+        console.log('🎭 [MOCK] BACK button clicked in MOCK pagination bar');
+        
+        // For MOCK data, use traditional page logic
+        if (window.youtubePagination.currentPage > 1) {
+            console.log('🎭 [MOCK] Going back one page in MOCK data');
+            window.youtubePagination.currentPage--;
+            const pageToken = window.youtubePagination.pageTokens[window.youtubePagination.currentPage - 2];
+            handleYoutube.handleYoutubeRequest(window.youtubePagination.originalQuery, true, pageToken);
+        } else {
+            console.log('🎭 [MOCK] Already on page 1, cannot go back further');
+        }
+    };
+    
+    mockBar.querySelector('.more-page-btn').onclick = function() {
+        console.log('🎭 [MOCK] 🚀 MORE button clicked for MOCK data');
+        console.log('🎭 [MOCK] 📊 Current MOCK pagination state:', {
+            currentPage: window.youtubePagination.currentPage,
+            totalPages: window.youtubePagination.totalPages,
+            originalQuery: window.youtubePagination.originalQuery
+        });
+        
+        // For MOCK data, use traditional totalPages logic
+        if (window.youtubePagination.currentPage < window.youtubePagination.totalPages) {
+            window.youtubePagination.currentPage++;
+            const pageToken = window.youtubePagination.pageTokens[window.youtubePagination.currentPage - 1];
+            handleYoutube.handleYoutubeRequest(window.youtubePagination.originalQuery, true, pageToken);
+        } else {
+            console.log('🎭 [MOCK] No more MOCK pages available');
+        }
+    };
+    
+    mockBar.querySelector('.next-btn').onclick = function() {
+        const nextState = window.youtubePagination.navigationHistory[window.youtubePagination.currentHistoryIndex + 1];
+        if (nextState) {
+            window.youtubePagination.currentHistoryIndex++;
+            handleYoutube.handleYoutubeRequest(nextState.query, false, nextState.pageToken);
+        }
+    };
     
     // Update button states
     updateButtonStates();
     
-    // Make sure it's visible
-    bar.style.display = 'flex';
-    bar.style.visibility = 'visible';
-    bar.style.opacity = '1';
+    console.log('🎭 [MOCK] pagination bar created and functional');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════════════
+// ██████████████████████████ REAL YOUTUBE MODULE ██████████████████████████████████████
+// ═══════════════════════════════════════════════════════════════════════════════════════
+// This module handles all REAL YouTube functionality (live API calls)
+// Uses real YouTube API data, nextPageToken logic, and live results
+// Complete segregation from MOCK YouTube module - NO BLEEDING ALLOWED
+// ═══════════════════════════════════════════════════════════════════════════════════════
+
+// Real YouTube results rendering function
+function renderRealYoutubeResults(videos, page, totalPages, subject, type = 'search', isPagination = false, originalMessageText = null) {
+    console.log('🌐 [REAL] renderRealYoutubeResults called with:', { videos, page, totalPages, subject, type, isPagination, originalMessageText });
     
-    console.log('Pagination bar is now visible and functional');
+    if (!videos || !Array.isArray(videos)) {
+        console.log('🌐 [REAL] ❌ No valid videos array provided to renderRealYoutubeResults, skipping render');
+        return;
+    }
+    
+    // Additional validation - check if videos have required properties
+    const validVideos = videos.filter(video => video && video.id && video.title);
+    if (validVideos.length === 0) {
+        console.log('🌐 [REAL] ❌ No videos with valid properties (id, title) found, skipping render');
+        return;
+    }
+    
+    console.log('🌐 [REAL] ✅ Valid videos to render:', validVideos.length);
+    
+    // For initial search: Add user query bubble first
+    if (!isPagination) {
+        // Use originalMessageText if provided, otherwise fallback to subject
+        addYouTubeUserQuery(originalMessageText || subject);
+    }
+    
+    // Standard YouTube layout system for ALL real results
+    console.log('🌐 [REAL] Using standard YouTube layout for real results (page', page, ')');
+    
+    // Note: Token synchronization is now handled in the API handler, no need to sync here
+    
+    // Clean up any existing empty bubbles before rendering (SINGLE cleanup call)
+    cleanupBrokenYouTubeElements();
+    
+    // Use setTimeout to ensure user query renders first (or immediate for pagination)
+    setTimeout(() => {
+        console.log('🌐 [REAL] 🚀 Starting renderYoutubeResults (no duplicate cleanup)');
+        // Use the standard rendering system for real data
+        renderYoutubeResults(validVideos, page, 'many', subject, type, true);
+        
+        // Show pagination bar for multi-video results - use BOTH systems for now
+        if (validVideos.length > 1) {
+            // 1. The enhanced pagination bar (future)
+            renderRealYoutubePaginationBar(page, 'many', subject);
+            
+        }
+    }, isPagination ? 0 : 100);
+}
+
+// Standard YouTube results rendering (used by real data)
+function renderYoutubeResults(videos, page, totalPages, subject, type = 'search', isRealData = false) {
+    console.log('+++ [REAL] renderYoutubeResults called with:', { videos, page, totalPages, subject, type, isRealData });
+    
+    // REMOVED: Duplicate cleanup call that was causing empty bubbles
+    // cleanupBrokenYouTubeElements(); // This was creating race conditions
+    
+    // Validate and clean video data
+    const validVideos = videos.filter(video => {
+        if (!video || !video.id || !video.title || !video.thumbnail) {
+            console.warn('Invalid video object:', video);
+            return false;
+        }
+        return true;
+    }).map((video, index) => {
+        try {
+            return {
+                id: String(video.id).replace(/[^a-zA-Z0-9-_]/g, ''), // Clean ID
+                title: String(video.title).replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;'),
+                description: String(video.description || '').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;'),
+                channelTitle: String(video.channelTitle || 'Unknown').replace(/"/g, '&quot;'),
+                thumbnail: String(video.thumbnail || '/assets/img/youtube-placeholder.png')
+            };
+        } catch (error) {
+            console.error('Error processing video:', video, error);
+            return null;
+        }
+    }).filter(video => video !== null);
+
+    console.log('+++ [REAL] Valid videos after processing:', validVideos.length);
+
+    if (validVideos.length === 0) {
+        addMessageToChat('assistant', '❌ No valid YouTube videos found for your search.', { mock: false, isYoutubePagination: true });
+        return;
+    }
+
+    // Create main bubble container
+    const youtubeMultiBubble = document.createElement('div');
+    youtubeMultiBubble.className = 'youtube-multi-bubble';
+
+    // Create header section with clean CSS classes only
+    const headerSection = document.createElement('div');
+    headerSection.className = 'youtube-header-section';
+        
+    // Real data header
+    const headerTitle = type === 'play' ? `📺 Found results for "${subject.replace(/youtube\s+/i, "").trim()}"` : '📺 YouTube Results';
+    const cacheBadge = '<span class="youtube-cache-badge" style="background: #2196f3;">🌐 Real API</span>';
+        
+    headerSection.innerHTML = `
+        <div class="youtube-header-container">
+            <div class="youtube-header-left">
+                <h3 class="youtube-header-title">${headerTitle}</h3>
+            </div>
+            <div class="youtube-header-right">
+                <button class="view-playlists-btn" onclick="window.playlistManager?.show(); return false;" title="View Playlists">
+                    <span class="view-playlists-btn-icon">📋</span><span class="view-playlists-btn-text">View Playlists</span>
+                </button>
+                <span class="youtube-page-info">Page ${page}${totalPages !== 'many' ? ` of ${totalPages}` : ' of many'}</span>
+                ${cacheBadge}
+            </div>
+        </div>
+    `;
+
+    // Create video list container (grid)
+    const videoList = document.createElement('ul');
+    videoList.className = 'video-list';
+
+    // Add each video as a list item
+    validVideos.forEach((video, index) => {
+        const videoItem = document.createElement('li');
+        videoItem.className = 'video-item';
+        
+        const videoDataEncoded = encodeURIComponent(JSON.stringify({
+            id: video.id,
+            title: video.title,
+            channelTitle: video.channelTitle,
+            thumbnail: video.thumbnail
+        }));
+
+        const displayTitle = video.title;
+
+        videoItem.innerHTML = `
+            <div class="button-thumb-group-MULTI top-buttons">
+                <button class="youtube-action-btn popup-btn" onclick="handleYoutube.openYoutubePopup('${video.id}'); return false;" title="Play in Popup">Play in Popup</button>
+                <button class="add-to-playlist-MULTI-btn" data-video="${videoDataEncoded}" title="Add to Playlist"><span class="plus-sign">+</span></button>
+            </div>
+            <span class="youtube-thumb-link youtube-popup-thumb" onclick="handleYoutube.openYoutubePopup('${video.id}'); return false;" title="Play video">
+                <img class="youtube-thumb-img" src="${video.thumbnail}" alt="${video.title}" loading="lazy" />
+            </span>
+            <div class="video-title">${displayTitle}</div>
+            <div class="button-thumb-group-MULTI bottom-buttons">
+                <button class="youtube-action-btn youtube-direct-link-improved" onclick="window.open('https://www.youtube.com/watch?v=${video.id}', '_blank'); return false;" title="Watch on YouTube">
+                    <span class="watch-on-youtube-icon">🎬</span>
+                    <span class="watch-on-youtube-text">Watch on YouTube</span>
+                </button>
+            </div>
+            <div class="video-channel">${video.channelTitle}</div>
+        `;
+        
+        videoList.appendChild(videoItem);
+    });
+
+    // Assemble the complete structure
+    youtubeMultiBubble.appendChild(headerSection);
+    youtubeMultiBubble.appendChild(videoList);
+
+    // Add the assistant response 
+    addMessageToChat('assistant', youtubeMultiBubble.outerHTML, { 
+        mock: false, 
+        isYoutubePagination: true,
+        subject: subject
+    });
+}
+
+// Real YouTube pagination bar function
+function renderRealYoutubePaginationBar(page, totalPages, subject) {
+    console.log('🌐 [REAL] 📊 renderRealYoutubePaginationBar called with:', { page, totalPages, subject });
+
+    // Check if real pagination bar already exists
+    const existingRealBar = document.querySelector('.real-youtube-pagination-bar');
+    if (existingRealBar) {
+        console.log('🌐 [REAL] ♻️ Real pagination bar already exists - keeping it to preserve event listeners and tokens');
+        // Just update the page display if needed, but don't recreate the bar
+        // return;
+    }
+
+    // FIRST: Remove any other existing REAL pagination bars (just in case)
+    const existingRealBars = document.querySelectorAll('.real-youtube-pagination-bar');
+    console.log('🌐 [REAL] 🗑️ Removing existing real pagination bars:', existingRealBars.length);
+    existingRealBars.forEach(bar => bar.remove());
+
+    // SECOND: Hide all other pagination bars (mock, etc.)
+    hideAllPaginationBars();
+
+    console.log('🌐 [REAL] 🆕 Creating NEW real pagination bar with current token:', window.youtubePagination.lastNextPageToken);
+
+    // Create the real YouTube pagination bar
+    const realBar = document.createElement('div');
+    realBar.className = 'real-youtube-pagination-bar';
+    realBar.innerHTML = `
+        <div id="pagination-drag-tab" class="drag-tab">
+            <img src="/assets/img/drag-me.png" class="drag-me-icon" alt="Drag Me" title="Drag to move pagination bar">
+            <button class="query-history-btn" title="View Query History">
+                <span class="query-history-icon">📚</span>
+                <span class="query-history-text">History</span>
+            </button>
+            <div class="query-history-dropdown">
+                <div class="query-history-header">Query History</div>
+                <div class="query-history-list"></div>
+            </div>
+        </div>
+        <div class="pagination-bar-content">
+            <button class="back-to-top-btn" title="Back to TOP (First Query)">
+                <img src="/assets/img/first-page.svg" alt="|<<" class="btn-icon">
+            </button>
+            <button class="query-start-btn" title="Back to Query Start">
+                <img src="/assets/img/prev-page.svg" alt="<<" class="btn-icon">
+            </button>
+            <button class="back-btn" title="Back One Page">
+                <img src="/assets/img/back.svg" alt="<" class="btn-icon">
+            </button>
+            <button class="more-page-btn" title="More Results">MORE</button>
+            <button class="next-btn" title="Next Page">
+                <img src="/assets/img/forward.svg" alt="Next" class="forward-icon">
+            </button>
+        </div>
+    `;
+
+
+    // Remove all the inline styling code
+    document.body.appendChild(realBar);
+
+    // Add dragging functionality to the real pagination bar
+    const dragTab = realBar.querySelector('#pagination-drag-tab'); // Fix: Use ID selector instead of class
+    
+    // Add safety check to prevent null reference error
+    if (dragTab) {
+        let offsetX = 0, offsetY = 0;
+        
+        dragTab.onmousedown = function(e) {
+            e.preventDefault();
+            offsetX = e.clientX - realBar.getBoundingClientRect().left;
+            offsetY = e.clientY - realBar.getBoundingClientRect().top;
+            realBar.classList.add('dragging');
+            
+            function onMouseMove(e) {
+                const newLeft = e.clientX - offsetX;
+                const newTop = e.clientY - offsetY;
+                const clampedLeft = Math.max(0, Math.min(newLeft, window.innerWidth - realBar.offsetWidth));
+                const clampedTop = Math.max(0, Math.min(newTop, window.innerHeight - realBar.offsetHeight));
+                realBar.style.left = clampedLeft + 'px';
+                realBar.style.top = clampedTop + 'px';
+                realBar.style.right = 'auto';
+                realBar.style.bottom = 'auto';
+            }
+            
+            function onMouseUp() {
+                realBar.classList.remove('dragging');
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', onMouseUp);
+            }
+            
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+        };
+    } else {
+        console.warn('⚠️ Drag tab element not found - pagination bar will not be draggable');
+    }
+    
+    // Add event listeners
+    realBar.querySelector('.more-page-btn').addEventListener('click', async () => {
+        console.log('🌐 [REAL] 🚀 MORE button clicked for REAL data');
+        
+        // Fix 1: Initialize currentPage if undefined, then increment
+        if (!window.youtubePagination.currentPage) {
+            window.youtubePagination.currentPage = 1;
+        }
+        window.youtubePagination.currentPage++;
+        
+        // Fix 2: Always get the LATEST nextPageToken at the TIME OF CLICK
+        const lastToken = sessionStorage.getItem('youtube_nextPageToken');
+        console.log('🌐 [REAL] 🔑 Using nextPageToken:', lastToken);
+        console.log('🌐 [REAL] 📄 Target page:', window.youtubePagination.currentPage);
+        
+        if (lastToken) {
+            // Make FRESH API call for next page - don't use cache for MORE button
+            try {
+                const fetchBody = { 
+                    query: subject, 
+                    type: 'search', 
+                    page: window.youtubePagination.currentPage,
+                    pageToken: lastToken 
+                };
+
+                console.log('🌐 [REAL] 📞 Making fresh API call for MORE with:', fetchBody);
+                const response = await fetch('/api/youtube/search', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(fetchBody)
+                });
+                
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const data = await response.json();
+                
+                // CRITICAL FIX: Update the nextPageToken IMMEDIATELY for future MORE clicks
+                if (data.nextPageToken) {
+                    sessionStorage.setItem('youtube_nextPageToken', data.nextPageToken);
+                    console.log('+++ [REAL]🔑 Updated nextPageToken for next MORE click:', data.nextPageToken);
+                } else {
+                    sessionStorage.removeItem('youtube_nextPageToken');
+                    console.log('+++ [REAL]🔍 No more pages available');
+                }
+                
+                // Cache the NEW results for this page
+                const cacheKey = `yt_${subject}_search_${window.youtubePagination.currentPage}`;
+                localStorage.setItem(cacheKey, JSON.stringify(data));
+                console.log('+++ [REAL]💾 Cached new results with key:', cacheKey);
+                
+                // Render the NEW page results
+                let videos = [];
+                if (data.video) {
+                    videos = [data.video];
+                } else if (data.videos) {
+                    videos = data.videos;
+                }
+
+                // Check for API errors first
+                if (data.success === false) {
+                    console.error('❌ [API-ERROR] YouTube API returned error:', data.error);
+                    addMessageToChat('assistant', `YouTube Error: ${data.error || 'API request failed'}`);
+                    return;
+                }
+
+                // Route fresh results to proper rendering
+                if (data.isMock) {
+                    // REAL system should never receive mock data - this indicates a server configuration error
+                    console.error('❌ [SEGREGATION-ERROR] REAL system received mock data from API');
+                    addMessageToChat('assistant', 'Error: Server returned invalid data format. Please try your search again.');
+                    return;
+                } else {
+                    if (data.resultType === 'MULTI') {
+                        window.youtubePagination.isActive = true;
+                        renderRealYoutubeResults(videos, data.page || currentPage, data.totalPages, subject, "search", true, null);
+                    }
+                }
+                
+            } catch (error) {
+                console.error('+++ [REAL]🌐 [REAL] ❌ Error fetching more results:', error);
+                window.showToast('Error loading more results', 'error');
+                // Rollback the page counter on error
+                window.youtubePagination.currentPage--;
+            }
+        } else {
+            console.log('+++ [REAL]🌐 [REAL] ⚠️ No nextPageToken available - trying page-based fallback');
+            
+            // Fallback: Try page-based pagination without token
+            try {
+                const fetchBody = { 
+                    query: subject, 
+                    type: 'search', 
+                    page: window.youtubePagination.currentPage
+                    // No pageToken - let API use page-based pagination
+                };
+
+                console.log('🌐 [REAL] 📞 Making fallback API call for MORE with page-based pagination:', fetchBody);
+                const response = await fetch('/api/youtube/search', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(fetchBody)
+                });
+                
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const data = await response.json();
+                
+                // Check if we got new results
+                if (data.videos && data.videos.length > 0) {
+                    // Success! Update token for next time
+                    if (data.nextPageToken) {
+                        sessionStorage.setItem('youtube_nextPageToken', data.nextPageToken);
+                        console.log('+++ [REAL]🔑 Updated nextPageToken from fallback:', data.nextPageToken);
+                    } else {
+                        sessionStorage.removeItem('youtube_nextPageToken');
+                    }
+                    
+                    // Cache and render the new results
+                    const cacheKey = `yt_${subject}_search_${window.youtubePagination.currentPage}`;
+                    localStorage.setItem(cacheKey, JSON.stringify(data));
+                    console.log('+++ [REAL]💾 Cached fallback results with key:', cacheKey);
+                    
+                    let videos = data.videos;
+                    renderRealYoutubeResults(videos, window.youtubePagination.currentPage, "many", subject, "search", true, null);
+                    
+                    window.showToast('✅ Loaded more results!', 'success');
+                } else {
+                    // No more results available
+                    window.showToast('No more results available', 'info');
+                    window.youtubePagination.currentPage--;
+                }
+                
+            } catch (error) {
+                console.error('+++ [REAL]🌐 [REAL] ❌ Error in fallback pagination:', error);
+                window.showToast('Error loading more results', 'error');
+                window.youtubePagination.currentPage--;
+            }
+        }
+    });
+
+    realBar.querySelector('.back-btn').addEventListener('click', () => {
+        console.log('+++ [REAL]🌐 [REAL] ⬅️ Back button clicked');
+        if (window.youtubePagination.currentPage > 1) {
+            window.youtubePagination.currentPage--;
+            
+            // Load cached results directly instead of calling deprecated 3-parameter system
+            const cacheKey = `yt_${subject}_search_${window.youtubePagination.currentPage}`;
+            console.log('🌐 [REAL] 🔍 Looking for cached results with key:', cacheKey);
+            
+            const cachedResult = localStorage.getItem(cacheKey);
+            if (cachedResult) {
+                const data = JSON.parse(cachedResult);
+                console.log('🌐 [REAL] 🎯 Found cached results for back navigation');
+                
+                let videos = [];
+                if (data.video) {
+                    videos = [data.video];
+                } else if (data.videos) {
+                    videos = data.videos;
+                }
+                
+                // Render the cached results
+                renderRealYoutubeResults(videos, window.youtubePagination.currentPage, 'many', subject, 'search', true);
+                
+                // Update button states after successful navigation
+                setInitialButtonStates();
+            } else {
+                console.log('🌐 [REAL] ❌ No cached results found for page', window.youtubePagination.currentPage);
+                // Rollback the page counter
+                window.youtubePagination.currentPage++;
+                toastManager?.show('No cached results for this page', 'warning');
+            }
+        }
+    });
+
+    realBar.querySelector('.next-btn').addEventListener('click', () => {
+        console.log('+++ [REAL]🌐 [REAL] ➡️ Next button clicked');
+        
+        // CRITICAL: Only proceed if we have cached results for next page
+        const nextPageNumber = window.youtubePagination.currentPage + 1;
+        const cacheKey = `yt_${subject}_search_${nextPageNumber}`;
+        console.log('🌐 [REAL] 🔍 Checking for cached page:', nextPageNumber, 'with key:', cacheKey);
+        
+        const cachedResult = localStorage.getItem(cacheKey);
+        if (cachedResult) {
+            // ONLY proceed if cache exists - increment page and render
+            window.youtubePagination.currentPage = nextPageNumber;
+            
+            const data = JSON.parse(cachedResult);
+            console.log('🌐 [REAL] 🎯 Found cached results for next navigation');
+            
+            let videos = [];
+            if (data.video) {
+                videos = [data.video];
+            } else if (data.videos) {
+                videos = data.videos;
+            }
+            
+            // Render the cached results
+            renderRealYoutubeResults(videos, window.youtubePagination.currentPage, 'many', subject, 'search', true);
+            
+            // Update button states after successful navigation
+            setInitialButtonStates();
+        } else {
+            // NO CACHED RESULTS - Do NOT increment page, just show warning
+            console.log('🌐 [REAL] ❌ No cached results found for page', nextPageNumber);
+            console.log('🔒 NEXT button should be disabled - no cached page available');
+            
+            toastManager?.show('No more cached pages available - click MORE for new results', 'warning');
+            
+            // Disable NEXT button since no more cached pages
+            const nextBtn = realBar.querySelector('.next-btn');
+            if (nextBtn) {
+                nextBtn.disabled = true;
+                nextBtn.style.opacity = '0.5';
+                nextBtn.style.cursor = 'not-allowed';
+                nextBtn.title = 'No more cached pages - click MORE for new results';
+                console.log('🔒 NEXT button disabled - no cached results available');
+            }
+        }
+    });
+    
+
+    console.log('+++ [REAL]🌐 ✅ REAL YouTube pagination bar created and functional');
+    
+    // CRITICAL FIX: Set proper initial button states
+    function setInitialButtonStates() {
+        const currentPage = window.youtubePagination?.currentPage || 1;
+        const backToTopBtn = realBar.querySelector('.back-to-top-btn');
+        const queryStartBtn = realBar.querySelector('.query-start-btn'); 
+        const backBtn = realBar.querySelector('.back-btn');
+        const nextBtn = realBar.querySelector('.next-btn');
+        const historyBtn = realBar.querySelector('.drag-tab .query-history-btn');
+        
+        // Back to top button - disable if only one query in history or on first query
+        if (backToTopBtn) {
+            const queryHistory = window.youtubePagination.allQueriesHistory || [];
+            if (queryHistory.length <= 1) {
+                backToTopBtn.disabled = true;
+                backToTopBtn.style.opacity = '0.5';
+                backToTopBtn.title = 'No previous queries to go back to';
+            }
+        }
+        
+        // Query start button - disable if on page 1
+        if (queryStartBtn) {
+            if (currentPage === 1) {
+                queryStartBtn.disabled = true;
+                queryStartBtn.style.opacity = '0.5';
+                queryStartBtn.title = 'Already on page 1';
+            }
+        }
+        
+        // Back button - disable if on page 1
+        if (backBtn) {
+            if (currentPage === 1) {
+                backBtn.disabled = true;
+                backBtn.style.opacity = '0.5';
+                backBtn.title = 'Already on first page';
+            }
+        }
+        
+        // Next button - disable if no cached next page
+        if (nextBtn) {
+            const nextPageKey = `yt_${subject}_search_${currentPage + 1}`;
+            const hasNextPage = localStorage.getItem(nextPageKey) !== null;
+            if (!hasNextPage) {
+                nextBtn.disabled = true;
+                nextBtn.style.opacity = '0.2';
+                nextBtn.title = 'No more cached pages - click MORE for new results';
+            }
+        }
+        
+        // Query history button - disable if no query history
+        if (historyBtn) {
+            let queryHistory = window.youtubePagination.allQueriesHistory || [];
+            
+            // If history is empty, try to auto-populate from localStorage cache
+            if (queryHistory.length === 0) {
+                console.log('🔍 [BUTTON-STATE] History empty, checking localStorage for cached queries');
+                const cachedQueries = [];
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key && key.startsWith('yt_') && key.includes('_search_1')) {
+                        const query = key.replace('yt_', '').replace('_search_1', '');
+                        const cachedData = localStorage.getItem(key);
+                        if (cachedData) {
+                            try {
+                                const data = JSON.parse(cachedData);
+                                if (data.timestamp) {
+                                    cachedQueries.push({
+                                        query: query,
+                                        timestamp: data.timestamp
+                                    });
+                                }
+                            } catch (e) {
+                                console.log('🔍 [BUTTON-STATE] Failed to parse cached data for key:', key);
+                            }
+                        }
+                    }
+                }
+                if (cachedQueries.length > 0) {
+                    window.youtubePagination.allQueriesHistory = cachedQueries.sort((a, b) => b.timestamp - a.timestamp);
+                    queryHistory = window.youtubePagination.allQueriesHistory;
+                    console.log('🔍 [BUTTON-STATE] Auto-populated history for button state:', queryHistory.length, 'queries');
+                }
+            }
+            
+            if (queryHistory.length === 0) {
+                historyBtn.disabled = true;
+                historyBtn.style.opacity = '0.5';
+                historyBtn.title = 'No query history available';
+                console.log('🔒 History button disabled - no history available');
+            } else {
+                historyBtn.disabled = false;
+                historyBtn.style.opacity = '1';
+                historyBtn.title = `View Query History (${queryHistory.length} queries)`;
+                console.log('✅ History button enabled -', queryHistory.length, 'queries available');
+            }
+        }
+    }
+    
+    // Apply initial button states
+    setInitialButtonStates();
+    
+    // ADDITIONAL FIX: Ensure buttons are properly disabled with a slight delay for DOM rendering
+    setTimeout(() => {
+        const currentPage = window.youtubePagination?.currentPage || 1;
+        const nextBtn = realBar.querySelector('.next-btn');
+        const backBtn = realBar.querySelector('.back-btn');
+        const queryStartBtn = realBar.querySelector('.query-start-btn');
+        const backToTopBtn = realBar.querySelector('.back-to-top-btn');
+        const historyBtn = realBar.querySelector('.drag-tab .query-history-btn');
+        
+        // Force disable NEXT button on initial search (page 1 with no cached next page)
+        if (nextBtn && currentPage === 1) {
+            const nextPageKey = `yt_${subject}_search_${currentPage + 1}`;
+            const hasNextPage = localStorage.getItem(nextPageKey) !== null;
+            if (!hasNextPage) {
+                nextBtn.disabled = true;
+                nextBtn.style.opacity = '0.5';
+                nextBtn.style.cursor = 'not-allowed';
+                nextBtn.title = 'No more cached pages - click MORE for new results';
+                console.log('🔒 NEXT button disabled - no cached page 2');
+            }
+        }
+        
+        // Force disable BACK button on page 1  
+        if (backBtn && currentPage === 1) {
+            backBtn.disabled = true;
+            backBtn.style.opacity = '0.5';
+            backBtn.style.cursor = 'not-allowed';
+            backBtn.title = 'Already on first page';
+            console.log('🔒 BACK button disabled - on page 1');
+        }
+        
+        // Force disable query start button on page 1
+        if (queryStartBtn && currentPage === 1) {
+            queryStartBtn.disabled = true;
+            queryStartBtn.style.opacity = '0.5';
+            queryStartBtn.style.cursor = 'not-allowed';
+            queryStartBtn.title = 'Already on page 1';
+            console.log('🔒 Query start button disabled - on page 1');
+        }
+        
+        // Force disable back to top if only one query
+        if (backToTopBtn) {
+            const queryHistory = window.youtubePagination.allQueriesHistory || [];
+            if (queryHistory.length <= 1) {
+                backToTopBtn.disabled = true;
+                backToTopBtn.style.opacity = '0.5';
+                backToTopBtn.style.cursor = 'not-allowed';
+                backToTopBtn.title = 'No previous queries to go back to';
+                console.log('🔒 Back to top button disabled - no query history');
+            }
+        }
+        
+        // Query history button - disable if no query history
+        if (historyBtn) {
+            let queryHistory = window.youtubePagination.allQueriesHistory || [];
+            
+            // If history is empty, try to auto-populate from localStorage cache
+            if (queryHistory.length === 0) {
+                console.log('🔍 [BUTTON-STATE] History empty, checking localStorage for cached queries');
+                const cachedQueries = [];
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key && key.startsWith('yt_') && key.includes('_search_1')) {
+                        const query = key.replace('yt_', '').replace('_search_1', '');
+                        const cachedData = localStorage.getItem(key);
+                        if (cachedData) {
+                            try {
+                                const data = JSON.parse(cachedData);
+                                if (data.timestamp) {
+                                    cachedQueries.push({
+                                        query: query,
+                                        timestamp: data.timestamp
+                                    });
+                                }
+                            } catch (e) {
+                                console.log('🔍 [BUTTON-STATE] Failed to parse cached data for key:', key);
+                            }
+                        }
+                    }
+                }
+                if (cachedQueries.length > 0) {
+                    window.youtubePagination.allQueriesHistory = cachedQueries.sort((a, b) => b.timestamp - a.timestamp);
+                    queryHistory = window.youtubePagination.allQueriesHistory;
+                    console.log('🔍 [BUTTON-STATE] Auto-populated history for button state:', queryHistory.length, 'queries');
+                }
+            }
+            
+            if (queryHistory.length === 0) {
+                historyBtn.disabled = true;
+                historyBtn.style.opacity = '0.5';
+                historyBtn.title = 'No query history available';
+                console.log('🔒 History button disabled - no history available');
+            } else {
+                historyBtn.disabled = false;
+                historyBtn.style.opacity = '1';
+                historyBtn.title = `View Query History (${queryHistory.length} queries)`;
+                console.log('✅ History button enabled -', queryHistory.length, 'queries available');
+            }
+        }
+    }, 100); // Small delay to ensure DOM is ready
+    
+    // Add missing event listeners for back-to-top and query-start buttons
+    realBar.querySelector('.back-to-top-btn').addEventListener('click', () => {
+        console.log('+++ [REAL] Back to TOP button clicked');
+        console.log('🔍 allQueriesHistory:', window.youtubePagination.allQueriesHistory);
+        const firstQuery = window.youtubePagination.allQueriesHistory?.[0];
+        if (firstQuery) {
+            console.log('🌐 [REAL] 🔍 Navigating to first query (no new bubble):', firstQuery.query);
+            
+            // Navigate directly to cached results without creating user bubble
+            const cacheKey = `yt_${firstQuery.query}_search_1`;
+            const cachedResult = localStorage.getItem(cacheKey);
+            if (cachedResult) {
+                const data = JSON.parse(cachedResult);
+                console.log('🌐 [REAL] 🎯 Found cached results for navigation');
+                
+                // Reset pagination to first query/page
+                window.youtubePagination.currentPage = 1;
+                window.youtubePagination.originalQuery = firstQuery.query;
+                
+                let videos = [];
+                if (data.video) {
+                    videos = [data.video];
+                } else if (data.videos) {
+                    videos = data.videos;
+                }
+                
+                // Render without creating user bubble
+                renderRealYoutubeResults(videos, 1, 'many', firstQuery.query, 'search', true);
+                
+                window.showToast('⬆️ Jumped to first query', 'info');
+            } else {
+                console.log('🌐 [REAL] ❌ No cached results found for first query');
+                window.showToast('No cached results for first query', 'warning');
+            }
+        } else {
+            console.log('🌐 [REAL] ❌ No queries in history');
+            window.showToast('No queries in history', 'warning');
+        }
+    });
+    
+    realBar.querySelector('.query-start-btn').addEventListener('click', () => {
+        console.log('+++ [REAL] Query start button clicked');
+        if (window.youtubePagination.originalQuery) {
+            console.log('🌐 [REAL] 🔍 Navigating to original query (no new bubble):', window.youtubePagination.originalQuery);
+            
+            // Navigate directly to cached results without creating user bubble
+            const cacheKey = `yt_${window.youtubePagination.originalQuery}_search_1`;
+            const cachedResult = localStorage.getItem(cacheKey);
+            if (cachedResult) {
+                const data = JSON.parse(cachedResult);
+                console.log('🌐 [REAL] 🎯 Found cached results for navigation');
+                
+                // Reset pagination to page 1
+                window.youtubePagination.currentPage = 1;
+                
+                let videos = [];
+                if (data.video) {
+                    videos = [data.video];
+                } else if (data.videos) {
+                    videos = data.videos;
+                }
+                
+                // Render without creating user bubble
+                renderRealYoutubeResults(videos, 1, 'many', window.youtubePagination.originalQuery, 'search', true);
+                
+                window.showToast('🏠 Back to page 1', 'info');
+            } else {
+                console.log('🌐 [REAL] ❌ No cached results found for original query');
+                window.showToast('No cached results for original query', 'warning');
+            }
+        } else {
+            console.log('🌐 [REAL] ❌ No original query stored');
+            window.showToast('No original query stored', 'warning');
+        }
+    });
+
+    // Query History Selector functionality
+    const historyBtn = realBar.querySelector('.query-history-btn');
+    const historyDropdown = realBar.querySelector('.query-history-dropdown');
+    const historyList = realBar.querySelector('.query-history-list');
+
+    // Toggle dropdown visibility
+    historyBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        e.preventDefault(); // Prevent drag functionality when clicking history button
+        const isVisible = historyDropdown.classList.contains('show');
+        
+        if (isVisible) {
+            historyDropdown.classList.remove('show');
+        } else {
+            updateQueryHistoryDisplay();
+            historyDropdown.classList.add('show');
+        }
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!realBar.contains(e.target) || (!historyBtn.contains(e.target) && !historyDropdown.contains(e.target))) {
+            historyDropdown.classList.remove('show');
+        }
+    });
+
+    // Prevent drag functionality when interacting with history elements
+    historyBtn.addEventListener('mousedown', (e) => {
+        e.stopPropagation();
+    });
+
+    historyDropdown.addEventListener('mousedown', (e) => {
+        e.stopPropagation();
+    });
+
+    // Function to update the query history display
+    function updateQueryHistoryDisplay() {
+        console.log('🔍 [HISTORY] Scanning ALL cached queries in localStorage...');
+        
+        // Always scan localStorage for ALL cached queries instead of relying on allQueriesHistory
+        const cachedQueries = [];
+        
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith('yt_') && key.includes('_search_1')) {
+                const query = key.replace('yt_', '').replace('_search_1', '');
+                const cachedData = localStorage.getItem(key);
+                if (cachedData) {
+                    try {
+                        const data = JSON.parse(cachedData);
+                        if (data.timestamp) {
+                            cachedQueries.push({
+                                query: query,
+                                timestamp: data.timestamp
+                            });
+                            console.log('🔍 [HISTORY] Found cached query:', query, 'from', new Date(data.timestamp).toLocaleString());
+                        }
+                    } catch (e) {
+                        console.log('🔍 [HISTORY] Failed to parse cached data for key:', key);
+                    }
+                }
+            }
+        }
+        
+        console.log('🔍 [HISTORY] Total cached queries found:', cachedQueries.length);
+        
+        if (cachedQueries.length === 0) {
+            historyList.innerHTML = '<div class="query-history-empty">No query history available</div>';
+            return;
+        }
+        
+        // Sort queries by timestamp (newest first)
+        const sortedHistory = cachedQueries.sort((a, b) => b.timestamp - a.timestamp);
+        
+        // Helper function to extract just the subject from query
+        function extractSubject(query) {
+            // Remove common YouTube search prefixes to show just the core subject
+            const cleanQuery = query
+                .replace(/^youtube\s+search\s+/i, '')
+                .replace(/^youtube\s+/i, '')
+                .replace(/^search\s+/i, '')
+                .trim();
+            return cleanQuery || query; // Fallback to original if cleaning results in empty string
+        }
+        
+        historyList.innerHTML = sortedHistory.map((item, index) => {
+            const cachedPages = countCachedPages(item.query);
+            const timeAgo = formatTimeAgo(item.timestamp);
+            const isCurrentQuery = window.youtubePagination.originalQuery === item.query;
+            const displaySubject = extractSubject(item.query);
+            
+            return `
+                <div class="query-history-item ${isCurrentQuery ? 'current' : ''}" data-query="${item.query}">
+                    <div class="query-history-content">
+                        <div class="query-history-query">${displaySubject}</div>
+                        <div class="query-history-pages">${cachedPages} pg${cachedPages !== 1 ? 's' : ''}</div>
+                    </div>
+                    <div class="query-history-meta">
+                        <span class="query-history-time">${timeAgo}</span>
+                        <button class="query-history-delete" onclick="deleteQueryFromHistory('${item.query.replace(/'/g, "\\'")}'); event.stopPropagation();" title="Delete this query and all cached data">🗑️</button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        
+        // Add click handlers for history navigation
+        historyList.querySelectorAll('.query-history-item').forEach(item => {
+            item.addEventListener('click', (event) => {
+                // Don't navigate if delete button was clicked
+                if (event.target.classList.contains('query-history-delete')) {
+                    return;
+                }
+                const query = item.dataset.query;
+                navigateToQuery(query);
+                historyDropdown.classList.remove('show');
+            });
+        });
+    }
+
+    // Function to navigate to a specific query
+    function navigateToQuery(query) {
+        console.log('🔍 [HISTORY] Navigating to query:', query);
+        
+        // Check if we have cached results for page 1 of this query
+        const cacheKey = `yt_${query}_search_1`;
+        const cachedResult = localStorage.getItem(cacheKey);
+        
+        if (cachedResult) {
+            const data = JSON.parse(cachedResult);
+            console.log('🌐 [HISTORY] 🎯 Found cached results for query navigation');
+            
+            // Update pagination state
+            window.youtubePagination.currentPage = 1;
+            window.youtubePagination.originalQuery = query;
+            
+            let videos = [];
+            if (data.video) {
+                videos = [data.video];
+            } else if (data.videos) {
+                videos = data.videos;
+            }
+            
+            // Render without creating user bubble
+            renderRealYoutubeResults(videos, 1, 'many', query, 'search', true);
+            
+            // Update button states
+            setInitialButtonStates();
+            
+            window.showToast(`📚 Switched to: ${query}`, 'info');
+        } else {
+            console.log('🌐 [HISTORY] ❌ No cached results found for query:', query);
+            window.showToast('No cached results for this query', 'warning');
+        }
+    }
+
+    // Helper function to count cached pages for a query
+    function countCachedPages(query) {
+        let count = 0;
+        let page = 1;
+        
+        while (page <= 10) { // Check up to 10 pages max
+            const cacheKey = `yt_${query}_search_${page}`;
+            if (localStorage.getItem(cacheKey)) {
+                count++;
+                page++;
+            } else {
+                break;
+            }
+        }
+        
+        return count;
+    }
+
+    // Helper function to format time ago
+    function formatTimeAgo(timestamp) {
+        const now = Date.now();
+        const diff = now - timestamp;
+        const minutes = Math.floor(diff / (1000 * 60));
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        
+        if (minutes < 1) return 'Just now';
+        if (minutes < 60) return `${minutes}m ago`;
+        if (hours < 24) return `${hours}h ago`;
+        if (days < 7) return `${days}d ago`;
+        return new Date(timestamp).toLocaleDateString();
+    }
+
+    // Function to delete query from history and cached data
+    function deleteQueryFromHistory(query) {
+        console.log('🗑️ [DELETE] Deleting query and cached data for:', query);
+        
+        // Find and remove all cached pages for this query
+        let deletedCount = 0;
+        const keysToDelete = [];
+        
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith(`yt_${query}_search_`)) {
+                keysToDelete.push(key);
+                deletedCount++;
+            }
+        }
+        
+        // Remove all found keys
+        keysToDelete.forEach(key => {
+            localStorage.removeItem(key);
+            console.log('🗑️ [DELETE] Removed cached data:', key);
+        });
+        
+        // Remove from allQueriesHistory if it exists
+        if (window.youtubePagination.allQueriesHistory) {
+            window.youtubePagination.allQueriesHistory = window.youtubePagination.allQueriesHistory.filter(
+                item => item.query !== query
+            );
+        }
+        
+        // Show success message
+        const displaySubject = extractSubject(query);
+        window.showToast(`🗑️ Deleted "${displaySubject}" and ${deletedCount} cached page${deletedCount !== 1 ? 's' : ''}`, 'success');
+        
+        // Refresh the display
+        updateQueryHistoryDisplay();
+        
+        // Helper function to extract just the subject from query
+        function extractSubject(query) {
+            const cleanQuery = query
+                .replace(/^youtube\s+search\s+/i, '')
+                .replace(/^youtube\s+/i, '')
+                .replace(/^search\s+/i, '')
+                .trim();
+            return cleanQuery || query;
+        }
+    }
+
+    // Make deleteQueryFromHistory globally accessible
+    window.deleteQueryFromHistory = deleteQueryFromHistory;
+}
+
+// YouTube Handler Object
+const handleYoutube = {
+    async handleYoutubeRequest(subject, isPagination = false, messageText = null) {
+        const type = 'search';
+        const currentPage = window.youtubePagination?.currentPage || 1;
+        const pageToken = null;
+        
+        // Track this query for navigation history (for back-to-top button)
+        if (!isPagination) {
+            addToQueriesHistory(subject);
+            // CRITICAL FIX: Set originalQuery for navigation buttons
+            window.youtubePagination.originalQuery = subject;
+        }
+        
+        // Generate cache key - ALWAYS check cache first
+        const cacheKey = `yt_${subject}_${type}_${currentPage}`;
+        console.log('🔍 [CACHE-FIRST] Checking cache with key:', cacheKey);
+        
+        // STEP 1: CHECK CACHE FIRST (for ALL requests - new searches AND pagination)
+        const cachedData = getCacheWithAgeCheck(cacheKey, 24); // 24 hour cache expiry
+        if (cachedData) {
+            console.log('💰 [API-SAVINGS] Saved YouTube API call for:', subject, 'page:', currentPage);
+            
+            // Show GREEN cache toast notification - saved API call!
+            const cacheAge = Date.now() - cachedData.timestamp;
+            const ageMinutes = Math.round(cacheAge / 1000 / 60);
+            if (window.showToast) {
+                window.showToast(`⚡ Loaded from cache (${ageMinutes}m old) - No API call needed!`, 'cache', 4000);
+            }
+            
+            let videos = [];
+            if (cachedData.video) {
+                videos = [cachedData.video];
+            } else if (cachedData.videos) {
+                videos = cachedData.videos;
+            }
+
+            // Route cached results to proper rendering
+            if (cachedData.isMock) {
+                // REAL system should never receive mock data - this indicates an error
+                console.error('❌ [SEGREGATION-ERROR] REAL system received mock data from cache');
+                addMessageToChat('assistant', 'Error: Invalid data format received. Please try your search again.');
+                return;
+            } else {
+                if (cachedData.resultType === 'MULTI') {
+                    window.youtubePagination.isActive = true;
+                    renderRealYoutubeResults(videos, cachedData.page || currentPage, cachedData.totalPages, subject, 'search', false, null);
+                }
+            }
+            return; // Exit early - no API call needed!
+        }
+
+        // STEP 2: NO CACHE FOUND - Check quota before making API call
+        console.log('❌ [CACHE-MISS] No cached results found - checking quota limits');
+        
+        // Check if we should block the API call due to quota limits
+        if (window.QuotaMonitor && window.QuotaMonitor.shouldBlockAPICall()) {
+            addMessageToChat('assistant', 'Search blocked to preserve YouTube API quota. Please try searching for previously searched terms which may be cached.');
+            return;
+        }
+        
+        console.log('🌐 [API-CALL] Quota check passed - fetching from YouTube API for:', subject, 'page:', currentPage);
+
+        // Show BLUE API call toast notification
+        if (window.showToast) {
+            window.showToast('🌐 Making YouTube API call...', 'api', 3000);
+        }
+
+        // STEP 3: Make fresh API call and cache the result
+        try {
+            const fetchBody = { query: subject, type, page: currentPage };
+            if (pageToken) fetchBody.pageToken = pageToken;
+
+            const response = await fetch('/api/youtube/search', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(fetchBody)
+            });
+            
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            const data = await response.json();
+            
+            // STEP 4: INCREMENT QUOTA COUNTER after successful API call
+            if (window.QuotaMonitor) {
+                const usage = window.QuotaMonitor.incrementUsage();
+                console.log(`📊 [QUOTA] API call successful - updated usage: ${usage.used}/${usage.limit}`);
+            }
+            
+            // STEP 5: IMMEDIATELY cache the fresh result with timestamp for future use
+            setCacheWithTimestamp(cacheKey, data);
+            console.log('⚡ [FUTURE-SAVINGS] This search will use cache next time!');
+            
+            // CRITICAL FIX: Store nextPageToken for MORE button functionality
+            if (data.nextPageToken) {
+                sessionStorage.setItem('youtube_nextPageToken', data.nextPageToken);
+                console.log('🔑 [PAGINATION] Stored nextPageToken for MORE button:', data.nextPageToken);
+            } else {
+                sessionStorage.removeItem('youtube_nextPageToken');
+                console.log('🔑 [PAGINATION] No nextPageToken in response - removed from storage');
+            }
+            
+            let videos = [];
+            if (data.video) {
+                videos = [data.video];
+            } else if (data.videos) {
+                videos = data.videos;
+            }
+
+            // Check for API errors first
+            if (data.success === false) {
+                console.error('❌ [API-ERROR] YouTube API returned error:', data.error);
+                addMessageToChat("assistant", "YouTube Error: " + (data.error || "API request failed"));
+                return;
+            }
+
+            // Route fresh results to proper rendering
+            if (data.isMock) {
+                // REAL system should never receive mock data - this indicates a server configuration error
+                console.error('❌ [SEGREGATION-ERROR] REAL system received mock data from API');
+                addMessageToChat('assistant', 'Error: Server returned invalid data format. Please try your search again.');
+                return;
+            } else {
+                if (data.resultType === 'MULTI') {
+                    window.youtubePagination.isActive = true;
+                    renderRealYoutubeResults(videos, data.page || currentPage, data.totalPages, subject, "search", true, null);
+                }
+            }
+            return;
+        } catch (error) {
+            console.error('❌ [API-ERROR] Error handling YouTube request:', error);
+            addMessageToChat('assistant', `Error: ${error.message}`);
+            return;
+        }
+    },
+
+    renderPaginationControls() {
+        // Pagination is now handled by renderRealYoutubePaginationBar() and renderMockPaginationBar() functions
+        return '';
+    },
+
+    openYoutubePopup(videoId) {
+        // Calculate dimensions for a wider window (90% of screen width, 16:9 aspect ratio)
+        const width = Math.floor(window.screen.width * 0.9);  // Increased from 0.8 to 0.9
+        const height = Math.floor(width * (9/16));
+        const left = Math.floor((window.screen.width - width) / 2);
+        const top = Math.floor((window.screen.height - height) / 2);
+    
+        const popup = window.open(
+            `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&vq=hd1080&hd=1`,
+            'YouTubePlayer',
+            `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=no,status=no`
+        );
+    
+        if (popup) {
+            popup.focus();
+        } else {
+            alert('Please allow popups for this site to play videos in a new window.');
+        }
+    },
+
+    createVideoContainer() {
+        if (!elements.videoContainer) {
+            const container = document.createElement('div');
+            container.id = 'youtube-container';
+            container.className = 'youtube-container hidden';
+
+            const closeBtn = document.createElement('button');
+            closeBtn.className = 'youtube-close-btn';
+            closeBtn.innerHTML = '×';
+            closeBtn.onclick = () => this.hideVideo();
+
+            const videoWrapper = document.createElement('div');
+            videoWrapper.id = 'youtube-video';
+            videoWrapper.className = 'youtube-video';
+
+            container.appendChild(closeBtn);
+            container.appendChild(videoWrapper);
+            document.body.appendChild(container);
+
+            elements.videoContainer = container;
+        }
+    },
+
+    showVideo(videoId) {
+        this.createVideoContainer();
+        const videoWrapper = document.getElementById('youtube-video');
+        videoWrapper.innerHTML = '';
+
+        // Create iframe with enhanced parameters
+        const iframe = document.createElement('iframe');
+        iframe.width = "100%";
+        iframe.height = "100%";
+        
+        // Build URL with all necessary parameters
+        const params = new URLSearchParams({
+            autoplay: '1',
+            rel: '0',
+            modestbranding: '1',
+            enablejsapi: '1',
+            origin: window.location.origin,
+            widget_referrer: window.location.href,
+            hl: 'en',
+            controls: '1',
+            fs: '1',
+            playsinline: '1',
+            iv_load_policy: '3',
+            vq: 'hd1080',  // Request 1080p quality
+            hd: '1'        // Enable HD
+        });
+        
+        // Set proper sandbox attributes to allow necessary features while maintaining security
+        iframe.sandbox = 'allow-same-origin allow-scripts allow-popups allow-presentation allow-forms';
+        
+        // Set referrer policy
+        iframe.referrerPolicy = 'strict-origin-when-cross-origin';
+        
+        // Use nocookie domain with enhanced parameters
+        iframe.src = `https://www.youtube-nocookie.com/embed/${videoId}?${params.toString()}`;
+        iframe.frameBorder = "0";
+        iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
+        iframe.allowFullscreen = true;
+
+        // Add loading indicator
+        const loadingDiv = document.createElement('div');
+        loadingDiv.className = 'youtube-loading';
+        loadingDiv.innerHTML = 'Loading video...';
+        videoWrapper.appendChild(loadingDiv);
+
+        // Handle iframe load event
+        iframe.onload = () => {
+            loadingDiv.remove();
+            // Check if the video is actually playing after a short delay
+            setTimeout(() => {
+                try {
+                    // If we detect the verification message, show fallback
+                    if (iframe.contentDocument && 
+                        (iframe.contentDocument.body.innerHTML.includes('Sign in') || 
+                         iframe.contentDocument.body.innerHTML.includes('confirm you\'re not a bot'))) {
+                        this.showFallbackMessage(videoId);
+                    }
+                } catch (e) {
+                    // If we can't access the iframe content (due to CORS), assume it's working
+                    console.log('Cannot check iframe content due to CORS, continuing playback');
+                }
+            }, 2000);
+        };
+
+        // Handle load errors
+        iframe.onerror = () => {
+            this.showFallbackMessage(videoId);
+        };
+
+        videoWrapper.appendChild(iframe);
+        elements.videoContainer.classList.remove('hidden');
+        this.isPlaying = true;
+
+        // Update app state
+        if (state.isListening) {
+            stopListening();
+            state.isListening = false;
+        }
+        updateStatus(MESSAGES.STATUS.VIDEO_PLAYING);
+    },
+
+    showFallbackMessage(videoId) {
+        const videoWrapper = document.getElementById('youtube-video');
+        videoWrapper.innerHTML = `
+            <div class="youtube-error">
+                <p>Unable to play video in embedded player.</p>
+                <p>You can watch it directly on YouTube:</p>
+                <a href="https://www.youtube.com/watch?v=${videoId}" 
+                   target="_blank" 
+                   rel="noopener noreferrer" 
+                   class="youtube-direct-link">
+                    Watch on YouTube
+                </a>
+            </div>
+        `;
+    },
+
+    hideVideo() {
+        if (elements.videoContainer) {
+            const videoWrapper = document.getElementById('youtube-video');
+            videoWrapper.innerHTML = '';
+            elements.videoContainer.classList.add('hidden');
+            this.isPlaying = false;
+            updateStatus(MESSAGES.STATUS.DEFAULT);
+        }
+    },
+
+    paginationState: {
+        currentPage: 1,
+        totalPages: 1,
+        query: '',
+        pageTokens: [''], // Start with empty token for page 1
+        prevPageTokens: [],
+        lastNextPageToken: null
+    },
+
+    renderMultiVideoLayout(videos, page, totalPages, subject, type = 'search') {
+        const displayTitle = type === 'play' ? `📺 Found results for "${subject.replace(/youtube\s+/i, "").trim()}"` : '📺 YouTube Results';
+        return `<div class="youtube-multi-bubble"><h3>${displayTitle}</h3><span>Page ${page}${totalPages ? ` of ${totalPages}` : ' of many'}</span><ul class="video-list">${videos.map(video => `<li class="video-item"><div>${video.title}</div><img src="${video.thumbnail}" alt="${video.title}"><div>${video.channelTitle}</div></li>`).join('')}</ul></div>`;
+    }
+};
+window.handleYoutube = handleYoutube;
+
+// ENHANCED CACHE SYSTEM - Utility Functions
+function isCacheExpired(cachedData, maxAgeHours = 24) {
+    if (!cachedData.timestamp) return true; // No timestamp = expired
+    const now = Date.now();
+    const maxAge = maxAgeHours * 60 * 60 * 1000; // Convert hours to milliseconds
+    const age = now - cachedData.timestamp;
+    const ageHours = (age / (60 * 60 * 1000)).toFixed(1);
+    
+    console.log(`⏰ [CACHE-AGE] Cache is ${ageHours} hours old (max: ${maxAgeHours}h)`);
+    return age > maxAge;
+}
+
+function setCacheWithTimestamp(key, data) {
+    const timestampedData = {
+        ...data,
+        timestamp: Date.now()
+    };
+    localStorage.setItem(key, JSON.stringify(timestampedData));
+    console.log('💾 [CACHE-STORE] Stored with timestamp:', new Date().toLocaleTimeString());
+}
+
+function getCacheWithAgeCheck(key, maxAgeHours = 24) {
+    const cachedResult = localStorage.getItem(key);
+    if (!cachedResult) {
+        console.log('❌ [CACHE-MISS] No cache found for key:', key);
+        return null;
+    }
+    
+    const data = JSON.parse(cachedResult);
+    if (isCacheExpired(data, maxAgeHours)) {
+        console.log('🗑️ [CACHE-EXPIRED] Removing stale cache for key:', key);
+        localStorage.removeItem(key);
+        return null;
+    }
+    
+    const ageHours = ((Date.now() - data.timestamp) / (60 * 60 * 1000)).toFixed(1);
+    console.log(`✅ [CACHE-HIT] Fresh cache found (${ageHours}h old)`);
+    return data;
+}
+
+window.youtubeManager = {
+    // This object can be used for future YouTube manager functionality
+    // For now, we use the existing handleYoutube.handleYoutubeRequest method
+};
+
+// Apply the enhanced cache system to the existing handleYoutubeRequest
+// The cache utility functions are already defined above
+
+// Helper function to track new YouTube queries for navigation history
+function addToQueriesHistory(query) {
+    // Check if this is a new query
+    const lastQuery = window.youtubePagination.allQueriesHistory[window.youtubePagination.allQueriesHistory.length - 1];
+    if (!lastQuery || lastQuery.query !== query) {
+        window.youtubePagination.allQueriesHistory.push({
+            query: query,
+            timestamp: Date.now()
+        });
+        
+        // Mark the start of this query in navigation history
+        window.youtubePagination.currentQueryStartIndex = window.youtubePagination.navigationHistory.length;
+        
+        console.log('🔍 Added new query to history:', query);
+        console.log('🔍 Total queries in history:', window.youtubePagination.allQueriesHistory.length);
+    }
+}
+
+// === MOCK YOUTUBE RESULTS RENDERING ===
+
+// Helper function to scroll to YouTube results
+function scrollToYouTubeResults() {
+    // Small delay to ensure DOM is rendered
+    setTimeout(() => {
+        // Look for the most recent YouTube results bubble
+        const youtubeElements = document.querySelectorAll('.youtube-multi-bubble, .youtube-single-bubble');
+        if (youtubeElements.length > 0) {
+            // Get the most recent (last) YouTube bubble
+            const latestYoutubeBubble = youtubeElements[youtubeElements.length - 1];
+            
+            // Find the parent message container
+            const messageContainer = latestYoutubeBubble.closest('.message');
+            
+            if (messageContainer) {
+                // Calculate position with some offset for better visibility
+                const rect = messageContainer.getBoundingClientRect();
+                const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                const targetPosition = rect.top + scrollTop - 100; // 100px offset from top
+                
+                console.log('📍 [SCROLL] Scrolling to YouTube results at position:', targetPosition);
+                
+                // Smooth scroll to the YouTube results
+                window.scrollTo({
+                    top: Math.max(0, targetPosition), // Ensure we don't scroll above page top
+                    behavior: 'smooth'
+                });
+                
+                // Optional: Add a subtle highlight effect
+                messageContainer.style.transition = 'box-shadow 0.3s ease';
+                messageContainer.style.boxShadow = '0 0 20px rgba(66, 165, 245, 0.3)';
+                setTimeout(() => {
+                    messageContainer.style.boxShadow = '';
+                }, 1500);
+            } else {
+                console.log('📍 [SCROLL] Could not find message container for YouTube bubble');
+            }
+        } else {
+            console.log('📍 [SCROLL] No YouTube results found to scroll to');
+        }
+    }, 300); // Wait for DOM rendering and any animations
 }
 
