@@ -2093,7 +2093,9 @@ function addMessageToChat(role, content, options = {}) {
             content.includes('<h2>Web Results') ||
             content.includes('<h2>News Results') ||
             content.includes("<ol class='search-results-list'>") ||
-            content.includes('<ol class="search-results-list">')
+            content.includes('<ol class="search-results-list">') ||
+            content.includes('youtube-multi-bubble') ||
+            content.includes('youtube-action-btn')
         ) {
             contentElement.innerHTML = content;
         }
@@ -7282,65 +7284,33 @@ function addToQueriesHistory(query) {
 
 // Helper function to scroll to YouTube results
 function scrollToYouTubeResults() {
-    // Small delay to ensure DOM is rendered
     setTimeout(() => {
-        // Look for the most recent YouTube results bubble
-        const youtubeElements = document.querySelectorAll('.youtube-multi-bubble, .youtube-single-bubble');
-        if (youtubeElements.length > 0) {
-            // Get the most recent (last) YouTube bubble
-            const latestYoutubeBubble = youtubeElements[youtubeElements.length - 1];
+        const chatContainer = document.querySelector('#chat-messages');
+        if (chatContainer) {
+            // Find ALL YouTube-related messages
+            const youtubeMessages = document.querySelectorAll('.message');
+            let targetMessage = null;
             
-            // Find the parent message container
-            const messageContainer = latestYoutubeBubble.closest('.message');
-            
-            if (messageContainer) {
-                console.log('📍 [SCROLL] CORRECT APPROACH - Scrolling to BOTTOM of chat where YouTube results are');
-                
-                // Scroll to bottom of chat container where new messages appear
-                const chatContainer = document.querySelector('#chat-messages') || document.querySelector('.chat-messages');
-                if (chatContainer) {
-                    chatContainer.scrollTop = chatContainer.scrollHeight;
-                    console.log('📍 [SCROLL] Scrolled chat container to bottom');
-                    
-                    // Small delay then adjust to show TOP of YouTube results
-                    setTimeout(() => {
-                        // Find the actual YouTube results bubble
-                        const youtubeBubble = document.querySelector('.youtube-multi-bubble, .youtube-single-bubble');
-                        if (youtubeBubble) {
-                            const bubbleHeight = youtubeBubble.offsetHeight;
-                            console.log('📍 [SCROLL] YouTube bubble height:', bubbleHeight + 'px');
-                            
-                            // Scroll up by the bubble height to show the TOP of results
-                            chatContainer.scrollTop = chatContainer.scrollHeight - bubbleHeight - 100; // 60px extra padding for better positioning // 20px extra padding
-                            console.log('📍 [SCROLL] Adjusted to show TOP of YouTube results');
-                        } else {
-                            console.log('📍 [SCROLL] YouTube bubble not found, keeping current position');
-                        }
-                    }, 150);
-                } else {
-                    // Fallback: scroll page to bottom with dynamic offset
-                    const youtubeBubble = document.querySelector('.youtube-multi-bubble, .youtube-single-bubble');
-                    const offset = youtubeBubble ? youtubeBubble.offsetHeight + 100 : 300; // 300px fallback
-                    window.scrollTo({
-                        top: document.body.scrollHeight - offset,
-                        behavior: 'smooth'
-                    });
-                    console.log('📍 [SCROLL] Scrolled page to bottom with header offset');
+            // Find the LAST message that contains YouTube content
+            for (let i = youtubeMessages.length - 1; i >= 0; i--) {
+                const message = youtubeMessages[i];
+                if (message.querySelector('.youtube-multi-bubble, .youtube-single-bubble')) {
+                    targetMessage = message;
+                    break;
                 }
-                
-                // Optional: Add a subtle highlight effect
-                messageContainer.style.transition = 'box-shadow 0.3s ease';
-                messageContainer.style.boxShadow = '0 0 20px rgba(66, 165, 245, 0.3)';
-                setTimeout(() => {
-                    messageContainer.style.boxShadow = '';
-                }, 1500);
-            } else {
-                console.log('📍 [SCROLL] Could not find message container for YouTube bubble');
             }
-        } else {
-            console.log('📍 [SCROLL] No YouTube results found to scroll to');
+            
+            if (targetMessage) {
+                // Get the TOP of the message container (not the bubble inside it)
+                const messageTop = targetMessage.offsetTop;
+                chatContainer.scrollTop = messageTop - 90; // 90px padding above - sweet spot
+                console.log('📍 [SCROLL] Scrolled to TOP of YouTube message container');
+            } else {
+                chatContainer.scrollTop = 0;
+                console.log('📍 [SCROLL] No YouTube message found');
+            }
         }
-    }, 300); // Wait for DOM rendering and any animations
+    }, 300);
 }
 
 
