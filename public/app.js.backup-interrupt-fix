@@ -27,8 +27,6 @@ console.log('ToastManager initialized:', window.toastManager);
 // GLOBAL SCOPED CONSTANTS
 // =====================================================
 
-const SHOW_VOICE_DROPDOWN = false;
-
 // SERVER URL
 const SERVER_URL = 'http://localhost:5300';
 
@@ -87,7 +85,8 @@ const MESSAGES = {
         READY: "Ready",
         ERROR: "Error occurred. Please refresh the page if issues persist.",
         INITIALIZING: "Initializing app...",
-        VIDEO_PLAYING: 'Video playing...'
+        VIDEO_PLAYING: 'Video playing...',
+        INTERRUPT: 'Interrupt?'
     },
     CONVERSATION: {
         ENABLE: "Conversation Mode is now enabled. You can speak freely \n ...and say 'exit' when you want to end the conversation.",
@@ -344,15 +343,6 @@ function isValidSessionId(sid) {
 // HELPER FUNCTIONS
 // =====================================================
 
-// Direct audio state to button visibility - NO other conditions
-function updateStopAudioButton() {
-    // Simple ternary using MESSAGES object: Show button ONLY when status shows interrupt/speaking messages
-    const statusText = elements.status ? elements.status.textContent : '';
-    const shouldShow = statusText === MESSAGES.STATUS.SPEAKING;
-    
-    elements.stopAudioButton.style.display = shouldShow ? 'inline-block' : 'none';
-}
-
 function isRecipe(text) {
     // Check if text contains both "Ingredients:" and "Instructions:" or "Directions:"
     return text.includes('Ingredients:') &&
@@ -391,10 +381,8 @@ async function handleCommand(text) {
     for (const pattern of patterns.greetings) {
         if (pattern.test(text)) {
             const response = generateGreeting();
-
             state.isAISpeaking = true;
-            updateStopAudioButton();  // Show button
-
+            elements.stopAudioButton.style.display = 'block';
             addMessageToChat('assistant', response, { type: 'greeting' });
             await queueAudioChunk(response);
             state.isAISpeaking = false;
@@ -406,8 +394,7 @@ async function handleCommand(text) {
     // FIRST: Check if we're waiting for a name change confirmation
     if (state.pendingNameChange) {
         state.isAISpeaking = true;
-        updateStopAudioButton();  // Show button
-
+        elements.stopAudioButton.style.display = 'block';
         state.lastRequestTime = Date.now();
 
         const response = text.trim().toLowerCase();
@@ -440,8 +427,7 @@ async function handleCommand(text) {
             const existingName = localStorage.getItem('stored_name');
 
             state.isAISpeaking = true;
-            updateStopAudioButton();  // Show button
-
+            elements.stopAudioButton.style.display = 'block';
             state.lastRequestTime = Date.now();
 
             if (existingName) {
@@ -468,10 +454,8 @@ async function handleCommand(text) {
     for (const pattern of patterns.getName) {
         if (pattern.test(text)) {
             const storedName = localStorage.getItem('stored_name');
-
             state.isAISpeaking = true;
-            updateStopAudioButton();  // Show button
-
+            elements.stopAudioButton.style.display = 'block';
             const message = storedName
                 ? `Your name is ${storedName}.`
                 : "I don't know your name yet. You can tell me by saying 'My name is [your name]'.";
@@ -490,7 +474,7 @@ async function handleCommand(text) {
         const match = text.match(pattern);
         if (match) {
             state.isAISpeaking = true;
-            updateStopAudioButton();  // Show button
+            elements.stopAudioButton.style.display = 'block';
 
             try {
                 // First check if the server is available
@@ -2006,7 +1990,7 @@ async function getAIResponse(message, selectedModel, history, systemPrompt, sess
                         endTime: Date.now()
                     });
 
-                    updateStatus(MESSAGES.STATUS.SPEAKING);
+                    updateStatus('AI is responding...');
 
                     // Check for Bing search results FIRST and handle them exclusively
                     const isBingWebResult = /# Web Results for|# News Results for/i.test(responseText);
@@ -2454,14 +2438,15 @@ async function exitConversation(isTimeout = false) {
 // Update status function
 function updateStatus(message) {
     elements.status.innerHTML = message;
-    updateStopAudioButton();
+    elements.stopAudioButton.style.display = 
+        message === MESSAGES.STATUS.SPEAKING ? 'inline-block' : 'none';
 }
 
 // Retrieve personal info function
 async function getPersonalInfo(key = null) {
     try {
         state.isAISpeaking = true;
-        updateStopAudioButton();  // Show button
+        elements.stopAudioButton.style.display = 'block';
 
         const response = await fetch(`/api/personal-info?userId=${window.sessionId}${key ? `&key=${key}` : ''}`);
         const data = await response.json();
@@ -2609,17 +2594,6 @@ function formatStoryParagraphs(text) {
 // Populate voice list function
 async function populateVoiceList() {
     try {
-        // Control voice dropdown visibility based on constant
-        if (elements.voiceSelect) {
-            elements.voiceSelect.style.display = SHOW_VOICE_DROPDOWN ? 'block' : 'none';
-            
-            // Also hide the parent container/label if it exists
-            const voiceContainer = elements.voiceSelect.parentElement;
-            if (voiceContainer && voiceContainer.className.includes('voice')) {
-                voiceContainer.style.display = SHOW_VOICE_DROPDOWN ? 'block' : 'none';
-            }
-        }
-
         const response = await fetch(`${SERVER_URL}/api/voices`);
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const voices = await response.json();
@@ -2655,23 +2629,11 @@ async function populateVoiceList() {
         if (defaultVoice) {
             elements.voiceSelect.value = defaultVoice;
             localStorage.setItem('selectedVoice', defaultVoice);
-
-        // Control voice dropdown visibility and ensure Andrew Neural is selected
-        if (elements.voiceSelect) {
-            elements.voiceSelect.style.display = SHOW_VOICE_DROPDOWN ? "block" : "none";
-        }
-        state.selectedVoice = defaultVoice || AUDIO_CONFIG.defaultVoice;
         }
     } catch (error) {
         console.error('Error fetching voices:', error);
         updateStatus('Failed to load voice options: ' + error.message);
         elements.voiceSelect.innerHTML = '<option value="">Error loading voices</option>';
-
-        // Hide voice dropdown even on error when SHOW_VOICE_DROPDOWN is false
-        if (elements.voiceSelect) {
-            elements.voiceSelect.style.display = SHOW_VOICE_DROPDOWN ? "block" : "none";
-        }
-        state.selectedVoice = AUDIO_CONFIG.defaultVoice;
     }
 }
 
@@ -2682,10 +2644,9 @@ async function playAudio(text) {
     
     try {
         state.isAISpeaking = true;
-        updateStopAudioButton();  // Show button
-
         state.isPlaying = true;
         updateStatus('AI is speaking...');
+        elements.stopAudioButton.style.display = 'inline-block';
 
         const response = await fetch(AUDIO_CONFIG.apiUrl, {
             method: 'POST',
@@ -2927,8 +2888,6 @@ async function queueAudioChunk(text) {
 
     if (!state.isAISpeaking) {
         state.isAISpeaking = true;
-        updateStopAudioButton();  // Show button
-
         enableSmartInterruptMode();
     }
 
@@ -3425,7 +3384,7 @@ function initializeSpeechRecognition() {
             elements.micButton.textContent = '🔴';
             // Set status based on current mode
             if (audioFilterState.isInterruptModeActive) {
-                updateStatus(MESSAGES.STATUS.SPEAKING);
+                updateStatus(MESSAGES.STATUS.INTERRUPT);
             } else {
                 updateStatus(MESSAGES.STATUS.LISTENING);
             }
@@ -3440,7 +3399,7 @@ function initializeSpeechRecognition() {
                     if (!state.isProcessing && !state.stopRequested) {
                         startListening();
                     }
-                }, 100);
+                }, 1000);
             }
         };
 
@@ -3479,17 +3438,10 @@ function initializeSpeechRecognition() {
                 if (INTERRUPT_KEYWORDS.some(keyword => transcript.includes(keyword))) {
                     console.log('🔇 [SMART-FILTER] Smart interrupt detected! Stopping audio...');
                     stopAllAudio();
-
-                    state.audioQueue = [];
-                    console.log('🔇 [SMART-FILTER] Audio queue cleared on interrupt');
                     
                     // Ensure proper cleanup and recovery
                     updateStatus('Interrupted!');
-                    console.log('🔇 [INTERRUPT] Audio interrupted!');
                     
-                    // Force immediate state cleanup
-                    state.isAISpeaking = false;
-                    state.isPlaying = false;
                     // Properly disable interrupt mode and recover
                     setTimeout(() => {
                         disableSmartInterruptMode();
@@ -3499,7 +3451,7 @@ function initializeSpeechRecognition() {
                                 startListening();
                             }
                         }
-                    }, 200);
+                    }, 1500);
                     return;
                 }
                 
@@ -3602,13 +3554,13 @@ function enableSmartInterruptMode() {
     audioFilterState.isInterruptModeActive = true;
 
     // 3. Show stop audio button during interrupt mode
-    updateStopAudioButton();
+    elements.stopAudioButton.style.display = 'inline-block';
 
     // 4. Start listening for interrupts only if not already listening
     if (state.isConversationMode && !state.isListening && !state.isProcessing) {
         console.log('🔇 [SMART-FILTER] Starting interrupt listening...');
         setTimeout(() => {
-            updateStatus(MESSAGES.STATUS.SPEAKING);
+            updateStatus(MESSAGES.STATUS.INTERRUPT);
             startListening();
         }, 200);
     }
@@ -3637,7 +3589,7 @@ function disableSmartInterruptMode() {
                 updateStatus(MESSAGES.STATUS.LISTENING);
                 startListening();
             }
-        }, 100);
+        }, 1000);
     }
 }
 
@@ -3657,7 +3609,7 @@ async function startSmartInterruptListening() {
         // Start recognition
         state.recognition.start();
         
-        updateStatus(MESSAGES.STATUS.SPEAKING);
+        updateStatus(MESSAGES.STATUS.INTERRUPT);
         
     } catch (error) {
         console.error('🔇 [SMART-FILTER] Failed to start smart interrupt:', error);
@@ -3844,7 +3796,7 @@ async function storePersonalInfo(info) {
 
     try {
         state.isAISpeaking = true;
-        updateStopAudioButton();  // Show button
+        elements.stopAudioButton.style.display = 'block';
 
         // Clean up the info text by removing "remember that" or "remember"
         let cleanInfo = info
@@ -4253,6 +4205,7 @@ const handleMyJokes = {
                     console.error('🎭 [JOKE ERROR] Empty or invalid joke content:', jokeData);
                     
                     const errorMessage = "Sorry, this joke appears to have empty content. There may be an issue with how it was saved.";
+                    updateStatus('AI is speaking...');
 
                     if (state.isConversationMode) {
                         // Temporarily pause conversation mode during joke playback
@@ -4270,7 +4223,7 @@ const handleMyJokes = {
                 
                 console.log('🎭 [JOKE DEBUG] About to display joke content in chat...');
                 state.isAISpeaking = true;
-                updateStopAudioButton();  // Show button
+                elements.stopAudioButton.style.display = 'block';
                 
                 // Ensure content is a string and trim any whitespace
                 const jokeContent = String(jokeData.content).trim();
@@ -4315,10 +4268,8 @@ const handleMyJokes = {
 
         if (messageText.toLowerCase() === 'no' && sessionStorage.getItem('pendingJoke')) {
             const response = "Okay, your joke is stored for later retrieval.";
-            
             state.isAISpeaking = true;
-            updateStopAudioButton();  // Show button
-
+            elements.stopAudioButton.style.display = 'block';
             addMessageToChat('assistant', response);
             await queueAudioChunk(response);
             sessionStorage.removeItem('pendingJoke');
@@ -4534,7 +4485,7 @@ const handleMyJokes = {
         const startTime = performance.now();
         try {
             state.isAISpeaking = true;
-            updateStopAudioButton();  // Show button
+            elements.stopAudioButton.style.display = 'block';
 
             const response = await fetch(`/api/jokes/list-jokes?type=my jokes&sessionId=${window.sessionId}`);
             const data = await response.json();
@@ -4615,8 +4566,7 @@ const handleMyJokes = {
     async deleteJoke(title) {
         try {
             state.isAISpeaking = true;
-            updateStopAudioButton();  // Show button
-
+            elements.stopAudioButton.style.display = 'block';
             // First get the joke to get its ID
             const getResponse = await fetch(`/api/jokes/delete-joke/${encodeURIComponent(title)}`);
             const getData = await getResponse.json();
@@ -4671,8 +4621,7 @@ const handleMyJokes = {
     async updateJoke(title, newContent) {
         try {
             state.isAISpeaking = true;
-            updateStopAudioButton();  // Show button
-
+            elements.stopAudioButton.style.display = 'block';
             const response = await fetch(`/api/jokes/update-joke/${encodeURIComponent(title)}`, {
                 method: 'PUT',
                 headers: {
@@ -4713,8 +4662,7 @@ const handleMyJokes = {
     async searchJokes(searchTerm) {
         try {
             state.isAISpeaking = true;
-            updateStopAudioButton();  // Show button
-
+            elements.stopAudioButton.style.display = 'block';
             const response = await fetch(`/api/jokes/search-jokes?term=${encodeURIComponent(searchTerm)}`);
             const data = await response.json();
 
@@ -4871,21 +4819,11 @@ function chunkText(text) {
 
 async function playNextInQueue() {
     console.log('🔊 [AUDIO] playNextInQueue called - Queue:', state.audioQueue.length, 'Playing:', state.isPlaying, 'stopRequested:', state.stopRequested);
-    
-    // Check if we should skip playback
-    if (!state.audioQueue.length || state.isPlaying || state.stopRequested || !state.isAISpeaking) {
-        console.log('🔊 [AUDIO] Skipping playback - interrupted or no audio needed');
-        return;
-    }
+    if (!state.audioQueue.length || state.isPlaying || state.stopRequested) return;
 
     try {
         state.isPlaying = true;
         state.isAISpeaking = true;
-        updateStopAudioButton();  // Show button
-
-        // Show Stop Audio button whenever audio is playing
-        updateStopAudioButton();
-
         const text = state.audioQueue[0];
 
         console.log('🔊 [AUDIO] About to fetch TTS for:', text);
@@ -4956,25 +4894,14 @@ async function playNextInQueue() {
         if (state.audioQueue.length > 0 && !state.stopRequested) {
             setTimeout(() => {
                 state.isPlaying = false;
-
-                // Restart interrupt listening for the next chunk during conversation mode
-                if (state.isConversationMode && state.isAISpeaking) {
-                    console.log('🔇[INTERRUPT] Restarting interrupt listening for next audio chunk');
-                    startListening();
-                }
                 playNextInQueue();
             }, AUDIO_CONFIG.pauseDuration);
-
         } else {
-            // Immediate cleanup and status update - no delays!
-            audioFilterState.isInterruptModeActive = false;
+            // Disable smart interrupt mode after playback
+            disableSmartInterruptMode();
             state.isPlaying = false;
             state.isAISpeaking = false;
-            updateStopAudioButton();  // Hide button
-            
-            // INSTANT status change and listening restart
             if (state.isConversationMode) {
-                updateStatus(MESSAGES.STATUS.LISTENING);
                 startListening();
             }
         }
@@ -5077,7 +5004,6 @@ async function requestMicrophonePermission() {
     }
 }
 
-
 // Update startListening function
 async function startListening() {
     if (state.isListening || state.isProcessing) {
@@ -5088,8 +5014,6 @@ async function startListening() {
     // Allow listening during AI speech for interrupts
     if (state.isAISpeaking) {
         console.log('🔇[INTERRUPT] Starting interrupt-mode listening during AI speech');
-        // Ensure interrupt mode is properly set
-        audioFilterState.isInterruptModeActive = true;
     }
 
     try {
@@ -5099,8 +5023,8 @@ async function startListening() {
 
         // Check if recognition is already active before starting
         if (state.recognition && !state.isListening) {
-            state.recognition.start();
-            startInactivityTimer();
+        state.recognition.start();
+        startInactivityTimer();
         }
     } catch (error) {
         console.error('Failed to start listening:', error);
