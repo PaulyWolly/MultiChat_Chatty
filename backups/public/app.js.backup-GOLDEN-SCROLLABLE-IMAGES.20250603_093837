@@ -1,8 +1,8 @@
 /*
   APP.JS
-  Version: 1
-  AppName: MultiChat_Chatty [v1]
-  Updated: 05/31/2025 @7:00PM
+  Version: 2
+  AppName: MultiChat_Chatty [v2]
+  Updated: 06/03/2025 @8:30AM
   Created by Paul Welby
 */
 
@@ -26,6 +26,8 @@ console.log('ToastManager initialized:', window.toastManager);
 // =====================================================
 // GLOBAL SCOPED CONSTANTS
 // =====================================================
+
+const SHOW_VOICE_DROPDOWN = false;
 
 // SERVER URL
 const SERVER_URL = 'http://localhost:5300';
@@ -342,6 +344,15 @@ function isValidSessionId(sid) {
 // HELPER FUNCTIONS
 // =====================================================
 
+// Direct audio state to button visibility - NO other conditions
+function updateStopAudioButton() {
+    // Simple ternary using MESSAGES object: Show button ONLY when status shows interrupt/speaking messages
+    const statusText = elements.status ? elements.status.textContent : '';
+    const shouldShow = statusText === MESSAGES.STATUS.SPEAKING;
+    
+    elements.stopAudioButton.style.display = shouldShow ? 'inline-block' : 'none';
+}
+
 function isRecipe(text) {
     // Check if text contains both "Ingredients:" and "Instructions:" or "Directions:"
     return text.includes('Ingredients:') &&
@@ -380,8 +391,10 @@ async function handleCommand(text) {
     for (const pattern of patterns.greetings) {
         if (pattern.test(text)) {
             const response = generateGreeting();
+
             state.isAISpeaking = true;
-            elements.stopAudioButton.style.display = 'block';
+            updateStopAudioButton();  // Show button
+
             addMessageToChat('assistant', response, { type: 'greeting' });
             await queueAudioChunk(response);
             state.isAISpeaking = false;
@@ -393,7 +406,8 @@ async function handleCommand(text) {
     // FIRST: Check if we're waiting for a name change confirmation
     if (state.pendingNameChange) {
         state.isAISpeaking = true;
-        elements.stopAudioButton.style.display = 'block';
+        updateStopAudioButton();  // Show button
+
         state.lastRequestTime = Date.now();
 
         const response = text.trim().toLowerCase();
@@ -426,7 +440,8 @@ async function handleCommand(text) {
             const existingName = localStorage.getItem('stored_name');
 
             state.isAISpeaking = true;
-            elements.stopAudioButton.style.display = 'block';
+            updateStopAudioButton();  // Show button
+
             state.lastRequestTime = Date.now();
 
             if (existingName) {
@@ -453,8 +468,10 @@ async function handleCommand(text) {
     for (const pattern of patterns.getName) {
         if (pattern.test(text)) {
             const storedName = localStorage.getItem('stored_name');
+
             state.isAISpeaking = true;
-            elements.stopAudioButton.style.display = 'block';
+            updateStopAudioButton();  // Show button
+
             const message = storedName
                 ? `Your name is ${storedName}.`
                 : "I don't know your name yet. You can tell me by saying 'My name is [your name]'.";
@@ -473,7 +490,7 @@ async function handleCommand(text) {
         const match = text.match(pattern);
         if (match) {
             state.isAISpeaking = true;
-            elements.stopAudioButton.style.display = 'block';
+            updateStopAudioButton();  // Show button
 
             try {
                 // First check if the server is available
@@ -1149,6 +1166,15 @@ async function checkMicrophonePermission() {
 
 // Cleanup function
 function stopAllAudio() {
+    if (state.interruptRecognition) {
+        try {
+            state.interruptRecognition.stop();
+            console.log('🔇 [INTERRUPT] Stopped interrupt recognition');
+        } catch (error) {
+            console.log('🔇 [INTERRUPT] Error stopping interrupt recognition:', error);
+        }
+    }
+
     stopListening();
     if (state.currentAudio) {
         state.currentAudio.pause();
@@ -1368,31 +1394,11 @@ async function sendMessage(message, isGreeting = false) {
         }
 
         // Check for YES/NO responses to pending joke actions
-        const pendingJoke = sessionStorage.getItem('pendingJoke');
-
-        if (pendingJoke && /^yes$/i.test(messageText)) {
-            addMessageToChat('user', messageText);
-            const joke = JSON.parse(pendingJoke);
-
-            const startTime = performance.now();
-            const messageElement = addMessageToChat('assistant', joke.content);
-            const duration = ((performance.now() - startTime) / 1000).toFixed(2);
-            updateMetadata(messageElement, {
-                model: 'memory',
-                duration: duration,
-                tokenCount: joke.content.length
-            });
-            
-            await queueAudioChunk(joke.content);
-            sessionStorage.removeItem('pendingJoke');
+        const isJokeHandled = await handleMyJokes.handleJokeRequest(messageText);
+        if (isJokeHandled) {
             return;
-        } else if (pendingJoke && /^no$/i.test(messageText)) {
-            addMessageToChat('user', messageText);
-            addMessageToChat('assistant', "Okay, maybe next time!");
-            await queueAudioChunk("Okay, maybe next time!");
-            sessionStorage.removeItem('pendingJoke');
-            return;
-        }
+        } 
+        
 
         // Check for YouTube request
         if (patterns.youtube.searchVideos.test(messageText) || patterns.youtube.playVideo.test(messageText)) {
@@ -1869,10 +1875,13 @@ async function sendMessage(message, isGreeting = false) {
                     });
                 }
 
+                    console.log('IMAGE DEBUG: Keywords detected in:', messageText);
                 if (/\b(more|info|detail|image|images|picture|pictures|photo|photos)\b/i.test(messageText)) {
                     const searchQuery = messageText.replace(/\b(more|info|detail|image|images|picture|pictures|photo|photos)\b/gi, '').trim();
+                    console.log("IMAGE DEBUG: Search query:", searchQuery);
                     const imageResults = await searchAndDisplayImages(searchQuery);
                     if (imageResults && imageResults.images && imageResults.images.length > 0) {
+                    console.log("IMAGE DEBUG: Results:", imageResults);
                         const { heading, cleanedText } = extractImageHeading(response.response);
                         updateMessageContent(response.messageElement, cleanedText);
                         insertAndStyleImages(imageResults.images, response.messageElement, heading);
@@ -1882,7 +1891,7 @@ async function sendMessage(message, isGreeting = false) {
                 console.log('Queueing audio for response:', response.response);
                 // await queueAudioChunk(response.response);
 
-                
+
             } catch (error) {
                 console.error(`Error getting AI response:`, error);
                 updateStatus('Error: ' + error.message);
@@ -2000,7 +2009,7 @@ async function getAIResponse(message, selectedModel, history, systemPrompt, sess
                         endTime: Date.now()
                     });
 
-                    updateStatus('AI is responding...');
+                    updateStatus(MESSAGES.STATUS.SPEAKING);
 
                     // Check for Bing search results FIRST and handle them exclusively
                     const isBingWebResult = /# Web Results for|# News Results for/i.test(responseText);
@@ -2114,6 +2123,9 @@ function addMessageToChat(role, content, options = {}) {
         // For assistant recipe messages, format ingredients as dashed HTML list
         else if (role === 'assistant' && content.match(/Ingredients:/i) && content.match(/Instructions:|Directions:/i)) {
             content = formatIngredientsAsDashedList(content);
+            contentElement.innerHTML = content;
+        }
+        else if (options.renderAsHTML) {
             contentElement.innerHTML = content;
         }
         else {
@@ -2445,15 +2457,14 @@ async function exitConversation(isTimeout = false) {
 // Update status function
 function updateStatus(message) {
     elements.status.innerHTML = message;
-    elements.stopAudioButton.style.display = 
-        message === MESSAGES.STATUS.SPEAKING ? 'inline-block' : 'none';
+    updateStopAudioButton();
 }
 
 // Retrieve personal info function
 async function getPersonalInfo(key = null) {
     try {
         state.isAISpeaking = true;
-        elements.stopAudioButton.style.display = 'block';
+        updateStopAudioButton();  // Show button
 
         const response = await fetch(`/api/personal-info?userId=${window.sessionId}${key ? `&key=${key}` : ''}`);
         const data = await response.json();
@@ -2496,7 +2507,10 @@ async function getPersonalInfo(key = null) {
 // =====================================================
 
 // Split text into chunks function
-function splitTextIntoChunks(text, maxLength = 200, forTTS = false) {
+function splitTextIntoChunks(text, maxLength = 500, forTTS = false) {
+    console.log('🔄 [CHUNK DEBUG] Input text length:', text.length);
+    console.log('🔄 [CHUNK DEBUG] Input text:', text);
+    
     // Add H.G. and J.K. to the honorifics regex
     const honorifics = /(?:Mr\.|Mrs\.|Dr\.|Sr\.|Jr\.|Ms\.|Prof\.|Rev\.|Capt\.|Lt\.|Col\.|Gen\.|Sgt\.|Cpl\.|Pvt\.|St\.|H\.G\.|J\.K\.)/g;
     // Replace honorifics and abbreviations with a marker
@@ -2505,40 +2519,44 @@ function splitTextIntoChunks(text, maxLength = 200, forTTS = false) {
     if (forTTS) tempText = tempText.replace(/DOT/g, '');
     // If for display, restore the period
     else tempText = tempText.replace(/DOT/g, '.');
+    
     // Split text into sentences, keeping the punctuation
-    const sentences = tempText.match(/[^.!?]+[.!?]+(?:\s|$)/g) || [tempText];
+    // Improved regex to better handle quoted speech and complex sentences
+    const sentences = tempText.match(/[^.!?]*[.!?]+/g) || [tempText];
+    console.log('🔄 [CHUNK DEBUG] Split into sentences count:', sentences.length);
+    console.log('🔄 [CHUNK DEBUG] Sentences:', sentences);
+    
     const chunks = [];
     let currentChunk = '';
 
     for (const sentence of sentences) {
-        // Restore honorifics in the sentence
-        const restoredSentence = sentence.replace(/DOT/g, '.');
+        const trimmedSentence = sentence.trim();
+        if (!trimmedSentence) continue;
         
-        if (currentChunk.length + restoredSentence.length > maxLength) {
-            if (currentChunk) {
-                chunks.push(currentChunk.trim());
-                currentChunk = '';
-            }
-            if (restoredSentence.length > maxLength) {
-                // Split long sentences into words
-                const words = restoredSentence.split(/\s+/);
-                for (const word of words) {
-                    if (currentChunk.length + word.length > maxLength) {
-                        chunks.push(currentChunk.trim());
-                        currentChunk = '';
-                    }
-                    currentChunk += (currentChunk ? ' ' : '') + word;
-                }
-            } else {
-                currentChunk = restoredSentence;
-            }
+        // Restore honorifics for this sentence
+        const restoredSentence = trimmedSentence.replace(/DOT/g, '.');
+        
+        // Check if adding this sentence would exceed the limit
+        if (currentChunk && (currentChunk + ' ' + restoredSentence).length > maxLength) {
+            // Push current chunk and start new one
+            chunks.push(currentChunk.trim());
+            currentChunk = restoredSentence;
         } else {
+            // Add to current chunk
             currentChunk += (currentChunk ? ' ' : '') + restoredSentence;
         }
     }
+    
+    // Don't forget the last chunk
     if (currentChunk) {
         chunks.push(currentChunk.trim());
     }
+    
+    console.log('🔄 [CHUNK DEBUG] Final chunks:', chunks.length);
+    chunks.forEach((chunk, i) => {
+        console.log(`🔄 [CHUNK DEBUG] Chunk ${i + 1}:`, chunk);
+    });
+    
     return chunks;
 }
 
@@ -2594,6 +2612,17 @@ function formatStoryParagraphs(text) {
 // Populate voice list function
 async function populateVoiceList() {
     try {
+        // Control voice dropdown visibility based on constant
+        if (elements.voiceSelect) {
+            elements.voiceSelect.style.display = SHOW_VOICE_DROPDOWN ? 'block' : 'none';
+            
+            // Also hide the parent container/label if it exists
+            const voiceContainer = elements.voiceSelect.parentElement;
+            if (voiceContainer && voiceContainer.className.includes('voice')) {
+                voiceContainer.style.display = SHOW_VOICE_DROPDOWN ? 'block' : 'none';
+            }
+        }
+
         const response = await fetch(`${SERVER_URL}/api/voices`);
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const voices = await response.json();
@@ -2629,11 +2658,23 @@ async function populateVoiceList() {
         if (defaultVoice) {
             elements.voiceSelect.value = defaultVoice;
             localStorage.setItem('selectedVoice', defaultVoice);
+
+        // Control voice dropdown visibility and ensure Andrew Neural is selected
+        if (elements.voiceSelect) {
+            elements.voiceSelect.style.display = SHOW_VOICE_DROPDOWN ? "block" : "none";
+        }
+        state.selectedVoice = defaultVoice || AUDIO_CONFIG.defaultVoice;
         }
     } catch (error) {
         console.error('Error fetching voices:', error);
         updateStatus('Failed to load voice options: ' + error.message);
         elements.voiceSelect.innerHTML = '<option value="">Error loading voices</option>';
+
+        // Hide voice dropdown even on error when SHOW_VOICE_DROPDOWN is false
+        if (elements.voiceSelect) {
+            elements.voiceSelect.style.display = SHOW_VOICE_DROPDOWN ? "block" : "none";
+        }
+        state.selectedVoice = AUDIO_CONFIG.defaultVoice;
     }
 }
 
@@ -2644,9 +2685,10 @@ async function playAudio(text) {
     
     try {
         state.isAISpeaking = true;
+        updateStopAudioButton();  // Show button
+
         state.isPlaying = true;
         updateStatus('AI is speaking...');
-        elements.stopAudioButton.style.display = 'inline-block';
 
         const response = await fetch(AUDIO_CONFIG.apiUrl, {
             method: 'POST',
@@ -2771,6 +2813,9 @@ function resetAudioState() {
 
     state.stopRequested = false;
     state.isPlaying = false;
+
+    // Disable smart interrupt mode after playback
+    disableSmartInterruptMode();
     state.isAISpeaking = false;
     state.audioQueue = [];
 
@@ -2794,6 +2839,10 @@ function stopAudioPlayback() {
     }
 
     state.isPlaying = false;
+
+    // Disable smart interrupt mode after playback
+    disableSmartInterruptMode();
+        
     state.isAISpeaking = false;
     updateStatus(state.isConversationMode ? MESSAGES.STATUS.LISTENING : MESSAGES.STATUS.READY);
 
@@ -2807,6 +2856,8 @@ function stopAudioPlayback() {
 
 // Queue audio chunk function
 async function queueAudioChunk(text) {
+
+    // [INTERRUPT] Add this at the top of queueAudioChunk function - 
     if (!text) return;
     
     // First, check if this chunk is part of a split initial sequence
@@ -2876,9 +2927,15 @@ async function queueAudioChunk(text) {
     console.log('After TTS preprocessing:', text);
     
     state.stopRequested = false;
-    state.isAISpeaking = true;
-    updateStatus(MESSAGES.STATUS.SPEAKING);
-    
+
+    if (!state.isAISpeaking) {
+        state.isAISpeaking = true;
+        updateStopAudioButton();  // Show button
+
+        enableSmartInterruptMode();
+    }
+
+    console.log('Queueing audio chunk:', text);
     // Split into sections, but preserve our protected names
     const sections = text.split(/(?=Ingredients:|Instructions:)/);
     let chunks = [];
@@ -2929,83 +2986,6 @@ async function queueAudioChunk(text) {
     }
 }
 
-// Update playNextInQueue function to ensure sequential playback
-// async function playNextInQueue() {
-//     if (!state.audioQueue.length || state.isPlaying || state.stopRequested) {
-//         if (!state.audioQueue.length || state.stopRequested) {
-//             updateStatus(state.isConversationMode ? MESSAGES.STATUS.LISTENING : MESSAGES.STATUS.READY);
-//             state.isAISpeaking = false;
-//         }
-//         return;
-//     }
-
-//     try {
-//         state.isPlaying = true;
-//         state.isAISpeaking = true;
-//         updateStatus(MESSAGES.STATUS.SPEAKING);
-
-//         const text = state.audioQueue[0];
-//         console.log('Playing chunk:', text);
-
-//         // Track last TTS time
-//         state.lastTTS = Date.now();
-
-//         const response = await fetch(AUDIO_CONFIG.apiUrl, {
-//             method: 'POST',
-//             headers: { 'Content-Type': 'application/json' },
-//             body: JSON.stringify({
-//                 text: text,
-//                 voice: AUDIO_CONFIG.defaultVoice,
-//                 rate: AUDIO_CONFIG.rate,
-//                 pitch: AUDIO_CONFIG.pitch,
-//                 volume: AUDIO_CONFIG.volume
-//             })
-//         });
-
-//         if (!response.ok) throw new Error(`TTS API error: ${response.status}`);
-        
-//         const audioBlob = await response.blob();
-//         if (audioBlob.size === 0) throw new Error('Empty audio response');
-
-//         if (state.currentAudio) {
-//             state.currentAudio.pause();
-//             state.currentAudio = null;
-//         }
-        
-//         const audioUrl = URL.createObjectURL(audioBlob);
-//         state.currentAudio = new Audio(audioUrl);
-//         state.currentAudio.volume = AUDIO_CONFIG.volume;
-
-//         // Wait for current chunk to finish before moving to next
-//         await new Promise((resolve, reject) => {
-//             state.currentAudio.onended = resolve;
-//             state.currentAudio.onerror = reject;
-//             state.currentAudio.play().catch(reject);
-//         });
-
-//         URL.revokeObjectURL(audioUrl);
-//         state.audioQueue.shift();  // Remove played chunk
-//         state.isPlaying = false;
-
-//         // Process next chunk if available
-//         if (state.audioQueue.length > 0 && !state.stopRequested) {
-//             setTimeout(() => playNextInQueue(), AUDIO_CONFIG.pauseDuration);
-//         } else {
-//             state.isAISpeaking = false;
-//             updateStatus(state.isConversationMode ? MESSAGES.STATUS.LISTENING : MESSAGES.STATUS.READY);
-//         }
-
-//     } catch (error) {
-//         console.error('Audio playback error:', error);
-//         state.isPlaying = false;
-//         state.isAISpeaking = false;
-//         updateStatus(state.isConversationMode ? MESSAGES.STATUS.LISTENING : MESSAGES.STATUS.READY);
-        
-//         if (state.audioQueue.length > 0) {
-//             setTimeout(() => playNextInQueue(), AUDIO_CONFIG.retryDelay);
-//         }
-//     }
-// }
 
 
 // =====================================================
@@ -3278,16 +3258,33 @@ function handleImageUpload(event) {
 // Search and display images function
 async function searchAndDisplayImages(query) {
     try {
+        console.log('IMAGE DEBUG: Fetching images for:', query);
         const response = await fetch(`/api/google-image-search?q=${encodeURIComponent(query)}`);
         if (!response.ok) {
             const errorData = await response.json();
             throw new Error(`HTTP error! status: ${response.status}, message: ${errorData.error}`);
         }
         const data = await response.json();
+        console.log('IMAGE DEBUG: Raw API response:', data);
 
-        if (data.items && data.items.length > 0) {
-            return { images: data.items.map(item => ({ url: item.link, name: item.title })) };
+        if (data.images && data.images.length > 0) {
+            console.log('IMAGE DEBUG: Found', data.images.length, 'images');
+            
+            // Remove duplicates by URL and filter out invalid entries
+            const uniqueImages = [];
+            const seenUrls = new Set();
+            
+            for (const item of data.images) {
+                if (item.link && item.title && !seenUrls.has(item.link)) {
+                    seenUrls.add(item.link);
+                    uniqueImages.push({ link: item.link, title: item.title, thumbnail: item.thumbnail });
+                }
+            }
+            
+            console.log('IMAGE DEBUG: After deduplication:', uniqueImages.length, 'unique images');
+            return { images: uniqueImages };
         }
+        console.log('IMAGE DEBUG: No images found');
         return null;
     } catch (error) {
         console.error('Error searching images:', error);
@@ -3311,44 +3308,217 @@ function extractImageHeading(text) {
 }
 
 function insertAndStyleImages(images, messageElement, headingText) {
+    const headingHtml = headingText ? `<h3 style="margin: 15px 0 10px 0; color: #333; font-size: 16px;">${headingText}</h3>` : "";
+    
+    // Check if images section already exists
+    const existingImageSection = messageElement.querySelector('.image-section');
+    if (existingImageSection) {
+        // If section exists, just add new images to the top
+        addMoreImages(images, existingImageSection);
+        return;
+    }
+
     const imageSection = `
-        <div class="image-section" style="margin-top: 15px; border-top: 1px solid #ccc; padding-top: 10px;">
-            <div class="image-container" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; max-width: 100%;">
-                ${images.map(image => `
-                    <a href="${image.link}" target="_blank" rel="noopener noreferrer" class="image-link"
-                        style="cursor: pointer; text-decoration: none; display: block; border: 1px solid #ddd; border-radius: 5px; overflow: hidden; transition: transform 0.2s ease-in-out; aspect-ratio: 1;">
-                        <img src="${image.link}" alt="${image.title}" title="${image.title}"
-                                style="width: 100%; height: 100%; object-fit: cover; display: block;">
-                    </a>
-                `).join('')}
+        ${headingHtml}
+        <div class="image-section" style="margin-top: 15px; border-top: 1px solid #ccc; padding-top: 10px; position: relative;">
+            <!-- More Images Button -->
+            <button class="more-images-btn" style="
+                position: absolute; 
+                top: 10px; 
+                right: 10px; 
+                background: #007bff; 
+                color: white; 
+                border: none; 
+                padding: 8px 12px; 
+                border-radius: 5px; 
+                cursor: pointer; 
+                font-size: 12px; 
+                z-index: 10;
+                transition: background 0.2s ease;
+            " onmouseover="this.style.background='#0056b3'" onmouseout="this.style.background='#007bff'">
+                More Images
+            </button>
+            
+            <!-- Scrollable Container -->
+            <div class="image-container-scroll" style="
+                max-height: 400px; 
+                overflow-y: auto; 
+                overflow-x: hidden; 
+                border: 1px solid #ddd; 
+                border-radius: 8px; 
+                padding: 10px;
+                margin-top: 35px;
+            ">
+                <div class="image-container" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; max-width: 100%;">
+                    ${images.map(image => `
+                        <a href="${image.link}" target="_blank" rel="noopener noreferrer" class="image-link"
+                            style="cursor: pointer; text-decoration: none; display: block; border: 1px solid #ddd; border-radius: 5px; overflow: hidden; transition: transform 0.2s ease-in-out; aspect-ratio: 1;">
+                            <img src="${image.link}" alt="${image.title}" title="${image.title}"
+                                    style="width: 100%; height: 100%; object-fit: cover; display: block;">
+                        </a>
+                    `).join('')}
+                </div>
             </div>
         </div>
     `;
 
-    // Check if images section already exists
-    const existingImageSection = messageElement.querySelector('.image-section');
-    if (existingImageSection) {
-        existingImageSection.remove();
-    }
-
     messageElement.insertAdjacentHTML('beforeend', imageSection);
 
-    // Add hover effects and error handling
-    messageElement.querySelectorAll('.image-link').forEach(link => {
+    // Store the current query for the "More Images" button
+    const imagesSectionElement = messageElement.querySelector('.image-section');
+    const query = headingText ? headingText.replace('Here are some relevant images for ', '').replace('.', '') : 'images';
+    imagesSectionElement.setAttribute('data-query', query);
+
+    // Add event listener to "More Images" button
+    const moreImagesBtn = messageElement.querySelector('.more-images-btn');
+    moreImagesBtn.addEventListener('click', () => fetchMoreImages(imagesSectionElement, query));
+
+    // Add hover effects and error handling to initial images
+    addImageEventListeners(messageElement);
+}
+
+// Function to add more images to the top of existing container
+function addMoreImages(newImages, imagesSectionElement) {
+    const imageContainer = imagesSectionElement.querySelector('.image-container');
+    
+    // Create new images HTML
+    const newImagesHtml = newImages.map(image => `
+        <a href="${image.link}" target="_blank" rel="noopener noreferrer" class="image-link new-image"
+            style="cursor: pointer; text-decoration: none; display: block; border: 1px solid #ddd; border-radius: 5px; overflow: hidden; transition: transform 0.2s ease-in-out; aspect-ratio: 1;">
+            <img src="${image.link}" alt="${image.title}" title="${image.title}"
+                    style="width: 100%; height: 100%; object-fit: cover; display: block;">
+        </a>
+    `).join('');
+    
+    // Insert at the TOP of the container
+    imageContainer.insertAdjacentHTML('afterbegin', newImagesHtml);
+    
+    // Add event listeners to new images
+    addImageEventListeners(imagesSectionElement);
+    
+    // Smooth scroll to show new images
+    const scrollContainer = imagesSectionElement.querySelector('.image-container-scroll');
+    scrollContainer.scrollTop = 0; // Scroll to top to show new images
+}
+
+// Function to fetch more images
+// Simplified function - no pagination needed!
+async function fetchMoreImages(imagesSectionElement, query) {
+    const moreImagesBtn = imagesSectionElement.querySelector('.more-images-btn');
+    
+    // Show loading state
+    moreImagesBtn.textContent = 'Loading...';
+    moreImagesBtn.disabled = true;
+    moreImagesBtn.style.background = '#6c757d';
+    
+    try {
+        console.log('IMAGE DEBUG: Fetching more images for:', query);
+        
+        // Just make the same API call - let deduplication handle variety
+        const response = await fetch(`/api/google-image-search?q=${encodeURIComponent(query)}`);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('IMAGE DEBUG: More images response:', data);
+        
+        if (data.images && data.images.length > 0) {
+            // Remove duplicates from new batch
+            const existingLinks = new Set(
+                Array.from(imagesSectionElement.querySelectorAll('.image-link img')).map(img => img.src)
+            );
+            
+            const newUniqueImages = data.images.filter(item => 
+                item.link && item.title && !existingLinks.has(item.link)
+            );
+            
+            if (newUniqueImages.length > 0) {
+                console.log('IMAGE DEBUG: Adding', newUniqueImages.length, 'new unique images');
+                addMoreImages(newUniqueImages, imagesSectionElement);
+            } else {
+                // If no new images, modify query slightly for variety
+                fetchMoreImagesWithVariation(imagesSectionElement, query);
+            }
+        }
+        
+    } catch (error) {
+        console.error('Error fetching more images:', error);
+    } finally {
+        // Restore button state
+        moreImagesBtn.textContent = 'More Images';
+        moreImagesBtn.disabled = false;
+        moreImagesBtn.style.background = '#007bff';
+    }
+}
+
+// Optional: Add variety when we run out of unique images
+// Complete function with variation when we run out of unique images
+async function fetchMoreImagesWithVariation(imagesSectionElement, query) {
+    const variations = [
+        `${query} photos`,
+        `${query} pictures`, 
+        `${query} images`,
+        `${query} wallpaper`,
+        `beautiful ${query}`,
+        `${query} HD`,
+        `amazing ${query}`,
+        `${query} nature`,
+        `${query} wildlife`
+    ];
+    
+    const randomVariation = variations[Math.floor(Math.random() * variations.length)];
+    console.log('IMAGE DEBUG: Trying variation:', randomVariation);
+    
+    try {
+        const response = await fetch(`/api/google-image-search?q=${encodeURIComponent(randomVariation)}`);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('IMAGE DEBUG: Variation response:', data);
+        
+        if (data.images && data.images.length > 0) {
+            // Remove duplicates from variation batch
+            const existingLinks = new Set(
+                Array.from(imagesSectionElement.querySelectorAll('.image-link img')).map(img => img.src)
+            );
+            
+            const newUniqueImages = data.images.filter(item => 
+                item.link && item.title && !existingLinks.has(item.link)
+            );
+            
+            if (newUniqueImages.length > 0) {
+                console.log('IMAGE DEBUG: Adding', newUniqueImages.length, 'variation images');
+                addMoreImages(newUniqueImages, imagesSectionElement);
+            } else {
+                console.log('IMAGE DEBUG: No new images found even with variation');
+            }
+        }
+        
+    } catch (error) {
+        console.error('Error fetching variation images:', error);
+    }
+}
+
+// Function to add event listeners to images (hover + error handling)
+function addImageEventListeners(messageElement) {
+    messageElement.querySelectorAll('.image-link:not(.processed)').forEach(link => {
+        link.classList.add('processed'); // Mark as processed to avoid duplicate listeners
+        
         link.onmouseover = () => link.style.transform = 'scale(1.05)';
         link.onmouseout = () => link.style.transform = 'scale(1)';
 
-        // Add error handling for images
         const img = link.querySelector('img');
         img.onerror = () => {
-            img.src = img.getAttribute('data-thumbnail') || 'path/to/fallback-image.jpg';
-            console.log('Image failed to load, falling back to thumbnail:', img.src);
+            img.style.display = 'none';
+            const placeholder = document.createElement('div');
+            placeholder.style.cssText = 'width: 100%; height: 100%; background: linear-gradient(135deg, #f0f0f0, #e0e0e0); display: flex; align-items: center; justify-content: center; color: #999; font-size: 12px; text-align: center; padding: 10px; box-sizing: border-box;';
+            placeholder.innerHTML = '<span>Image<br>Unavailable</span>';
+            link.appendChild(placeholder);
+            console.log('Image failed to load:', img.src);
         };
-
-        // Store thumbnail as backup
-        if (image.thumbnail) {
-            img.setAttribute('data-thumbnail', image.thumbnail);
-        }
     });
 }
 
@@ -3427,6 +3597,9 @@ function getTimeOfDay() {
 // SPEECH RECOGNITION FUNCTIONS
 // =====================================================
 
+// Global interrupt keywords for voice stopping during AI speech
+const INTERRUPT_KEYWORDS = ['stop', 'stop audio', 'cancel', 'quiet', 'silence', 'enough'];
+
 // Initialize speech recognition function
 function initializeSpeechRecognition() {
     if (!('webkitSpeechRecognition' in window)) {
@@ -3443,7 +3616,12 @@ function initializeSpeechRecognition() {
         state.recognition.onstart = () => {
             state.isListening = true;
             elements.micButton.textContent = '🔴';
-            updateStatus('Listening...');
+            // Set status based on current mode
+            if (audioFilterState.isInterruptModeActive) {
+                updateStatus(MESSAGES.STATUS.SPEAKING);
+            } else {
+                updateStatus(MESSAGES.STATUS.LISTENING);
+            }
         };
 
         state.recognition.onend = () => {
@@ -3455,7 +3633,7 @@ function initializeSpeechRecognition() {
                     if (!state.isProcessing && !state.stopRequested) {
                         startListening();
                     }
-                }, 1000);
+                }, 100);
             }
         };
 
@@ -3477,8 +3655,53 @@ function initializeSpeechRecognition() {
         };
 
         state.recognition.onresult = (event) => {
-            const transcript = event.results[0][0].transcript;
-            console.log('Heard:', transcript);
+            const transcript = event.results[0][0].transcript.trim().toLowerCase();
+            const confidence = event.results[0][0].confidence;
+            console.log('🎤 Heard:', transcript, `(confidence: ${confidence?.toFixed(2) || 'unknown'})`);
+            
+            // SMART INTERRUPT MODE: Enhanced filtering during AI speech
+            if (audioFilterState.isInterruptModeActive || state.isAISpeaking) {
+                console.log('🔇 [SMART-FILTER] Processing in interrupt mode...');
+                
+                // Require higher confidence for interrupts
+                if (confidence && confidence < AUDIO_FILTER_CONFIG.interruptThreshold) {
+                    console.log('🔇 [SMART-FILTER] Confidence too low, ignoring');
+                    return;
+                }
+                
+                if (INTERRUPT_KEYWORDS.some(keyword => transcript.includes(keyword))) {
+                    console.log('🔇 [SMART-FILTER] Smart interrupt detected! Stopping audio...');
+                    stopAllAudio();
+
+                    state.audioQueue = [];
+                    console.log('🔇 [SMART-FILTER] Audio queue cleared on interrupt');
+                    
+                    // Ensure proper cleanup and recovery
+                    updateStatus('Interrupted!');
+                    console.log('🔇 [INTERRUPT] Audio interrupted!');
+                    
+                    // Force immediate state cleanup
+                    state.isAISpeaking = false;
+                    state.isPlaying = false;
+                    // Properly disable interrupt mode and recover
+                    setTimeout(() => {
+                        disableSmartInterruptMode();
+                        if (state.isConversationMode) {
+                            updateStatus(MESSAGES.STATUS.LISTENING);
+                            if (!state.isListening) {
+                                startListening();
+                            }
+                        }
+                    }, 200);
+                    return;
+                }
+                
+                console.log('🔇 [SMART-FILTER] Non-interrupt command ignored during AI speech');
+                return;
+            }
+            
+            // NORMAL MODE: Process regular commands
+            console.log('💬 [NORMAL MODE] Processing command:', transcript);
             handleSpeechResult(event);
         };
 
@@ -3537,6 +3760,101 @@ async function handleResponse(response) {
             console.error('Error playing audio response:', error);
         }
     }  // <-- Add this closing brace
+}
+
+// =====================================================
+// SMART AUDIO FILTERING FOR VOICE INTERRUPTS
+// =====================================================
+
+// Audio filtering configuration for Andrew-en voice
+const AUDIO_FILTER_CONFIG = {
+    duckingVolume: 0.15,          // Reduce AI voice to 15% during interrupt
+    originalVolume: 1.0,          // Original AI voice volume  
+    interruptThreshold: 0.4,      // Minimum confidence for interrupt
+    andrewFreqRange: [80, 250],   // Andrew-en fundamental frequency range
+};
+
+// Audio filtering state
+const audioFilterState = {
+    isInterruptModeActive: false,
+    originalAudioVolume: 1.0,
+};
+
+// Enable smart interrupt mode during AI speech
+function enableSmartInterruptMode() {
+    console.log('🔇 [SMART-FILTER] Enabling smart interrupt mode...');
+    
+    // 1. Duck AI audio volume significantly  
+    if (state.currentAudio) {
+        audioFilterState.originalAudioVolume = state.currentAudio.volume;
+        state.currentAudio.volume = AUDIO_FILTER_CONFIG.duckingVolume;
+        console.log(`🔇 [SMART-FILTER] AI volume ducked to ${AUDIO_FILTER_CONFIG.duckingVolume * 100}%`);
+    }
+    
+    // 2. Enable interrupt mode flag
+    audioFilterState.isInterruptModeActive = true;
+
+    // 3. Show stop audio button during interrupt mode
+    updateStopAudioButton();
+
+    // 4. Start listening for interrupts only if not already listening
+    if (state.isConversationMode && !state.isListening && !state.isProcessing) {
+        console.log('🔇 [SMART-FILTER] Starting interrupt listening...');
+        setTimeout(() => {
+            updateStatus(MESSAGES.STATUS.SPEAKING);
+            startListening();
+        }, 200);
+    }
+}
+
+// Disable smart interrupt mode
+function disableSmartInterruptMode() {
+    console.log('🔇 [SMART-FILTER] Disabling smart interrupt mode...');
+    
+    // 1. Restore original AI volume
+    if (state.currentAudio && audioFilterState.originalAudioVolume) {
+        state.currentAudio.volume = audioFilterState.originalAudioVolume;
+    }
+    
+    // 2. Disable interrupt mode
+    audioFilterState.isInterruptModeActive = false;
+    
+    // 3. Hide stop audio button
+    elements.stopAudioButton.style.display = 'none';
+    
+    // Properly restart normal listening after interrupt mode
+    if (state.isConversationMode && !state.isListening && !state.isProcessing) {
+        console.log('🔇 [SMART-FILTER] Restarting normal listening after interrupt mode...');
+        setTimeout(() => {
+            if (!state.isListening && !state.isAISpeaking) {
+                updateStatus(MESSAGES.STATUS.LISTENING);
+                startListening();
+            }
+        }, 100);
+    }
+}
+
+// Start smart interrupt listening with higher sensitivity
+async function startSmartInterruptListening() {
+    if (!state.recognition) {
+        initializeSpeechRecognition();
+    }
+    
+    try {
+        console.log('🔇 [SMART-FILTER] Starting smart interrupt listening...');
+        
+        // Configure for high-sensitivity interrupt detection
+        state.recognition.continuous = true;
+        state.recognition.interimResults = false;
+        
+        // Start recognition
+        state.recognition.start();
+        
+        updateStatus(MESSAGES.STATUS.SPEAKING);
+        
+    } catch (error) {
+        console.error('🔇 [SMART-FILTER] Failed to start smart interrupt:', error);
+    }
 }
 
 // =====================================================
@@ -3719,7 +4037,7 @@ async function storePersonalInfo(info) {
 
     try {
         state.isAISpeaking = true;
-        elements.stopAudioButton.style.display = 'block';
+        updateStopAudioButton();  // Show button
 
         // Clean up the info text by removing "remember that" or "remember"
         let cleanInfo = info
@@ -4107,36 +4425,93 @@ const handleMyJokes = {
         }
 
         if (messageText.toLowerCase() === 'yes' && sessionStorage.getItem('pendingJoke')) {
+            console.log('🎭 [YES DEBUG] Processing YES response for pending joke');
+            console.log('🎭 [YES DEBUG] pendingJoke in sessionStorage:', sessionStorage.getItem('pendingJoke'));
+            
             try {
                 let jokeData;
                 try {
                     jokeData = JSON.parse(sessionStorage.getItem('pendingJoke'));
+                    console.log('🎭 [JOKE DEBUG] Raw joke data:', jokeData);
+                    console.log('🎭 [JOKE DEBUG] Joke content type:', typeof jokeData.content);
+                    console.log('🎭 [JOKE DEBUG] Joke content length:', jokeData.content ? jokeData.content.length : 'null/undefined');
+                    console.log('🎭 [JOKE DEBUG] Joke content:', JSON.stringify(jokeData.content));
                 } catch (error) {
                     console.error('Error parsing stored joke:', error);
                     throw new Error('Invalid stored joke data');
                 }
-                state.isAISpeaking = true;
-                elements.stopAudioButton.style.display = 'block';
-                addMessageToChat('assistant', jokeData.content);
-                await queueAudioChunk(jokeData.content);
-                sessionStorage.removeItem('pendingJoke');
-            } catch (error) {
-                console.error('Error playing joke:', error);
-            } finally {
-                state.isAISpeaking = false;
-                elements.stopAudioButton.style.display = 'none';
-                if (state.isConversationMode) {
-                    updateStatus(MESSAGES.STATUS.LISTENING);
-                    startListening();
+                
+                // Validate joke content
+                if (!jokeData || !jokeData.content || jokeData.content.trim() === '') {
+                    console.error('🎭 [JOKE ERROR] Empty or invalid joke content:', jokeData);
+                    
+                    const errorMessage = "Sorry, this joke appears to have empty content. There may be an issue with how it was saved.";
+
+                    if (state.isConversationMode) {
+                        // Temporarily pause conversation mode during joke playback
+                        const wasListening = state.recognition && !state.recognition.stop;
+                        if (wasListening) {
+                            stopListening();
+                        }
+                    }
+
+                    addMessageToChat('assistant', errorMessage);
+                    await queueAudioChunk(errorMessage);
+                    sessionStorage.removeItem('pendingJoke');
+                    return true;
                 }
-            }
+                
+                console.log('🎭 [JOKE DEBUG] About to display joke content in chat...');
+                state.isAISpeaking = true;
+                updateStopAudioButton();  // Show button
+                
+                // Ensure content is a string and trim any whitespace
+                const jokeContent = String(jokeData.content).trim();
+
+                // Add emojis to make jokes visually appealing like story responses
+                const enhancedJokeContent = jokeContent
+                    .replace(/\bItalian guy\b/gi, '🇮🇹 Italian guy')
+                    .replace(/\bPolish guy\b/gi, '🇵🇱 Polish guy') 
+                    .replace(/\bgirls?\b/gi, '👩 girls')
+                    .replace(/\bbeach\b/gi, '🏖️ beach')
+                    .replace(/\bconfused\b/gi, '😕 confused')
+                    .replace(/\bchuckles?\b/gi, '😄 chuckles')
+                    .replace(/\bsays?\b/gi, '💬 says')
+                    .replace(/\breplies?\b/gi, '💬 replies')
+                    .replace(/\bpotato\b/gi, '🥔 potato')
+                    .replace(/\bpants\b/gi, '👖 pants')
+                    .replace(/^/, '🎭 ');
+
+                console.log('🎭 [JOKE DEBUG] Final processed content:', JSON.stringify(jokeContent));
+                console.log('🎭 [JOKE DEBUG] Calling addMessageToChat...');
+                
+                addMessageToChat('assistant', formatStoryParagraphs(enhancedJokeContent), { 
+                    renderAsHTML: true 
+                });
+
+                console.log('🎭 [JOKE DEBUG] addMessageToChat completed, now queuing audio...');
+                
+                await queueAudioChunk(jokeContent);
+                console.log('🎭 [JOKE DEBUG] Audio queued, removing from sessionStorage...');
+                
+                sessionStorage.removeItem('pendingJoke');
+                console.log('🎭 [JOKE DEBUG] Joke display process completed successfully');
+            } catch (error) {
+                console.error('🎭 [JOKE ERROR] Error playing joke:', error);
+                const errorMessage = "Sorry, there was an error displaying your joke.";
+                addMessageToChat('assistant', errorMessage);
+                await queueAudioChunk(errorMessage);
+                sessionStorage.removeItem('pendingJoke');
+            } 
             return true;
         }
 
         if (messageText.toLowerCase() === 'no' && sessionStorage.getItem('pendingJoke')) {
             const response = "Okay, your joke is stored for later retrieval.";
+            
             state.isAISpeaking = true;
-            elements.stopAudioButton.style.display = 'block';
+            updateStopAudioButton();  // Show button
+
             addMessageToChat('assistant', response);
             await queueAudioChunk(response);
             sessionStorage.removeItem('pendingJoke');
@@ -4286,10 +4661,20 @@ const handleMyJokes = {
         try {
             // Normalize the title to match how it's stored
             const normalizedTitle = title.toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
+            console.log('🎭 [RETRIEVE DEBUG] Original title:', title);
+            console.log('🎭 [RETRIEVE DEBUG] Normalized title:', normalizedTitle);
+            
             const response = await fetch(`/api/jokes/get-joke/${encodeURIComponent(normalizedTitle)}?sessionId=${window.sessionId}`);
             const data = await response.json();
+            
+            console.log('🎭 [RETRIEVE DEBUG] API response:', data);
 
             if (data.success && data.joke) {
+                console.log('🎭 [RETRIEVE DEBUG] Joke found:', data.joke);
+                console.log('🎭 [RETRIEVE DEBUG] Joke content type:', typeof data.joke.content);
+                console.log('🎭 [RETRIEVE DEBUG] Joke content length:', data.joke.content ? data.joke.content.length : 'null/undefined');
+                console.log('🎭 [RETRIEVE DEBUG] Joke content:', JSON.stringify(data.joke.content));
+                
                 const message = "I found your joke. Would you like to hear it? Say Yes to hear it or No to cancel.";
                 const endTime = performance.now();
                 const duration = ((endTime - startTime) / 1000).toFixed(2);
@@ -4303,8 +4688,10 @@ const handleMyJokes = {
 
                 await queueAudioChunk(message);
                 sessionStorage.setItem('pendingJoke', JSON.stringify(data.joke));
+                console.log('🎭 [RETRIEVE DEBUG] Stored in sessionStorage:', JSON.stringify(data.joke));
 
             } else {
+                console.log('🎭 [RETRIEVE DEBUG] Joke not found or failed:', data);
                 const message = `Sorry, I couldn't find a joke about "${title}".`;
                 const metadata = {
                     model: elements.modelSelect.value,
@@ -4340,7 +4727,7 @@ const handleMyJokes = {
         const startTime = performance.now();
         try {
             state.isAISpeaking = true;
-            elements.stopAudioButton.style.display = 'block';
+            updateStopAudioButton();  // Show button
 
             const response = await fetch(`/api/jokes/list-jokes?type=my jokes&sessionId=${window.sessionId}`);
             const data = await response.json();
@@ -4421,7 +4808,8 @@ const handleMyJokes = {
     async deleteJoke(title) {
         try {
             state.isAISpeaking = true;
-            elements.stopAudioButton.style.display = 'block';
+            updateStopAudioButton();  // Show button
+
             // First get the joke to get its ID
             const getResponse = await fetch(`/api/jokes/delete-joke/${encodeURIComponent(title)}`);
             const getData = await getResponse.json();
@@ -4476,7 +4864,8 @@ const handleMyJokes = {
     async updateJoke(title, newContent) {
         try {
             state.isAISpeaking = true;
-            elements.stopAudioButton.style.display = 'block';
+            updateStopAudioButton();  // Show button
+
             const response = await fetch(`/api/jokes/update-joke/${encodeURIComponent(title)}`, {
                 method: 'PUT',
                 headers: {
@@ -4517,7 +4906,8 @@ const handleMyJokes = {
     async searchJokes(searchTerm) {
         try {
             state.isAISpeaking = true;
-            elements.stopAudioButton.style.display = 'block';
+            updateStopAudioButton();  // Show button
+
             const response = await fetch(`/api/jokes/search-jokes?term=${encodeURIComponent(searchTerm)}`);
             const data = await response.json();
 
@@ -4673,33 +5063,68 @@ function chunkText(text) {
 }
 
 async function playNextInQueue() {
-    if (!state.audioQueue.length || state.isPlaying || state.stopRequested) return;
+    console.log('🔊 [AUDIO] playNextInQueue called - Queue:', state.audioQueue.length, 'Playing:', state.isPlaying, 'stopRequested:', state.stopRequested);
+    
+    // Check if we should skip playback
+    if (!state.audioQueue.length || state.isPlaying || state.stopRequested || !state.isAISpeaking) {
+        console.log('🔊 [AUDIO] Skipping playback - interrupted or no audio needed');
+        return;
+    }
 
     try {
         state.isPlaying = true;
         state.isAISpeaking = true;
+        updateStopAudioButton();  // Show button
+
+        // Show Stop Audio button whenever audio is playing
+        updateStopAudioButton();
+
         const text = state.audioQueue[0];
 
-        const response = await fetch(AUDIO_CONFIG.apiUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                text: text,
-                voice: AUDIO_CONFIG.defaultVoice,
-                rate: AUDIO_CONFIG.rate,
-                pitch: AUDIO_CONFIG.pitch,
-                volume: AUDIO_CONFIG.volume
-            })
-        });
+        console.log('🔊 [AUDIO] About to fetch TTS for:', text);
+        console.log('🔊 [AUDIO] TTS API URL:', AUDIO_CONFIG.apiUrl);
+        console.log('🔊 [AUDIO] About to call fetch...');
+
+        // Debug the exact payload
+        const payload = {
+            text: text,
+            voice: AUDIO_CONFIG.defaultVoice,
+            rate: AUDIO_CONFIG.rate,
+            pitch: AUDIO_CONFIG.pitch,
+            volume: AUDIO_CONFIG.volume
+        };
+        console.log('🔊 [AUDIO] EXACT PAYLOAD:', JSON.stringify(payload));
+
+        let response;
+        try {
+            console.log('🔊 [AUDIO] Calling fetch now...');
+            response = await fetch(AUDIO_CONFIG.apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            console.log('🔊 [AUDIO] fetch completed successfully!');
+        } catch (fetchError) {
+            console.error('🔊 [AUDIO] CRITICAL FETCH ERROR:', fetchError);
+            throw fetchError;
+        }
+
+        console.log('🔊 [AUDIO] Response status:', response.status);
+        console.log('🔊 [AUDIO] Response headers:', [...response.headers.entries()]);
+        console.log('🔊 [AUDIO] Response ok:', response.ok);
 
         if (!response.ok) throw new Error(`TTS API error: ${response.status}`);
         
-        const audioBlob = await response.blob();
-        if (audioBlob.size === 0) throw new Error('Empty audio response');
+        console.log('🔊 [AUDIO] About to get blob...');
+        const audioBlob1 = await response.blob();
+        console.log('🔊 [AUDIO] Blob received - size:', audioBlob1.size, 'type:', audioBlob1.type);
+
+        if (!response.ok) throw new Error(`TTS API error: ${response.status}`);
+        if (audioBlob1.size === 0) throw new Error('Empty audio response');
 
         cleanup(state.currentAudio);
         
-        const audioUrl = URL.createObjectURL(audioBlob);
+        const audioUrl = URL.createObjectURL(audioBlob1);
         state.currentAudio = new Audio(audioUrl);
         state.currentAudio.volume = AUDIO_CONFIG.volume;
 
@@ -4724,12 +5149,25 @@ async function playNextInQueue() {
         if (state.audioQueue.length > 0 && !state.stopRequested) {
             setTimeout(() => {
                 state.isPlaying = false;
+
+                // Restart interrupt listening for the next chunk during conversation mode
+                if (state.isConversationMode && state.isAISpeaking) {
+                    console.log('🔇[INTERRUPT] Restarting interrupt listening for next audio chunk');
+                    startListening();
+                }
                 playNextInQueue();
             }, AUDIO_CONFIG.pauseDuration);
+
         } else {
+            // Immediate cleanup and status update - no delays!
+            audioFilterState.isInterruptModeActive = false;
             state.isPlaying = false;
             state.isAISpeaking = false;
+            updateStopAudioButton();  // Hide button
+            
+            // INSTANT status change and listening restart
             if (state.isConversationMode) {
+                updateStatus(MESSAGES.STATUS.LISTENING);
                 startListening();
             }
         }
@@ -4832,11 +5270,19 @@ async function requestMicrophonePermission() {
     }
 }
 
+
 // Update startListening function
 async function startListening() {
-    if (state.isListening || state.isProcessing || state.isAISpeaking) {
+    if (state.isListening || state.isProcessing) {
         console.log('Cannot start listening - already active or processing');
         return;
+    }
+    
+    // Allow listening during AI speech for interrupts
+    if (state.isAISpeaking) {
+        console.log('🔇[INTERRUPT] Starting interrupt-mode listening during AI speech');
+        // Ensure interrupt mode is properly set
+        audioFilterState.isInterruptModeActive = true;
     }
 
     try {
@@ -4846,8 +5292,8 @@ async function startListening() {
 
         // Check if recognition is already active before starting
         if (state.recognition && !state.isListening) {
-        state.recognition.start();
-        startInactivityTimer();
+            state.recognition.start();
+            startInactivityTimer();
         }
     } catch (error) {
         console.error('Failed to start listening:', error);
@@ -5415,7 +5861,7 @@ function cleanupBrokenYouTubeElements() {
         const isEmptyOrBasic = !messageContent || 
             messageContent.innerHTML.trim() === '' || 
             messageContent.innerHTML.trim().length < 20 ||
-            messageContent.textContent.trim() === '' ||
+            messageContent.textContent.trim() === '' || 
             messageContent.textContent.trim().length < 5;
         
         if (hasYouTubeContent || isEmptyOrBasic) {
@@ -5905,9 +6351,6 @@ function renderRealYoutubeResults(videos, page, totalPages, subject, type = 'sea
 function renderYoutubeResults(videos, page, totalPages, subject, type = 'search', isRealData = false) {
     console.log('+++ [REAL] renderYoutubeResults called with:', { videos, page, totalPages, subject, type, isRealData });
     
-    // REMOVED: Duplicate cleanup call that was causing empty bubbles
-    // cleanupBrokenYouTubeElements(); // This was creating race conditions
-    
     // Validate and clean video data
     const validVideos = videos.filter(video => {
         if (!video || !video.id || !video.title || !video.thumbnail) {
@@ -6020,7 +6463,10 @@ function renderYoutubeResults(videos, page, totalPages, subject, type = 'search'
         isYoutubePagination: true,
         subject: subject
     });
-    
+
+    // ALWAYS scroll to TOP of YouTube results (override normal bottom scrolling)
+    scrollToYouTubeResults();
+
     // ENSURE HEADER CONTEXT: Update header after rendering to ensure correct context
     setTimeout(() => {
         if (window.updateAllYouTubeHeaders && subject) {
@@ -6059,7 +6505,7 @@ function renderRealYoutubePaginationBar(page, totalPages, subject) {
             <img src="/assets/img/drag-me.png" class="drag-me-icon" alt="Drag Me" title="Drag to move pagination bar">
             <button class="query-history-btn" title="View Query History">
                 <span class="query-history-icon">📚</span>
-                <span class="query-history-text">REAL YouTube History</span>
+                <span class="query-history-text">YouTube Query History</span>
             </button>
             <div class="query-history-dropdown">
                 <div class="query-history-header">Query History</div>
@@ -7301,33 +7747,39 @@ function addToQueriesHistory(query) {
 
 // Helper function to scroll to YouTube results
 function scrollToYouTubeResults() {
-    setTimeout(() => {
-        const chatContainer = document.querySelector('#chat-messages');
-        if (chatContainer) {
-            // Find ALL YouTube-related messages
-            const youtubeMessages = document.querySelectorAll('.message');
-            let targetMessage = null;
-            
-            // Find the LAST message that contains YouTube content
-            for (let i = youtubeMessages.length - 1; i >= 0; i--) {
-                const message = youtubeMessages[i];
-                if (message.querySelector('.youtube-multi-bubble, .youtube-single-bubble')) {
-                    targetMessage = message;
-                    break;
-                }
-            }
-            
-            if (targetMessage) {
-                // Get the TOP of the message container (not the bubble inside it)
-                const messageTop = targetMessage.offsetTop;
-                chatContainer.scrollTop = messageTop - 90; // 90px padding above - sweet spot
-                console.log('📍 [SCROLL] Scrolled to TOP of YouTube message container');
-            } else {
-                chatContainer.scrollTop = 0;
-                console.log('📍 [SCROLL] No YouTube message found');
+    // Remove setTimeout - execute immediately
+    const chatContainer = document.querySelector('#chat-messages');
+    if (chatContainer) {
+        // Find ALL YouTube-related messages
+        const youtubeMessages = document.querySelectorAll('.message');
+        let targetMessage = null;
+        
+        // Find the LAST message that contains YouTube content
+        for (let i = youtubeMessages.length - 1; i >= 0; i--) {
+            const message = youtubeMessages[i];
+            if (message.querySelector('.youtube-multi-bubble, .youtube-single-bubble, .youtube-multi-bubble-mock, .youtube-single-bubble-mock')) {
+                targetMessage = message;
+                break;
             }
         }
-    }, 300);
+        
+        if (targetMessage) {
+            // Get the TOP of the message container (not the bubble inside it)
+            const messageTop = targetMessage.offsetTop;
+            chatContainer.scrollTop = messageTop - 90;
+            console.log('📍 [SCROLL] Scrolled to TOP of YouTube message container');
+            
+            // FORCE the scroll to stick by setting it again after a tiny delay
+            setTimeout(() => {
+                chatContainer.scrollTop = messageTop - 90;
+                console.log('📍 [SCROLL] FORCED scroll to stick at TOP');
+            }, 50);
+            
+        } else {
+            chatContainer.scrollTop = 0;
+            console.log('📍 [SCROLL] No YouTube message found');
+        }
+    }
 }
 
 
