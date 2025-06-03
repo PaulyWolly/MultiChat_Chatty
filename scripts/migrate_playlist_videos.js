@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const { ObjectId } = require('mongodb');
 require('dotenv').config();
 
-const Playlist = require('./server/models/Playlist');
+const Playlist = require('../server/models/Playlist');
 
 async function migrate() {
   await mongoose.connect(process.env.MONGODB_URI);
