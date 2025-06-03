@@ -281,6 +281,7 @@ const state = {
     isSending: false,
     messageCounter: 0,
     selectedModel: 'gpt-4o-mini',
+    selectedVoice: localStorage.getItem('selectedVoice') || null, // Initialize from localStorage
     audioQueue: [],
     isPlaying: false,
     isRendering: false,
@@ -970,7 +971,10 @@ function setupEventListeners() {
     elements.modelSelect.addEventListener('change', () => state.selectedModel = this.value);
     elements.conversationModeToggle.addEventListener('change', handleConversationModeToggle);
     elements.stopAudioButton.addEventListener('click', stopAudioPlayback);
-    elements.voiceSelect.addEventListener('change', () => localStorage.setItem('selectedVoice', this.value));
+    elements.voiceSelect.addEventListener('change', (event) => {
+    state.selectedVoice = event.target.value;
+    localStorage.setItem('selectedVoice', event.target.value);
+});
     window.addEventListener('beforeunload', cleanup);
 }
 
@@ -1993,9 +1997,9 @@ async function getAIResponse(message, selectedModel, history, systemPrompt, sess
                         continue; // Skip all other processing for Bing results
                     }
 
-                    // 🎯 Queue audio for complete sentences - STREAMING AUDIO
+                    // Queue audio for complete sentences
                     const sentences = currentChunk.match(/[^.!?]+[.!?]+/g);
-                    if (sentences && state.selectedVoice) {
+                    if (sentences) {
                         queueAudioChunk(sentences.join(' '));
                         currentChunk = currentChunk.replace(sentences.join(''), '');
                     }
@@ -2089,7 +2093,9 @@ function addMessageToChat(role, content, options = {}) {
             content.includes('<h2>Web Results') ||
             content.includes('<h2>News Results') ||
             content.includes("<ol class='search-results-list'>") ||
-            content.includes('<ol class="search-results-list">')
+            content.includes('<ol class="search-results-list">') ||
+            content.includes('youtube-multi-bubble') ||
+            content.includes('youtube-action-btn')
         ) {
             contentElement.innerHTML = content;
         }
@@ -2098,11 +2104,15 @@ function addMessageToChat(role, content, options = {}) {
             content = formatIngredientsAsDashedList(content);
             contentElement.innerHTML = content;
         }
-        // Force story formatting for all long assistant responses
-        else if (role === 'assistant' && content.length > 400) {
-            contentElement.innerHTML = formatStoryParagraphs(content);
-        } else {
-            contentElement.textContent = content;
+        else {
+            // Add character with formatting and emojis for stories
+            if (role === 'assistant' && content.length > 200) {
+                const formattedContent = formatStreamingText(content);
+                contentElement.style.whiteSpace = 'pre-wrap'; // Preserve line breaks
+                contentElement.textContent = formattedContent;
+            } else {
+                contentElement.textContent = content;
+            }
         }
     }
 
@@ -2186,6 +2196,43 @@ function addMessageToChat(role, content, options = {}) {
 }
 
 // Update message content function
+
+// Format text into paragraphs during streaming (doesn't interfere with audio)
+function formatStreamingText(text) {
+    if (!text || text.length < 100) return text; // Skip short text
+    
+    // Split into sentences
+    const sentences = text.split(/(?<=[.!?])\s+/);
+    let formattedText = '';
+    let currentParagraph = '';
+    let sentenceCount = 0;
+    
+    for (let i = 0; i < sentences.length; i++) {
+        const sentence = sentences[i].trim();
+        if (!sentence) continue;
+        
+        currentParagraph += (currentParagraph ? ' ' : '') + sentence;
+        sentenceCount++;
+        
+        // Create paragraph after 5 sentences or at the end
+        if (sentenceCount >= 5 || i === sentences.length - 1) {
+            if (formattedText) formattedText += '\n\n'; // Double line break between paragraphs
+            formattedText += currentParagraph;
+            currentParagraph = '';
+            sentenceCount = 0;
+        }
+    }
+    
+    // Add some character with emojis at the beginning of stories
+    if (text.includes('Once upon a time') || text.includes('once upon a time')) {
+        formattedText = '📖✨ ' + formattedText;
+    } else if (text.includes('village') || text.includes('lived')) {
+        formattedText = '🏘️📚 ' + formattedText;
+    }
+    
+    return formattedText;
+}
+
 function updateMessageContent(messageElement, content, tokenCount) {
     // Add null check to prevent errors
     if (!messageElement) {
@@ -2205,12 +2252,15 @@ function updateMessageContent(messageElement, content, tokenCount) {
             content.includes('<ol class="search-results-list">')
         ) {
             contentElement.innerHTML = content;
-        } else if (messageElement.classList.contains('assistant') && content.length > 400) {
-            // For long assistant responses, use innerHTML with formatted paragraphs
-            contentElement.innerHTML = formatStoryParagraphs(content);
         } else {
-            // For regular text content
-            contentElement.textContent = content;
+            // For regular text content - format during streaming without breaking audio
+            if (messageElement.classList.contains('assistant') && content.length > 200) {
+                const formattedContent = formatStreamingText(content);
+                contentElement.style.whiteSpace = 'pre-wrap'; // Preserve line breaks
+                contentElement.textContent = formattedContent;
+            } else {
+                contentElement.textContent = content;
+            }
         }
     }
 
@@ -4640,7 +4690,15 @@ async function playNextInQueue() {
         await new Promise((resolve, reject) => {
             state.currentAudio.onended = resolve;
             state.currentAudio.onerror = reject;
-            state.currentAudio.play();
+            // Add small delay and fade-in to prevent cut-off of first words
+                    state.currentAudio.volume = 0.1; // Start very quiet
+                    state.currentAudio.play();
+                    // Fade in quickly to prevent missing first syllables
+                    setTimeout(() => {
+                        if (state.currentAudio) {
+                            state.currentAudio.volume = AUDIO_CONFIG.volume;
+                        }
+                    }, 50); // 50ms fade-in
         });
 
         state.audioQueue.shift();
@@ -5984,7 +6042,7 @@ function renderRealYoutubePaginationBar(page, totalPages, subject) {
             <img src="/assets/img/drag-me.png" class="drag-me-icon" alt="Drag Me" title="Drag to move pagination bar">
             <button class="query-history-btn" title="View Query History">
                 <span class="query-history-icon">📚</span>
-                <span class="query-history-text">History</span>
+                <span class="query-history-text">REAL YouTube History</span>
             </button>
             <div class="query-history-dropdown">
                 <div class="query-history-header">Query History</div>
@@ -7226,65 +7284,33 @@ function addToQueriesHistory(query) {
 
 // Helper function to scroll to YouTube results
 function scrollToYouTubeResults() {
-    // Small delay to ensure DOM is rendered
     setTimeout(() => {
-        // Look for the most recent YouTube results bubble
-        const youtubeElements = document.querySelectorAll('.youtube-multi-bubble, .youtube-single-bubble');
-        if (youtubeElements.length > 0) {
-            // Get the most recent (last) YouTube bubble
-            const latestYoutubeBubble = youtubeElements[youtubeElements.length - 1];
+        const chatContainer = document.querySelector('#chat-messages');
+        if (chatContainer) {
+            // Find ALL YouTube-related messages
+            const youtubeMessages = document.querySelectorAll('.message');
+            let targetMessage = null;
             
-            // Find the parent message container
-            const messageContainer = latestYoutubeBubble.closest('.message');
-            
-            if (messageContainer) {
-                console.log('📍 [SCROLL] CORRECT APPROACH - Scrolling to BOTTOM of chat where YouTube results are');
-                
-                // Scroll to bottom of chat container where new messages appear
-                const chatContainer = document.querySelector('#chat-messages') || document.querySelector('.chat-messages');
-                if (chatContainer) {
-                    chatContainer.scrollTop = chatContainer.scrollHeight;
-                    console.log('📍 [SCROLL] Scrolled chat container to bottom');
-                    
-                    // Small delay then adjust to show TOP of YouTube results
-                    setTimeout(() => {
-                        // Find the actual YouTube results bubble
-                        const youtubeBubble = document.querySelector('.youtube-multi-bubble, .youtube-single-bubble');
-                        if (youtubeBubble) {
-                            const bubbleHeight = youtubeBubble.offsetHeight;
-                            console.log('📍 [SCROLL] YouTube bubble height:', bubbleHeight + 'px');
-                            
-                            // Scroll up by the bubble height to show the TOP of results
-                            chatContainer.scrollTop = chatContainer.scrollHeight - bubbleHeight - 100; // 60px extra padding for better positioning // 20px extra padding
-                            console.log('📍 [SCROLL] Adjusted to show TOP of YouTube results');
-                        } else {
-                            console.log('📍 [SCROLL] YouTube bubble not found, keeping current position');
-                        }
-                    }, 150);
-                } else {
-                    // Fallback: scroll page to bottom with dynamic offset
-                    const youtubeBubble = document.querySelector('.youtube-multi-bubble, .youtube-single-bubble');
-                    const offset = youtubeBubble ? youtubeBubble.offsetHeight + 100 : 300; // 300px fallback
-                    window.scrollTo({
-                        top: document.body.scrollHeight - offset,
-                        behavior: 'smooth'
-                    });
-                    console.log('📍 [SCROLL] Scrolled page to bottom with header offset');
+            // Find the LAST message that contains YouTube content
+            for (let i = youtubeMessages.length - 1; i >= 0; i--) {
+                const message = youtubeMessages[i];
+                if (message.querySelector('.youtube-multi-bubble, .youtube-single-bubble')) {
+                    targetMessage = message;
+                    break;
                 }
-                
-                // Optional: Add a subtle highlight effect
-                messageContainer.style.transition = 'box-shadow 0.3s ease';
-                messageContainer.style.boxShadow = '0 0 20px rgba(66, 165, 245, 0.3)';
-                setTimeout(() => {
-                    messageContainer.style.boxShadow = '';
-                }, 1500);
-            } else {
-                console.log('📍 [SCROLL] Could not find message container for YouTube bubble');
             }
-        } else {
-            console.log('📍 [SCROLL] No YouTube results found to scroll to');
+            
+            if (targetMessage) {
+                // Get the TOP of the message container (not the bubble inside it)
+                const messageTop = targetMessage.offsetTop;
+                chatContainer.scrollTop = messageTop - 90; // 90px padding above - sweet spot
+                console.log('📍 [SCROLL] Scrolled to TOP of YouTube message container');
+            } else {
+                chatContainer.scrollTop = 0;
+                console.log('📍 [SCROLL] No YouTube message found');
+            }
         }
-    }, 300); // Wait for DOM rendering and any animations
+    }, 300);
 }
 
 
