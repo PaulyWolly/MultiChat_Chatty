@@ -5584,6 +5584,53 @@ button.next-page-btn {
     color: #b71c1c;
 }
 
+/* Save button styling */
+.query-history-save {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 2px 4px;
+    border-radius: 3px;
+    opacity: 0.8;
+    transition: opacity 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #4CAF50;
+    margin-right: 4px;
+}
+
+.query-history-save:hover {
+    opacity: 1;
+    background: rgba(76, 175, 80, 0.1);
+    transform: scale(1.1);
+    color: #388E3C;
+}
+
+/* LED indicator styling */
+.query-led {
+    display: inline-block;
+    margin-right: 6px;
+    font-size: 8px;
+    line-height: 1;
+    vertical-align: middle;
+}
+
+.query-led.green {
+    color: #4CAF50;
+    text-shadow: 0 0 3px rgba(76, 175, 80, 0.5);
+    animation: greenLEDPulse 2s infinite;
+}
+
+@keyframes greenLEDPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
 
 
 
@@ -5643,4 +5690,45 @@ button.next-page-btn {
 .youtube-single-bubble-mock {
     position: relative !important;
     border: 1px dashed #ccc !important;
+}
+
+/* Recipe formatting CSS classes */
+.recipe-ingredients-heading {
+    /* Customize ingredients heading style */
+    display:block;
+    margin-top: 12px;
+    margin-bottom: 4px;
+    line-height: 1.2;
+}
+
+.recipe-instructions-heading {
+    /* Customize instructions heading style */
+    margin-top: 0px;
+    margin-bottom: 0px;
+}
+
+.recipe-ingredients-list {
+    /* Customize ingredients list spacing - you can reduce margins here */
+    list-style-type: disc;
+    padding-left: 40px;
+    margin-top: 0px;
+}
+
+.recipe-ingredient-item {
+    /* display:block; */
+    margin-bottom: -4px;
+    line-height: 1.2;
+    list-style-type: square;
+}
+
+.recipe-instructions-list {
+    /* Customize instructions list spacing - you can reduce margins here */
+    display:block;
+    margin-top: 12px;
+    margin-bottom: 4px;
+    line-height: 1.2;
+}
+
+.recipe-instruction-item {
+    /* Customize individual instruction items */
 }

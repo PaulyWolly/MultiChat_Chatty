@@ -124,6 +124,7 @@
       </div>
     </div>
 
+    <script src="config.js"></script>
     <script type="module" src="components/ToastManager.js"></script>
     <script type="module" src="components/PlaylistManager.js"></script>
     <script src="quota-monitor.js"></script>
