@@ -2797,7 +2797,7 @@ button {
 .playlist-actions-header,
 .playlist-videos-table td.playlist-actions-cell {
     /* width: 480px !important; */
-    min-width: 330px;
+    min-width: 390px;
     max-width: 480px;
     text-align: center !important;
 }
