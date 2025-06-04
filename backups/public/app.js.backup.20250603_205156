@@ -1,8 +1,8 @@
 /*
   APP.JS
-  Version: 1
-  AppName: MultiChat_Chatty [v1]
-  Updated: 05/31/2025 @7:00PM
+  Version: 2
+  AppName: MultiChat_Chatty [v2]
+  Updated: 06/03/2025 @8:30AM
   Created by Paul Welby
 */
 
@@ -80,7 +80,7 @@ const MIC_INITIALIZATION_DELAY = 4000;  // 4 seconds delay
 // Add the MESSAGES constant
 const MESSAGES = {
     STATUS: {
-        DEFAULT: `<br>Click the <span class="status-keyword">Conversation Mode</span> checkbox, or press the <span class="status-keyword">Microphone</span> button <br>...to enable conversations, or enter a message and press Send</span><br><br>`,
+        DEFAULT: `<br>Click the <span class="status-keyword">Conversation Mode</span> checkbox, or press the <span class="status-keyword">Microphone</span> button <br>...to enable conversations, or enter a message and press [ENTER] or [Send]</span><br><br>`,
         LISTENING: "Listening...",
         SPEAKING: "AI is speaking...",
         PROCESSING: "Processing...",
@@ -632,7 +632,7 @@ function formatIngredientsAsDashedList(text) {
     let formatted = '';
     for (let i = 0; i < parts.length; i++) {
         if (/Ingredients:/i.test(parts[i])) {
-            formatted += '<strong>' + parts[i] + '</strong>';
+            formatted += '<strong class="recipe-ingredients-heading">' + parts[i] + '</strong>';
             // Convert numbered or dashed lines to <li>
             const lines = parts[i+1]
                 .split(/\n|\r/)
@@ -641,14 +641,14 @@ function formatIngredientsAsDashedList(text) {
             const liLines = lines.map(line => {
                 // Remove leading numbers/dots/dashes and whitespace
                 const cleaned = line.replace(/^\s*\d+\.?\s*/, '').replace(/^[-–—•]\s*/, '');
-                return `<li style="list-style-type: '- '; margin-left: 1em;">${cleaned}</li>`;
+                return `<li class="recipe-ingredient-item" style="list-style-type: '- '; margin-left: 1em;">${cleaned}</li>`;
             });
-            formatted += `<ul style="margin: 0 0 1em 0; padding-left: 1.5em;">${liLines.join('')}</ul>`;
+            formatted += `<ul class="recipe-ingredients-list" style="margin: 0 0 1em 0; padding-left: 1.5em;">${liLines.join('')}</ul>`;
             i++; // Skip the ingredients content part
         } else {
             // For the rest, preserve line breaks and bold section headers
             if (/^(Instructions:|Directions:)$/i.test(parts[i])) {
-                formatted += '<strong>' + parts[i] + '</strong>';
+                formatted += '<strong class="recipe-instructions-heading">' + parts[i] + '</strong>';
             } else {
                 formatted += parts[i].replace(/\n/g, '<br>');
             }
@@ -1097,9 +1097,52 @@ function setupSSEConnection() {
                         });
                     }
 
-                    // Queue audio if enabled
+                    // DOUUBLE FORMATTING - TEMPORARILY DISABLED
+                    // Format the response BEFORE display and TTS
+                    // let formattedResponse = data.response;
+                    // if (data.response && data.response.length > 100) {
+                    //     formattedResponse = formatStreamingText(data.response);
+                    // }
+
+                    // // Update the message element with formatted content
+                    // const messageElements = document.querySelectorAll('.message.assistant');
+                    // if (messageElements.length > 0) {
+                    //     const latestMessage = messageElements[messageElements.length - 1];
+                    //     const contentElement = latestMessage.querySelector('.message-content');
+                    //     if (contentElement) {
+                    //         if (formattedResponse.includes('<ul>') || formattedResponse.includes('<ol>') || formattedResponse.includes('<h3>')) {
+                    //             contentElement.innerHTML = formattedResponse;
+                    //         } else {
+                    //             contentElement.textContent = formattedResponse;
+                    //         }
+                    //     }
+                    // }
+
+                   
+                    // Queue audio if enabled - but read what the user SEES, not raw text
                     if (data.shouldPlayAudio && state.selectedVoice) {
-                        queueAudioChunk(data.response);
+                        setTimeout(() => {
+                            const messageElements = document.querySelectorAll('.message.assistant');
+                            if (messageElements.length > 0) {
+                                const latestMessage = messageElements[messageElements.length - 1];
+                                const contentElement = latestMessage.querySelector('.message-content');
+                                if (contentElement) {
+                                    // Read the FORMATTED text that user sees
+                                    let textForTTS = contentElement.textContent || contentElement.innerText;
+                                    
+                                    // Clean up the formatted text for better TTS
+                                    textForTTS = textForTTS
+                                        .replace(/•/g, '') // Remove bullet points
+                                        .replace(/\n+/g, ' ') // Replace line breaks with spaces
+                                        .replace(/\s+/g, ' ') // Normalize spaces
+                                        .trim();
+                                    
+                                    queueAudioChunk(textForTTS);
+                                } else {
+                                    queueAudioChunk(data.response);
+                                }
+                            }
+                        }, 200); // Short delay to let formatting complete
                     }
                 }
             } catch (error) {
@@ -1560,7 +1603,7 @@ async function sendMessage(message, isGreeting = false) {
                 const response = `I'll remember that the ${keyword} is "${value}"`;
                 const messageElement = addMessageToChat('assistant', response);
                 const endTime = Date.now();
-                const durationInSeconds = ((endTime - startTime) / 1000).toFixed(2);
+                const durationInSeconds = ((endTime - startTime) / 1000).toFixed(2);  // Minimum 0.01s
                 // Queue audio if enabled
                 // if (state.selectedVoice) {
                 //     await queueAudioChunk(response);
@@ -1875,10 +1918,13 @@ async function sendMessage(message, isGreeting = false) {
                     });
                 }
 
+                    console.log('IMAGE DEBUG: Keywords detected in:', messageText);
                 if (/\b(more|info|detail|image|images|picture|pictures|photo|photos)\b/i.test(messageText)) {
                     const searchQuery = messageText.replace(/\b(more|info|detail|image|images|picture|pictures|photo|photos)\b/gi, '').trim();
+                    console.log("IMAGE DEBUG: Search query:", searchQuery);
                     const imageResults = await searchAndDisplayImages(searchQuery);
                     if (imageResults && imageResults.images && imageResults.images.length > 0) {
+                    console.log("IMAGE DEBUG: Results:", imageResults);
                         const { heading, cleanedText } = extractImageHeading(response.response);
                         updateMessageContent(response.messageElement, cleanedText);
                         insertAndStyleImages(imageResults.images, response.messageElement, heading);
@@ -2042,10 +2088,11 @@ async function getAIResponse(message, selectedModel, history, systemPrompt, sess
 
 // Add message to chat function
 function addMessageToChat(role, content, options = {}) {
-    // Prevent empty assistant bubbles
+    // Prevent empty assistant bubbles, except for image analysis which needs empty placeholder
     if (
         role === 'assistant' &&
-        (!content || (typeof content === 'string' && content.trim() === ''))
+        (!content || (typeof content === 'string' && content.trim() === '')) &&
+        !options.isImageAnalysis
     ) {
         return null; // Don't create empty assistant bubbles
     }
@@ -2139,31 +2186,58 @@ function addMessageToChat(role, content, options = {}) {
 
     elements.chatMessages.appendChild(messageElement);
 
-    // Clean scroll logic: YouTube content scrolls to TOP, everything else scrolls to BOTTOM
-    // Clean scroll logic: YouTube content scrolls to TOP, everything else scrolls to BOTTOM continuously
+    // // Clean scroll logic: YouTube content scrolls to TOP, everything else scrolls to BOTTOM continuously
+    // // Check if content is a recipe
+    // const isRecipe = content.toLowerCase().includes('ingredients:') && 
+    //     (content.toLowerCase().includes('instructions:') || content.toLowerCase().includes('steps:'));
+
+    // if (options.isYoutube || content.includes('YouTube Results') || content.includes('youtube-multi-bubble')) {
+    //     scrollToYouTubeResults();
+    // } else if (isRecipe) {
+    
+    //     // For recipes, do ONE gentle scroll to show the content, then let user control scrolling
+    //     console.log('📍 [SCROLL] Recipe detected - gentle scroll only');
+    //     const scrollOnce = () => {
+    //         const chatContainer = document.getElementById('chat-messages');
+            
+    //         if (chatContainer) {
+    //             chatContainer.scrollTop = chatContainer.scrollHeight;
+    //         }
+    //     };
+
+    //     // Just one scroll when content first appears
+    //     scrollOnce();
+    //     setTimeout(scrollOnce, 500); // One more after brief delay
+    // } else {
+    //     // For non-YouTube, non-recipe content (stories, jokes, etc.) - keep aggressive scrolling
+    //     const scrollToBottom = () => {
+    //         const chatContainer = document.getElementById("chat-messages");
+    //         if (chatContainer) {
+    //         chatContainer.scrollTop = chatContainer.scrollHeight;
+    //         }
+    //     };
+
+    //     // Scroll immediately, then keep scrolling as content arrives
+    //     scrollToBottom();
+    //     setTimeout(scrollToBottom, 500);
+    //     setTimeout(scrollToBottom, 1500);
+    //     setTimeout(scrollToBottom, 3000);
+    //     setTimeout(scrollToBottom, 5000);
+    //     setTimeout(scrollToBottom, 7500);
+    //     setTimeout(scrollToBottom, 10000);
+    //     setTimeout(scrollToBottom, 12500);
+    //     setTimeout(scrollToBottom, 15000);
+    //     setTimeout(scrollToBottom, 17500);
+    //     setTimeout(scrollToBottom, 20000);
+    // }
+
     if (options.isYoutube || content.includes('YouTube Results') || content.includes('youtube-multi-bubble')) {
         scrollToYouTubeResults();
     } else {
-        // For non-YouTube content, keep scrolling to bottom as content loads
-        const scrollToBottom = () => {
-            const chatContainer = document.getElementById('chat-messages');
-            if (chatContainer) {
-                chatContainer.scrollTop = chatContainer.scrollHeight;
-            }
-        };
-        
-        // Scroll immediately, then keep scrolling as content arrives
-        scrollToBottom();
-        setTimeout(scrollToBottom, 500);
-        setTimeout(scrollToBottom, 1500);
-        setTimeout(scrollToBottom, 3000);
-        setTimeout(scrollToBottom, 5000);
-        setTimeout(scrollToBottom, 7500);
-        setTimeout(scrollToBottom, 10000);
-        setTimeout(scrollToBottom, 12500);
-        setTimeout(scrollToBottom, 15000);
-        setTimeout(scrollToBottom, 17500);
-        setTimeout(scrollToBottom, 20000);
+        const chatContainer = document.getElementById('chat-messages');
+        if (chatContainer) {
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
     }
 
     return messageElement;
@@ -2222,7 +2296,69 @@ function addMessageToChat(role, content, options = {}) {
 function formatStreamingText(text) {
     if (!text || text.length < 100) return text; // Skip short text
     
-    // Split into sentences
+    // Check if this is a recipe first
+    const hasIngredients = text.toLowerCase().includes('ingredients:');
+    const hasInstructions = text.toLowerCase().includes('instructions:') || text.toLowerCase().includes('steps:');
+    
+    if (hasIngredients && hasInstructions) {
+        // Format as recipe with proper HTML lists
+        let formattedText = text;
+        
+        // Format ingredients section
+        formattedText = formattedText.replace(
+            /(ingredients:[\s\S]*?)(?=instructions:|steps:|$)/i,
+            function(match, ingredientsSection) {
+                const lines = ingredientsSection.split('\n').map(line => line.trim()).filter(line => line);
+                let result = '<h3 class="recipe-ingredients-heading">🥄 Ingredients</h3>\n<ul class="recipe-ingredients-list">\n';
+                
+                for (let i = 1; i < lines.length; i++) { // Skip the "Ingredients:" line
+                    const line = lines[i];
+                    if (line && !line.toLowerCase().includes('instructions') && !line.toLowerCase().includes('steps')) {
+                        // Remove leading numbers and clean up
+                        const cleanLine = line.replace(/^\d+\.\s*/, '').replace(/^-\s*/, '').trim();
+                        if (cleanLine) {
+                            result += `<li class="recipe-ingredient-item">${cleanLine}</li>\n`;
+                        }
+                    }
+                }
+                result += '</ul>\n\n';
+                return result;
+            }
+        );
+        
+        // Format instructions section
+        formattedText = formattedText.replace(
+            /(instructions:|steps:)([\s\S]*)/i,
+            function(match, header, instructionsSection) {
+                const lines = instructionsSection.split('\n').map(line => line.trim()).filter(line => line);
+                let result = '<h3 class="recipe-instructions-heading">👩‍🍳 Instructions</h3>\n<ol class="recipe-instructions-list">\n';
+                
+                for (const line of lines) {
+                    if (line) {
+                        // Remove leading numbers and clean up
+                        const cleanLine = line.replace(/^\d+\.\s*/, '').trim();
+                        if (cleanLine) {
+                            result += `<li class="recipe-instruction-item">${cleanLine}</li>\n`;
+                        }
+                    }
+                }
+                result += '</ol>\n';
+                return result;
+            }
+        );
+        
+        // Add recipe emoji
+        formattedText = '👨‍🍳🍽️ ' + formattedText;
+        return formattedText;
+    }
+    
+    // Original formatting for non-recipes
+    
+    if (hasIngredients && hasInstructions) {
+        // TEMPORARILY DISABLED - just return original text for now
+        return text;
+    }
+    
     const sentences = text.split(/(?<=[.!?])\s+/);
     let formattedText = '';
     let currentParagraph = '';
@@ -2244,13 +2380,11 @@ function formatStreamingText(text) {
         }
     }
     
-    // Add appropriate emojis based on content type
+    //Add appropriate emojis based on content type
     if (text.includes('Once upon a time') || text.includes('once upon a time')) {
         formattedText = '📖✨ ' + formattedText;
     } else if (text.includes('village') || text.includes('lived')) {
         formattedText = '🏘️📚 ' + formattedText;
-    } else if (text.includes('recipe') || text.includes('ingredients') || text.includes('cooking')) {
-        formattedText = '👨‍🍳🍽️ ' + formattedText;
     } else if (text.includes('joke') || text.includes('funny') || text.includes('laugh')) {
         formattedText = '😄🎭 ' + formattedText;
     } else if (text.includes('search') || text.includes('found') || text.includes('results')) {
@@ -2263,6 +2397,7 @@ function formatStreamingText(text) {
     return formattedText;
 }
 
+//Old more advanced formatedStreamingText function
 function updateMessageContent(messageElement, content, tokenCount) {
     // Add null check to prevent errors
     if (!messageElement) {
@@ -2287,7 +2422,13 @@ function updateMessageContent(messageElement, content, tokenCount) {
             if (messageElement.classList.contains('assistant') && content.length > 200) {
                 const formattedContent = formatStreamingText(content);
                 contentElement.style.whiteSpace = 'pre-wrap'; // Preserve line breaks
-                contentElement.textContent = formattedContent;
+                
+                // Check if formatted content contains HTML (recipes)
+                if (formattedContent.includes('<ul') || formattedContent.includes('<ol') || formattedContent.includes('<h3') || formattedContent.includes('class="recipe-')) {
+                    contentElement.innerHTML = formattedContent;
+                } else {
+                    contentElement.textContent = formattedContent;
+                }
             } else {
                 contentElement.textContent = content;
             }
@@ -2307,6 +2448,34 @@ function updateMessageContent(messageElement, content, tokenCount) {
 }
 
 // Update metadata function
+
+//SIMPLE version - temproary fix
+// function updateMessageContent(messageElement, content, tokenCount) {
+//     // Add null check to prevent errors
+//     if (!messageElement) {
+//         console.error('updateMessageContent called with null messageElement');
+//         return;
+//     }
+    
+//     const contentElement = messageElement.querySelector('.message-content');
+//     const metadataElement = messageElement.querySelector('.metadata');
+
+//     if (contentElement) {
+//         contentElement.innerText = content;
+//     }
+
+//     if (metadataElement && tokenCount) {
+//         const modelName = document.getElementById('model-select').value;
+//         const duration = ((Date.now() - state.lastRequestTime) / 1000).toFixed(2);
+
+//         metadataElement.innerHTML = `
+//             <span class="model-info">${modelName}</span>&nbsp;|&nbsp;
+//             <span class="response-time">${duration}s</span>&nbsp;|&nbsp;
+//             <span class="token-count">${tokenCount} tokens</span>
+//         `;
+//     }
+// }
+
 function updateMetadata(messageElement, metadata = {}) {
 
     // Add null check to prevent errors
@@ -2356,17 +2525,25 @@ function updateMetadata(messageElement, metadata = {}) {
     // Check for recipe content and handle recipe buttons
     const messageContent = messageElement.querySelector('.message-content');
     if (messageContent) {
-        const text = messageContent.textContent;
-        const hasIngredients = text.toLowerCase().includes('ingredients:');
-        const hasInstructions = text.toLowerCase().includes('instructions:') ||
-                                text.toLowerCase().includes('steps:');
+        // const text = messageContent.textContent;
+        // const hasIngredients = text.toLowerCase().includes('ingredients:');
+        // const hasInstructions = text.toLowerCase().includes('instructions:') ||
+        //                         text.toLowerCase().includes('steps:');
 
+        // Check both textContent (for plain text) and innerHTML (for formatted HTML)
+        const text = messageContent.textContent || '';
+        const html = messageContent.innerHTML || '';
+        const combinedText = (text + ' ' + html).toLowerCase();
+
+        const hasIngredients = combinedText.includes('ingredients');
+        const hasInstructions = combinedText.includes('instructions') || combinedText.includes('steps');
+    
         if (hasIngredients && hasInstructions) {
             // Make metadata div a flex container
             metadataElement.style.display = 'flex';
             metadataElement.style.alignItems = 'center';
             metadataElement.style.justifyContent = 'space-between';
-
+    
             // Create recipe buttons container
             const recipeButtons = document.createElement('span');
             recipeButtons.className = 'recipe-buttons';
@@ -2374,22 +2551,110 @@ function updateMetadata(messageElement, metadata = {}) {
                 display: flex;
                 gap: 5px;
                 margin-left: auto;
-            `;
+            `;    
 
             // Add the buttons
-            recipeButtons.innerHTML = `
-                <button style="
-                    background: transparent;
-                    border: none;
-                    cursor: pointer;
-                    font-size: 20px;
-                    padding: 0;
-                    margin: 0;
-                " onclick="printRecipe('${text.replace(
-                /'/g,
-                "\\'"
-                )}', this.closest('.message'))" title="Print Recipe">🖨️</button>
+            // Create print button safely without inline onclick
+            const printButton = document.createElement('button');
+            printButton.style.cssText = `
+                background: transparent;
+                border: none;
+                cursor: pointer;
+                font-size: 20px;
+                padding: 0;
+                margin: 0;
             `;
+            printButton.title = 'Print Recipe';
+            printButton.innerHTML = '🖨️';
+            
+            // Add event listener to avoid JavaScript parsing issues
+            // Add event listener to avoid JavaScript parsing issues
+            printButton.addEventListener('click', function() {
+                // First try to get the HTML content for better extraction
+                let rawText = '';
+                if (messageContent.innerHTML && messageContent.innerHTML.includes('<h3')) {
+                    // Debug what we're working with
+                    console.log('🖨️ [PRINT] Raw HTML:', messageContent.innerHTML);
+                    
+                    // Fallback: if CSS selectors don't work, parse HTML directly
+                    let extractedText = '';
+                    
+                    // Try CSS selectors first
+                    const ingredientsHeader = messageContent.querySelector('.recipe-ingredients-heading');
+                    const instructionsHeader = messageContent.querySelector('.recipe-instructions-heading');
+                    
+                    console.log('🖨️ [PRINT] Found ingredients header:', !!ingredientsHeader);
+                    console.log('🖨️ [PRINT] Found instructions header:', !!instructionsHeader);
+                    
+                    if (ingredientsHeader && instructionsHeader) {
+                        // CSS selector approach
+                        extractedText += 'Ingredients:\n';
+                        const ingredientsList = messageContent.querySelector('.recipe-ingredients-list');
+                        if (ingredientsList) {
+                            const items = ingredientsList.querySelectorAll('.recipe-ingredient-item');
+                            console.log('🖨️ [PRINT] Found ingredient items:', items.length);
+                            items.forEach(item => {
+                                extractedText += '• ' + item.textContent.trim() + '\n';
+                            });
+                        }
+                        
+                        extractedText += '\nInstructions:\n';
+                        const instructionsList = messageContent.querySelector('.recipe-instructions-list');
+                        if (instructionsList) {
+                            const items = instructionsList.querySelectorAll('.recipe-instruction-item');
+                            console.log('🖨️ [PRINT] Found instruction items:', items.length);
+                            items.forEach((item, index) => {
+                                extractedText += (index + 1) + '. ' + item.textContent.trim() + '\n';
+                            });
+                        }
+                    } else {
+                        // Fallback: parse HTML manually
+                        console.log('🖨️ [PRINT] Using HTML parsing fallback');
+                        extractedText = messageContent.innerHTML
+                            .replace(/<h3[^>]*class="recipe-ingredients-heading"[^>]*>/g, '\nIngredients:\n')
+                            .replace(/<h3[^>]*class="recipe-instructions-heading"[^>]*>/g, '\nInstructions:\n')
+                            .replace(/<li[^>]*class="recipe-ingredient-item"[^>]*>/g, '• ')
+                            .replace(/<li[^>]*class="recipe-instruction-item"[^>]*>/g, function(match, offset, string) {
+                                // Count previous instruction items to get the number
+                                const beforeThis = string.substring(0, offset);
+                                const instructionMatches = (beforeThis.match(/class="recipe-instruction-item"/g) || []).length;
+                                return (instructionMatches + 1) + '. ';
+                            })
+                            .replace(/<[^>]*>/g, '') // Remove all HTML tags
+                            .replace(/\n\s*\n/g, '\n') // Remove duplicate newlines
+                            .trim();
+                    }
+                    
+                    rawText = extractedText.trim();
+                    console.log('🖨️ [PRINT] Extracted text length:', rawText.length);
+                    console.log('🖨️ [PRINT] Extracted text preview:', rawText.substring(0, 300));
+                } else {
+                    // Fallback to text content
+                    rawText = messageContent.textContent || messageContent.innerText || '';
+                }
+                
+                // Clean the text for printing by removing emojis and special formatting
+                let cleanText = rawText
+                    .replace(/👨‍🍳🍽️\s*/g, '')  // Remove chef/recipe emojis
+                    .replace(/🥄\s*Ingredients/gi, 'Ingredients:')  // Replace emoji ingredients with clean text
+                    .replace(/👩‍🍳\s*Instructions/gi, 'Instructions:')  // Replace emoji instructions with clean text
+                    .replace(/[\u{1F300}-\u{1F9FF}]/gu, '')  // Remove any remaining emojis
+                    .trim();
+                
+                // Debug intermediate steps to find where truncation occurs
+                console.log('🖨️ [PRINT-DEBUG] Raw text length after extraction:', rawText.length);
+                console.log('🖨️ [PRINT-DEBUG] Raw text preview:', rawText.substring(0, 300));
+                console.log('🖨️ [PRINT-DEBUG] Clean text length after emoji removal:', cleanText.length);
+                console.log('🖨️ [PRINT-DEBUG] Clean text ends with:', cleanText.substring(cleanText.length - 50));
+                
+                console.log('Print button clicked with clean text length:', cleanText.length);
+                console.log('Clean text preview:', cleanText.substring(0, 200));
+                console.log('🖨️ [CALLER-DEBUG] About to call printRecipe with text length:', cleanText.length);
+                console.log('🖨️ [CALLER-DEBUG] Text being passed ends with:', cleanText.substring(cleanText.length - 100));
+                printRecipe(cleanText, messageElement);
+            });
+            
+            recipeButtons.appendChild(printButton);
 
             metadataElement.appendChild(recipeButtons);
         }
@@ -2510,10 +2775,18 @@ function splitTextIntoChunks(text, maxLength = 500, forTTS = false) {
     
     // Add H.G. and J.K. to the honorifics regex
     const honorifics = /(?:Mr\.|Mrs\.|Dr\.|Sr\.|Jr\.|Ms\.|Prof\.|Rev\.|Capt\.|Lt\.|Col\.|Gen\.|Sgt\.|Cpl\.|Pvt\.|St\.|H\.G\.|J\.K\.)/g;
+    
     // Replace honorifics and abbreviations with a marker
     let tempText = text.replace(honorifics, match => match.replace(/\./g, 'DOT'));
+    
     // If for TTS, remove the DOT marker (so "MrDOT Smith" becomes "Mr Smith")
     if (forTTS) tempText = tempText.replace(/DOT/g, '');
+
+    // Fix letter-by-letter reading by normalizing whitespace first
+    if (forTTS) {
+        text = text.replace(/\s+/g, ' ').trim();
+    }
+    
     // If for display, restore the period
     else tempText = tempText.replace(/DOT/g, '.');
     
@@ -2892,35 +3165,38 @@ async function queueAudioChunk(text) {
     }
     
     // Generic pattern to match any sequence of initials (1-3 letters) followed by a last name
-    const initialPattern = /([A-Z]\.?\s*){1,3}([A-Z][a-z]+)/g;
+    //const initialPattern = /([A-Z]\.?\s*){1,3}([A-Z][a-z]+)/g;
+    // text = protectHonorifics(text);
+    // text = preprocessForTTS(text);
     
-    // First pass: Replace all initial sequences with a single unit
-    text = text.replace(initialPattern, (match) => {
-        console.log('Found initial sequence:', match);
-        // Remove all spaces and periods between initials
-        const result = match.replace(/[\s\.]+/g, '');
-        console.log('Converted to:', result);
-        return result;
-    });
+    // // First pass: Replace all initial sequences with a single unit
+    // text = text.replace(initialPattern, (match) => {
+    //     console.log('Found initial sequence:', match);
+    //     // Remove all spaces and periods between initials
+    //     const result = match.replace(/[\s\.]+/g, '');
+    //     console.log('Converted to:', result);
+    //     return result;
+    // });
     
-    console.log('After initial replacement:', text);
+    // console.log('After initial replacement:', text);
     
-    // Also handle cases where it's part of a phrase
-    text = text.replace(/(?:by|from|of|based on)\s+([A-Z]\.?\s*){1,3}([A-Z][a-z]+)/g, (match) => {
-        console.log('Found phrase with initials:', match);
-        // Keep the preposition but join the initials
-        const result = match.replace(/([A-Z]\.?\s*){1,3}([A-Z][a-z]+)/g, (name) => {
-            return name.replace(/[\s\.]+/g, '');
-        });
-        console.log('Converted phrase to:', result);
-        return result;
-    });
+    // // Also handle cases where it's part of a phrase
+    // text = text.replace(/(?:by|from|of|based on)\s+([A-Z]\.?\s*){1,3}([A-Z][a-z]+)/g, (match) => {
+    //     console.log('Found phrase with initials:', match);
+    //     // Keep the preposition but join the initials
+    //     const result = match.replace(/([A-Z]\.?\s*){1,3}([A-Z][a-z]+)/g, (name) => {
+    //         return name.replace(/[\s\.]+/g, '');
+    //     });
+    //     console.log('Converted phrase to:', result);
+    //     return result;
+    // });
     
-    console.log('After phrase replacement:', text);
+    // console.log('After phrase replacement:', text);
     
     // Protect honorifics and abbreviations before TTS
     text = protectHonorifics(text);
     text = preprocessForTTS(text);
+
     console.log('After TTS preprocessing:', text);
     
     state.stopRequested = false;
@@ -2933,13 +3209,17 @@ async function queueAudioChunk(text) {
     }
 
     console.log('Queueing audio chunk:', text);
+
     // Split into sections, but preserve our protected names
-    const sections = text.split(/(?=Ingredients:|Instructions:)/);
-    let chunks = [];
-    sections.forEach(section => {
-        const sectionChunks = splitTextIntoChunks(section, 200, true);
-        chunks = chunks.concat(sectionChunks);
-    });
+    // const sections = text.split(/(?=Ingredients:|Instructions:)/);
+    // let chunks = [];
+    // sections.forEach(section => {
+    //     const sectionChunks = splitTextIntoChunks(section, 200, true);
+    //     chunks = chunks.concat(sectionChunks);
+    // });
+
+    // TEMPORARILY DISABLED recipe splitting - just use normal chunking with larger chunks for recipes
+    const chunks = splitTextIntoChunks(text, 400, true);
     
     console.log('Chunks before post-processing:', chunks);
     
@@ -3255,16 +3535,33 @@ function handleImageUpload(event) {
 // Search and display images function
 async function searchAndDisplayImages(query) {
     try {
+        console.log('IMAGE DEBUG: Fetching images for:', query);
         const response = await fetch(`/api/google-image-search?q=${encodeURIComponent(query)}`);
         if (!response.ok) {
             const errorData = await response.json();
             throw new Error(`HTTP error! status: ${response.status}, message: ${errorData.error}`);
         }
         const data = await response.json();
+        console.log('IMAGE DEBUG: Raw API response:', data);
 
-        if (data.items && data.items.length > 0) {
-            return { images: data.items.map(item => ({ url: item.link, name: item.title })) };
+        if (data.images && data.images.length > 0) {
+            console.log('IMAGE DEBUG: Found', data.images.length, 'images');
+            
+            // Remove duplicates by URL and filter out invalid entries
+            const uniqueImages = [];
+            const seenUrls = new Set();
+            
+            for (const item of data.images) {
+                if (item.link && item.title && !seenUrls.has(item.link)) {
+                    seenUrls.add(item.link);
+                    uniqueImages.push({ link: item.link, title: item.title, thumbnail: item.thumbnail });
+                }
+            }
+            
+            console.log('IMAGE DEBUG: After deduplication:', uniqueImages.length, 'unique images');
+            return { images: uniqueImages };
         }
+        console.log('IMAGE DEBUG: No images found');
         return null;
     } catch (error) {
         console.error('Error searching images:', error);
@@ -3288,44 +3585,217 @@ function extractImageHeading(text) {
 }
 
 function insertAndStyleImages(images, messageElement, headingText) {
+    const headingHtml = headingText ? `<h3 style="margin: 15px 0 10px 0; color: #333; font-size: 16px;">${headingText}</h3>` : "";
+    
+    // Check if images section already exists
+    const existingImageSection = messageElement.querySelector('.image-section');
+    if (existingImageSection) {
+        // If section exists, just add new images to the top
+        addMoreImages(images, existingImageSection);
+        return;
+    }
+
     const imageSection = `
-        <div class="image-section" style="margin-top: 15px; border-top: 1px solid #ccc; padding-top: 10px;">
-            <div class="image-container" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; max-width: 100%;">
-                ${images.map(image => `
-                    <a href="${image.link}" target="_blank" rel="noopener noreferrer" class="image-link"
-                        style="cursor: pointer; text-decoration: none; display: block; border: 1px solid #ddd; border-radius: 5px; overflow: hidden; transition: transform 0.2s ease-in-out; aspect-ratio: 1;">
-                        <img src="${image.link}" alt="${image.title}" title="${image.title}"
-                                style="width: 100%; height: 100%; object-fit: cover; display: block;">
-                    </a>
-                `).join('')}
+        ${headingHtml}
+        <div class="image-section" style="margin-top: 15px; border-top: 1px solid #ccc; padding-top: 10px; position: relative;">
+            <!-- More Images Button -->
+            <button class="more-images-btn" style="
+                position: absolute; 
+                top: 10px; 
+                right: 10px; 
+                background: #007bff; 
+                color: white; 
+                border: none; 
+                padding: 8px 12px; 
+                border-radius: 5px; 
+                cursor: pointer; 
+                font-size: 12px; 
+                z-index: 10;
+                transition: background 0.2s ease;
+            " onmouseover="this.style.background='#0056b3'" onmouseout="this.style.background='#007bff'">
+                More Images
+            </button>
+            
+            <!-- Scrollable Container -->
+            <div class="image-container-scroll" style="
+                max-height: 400px; 
+                overflow-y: auto; 
+                overflow-x: hidden; 
+                border: 1px solid #ddd; 
+                border-radius: 8px; 
+                padding: 10px;
+                margin-top: 35px;
+            ">
+                <div class="image-container" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; max-width: 100%;">
+                    ${images.map(image => `
+                        <a href="${image.link}" target="_blank" rel="noopener noreferrer" class="image-link"
+                            style="cursor: pointer; text-decoration: none; display: block; border: 1px solid #ddd; border-radius: 5px; overflow: hidden; transition: transform 0.2s ease-in-out; aspect-ratio: 1;">
+                            <img src="${image.link}" alt="${image.title}" title="${image.title}"
+                                    style="width: 100%; height: 100%; object-fit: cover; display: block;">
+                        </a>
+                    `).join('')}
+                </div>
             </div>
         </div>
     `;
 
-    // Check if images section already exists
-    const existingImageSection = messageElement.querySelector('.image-section');
-    if (existingImageSection) {
-        existingImageSection.remove();
-    }
-
     messageElement.insertAdjacentHTML('beforeend', imageSection);
 
-    // Add hover effects and error handling
-    messageElement.querySelectorAll('.image-link').forEach(link => {
+    // Store the current query for the "More Images" button
+    const imagesSectionElement = messageElement.querySelector('.image-section');
+    const query = headingText ? headingText.replace('Here are some relevant images for ', '').replace('.', '') : 'images';
+    imagesSectionElement.setAttribute('data-query', query);
+
+    // Add event listener to "More Images" button
+    const moreImagesBtn = messageElement.querySelector('.more-images-btn');
+    moreImagesBtn.addEventListener('click', () => fetchMoreImages(imagesSectionElement, query));
+
+    // Add hover effects and error handling to initial images
+    addImageEventListeners(messageElement);
+}
+
+// Function to add more images to the top of existing container
+function addMoreImages(newImages, imagesSectionElement) {
+    const imageContainer = imagesSectionElement.querySelector('.image-container');
+    
+    // Create new images HTML
+    const newImagesHtml = newImages.map(image => `
+        <a href="${image.link}" target="_blank" rel="noopener noreferrer" class="image-link new-image"
+            style="cursor: pointer; text-decoration: none; display: block; border: 1px solid #ddd; border-radius: 5px; overflow: hidden; transition: transform 0.2s ease-in-out; aspect-ratio: 1;">
+            <img src="${image.link}" alt="${image.title}" title="${image.title}"
+                    style="width: 100%; height: 100%; object-fit: cover; display: block;">
+        </a>
+    `).join('');
+    
+    // Insert at the TOP of the container
+    imageContainer.insertAdjacentHTML('afterbegin', newImagesHtml);
+    
+    // Add event listeners to new images
+    addImageEventListeners(imagesSectionElement);
+    
+    // Smooth scroll to show new images
+    const scrollContainer = imagesSectionElement.querySelector('.image-container-scroll');
+    scrollContainer.scrollTop = 0; // Scroll to top to show new images
+}
+
+// Function to fetch more images
+// Simplified function - no pagination needed!
+async function fetchMoreImages(imagesSectionElement, query) {
+    const moreImagesBtn = imagesSectionElement.querySelector('.more-images-btn');
+    
+    // Show loading state
+    moreImagesBtn.textContent = 'Loading...';
+    moreImagesBtn.disabled = true;
+    moreImagesBtn.style.background = '#6c757d';
+    
+    try {
+        console.log('IMAGE DEBUG: Fetching more images for:', query);
+        
+        // Just make the same API call - let deduplication handle variety
+        const response = await fetch(`/api/google-image-search?q=${encodeURIComponent(query)}`);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('IMAGE DEBUG: More images response:', data);
+        
+        if (data.images && data.images.length > 0) {
+            // Remove duplicates from new batch
+            const existingLinks = new Set(
+                Array.from(imagesSectionElement.querySelectorAll('.image-link img')).map(img => img.src)
+            );
+            
+            const newUniqueImages = data.images.filter(item => 
+                item.link && item.title && !existingLinks.has(item.link)
+            );
+            
+            if (newUniqueImages.length > 0) {
+                console.log('IMAGE DEBUG: Adding', newUniqueImages.length, 'new unique images');
+                addMoreImages(newUniqueImages, imagesSectionElement);
+            } else {
+                // If no new images, modify query slightly for variety
+                fetchMoreImagesWithVariation(imagesSectionElement, query);
+            }
+        }
+        
+    } catch (error) {
+        console.error('Error fetching more images:', error);
+    } finally {
+        // Restore button state
+        moreImagesBtn.textContent = 'More Images';
+        moreImagesBtn.disabled = false;
+        moreImagesBtn.style.background = '#007bff';
+    }
+}
+
+// Optional: Add variety when we run out of unique images
+// Complete function with variation when we run out of unique images
+async function fetchMoreImagesWithVariation(imagesSectionElement, query) {
+    const variations = [
+        `${query} photos`,
+        `${query} pictures`, 
+        `${query} images`,
+        `${query} wallpaper`,
+        `beautiful ${query}`,
+        `${query} HD`,
+        `amazing ${query}`,
+        `${query} nature`,
+        `${query} wildlife`
+    ];
+    
+    const randomVariation = variations[Math.floor(Math.random() * variations.length)];
+    console.log('IMAGE DEBUG: Trying variation:', randomVariation);
+    
+    try {
+        const response = await fetch(`/api/google-image-search?q=${encodeURIComponent(randomVariation)}`);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('IMAGE DEBUG: Variation response:', data);
+        
+        if (data.images && data.images.length > 0) {
+            // Remove duplicates from variation batch
+            const existingLinks = new Set(
+                Array.from(imagesSectionElement.querySelectorAll('.image-link img')).map(img => img.src)
+            );
+            
+            const newUniqueImages = data.images.filter(item => 
+                item.link && item.title && !existingLinks.has(item.link)
+            );
+            
+            if (newUniqueImages.length > 0) {
+                console.log('IMAGE DEBUG: Adding', newUniqueImages.length, 'variation images');
+                addMoreImages(newUniqueImages, imagesSectionElement);
+            } else {
+                console.log('IMAGE DEBUG: No new images found even with variation');
+            }
+        }
+        
+    } catch (error) {
+        console.error('Error fetching variation images:', error);
+    }
+}
+
+// Function to add event listeners to images (hover + error handling)
+function addImageEventListeners(messageElement) {
+    messageElement.querySelectorAll('.image-link:not(.processed)').forEach(link => {
+        link.classList.add('processed'); // Mark as processed to avoid duplicate listeners
+        
         link.onmouseover = () => link.style.transform = 'scale(1.05)';
         link.onmouseout = () => link.style.transform = 'scale(1)';
 
-        // Add error handling for images
         const img = link.querySelector('img');
         img.onerror = () => {
-            img.src = img.getAttribute('data-thumbnail') || 'path/to/fallback-image.jpg';
-            console.log('Image failed to load, falling back to thumbnail:', img.src);
+            img.style.display = 'none';
+            const placeholder = document.createElement('div');
+            placeholder.style.cssText = 'width: 100%; height: 100%; background: linear-gradient(135deg, #f0f0f0, #e0e0e0); display: flex; align-items: center; justify-content: center; color: #999; font-size: 12px; text-align: center; padding: 10px; box-sizing: border-box;';
+            placeholder.innerHTML = '<span>Image<br>Unavailable</span>';
+            link.appendChild(placeholder);
+            console.log('Image failed to load:', img.src);
         };
-
-        // Store thumbnail as backup
-        if (image.thumbnail) {
-            img.setAttribute('data-thumbnail', image.thumbnail);
-        }
     });
 }
 
@@ -3664,73 +4134,201 @@ async function startSmartInterruptListening() {
     }
 }
 
+
 // =====================================================
-// RECIPE HANDLING FUNCTIONS
+// IMPROVED RECIPE HANDLING FUNCTIONS
 // =====================================================
 
 window.printRecipe = async function(recipeText, messageElement) {
-
-    // Hide the pagination bar
-    //hidePaginationBar();
-
     try {
-        console.log('Recipe text sent to server:', recipeText.substring(0, 200));
-
-        // Get any images from the message element FIRST
-        const images = messageElement.querySelectorAll('.image-link img');
-        const imageUrls = Array.from(images).map(img => img.src);
-        console.log('Found recipe images:', imageUrls);
+        console.log('🖨️ [SERVER-DEBUG] Full recipe text length received:', recipeText.length);
+        console.log('🖨️ [SERVER-DEBUG] Recipe text ends with:', recipeText.substring(recipeText.length - 100));
+        console.log('Recipe text sent to server:', recipeText.substring(0, 200)); // Log what we're sending
+        
+        // Extract recipe title from the original message to match server expectations
+        const messageContainer = messageElement.closest('.message');
+        const fullMessageText = messageContainer ? messageContainer.textContent : '';
+        
+        // Look for the recipe title in the original message (usually appears first in ALL CAPS)
+        let recipeTitle = "ORANGE SHERBET"; // Default based on current recipe
+        const titleMatch = fullMessageText.match(/([A-Z][A-Z\s]{5,}?)(?=\n|Here is|$)/);
+        if (titleMatch && titleMatch[1].trim().length > 5) {
+            recipeTitle = titleMatch[1].trim();
+        }
+        
+        console.log('🖨️ [TITLE-DEBUG] Extracted recipe title:', recipeTitle);
+        console.log('🖨️ [TITLE-DEBUG] Full message text preview:', fullMessageText.substring(0, 200));
+        
+        // Format text to match server expectations: TITLE + "Here is" + content
+        const serverFormattedText = `${recipeTitle}\n\nHere is a delicious recipe.\n\n` + recipeText
+            .replace(/•\s*/g, '') // Remove bullet points
+            .replace(/Instructions:\s*/i, '\nInstructions:\n') // Ensure proper spacing
+            .replace(/Ingredients:\s*/i, 'Ingredients:\n') // Ensure proper spacing
+            .trim();
+            
+        console.log('🖨️ [FORMAT-DEBUG] Formatted text length:', serverFormattedText.length);
+        console.log('🖨️ [FORMAT-DEBUG] Formatted text preview:', serverFormattedText.substring(0, 300));
+        
+        // Debug the actual payload being sent
+        const payload = { text: serverFormattedText };
+        console.log('🖨️ [FETCH-DEBUG] Payload object text length:', payload.text.length);
+        console.log('🖨️ [FETCH-DEBUG] Payload text ends with:', payload.text.substring(payload.text.length - 100));
+        
+        const jsonString = JSON.stringify(payload);
+        console.log('🖨️ [FETCH-DEBUG] JSON string length:', jsonString.length);
+        console.log('🖨️ [FETCH-DEBUG] JSON string ends with:', jsonString.substring(jsonString.length - 150));
 
         const response = await fetch('/api/recipe', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ text: recipeText })
+            body: jsonString
         });
 
         const data = await response.json();
+        console.log('Server response:', data); // Log what we get back
+        
+        // If server failed, try alternative formats
+        if (!data.success) {
+            console.log('🖨️ [SERVER-ERROR] Server failed to parse. Trying alternative formats...');
+            console.log('🖨️ [SERVER-ERROR] Current format preview:', serverFormattedText.substring(0, 500));
+            
+            // Try alternative format: just the original text with minimal changes
+            const alternativeFormat = recipeText
+                .replace(/•/g, '-') // Use dashes instead of bullets
+                .replace(/Ingredients:/i, '**Ingredients:**')
+                .replace(/Instructions:/i, '**Instructions:**');
+                
+            console.log('🖨️ [RETRY] Trying alternative format...');
+            
+            const retryResponse = await fetch('/api/recipe', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: alternativeFormat })
+            });
+            
+            const retryData = await retryResponse.json();
+            console.log('🖨️ [RETRY] Alternative format response:', retryData);
+            
+            if (retryData.success) {
+                // Use the successful format
+                Object.assign(data, retryData);
+            } else {
+                console.log('🖨️ [RETRY] Alternative format also failed. This is a server-side parsing issue.');
+            }
+        }
+
         if (!data.success) throw new Error(data.error);
 
         const recipeName = data.recipe.name;
-        
-        // Split the recipe text into sections
-        const sections = recipeText.split(/(?:ingredients:|instructions:|directions:)/i);
-        
-        const description = sections[0]
-            .split('\n')[0]
-            .substring(recipeName.length)
-            .replace(/^[^a-zA-Z]+/, '')
-            .trim();
+        console.log('Recipe name from server:', recipeName); // Log the name we'll use
 
-        const ingredients = sections[1] ? sections[1].trim().split(/\d+\./).filter(item => item.trim()) : [];
-        const instructions = sections[2] ? sections[2].trim().split(/\d+\./).filter(item => item.trim()) : [];
+        // Get any images from the message
+        const images = messageElement.querySelectorAll('.image-link img');
+        const imageUrls = Array.from(images).map(img => img.src);
 
-        // Create print window
+ 
+        // Split the recipe text into sections - third try!
+        console.log('🔍 [DEBUG] Full recipe text:', recipeText);
+
+        // More precise parsing
+        let ingredients = [];
+        let instructions = [];
+        let description = '';
+
+        // Try to find ingredients section
+        const ingredientsMatch = recipeText.match(/ingredients:?\s*([\s\S]*?)(?=instructions:|directions:|$)/i);
+        if (ingredientsMatch) {
+            const ingredientsText = ingredientsMatch[1];
+            console.log('🔍 [DEBUG] Found ingredients text:', ingredientsText);
+            
+            // Only get lines that look like actual ingredients (not cooking instructions)
+            ingredients = ingredientsText
+                .split('\n')
+                .map(line => line.trim())
+                .filter(line => {
+                    // Include lines that start with numbers or bullets, but exclude cooking verbs
+                    const hasCookingVerbs = /^(fold|bake|let|enjoy|mix|stir|add|pour|heat|cook|remove)/i.test(line);
+                    const isIngredientFormat = line && (line.match(/^\d+\./) || line.match(/^[•-]/) || line.match(/^\d+\s+(cup|tablespoon|teaspoon|pound|ounce)/));
+                    return isIngredientFormat && !hasCookingVerbs;
+                })
+                .map(line => line.replace(/^\d+\.\s*/, '').replace(/^[•-]\s*/, ''));
+        }
+
+        // Try to find instructions section  
+        const instructionsMatch = recipeText.match(/(?:instructions|directions):?\s*([\s\S]*)/i);
+        if (instructionsMatch) {
+            const instructionsText = instructionsMatch[1];
+            console.log('🔍 [DEBUG] Found instructions text:', instructionsText);
+            
+            // Get lines that look like cooking instructions
+            instructions = instructionsText
+                .split('\n')
+                .map(line => line.trim())
+                .filter(line => {
+                    // Include lines with cooking verbs or numbered steps
+                    const hasCookingVerbs = /^(fold|bake|let|enjoy|mix|stir|add|pour|heat|cook|remove|preheat|melt|combine|gradually)/i.test(line);
+                    const isNumbered = line.match(/^\d+\./);
+                    return line && (hasCookingVerbs || isNumbered);
+                })
+                .map(line => line.replace(/^\d+\.\s*/, ''));
+        }
+
+        // Extract description (everything before ingredients)
+        const descMatch = recipeText.match(/^([\s\S]*?)(?=ingredients:)/i);
+        if (descMatch) {
+            description = descMatch[1]
+                .split('\n')[0]
+                .replace(recipeName, '')
+                .replace(/^[^a-zA-Z]+/, '')
+                .trim();
+        }
+
+        console.log('🔍 [DEBUG] Final ingredients:', ingredients);
+        console.log('🔍 [DEBUG] Final instructions:', instructions);
+
+        // Fallback: if no proper parsing worked, split by simple patterns
+        if (ingredients.length === 0 && instructions.length === 0) {
+            console.log('🔍 [DEBUG] Fallback parsing...');
+            const lines = recipeText.split('\n').map(line => line.trim()).filter(line => line);
+            
+            let currentSection = '';
+            for (const line of lines) {
+                if (line.toLowerCase().includes('ingredients')) {
+                    currentSection = 'ingredients';
+                    continue;
+                }
+                if (line.toLowerCase().includes('instructions') || line.toLowerCase().includes('directions')) {
+                    currentSection = 'instructions';
+                    continue;
+                }
+                
+                if (currentSection === 'ingredients' && line.match(/^\d+\.|\w/)) {
+                    ingredients.push(line.replace(/^\d+\.\s*/, ''));
+                }
+                if (currentSection === 'instructions' && line.match(/^\d+\./)) {
+                    instructions.push(line.replace(/^\d+\.\s*/, ''));
+                }
+            }
+        }
+
+
+        // Create print window first to ensure it's ready
         const printWindow = window.open('', '_blank');
         if (!printWindow) {
             throw new Error('Pop-up blocked. Please allow pop-ups and try again.');
         }
 
-        // Create formatted HTML with recipe content first, then images section
+        // Create formatted HTML
         const formattedText = `
-            <div class="recipe-content">
-                <div class="recipe-intro">${description}</div>
-                <h2>Ingredients</h2>
-                <ul class="ingredients-list">
-                    ${ingredients.map(item => `<li>${item.trim()}</li>`).join('')}
-                </ul>
-                <h2>Instructions</h2>
-                <ol class="instructions-list">
-                    ${instructions.map(item => `<li>${item.trim()}</li>`).join('')}
-                </ol>
-            </div>
-            ${imageUrls.length > 0 ? `
-                <div class="recipe-images">
-                    <h2>Recipe Images</h2>
-                    <div class="image-grid">
-                        ${imageUrls.map(url => `<img src="${url}" alt="Recipe Image">`).join('')}
-                    </div>
-                </div>
-            ` : ''}
+            <div class="recipe-intro">${description}</div>
+            <h2>Ingredients</h2>
+            <ul class="ingredients-list">
+                ${ingredients.map(item => `<li>${item.trim()}</li>`).join('')}
+            </ul>
+            <h2>Instructions</h2>
+            <ol class="instructions-list">
+                ${instructions.map(item => `<li>${item.trim()}</li>`).join('')}
+            </ol>
         `;
 
         printWindow.document.write(`
@@ -3764,9 +4362,6 @@ window.printRecipe = async function(recipeText, messageElement) {
                             margin-bottom: 20px;
                             color: #666;
                         }
-                        .recipe-content {
-                            margin-bottom: 40px;
-                        }
                         .ingredients-list {
                             list-style-type: disc !important;
                             padding-left: 20px;
@@ -3785,52 +4380,57 @@ window.printRecipe = async function(recipeText, messageElement) {
                             margin-bottom: 12px;
                             line-height: 1.6;
                         }
-                        .recipe-images {
-                            margin-top: 40px;
-                            border-top: 2px solid #eee;
-                            padding-top: 20px;
+                        .image-section {
+                            page-break-before: always;
                         }
                         .image-grid {
                             display: grid;
                             grid-template-columns: repeat(2, 1fr);
-                            gap: 20px;
-                            margin-top: 20px;
+                            gap: 10px;
+                            margin: 5px 0;
+                            max-width: 800px;
                         }
                         .image-grid img {
                             width: 100%;
-                            height: 300px;
+                            height: 250px;
                             object-fit: cover;
                             border-radius: 8px;
-                        }
-                        @media print {
-                            .recipe-images {
-                                break-before: always;
-                            }
-                            .image-grid img {
-                                max-height: 250px;
-                            }
                         }
                     </style>
                 </head>
                 <body>
                     <h1>${recipeName}</h1>
-                    ${formattedText}
+                    <div class="recipe-content">${formattedText}</div>
+                    ${imageUrls.length ? `
+                        <hr style="margin: 30px 0; border: none; border-top: 2px solid #ddd;">
+                        <div class="image-section">
+                            <h2 style="margin-bottom: 15px;">Recipe Images</h2>
+                            <div class="image-grid">
+                                ${imageUrls.map(url => `<img src="${url}" alt="Recipe Image">`).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
                 </body>
             </html>
         `);
-        
         printWindow.document.close();
-        
-        // Wait for images to load before printing
         setTimeout(() => {
             printWindow.print();
-        }, 1000);
+        }, 500);  // Give the browser time to load images
 
     } catch (error) {
         console.error('Error printing recipe:', error);
         updateStatus(MESSAGES.ERRORS.CONNECTION);
     }
 };
+
+function printRecipe(recipeText, messageElement) {
+    // Call the async version
+    console.log('🖨️ [WRAPPER-DEBUG] Wrapper function received text length:', recipeText.length);
+    console.log('🖨️ [WRAPPER-DEBUG] Wrapper text ends with:', recipeText.substring(recipeText.length - 100));
+    window.printRecipe(recipeText, messageElement);
+}  
+
 
 // =====================================================
 // PERSONAL INFO HANDLING FUNCTIONS
@@ -5116,51 +5716,7 @@ async function startListening() {
     }
 }
 
-function printRecipe(recipeText, messageElement) {
-    // Create a new window for printing
-    const printWindow = window.open('', '_blank');
-    
-    // Create the print content
-    const printContent = `
-        <html>
-            <head>
-                <title>Recipe Print</title>
-                <style>
-                    body {
-                        font-family: Arial, sans-serif;
-                        line-height: 1.6;
-                        padding: 20px;
-                        max-width: 800px;
-                        margin: 0 auto;
-                    }
-                    @media print {
-                        body {
-                            padding: 0;
-                        }
-                    }
-                </style>
-            </head>
-            <body>
-                <div>${recipeText}</div>
-            </body>
-        </html>
-    `;
-    
-    // Write the content to the new window
-    printWindow.document.write(printContent);
-    printWindow.document.close();
-    
-    // Wait for content to load then print
-    printWindow.onload = function() {
-        printWindow.print();
-        // Close the window after printing (or if user cancels)
-        printWindow.onafterprint = function() {
-            printWindow.close();
-        };
-    };
-}
 
-// Helper functions for honorific handling
 function protectHonorifics(text) {
     const honorifics = [
         'Mr', 'Mrs', 'Ms', 'Dr', 'Sr', 'Jr', 'Prof', 'Rev', 'Fr', 'St', 'Mx', 'Capt', 'Lt', 'Col', 'Gen', 'Sgt', 'Adm', 'Maj', 'Hon', 'Pres', 'Gov', 'Amb', 'Sec', 'Supt', 'Rep', 'Sen', 'Treas', 'Dir', 'H.G', 'J.K', 'HG', 'JK'
@@ -5326,6 +5882,7 @@ async function warmUpTTS() {
 function preprocessForTTS(text) {
     let processed = text
         // Replace specific phrases first
+        .replace(/U\.S\. passport/gi, 'United States passport')
         .replace(/U\.S\. Citizen/gi, 'United States citizen')
         .replace(/U\.S\. government/gi, 'United States government')
         // Replace abbreviations (with or without periods)
@@ -5334,9 +5891,9 @@ function preprocessForTTS(text) {
         .replace(/U\.S\./gi, 'United States')
         .replace(/U\.S/gi, 'United States')
         .replace(/\bUS\b/g, 'United States')
-        // Aggressively protect H.G. Wells and J.K. Rowling (all forms, no spaces between initials)
-        .replace(/H\s*\.?\s*G\s*\.?\s*Wells/gi, 'HG Wells')
-        .replace(/J\s*\.?\s*K\s*\.?\s*Rowling/gi, 'JK Rowling');
+        // Protect H.G. Wells and J.K. Rowling
+        .replace(/H\.G\.\s*Wells/gi, 'HG Wells')
+        .replace(/J\.K\.\s*Rowling/gi, 'JK Rowling');
     return processed;
 }
 
@@ -6312,7 +6869,7 @@ function renderRealYoutubePaginationBar(page, totalPages, subject) {
             <img src="/assets/img/drag-me.png" class="drag-me-icon" alt="Drag Me" title="Drag to move pagination bar">
             <button class="query-history-btn" title="View Query History">
                 <span class="query-history-icon">📚</span>
-                <span class="query-history-text">REAL YouTube History</span>
+                <span class="query-history-text">YouTube Query History</span>
             </button>
             <div class="query-history-dropdown">
                 <div class="query-history-header">Query History</div>
