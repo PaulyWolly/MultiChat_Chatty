@@ -2,7 +2,7 @@
   APP.JS
   Version: 2
   AppName: MultiChat_Chatty [v2]
-  Updated: 06/03/2025 @8:30AM
+  Updated: 06/03/2025 @10:00PM
   Created by Paul Welby
 */
 
@@ -6960,7 +6960,7 @@ function renderRealYoutubePaginationBar(page, totalPages, subject) {
                 };
 
                 console.log('🌐 [REAL] 📞 Making fresh API call for MORE with:', fetchBody);
-                const response = await fetch('/api/youtube/search', {
+                const response = await fetch(window.appConfig.getYouTubeApiUrl('search'), {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(fetchBody)
@@ -7030,7 +7030,7 @@ function renderRealYoutubePaginationBar(page, totalPages, subject) {
                 };
 
                 console.log('🌐 [REAL] 📞 Making fallback API call for MORE with page-based pagination:', fetchBody);
-                const response = await fetch('/api/youtube/search', {
+                const response = await fetch(window.appConfig.getYouTubeApiUrl('search'), {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(fetchBody)
@@ -7479,7 +7479,7 @@ function renderRealYoutubePaginationBar(page, totalPages, subject) {
     });
 
     // Function to update the query history display
-    function updateQueryHistoryDisplay() {
+    async function updateQueryHistoryDisplay() {
         console.log('🔍 [HISTORY] Scanning ALL cached queries in localStorage...');
         
         // Always scan localStorage for ALL cached queries instead of relying on allQueriesHistory
@@ -7517,6 +7517,10 @@ function renderRealYoutubePaginationBar(page, totalPages, subject) {
         // Sort queries by timestamp (newest first)
         const sortedHistory = cachedQueries.sort((a, b) => b.timestamp - a.timestamp);
         
+        // Check which queries are saved in database
+        const queryList = sortedHistory.map(item => item.query);
+        const savedQueries = await checkSavedQueries(queryList);
+        
         // Helper function to extract just the subject from query
         function extractSubject(query) {
             // Remove common YouTube search prefixes to show just the core subject
@@ -7533,16 +7537,34 @@ function renderRealYoutubePaginationBar(page, totalPages, subject) {
             const timeAgo = formatTimeAgo(item.timestamp);
             const isCurrentQuery = window.youtubePagination.originalQuery === item.query;
             const displaySubject = extractSubject(item.query);
+            const isSavedInDB = savedQueries[item.query] || false;
+            
+            // Get UI config
+            const uiConfig = window.appConfig ? window.appConfig.getUIConfig() : {
+                ledIndicators: { saved: '🟢', unsaved: '' },
+                saveButton: '💾',
+                deleteButton: '❌'
+            };
+            
+            // LED indicator: Green for database-stored, no LED for cache-only
+            const ledIndicator = isSavedInDB ? `<span class="query-led green" title="Saved in database">${uiConfig.ledIndicators.saved}</span>` : '';
+            
+            // Save button: Only show if not already saved
+            const saveButton = !isSavedInDB ? 
+                `<button class="query-history-save" onclick="saveQueryToDB('${item.query.replace(/'/g, "\\'")}'); event.stopPropagation();" title="Save to database">${uiConfig.saveButton}</button>` : '';
             
             return `
                 <div class="query-history-item ${isCurrentQuery ? 'current' : ''}" data-query="${item.query}">
                     <div class="query-history-content">
-                        <div class="query-history-query">${displaySubject}</div>
+                        <div class="query-history-query">
+                            ${ledIndicator}${displaySubject}
+                        </div>
                         <div class="query-history-pages">${cachedPages} pg${cachedPages !== 1 ? 's' : ''}</div>
                     </div>
                     <div class="query-history-meta">
                         <span class="query-history-time">${timeAgo}</span>
-                        <button class="query-history-delete" onclick="deleteQueryFromHistory('${item.query.replace(/'/g, "\\'")}'); event.stopPropagation();" title="Delete this query and all cached data">❌</button>
+                        ${saveButton}
+                        <button class="query-history-delete" onclick="deleteQueryFromHistory('${item.query.replace(/'/g, "\\'")}'); event.stopPropagation();" title="Delete this query and all cached data">${uiConfig.deleteButton}</button>
                     </div>
                 </div>
             `;
@@ -7551,8 +7573,9 @@ function renderRealYoutubePaginationBar(page, totalPages, subject) {
         // Add click handlers for history navigation
         historyList.querySelectorAll('.query-history-item').forEach(item => {
             item.addEventListener('click', (event) => {
-                // Don't navigate if delete button was clicked
-                if (event.target.classList.contains('query-history-delete')) {
+                // Don't navigate if delete or save button was clicked
+                if (event.target.classList.contains('query-history-delete') || 
+                    event.target.classList.contains('query-history-save')) {
                     return;
                 }
                 const query = item.dataset.query;
@@ -7601,23 +7624,25 @@ function renderRealYoutubePaginationBar(page, totalPages, subject) {
         }
     }
 
-    // Helper function to count cached pages for a query
-    function countCachedPages(query) {
-        let count = 0;
-        let page = 1;
-        
-        while (page <= 10) { // Check up to 10 pages max
-            const cacheKey = `yt_${query}_search_${page}`;
-            if (localStorage.getItem(cacheKey)) {
-                count++;
-                page++;
-            } else {
-                break;
+            // Helper function to count cached pages for a query
+        function countCachedPages(query) {
+            let count = 0;
+            let page = 1;
+            
+            const cacheConfig = window.appConfig ? window.appConfig.getCacheConfig() : { keyPrefix: 'yt_' };
+            
+            while (page <= 10) { // Check up to 10 pages max
+                const cacheKey = `${cacheConfig.keyPrefix}${query}_search_${page}`;
+                if (localStorage.getItem(cacheKey)) {
+                    count++;
+                    page++;
+                } else {
+                    break;
+                }
             }
+            
+            return count;
         }
-        
-        return count;
-    }
 
     // Helper function to format time ago
     function formatTimeAgo(timestamp) {
@@ -7801,7 +7826,7 @@ const handleYoutube = {
             const fetchBody = { query: subject, type, page: actualPage };
             if (pageToken) fetchBody.pageToken = pageToken;
 
-            const response = await fetch('/api/youtube/search', {
+            const response = await fetch(window.appConfig.getYouTubeApiUrl('search'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(fetchBody)
@@ -8106,6 +8131,150 @@ function addToQueriesHistory(query) {
         console.log('🔍 Total queries in history:', window.youtubePagination.allQueriesHistory.length);
     }
 }
+
+// =====================================================
+// YOUTUBE DATABASE PERSISTENCE FUNCTIONS
+// =====================================================
+
+// Helper function to count cached pages for a query (global scope)
+function countCachedPages(query) {
+    let count = 0;
+    let page = 1;
+    
+    const cacheConfig = window.appConfig ? window.appConfig.getCacheConfig() : { keyPrefix: 'yt_' };
+    
+    while (page <= 10) { // Check up to 10 pages max
+        const cacheKey = `${cacheConfig.keyPrefix}${query}_search_${page}`;
+        if (localStorage.getItem(cacheKey)) {
+            count++;
+            page++;
+        } else {
+            break;
+        }
+    }
+    
+    return count;
+}
+
+// Save YouTube search to database
+async function saveYouTubeSearchToDB(query) {
+    try {
+        await window.appConfig.load();
+        const dbConfig = window.appConfig.getDatabaseConfig();
+        const userId = dbConfig.defaultUserId;
+        
+        // Count cached pages for this query
+        const totalPages = countCachedPages(query);
+        
+        // Extract clean display name
+        const displayName = query
+            .replace(/^youtube\s+search\s+/i, '')
+            .replace(/^youtube\s+/i, '')
+            .replace(/^search\s+/i, '')
+            .trim() || query;
+            
+        // Get cache keys for this query
+        const cacheConfig = window.appConfig.getCacheConfig();
+        const cacheKeys = [];
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith(`${cacheConfig.keyPrefix}${query}_search_`)) {
+                cacheKeys.push(key);
+            }
+        }
+        
+        console.log('💾 [DB-SAVE] Saving query to database:', { query, displayName, totalPages });
+        
+        const response = await fetch(window.appConfig.getYouTubeApiUrl('saveSearch'), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                query,
+                userId,
+                displayName,
+                totalPages,
+                videoCount: 0, // Could be enhanced to count actual videos
+                cacheKeys,
+                searchMetadata: {
+                    searchType: 'search',
+                    lastPageViewed: 1,
+                    totalResults: totalPages * 10 // Estimate
+                }
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            console.log('💾 [DB-SAVE] Successfully saved query:', data.message);
+            const uiConfig = window.appConfig.getUIConfig();
+            window.showToast(`${uiConfig.saveButton} Saved "${displayName}" to database`, 'success');
+            
+            // Refresh the query history display to show the green LED
+            updateQueryHistoryDisplay();
+        } else {
+            throw new Error(data.error || 'Failed to save query');
+        }
+        
+        return data;
+    } catch (error) {
+        console.error('💾 [DB-SAVE] Error saving query:', error);
+        window.showToast('Failed to save query to database', 'error');
+        throw error;
+    }
+}
+
+// Check which queries are saved in database
+async function checkSavedQueries(queries) {
+    try {
+        await window.appConfig.load();
+        const dbConfig = window.appConfig.getDatabaseConfig();
+        const userId = dbConfig.defaultUserId;
+        
+        const response = await fetch(window.appConfig.getYouTubeApiUrl('checkSaved'), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ queries, userId })
+        });
+        
+        // Check if response is OK and content-type is JSON
+        if (!response.ok) {
+            console.error('🔍 [DB-CHECK] Server error:', response.status, response.statusText);
+            return {};
+        }
+        
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            console.error('🔍 [DB-CHECK] Server returned non-JSON response:', contentType);
+            const text = await response.text();
+            console.error('🔍 [DB-CHECK] Response body:', text.substring(0, 200));
+            return {};
+        }
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            console.log('🔍 [DB-CHECK] Successfully checked', queries.length, 'queries');
+            return data.results; // Object mapping query -> boolean
+        } else {
+            console.error('🔍 [DB-CHECK] Failed to check saved queries:', data.error);
+            return {};
+        }
+    } catch (error) {
+        console.error('🔍 [DB-CHECK] Error checking saved queries:', error);
+        return {};
+    }
+}
+
+// Global function for save button onclick
+window.saveQueryToDB = async function(query) {
+    try {
+        console.log('💾 [GLOBAL] Save button clicked for query:', query);
+        await saveYouTubeSearchToDB(query);
+    } catch (error) {
+        console.error('💾 [GLOBAL] Error in save button handler:', error);
+    }
+};
 
 // === MOCK YOUTUBE RESULTS RENDERING ===
 
