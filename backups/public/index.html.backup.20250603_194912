@@ -127,7 +127,7 @@
     <script type="module" src="components/ToastManager.js"></script>
     <script type="module" src="components/PlaylistManager.js"></script>
     <script src="quota-monitor.js"></script>
-    <script type="module" src="app.js"></script>
+    <script type="module" src="app.js?v=20250603-1715"></script>
     <script>
       function enforceImageStyles() {
         document.querySelectorAll(".image-link").forEach((link) => {

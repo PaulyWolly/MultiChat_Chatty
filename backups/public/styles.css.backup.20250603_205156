@@ -2797,7 +2797,7 @@ button {
 .playlist-actions-header,
 .playlist-videos-table td.playlist-actions-cell {
     /* width: 480px !important; */
-    min-width: 330px;
+    min-width: 390px;
     max-width: 480px;
     text-align: center !important;
 }
@@ -5643,4 +5643,45 @@ button.next-page-btn {
 .youtube-single-bubble-mock {
     position: relative !important;
     border: 1px dashed #ccc !important;
+}
+
+/* Recipe formatting CSS classes */
+.recipe-ingredients-heading {
+    /* Customize ingredients heading style */
+    display:block;
+    margin-top: 12px;
+    margin-bottom: 4px;
+    line-height: 1.2;
+}
+
+.recipe-instructions-heading {
+    /* Customize instructions heading style */
+    margin-top: 0px;
+    margin-bottom: 0px;
+}
+
+.recipe-ingredients-list {
+    /* Customize ingredients list spacing - you can reduce margins here */
+    list-style-type: disc;
+    padding-left: 40px;
+    margin-top: 0px;
+}
+
+.recipe-ingredient-item {
+    /* display:block; */
+    margin-bottom: -4px;
+    line-height: 1.2;
+    list-style-type: square;
+}
+
+.recipe-instructions-list {
+    /* Customize instructions list spacing - you can reduce margins here */
+    display:block;
+    margin-top: 12px;
+    margin-bottom: 4px;
+    line-height: 1.2;
+}
+
+.recipe-instruction-item {
+    /* Customize individual instruction items */
 }
