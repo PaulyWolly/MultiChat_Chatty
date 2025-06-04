@@ -1,8 +1,8 @@
 /*
   STYLES.CSS
-  Version: 1
-  AppName: MultiChat_Chatty [v1]
-  Updated: 05/24/2025 @10:00AM
+  Version: 2
+  AppName: MultiChat_Chatty [v2]
+  Updated: 06/03/2025 @8:30AM
   Created by Paul Welby
 */
 
@@ -34,6 +34,7 @@ body {
     align-items: center;
     padding: 10px;
     border-bottom: 1px solid #ccc;
+    background: #d5e4f6;
 }
 
 
@@ -67,7 +68,7 @@ body {
     display: flex;
     padding: 10px;
     border-top: 1px solid #ccc;
-    height: 60px;
+    height: 55px;
     align-items: center;
 }
 
@@ -105,7 +106,7 @@ status {
     gap: 2px;
     font-size: 1.9vh;
     font-weight: 400;
-    max-width: 65%;
+    max-width: 56%;
 }
 
 #input-container {
@@ -116,6 +117,7 @@ status {
     padding: 5px 5px 0px 20px;
     border-radius: 8px;
     width: 35vw;
+    height: 6.5vh;
     /* Fixed width */
     margin-left: 200px;
 }
@@ -184,8 +186,8 @@ status {
 }
 
 button {
-    padding: 10px 20px;
-    font-size: 16px;
+    padding: 4px 8px 4px 8px;
+    font-size: 17px;
     cursor: pointer;
 }
 
@@ -200,7 +202,7 @@ button {
 }
 
 .user {
-    background-color: #0b77ed40;
+    background-color: #007bff3b;
     align-self: flex-end;
     margin-left: auto;
     border: 1px solid #bbdefb;
@@ -247,6 +249,7 @@ button {
     border-bottom: 1px solid #e0e0e0;
     /* margin-bottom: 8px; */
     padding-bottom: 6px;
+    padding-top: 5px;
 }
 
 /* System bubble styling (for date/time responses) */
@@ -374,18 +377,19 @@ button {
 #mic-button,
 #stop-audio-button {
     padding: 5px 10px;
-    margin-left: 5px;
+    margin-left: 0px;
+    margin-right: 5px;
     background-color: #007bff;
     color: white;
     border: none;
     border-radius: 4px;
     cursor: pointer;
     height: 32px;
-    /* Set a fixed height for all buttons */
     line-height: 22px;
-    /* Adjust line height to vertically center text */
     font-size: 14px;
-    /* Ensure consistent font size */
+    position: relative;
+    right: 5px;
+    bottom: 1px;
 }
 
 #send-button:hover,
@@ -407,17 +411,18 @@ button {
 
 #stop-audio-button {
     padding: 5px 10px;
-    margin-left: 10px;
+    margin-left: 19px;
     background-color: #dc3545;
     color: white;
     border: none;
     border-radius: 4px;
     cursor: pointer;
     display: none;
-    width: 100px;
+    width: 120px;
     height: 40px;
     font-size: .95em;
     margin-right: 0px;
+    margin-bottom: 36px;
     margin-top: 42px;
 }
 
@@ -444,8 +449,8 @@ button {
     height: 22px;
     line-height: 22px;
     position: absolute;
-    bottom: 24px;
-    left: 55%;
+    bottom: 20px;
+    left: 48%;
     z-index: 1000;
     transform: translateX(-50%);
 }
@@ -563,12 +568,17 @@ button {
 
 /* Ensure paragraphs within messages fill width */
 .message.assistant p {
-    width: 100%;
-    margin: 8px 0;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    line-height: 1.4;
     white-space: normal;
     word-wrap: break-word;
-    font-size: 14px;
-    font-weight: 600;
+    font-size: 16px;
+    font-weight: normal;
+    padding-right: 10px;
+    text-align: justify;
+    position: relative;
+    bottom: 5px;
 }
 
 /* Media query for smaller screens */
@@ -598,7 +608,7 @@ button {
 
 .message.assistant:has(.message-content > p:nth-child(2)),
 .message.assistant .message-content:has(> p:nth-child(2)) {
-    width: 48%;
+    /* width: 48%; */
 }
 
 .icon-button {
@@ -777,17 +787,15 @@ button {
     width: 100%;
 }
 
-.message-bubble.ai {
-    width: 80vw;
-    margin-left: auto;
-    margin-right: 0;
-    background-color: #e3f2fd;
-    border-radius: 15px;
-    padding: 10px;
-    margin-bottom: 10px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    position: relative;
-    word-wrap: break-word;
+.message.assistant-mock {
+    background-color: #f0f0f0;
+    align-self: flex-start;
+    width: max-content;
+    max-width: 80%;
+    padding: 8px 10px;
+    border-radius: 12px;
+    border: 1px solid #e0e0e0;
+    /* Add any mock-specific overrides here if needed */
 }
 
 .conversation-mode-checkbox {
@@ -1033,8 +1041,7 @@ button {
 #input-container button,
 #input-container .icon-button {
     background: none;
-    border: none;
-    padding: 8px;
+    border: 1px solid lightgrey;
     cursor: pointer;
     color: #666;
     transition: color 0.2s;
@@ -1118,7 +1125,7 @@ button {
 .message.assistant:has(p + p),
 .message.assistant:has(.message-content > div + div),
 .message.assistant:has(br) {
-    width: 80%;
+    /* width: 80%; */
     /* Full width for long content */
 }
 
@@ -1156,13 +1163,14 @@ button {
 
 /* Base message styles */
 .message {
-    max-width: 80%;
+    /* max-width: 20%; */
     padding: 8px 12px;
     border-radius: 12px;
     margin: 2px 0;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
     display: flex;
     flex-direction: column;
+    background-color: #007bff3b;
 }
 
 /* Message content wrapper */
@@ -1184,8 +1192,7 @@ button {
     max-width: 100%;
     /* Ensure content doesn't overflow */
     text-align: left;
-    padding-left: 5px;
-    padding-right: 5px;
+    padding: 5px;
 }
 
 /* Add these styles at the end of your existing styles.css file */
@@ -1290,21 +1297,33 @@ button {
 
 .video-title-MULTI {
     text-align: center;
-    margin-top: 20px;
+    margin-top: -40px;
     font-size: .7em;
     color: #212529;
     font-weight: 500;
-    margin-bottom: 10px;
-    white-space: normal;
-    /* Allow wrapping */
+    margin-bottom: 0;
+    
+    /* Force exactly 2 lines with ellipsis - consistent spacing for all titles */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.3em;
+    height: 2.6em; /* 2 lines * 1.3em line-height */
+    min-height: 2.6em; /* Ensure minimum 2-line height even for short titles */
+    
     word-break: break-word;
-    /* Break long words if needed */
     overflow-wrap: break-word;
-    /* Ensure wrapping for long words */
     width: 70%;
     position: relative;
     left: -8px;
-    /* Fill the card width */
+    margin-left: auto;
+    margin-right: auto;
+    
+    /* Ensure consistent box sizing */
+    box-sizing: border-box;
+    padding: 0;
 }
 
 .video-controls {
@@ -1336,14 +1355,13 @@ button {
 }
 
 .youtube-thumb-link img {
-    /* width: 95%; */
     max-width: 250px;
     height: auto;
     border-radius: 6px;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
     display: block;
     margin-right: 20px;
-    /* margin: 0 auto; */
+    margin-top: -50px;  
 }
 
 .youtube-popup-thumb {
@@ -1394,12 +1412,12 @@ button {
 }
 
 .button-thumb-group-MULTI {
-    display: flex;
+    display: flex    ;
     flex-direction: column;
     align-items: flex-start;
     position: relative;
     width: 100%;
-    /* margin-left: 30px;    */
+    margin-bottom: 70px;
 }
 
 .youtube-action-btn.tab-btn {
@@ -1412,7 +1430,7 @@ button {
 }
 
 .youtube-thumb-link {
-    margin-top: 20px;
+    /* margin-top: 20px; */
     width: 100%;
 }
 
@@ -1476,13 +1494,13 @@ button {
 }
 
 .message.assistant:has(.youtube-results.grid) {
-    width: 100%;
-    max-width: none;
+    width: 80%;
+    max-width: 80%;
 }
 
 .message-content:has(.youtube-results.grid) {
     width: 100%;
-    max-width: none;
+    max-width: 100%;
     display: block;
 }
 
@@ -1614,7 +1632,7 @@ button {
 
 /* ===== YOUTUBE MULTI VIDEO LAYOUT ===== */
 .youtube-multi-bubble {
-    max-width: 96%;
+    max-width: 80%;
     margin: 8px 0;
     background: #fff;
     border-radius: 12px;
@@ -1623,25 +1641,18 @@ button {
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
 }
 
+.youtube-multi-bubble p {
+    margin-top: -20px;
+}
+
 .youtube-multi-bubble .video-list {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 24px;
-    margin: 0;
+    /* margin: 40px 0 0 0; */
     padding: 0;
     list-style: none;
     width: 100%;
-}
-
-.youtube-multi-bubble .video-item {
-    width: 100%;
-    background: #f9f9f9;
-    border-radius: 8px;
-    padding: 12px;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
 }
 
 .youtube-multi-bubble .button-thumb-group {
@@ -1667,7 +1678,20 @@ button {
     font-size: 0.7em;
     color: #212529;
     font-weight: 500;
-    line-height: 1.4;
+    line-height: 1.5;
+    
+    /* Restrict to exactly 2 lines with ellipsis */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    height: 2.6em; /* 2 lines * 1.3em line-height */
+    min-height: 2.6em; /* Ensure minimum 2-line height even for short titles */
+    
+    word-break: break-word;
+    overflow-wrap: break-word;
+    box-sizing: border-box;
 }
 
 /* SINGLE video add to playlist button */
@@ -1688,8 +1712,8 @@ button {
     padding: 0;
     line-height: 1;
     position: absolute;
-    right: -24px;
-    top: 15px;
+    right: 18px;
+    top: 6px;
     z-index: 1000;
     pointer-events: auto;
 }
@@ -1790,14 +1814,14 @@ button {
 }
 
 .youtube-multi-bubble .video-item {
-    /* width: 350px; */
     background: #f9f9f9;
     border-radius: 8px;
-    padding: 10px;
+    padding: 20px 10px 10px 10px; /* Increased top padding from 10px to 20px */
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
-    /* margin-bottom: 12px; */
     display: flex;
     flex-direction: column;
+    position: relative;
+    z-index: 10; /* Ensure cards are above any background text */
 }
 
 .youtube-single-bubble .video-list {
@@ -1999,17 +2023,18 @@ button {
 }
 
 .youtube-single-bubble-dummy .video-item-dummy {
-    position: relative;
-    padding-top: 32px;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    background: #f9f9f9;
-    border-radius: 8px;
-    padding: 10px;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
-    margin-bottom: 12px;
-    width: 100%;
+    position: relative !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    padding-top: 32px !important;
+    background: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    min-width: unset !important;
+    max-width: unset !important;
+    margin-bottom: 0 !important;
+    width: unset !important;
 }
 
 .youtube-single-bubble-dummy .video-title-dummy {
@@ -2030,21 +2055,29 @@ button {
 }
 
 .youtube-single-bubble-dummy .button-thumb-group.top-buttons-dummy {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 8px;
-    justify-content: flex-start;
-    margin-bottom: 10px;
-    width: 100%;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
+    justify-content: flex-start !important;
+    margin-bottom: 10px !important;
+    width: 100% !important;
 }
 
 .youtube-single-bubble-dummy .button-thumb-group.bottom-buttons-dummy {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    margin-top: 10px;
-    width: 100%;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    margin-top: 10px !important;
+    margin-bottom: 0 !important;
+    width: 100% !important;
+}
+
+.youtube-single-bubble-dummy .youtube-thumb-link-dummy {
+    display: flex !important;
+    justify-content: center !important;
+    margin: 12px 0 !important;
+    width: 100% !important;
 }
 
 .youtube-single-bubble-dummy .youtube-action-btn.add-to-playlist-btn-dummy {
@@ -2310,7 +2343,7 @@ button {
     font-size: .9em;
     position: relative;
     right: 0px;
-    bottom: -5px;
+    bottom: -16px;
     box-shadow: 0 2px 8px rgba(233, 40, 40, 0.08);
 }
 
@@ -2389,7 +2422,7 @@ button {
     cursor: grab !important;
     position: relative !important;
     top: 0px !important;
-    left: -9px !important;
+    left: 4px !important;
     color: #050505 !important;
 }
 
@@ -2402,8 +2435,8 @@ button {
     padding: 0 !important;
     font-size: 18px !important;
     position: absolute;
-    bottom: 5px;
-    right: 30px;
+    bottom: 12px;
+    right: 25px;
 
 }
 
@@ -2415,9 +2448,10 @@ button {
     margin-top: 15px;
     padding: 0 !important;
     font-size: 18px !important;
+    margin-left: 150px;
     position: absolute;
     bottom: 5px;
-    right: 85px;
+    right: 75px;
 }
 
 .playlist-manager-dialog .videos-container {
@@ -2763,7 +2797,7 @@ button {
 .playlist-actions-header,
 .playlist-videos-table td.playlist-actions-cell {
     /* width: 480px !important; */
-    min-width: 330px;
+    min-width: 390px;
     max-width: 480px;
     text-align: center !important;
 }
@@ -2852,7 +2886,7 @@ button {
     width: 50%;
     max-width: 50%;
     min-width: 200px;
-    min-height: 138px;
+    min-height: 165px;
     border: 2px solid #007bff;
     background: rgba(0, 123, 255, 0.05);
     border-radius: 8px;
@@ -2964,7 +2998,7 @@ button {
 }
 .user-input-textarea {
     width: 85vw !important;
-    height: 6vh;
+    height: 4vh;
     /* background: #000; */
     display: flex;
     align-items: center;
@@ -3358,4 +3392,2255 @@ button {
 
 .playlist-sort-arrow:hover {
   color: #1976d2;
+}
+
+/* --- ENSURE MOCK MULTI GRID IS IDENTICAL TO REAL MULTI GRID --- */
+.youtube-multi-bubble-mock .video-list-mock {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 24px !important;
+    margin: 40px 0 0 0 !important;
+    padding: 0 !important;
+    list-style: none !important;
+    width: 100% !important;
+}
+
+.youtube-multi-bubble-mock .video-item-mock {
+    width: 100%;
+    background: #f9f9f9;
+    border-radius: 8px;
+    /* padding: 12px; */
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.youtube-multi-bubble-mock .button-thumb-group-MULTI-MOCK.top-buttons {
+    width: 97%;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 8px;
+    justify-content: flex-start;
+    margin-top: 10px;
+    margin-bottom: 0px;
+    position: relative;
+}
+
+.youtube-multi-bubble-mock .button-thumb-group-MULTI-MOCK.bottom-buttons {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 10px;
+    margin-bottom: 0;
+}
+
+.youtube-multi-bubble-mock .youtube-thumb-link {
+    margin-top: 20px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.youtube-multi-bubble-mock .youtube-thumb-link img {
+    width: 100%;
+    height: auto;
+    border-radius: 6px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+    display: block;
+}
+
+.youtube-multi-bubble-mock .video-title-MULTI-MOCK {
+    width: 90%;
+    text-align: center;
+    margin-top: 12px;
+    margin-bottom: 10px;
+    font-size: 0.7em;
+    color: #212529;
+    font-weight: 500;
+    
+    /* Restrict to exactly 2 lines with ellipsis */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.3em;
+    height: 2.6em; /* 2 lines * 1.3em line-height */
+    
+    word-break: break-word;
+    overflow-wrap: break-word;
+}
+
+.youtube-multi-bubble-mock .youtube-action-btn.youtube-popup-btn {
+    padding: 8px 16px;
+    margin-right: 8px;
+    background-color: #0056b3 !important;
+    color: #fff;
+    border-radius: 6px;
+    border: none;
+    font-size: 15px;
+    font-weight: bold;
+    box-shadow: rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px;
+    text-decoration: none;
+    position: relative;
+    top: -6px;
+}
+
+.youtube-multi-bubble-mock .youtube-action-btn.youtube-popup-btn:hover {
+    background: #1976d2 !important;
+}
+
+.youtube-multi-bubble-mock .youtube-action-btn.youtube-direct-link {
+    background: #3f70f7;
+    color: white;
+    border-radius: 8px;
+    margin-top: 10px;
+    padding: 8px;
+    text-decoration: none;
+}
+
+.youtube-multi-bubble-mock .add-to-playlist-MULTI-MOCK-btn {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+    margin: 0 4px;
+    padding: 0;
+    line-height: 1;
+    position: absolute;
+    right: 25px;
+    top: 4px;
+    z-index: 1000;
+    pointer-events: auto;
+}
+
+.youtube-multi-bubble-mock .add-to-playlist-MULTI-MOCK-btn:hover {
+    background-color: #388e3c;
+    transform: scale(1.1);
+}
+
+@media (max-width: 1200px) {
+    .youtube-multi-bubble-mock .video-list-mock {
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
+}
+
+@media (max-width: 992px) {
+    .youtube-multi-bubble-mock .video-list-mock {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+
+@media (max-width: 576px) {
+    .youtube-multi-bubble-mock .video-list-mock {
+        grid-template-columns: 1fr !important;
+    }
+    .youtube-multi-bubble-mock {
+        max-width: 100%;
+        padding: 12px;
+    }
+}
+
+.message.assistant:has(.youtube-single-bubble-dummy) {
+    width: 60%;
+    max-width: 600px;
+    min-width: 340px;
+    margin-left: 0;
+    margin-right: auto;
+    align-self: flex-start;
+}
+
+/* ===== YOUTUBE SINGLE-MOCK VIDEO LAYOUT ===== */
+.youtube-single-bubble-single-mock {
+    max-width: 92%;
+    margin: 8px 0;
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px 20px 10px 20px;
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+.youtube-single-bubble-single-mock .video-list-single-mock {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    gap: 32px !important;
+    justify-content: flex-start !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    list-style: none !important;
+    max-width: 750px !important;
+}
+
+.youtube-single-bubble-single-mock .video-item-single-mock {
+    position: relative !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    padding-top: 32px !important;
+    background: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    min-width: unset !important;
+    max-width: unset !important;
+    margin-bottom: 0 !important;
+    width: unset !important;
+}
+
+.youtube-single-bubble-single-mock .button-thumb-group-single-mock.top-buttons {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
+    justify-content: flex-start !important;
+    margin-bottom: 10px !important;
+}
+
+.youtube-single-bubble-single-mock .button-thumb-group-single-mock.bottom-buttons {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    margin-top: 10px !important;
+    margin-bottom: 0 !important;
+}
+
+.youtube-single-bubble-single-mock .youtube-thumb-link-single-mock {
+    display: flex !important;
+    justify-content: center !important;
+    margin: 12px 0 !important;
+    width: 100% !important;
+}
+
+.youtube-single-bubble-single-mock .youtube-thumb-link-single-mock img {
+    max-width: 250px;
+    border-radius: 6px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+    display: block;
+    margin: 0 auto;
+}
+
+.youtube-single-bubble-single-mock .youtube-action-btn.youtube-popup-btn-single-mock {
+    padding: 8px 16px;
+    margin-right: 8px;
+    background-color: #0056b3 !important;
+    color: #fff;
+    border-radius: 6px;
+    border: none;
+    font-size: 15px;
+    font-weight: bold;
+    box-shadow: rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px;
+    text-decoration: none;
+    position: relative;
+    top: -6px;
+}
+
+.youtube-single-bubble-single-mock .youtube-action-btn.youtube-popup-btn-single-mock:hover {
+    background: #1976d2 !important;
+}
+
+.youtube-single-bubble-single-mock .youtube-action-btn.youtube-direct-link-single-mock {
+    background: #ff0000;
+    color: #fff;
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-size: 15px;
+    font-weight: bold;
+    border: none;
+    margin-top: 0;
+    margin-bottom: 0;
+    text-align: left;
+    text-decoration: none;
+}
+
+.add-to-playlist-SINGLE-mock-btn {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+    margin: 0 4px;
+    padding: 0;
+    line-height: 1;
+    position: absolute;
+    right: -6px;
+    top: 0px;
+    z-index: 1000;
+    pointer-events: auto;
+
+}
+
+.youtube-single-bubble-single-mock .add-to-playlist-SINGLE-mock-btn {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+    margin: 0 4px;
+    padding: 0;
+    line-height: 1;
+    position: absolute;
+    right: -24px;
+    top: 15px;
+    z-index: 1000;
+    pointer-events: auto;
+}
+
+.youtube-single-bubble-single-mock .add-to-playlist-SINGLE-mock-btn:hover {
+    background-color: #388e3c;
+    transform: scale(1.1);
+}
+
+/* ===== YOUTUBE MULTI-MOCK VIDEO LAYOUT ===== */
+.youtube-multi-bubble-multi-mock {
+    max-width: 80%;
+    margin: 8px 0;
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+.youtube-multi-bubble-multi-mock .video-list-multi-mock {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    width: 100%;
+}
+
+.youtube-multi-bubble-multi-mock .video-item-multi-mock {
+    width: 100%;
+    background: #f9f9f9;
+    border-radius: 8px;
+    padding: 12px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.youtube-multi-bubble-multi-mock .button-thumb-group-multi-mock.top-buttons {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 8px;
+    justify-content: flex-start;
+    margin-bottom: 10px;
+    position: relative;
+}
+
+.youtube-multi-bubble-multi-mock .button-thumb-group-multi-mock.bottom-buttons {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 10px;
+    margin-bottom: 0;
+}
+
+.youtube-multi-bubble-multi-mock .youtube-thumb-link-multi-mock {
+    margin-top: 20px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.youtube-multi-bubble-multi-mock .youtube-thumb-link-multi-mock img {
+    width: 100%;
+    height: auto;
+    border-radius: 6px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+    display: block;
+}
+
+.youtube-multi-bubble-multi-mock .video-title-multi-mock {
+    width: 90%;
+    text-align: center;
+    margin-top: 12px;
+    font-size: 0.7em;
+    color: #212529;
+    font-weight: 500;
+    
+    /* Restrict to exactly 2 lines with ellipsis */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.3em;
+    height: 2.6em; /* 2 lines * 1.3em line-height */
+    
+    word-break: break-word;
+    overflow-wrap: break-word;
+}
+
+.youtube-multi-bubble-multi-mock .youtube-action-btn.youtube-popup-btn-multi-mock {
+    padding: 8px 16px;
+    margin-right: 8px;
+    background-color: #0056b3 !important;
+    color: #fff;
+    border-radius: 6px;
+    border: none;
+    font-size: 15px;
+    font-weight: bold;
+    box-shadow: rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px;
+    text-decoration: none;
+    position: relative;
+    top: -6px;
+}
+
+.youtube-multi-bubble-multi-mock .youtube-action-btn.youtube-popup-btn-multi-mock:hover {
+    background: #1976d2 !important;
+}
+
+.youtube-multi-bubble-multi-mock .youtube-action-btn.youtube-direct-link-multi-mock {
+    background: #3f70f7;
+    color: white;
+    border-radius: 8px;
+    margin-top: 10px;
+    padding: 8px;
+    text-decoration: none;
+}
+
+.youtube-multi-bubble-multi-mock .add-to-playlist-MULTI-mock-btn {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+    margin: 0 4px;
+    padding: 0;
+    line-height: 1;
+    position: absolute;
+    right: 25px;
+    top: 4px;
+    z-index: 1000;
+    pointer-events: auto;
+}
+
+.youtube-multi-bubble-multi-mock .add-to-playlist-MULTI-mock-btn:hover {
+    background-color: #388e3c;
+    transform: scale(1.1);
+}
+
+.message.assistant-mock {
+    background-color: #f0f0f0;
+    align-self: flex-start;
+    width: max-content;
+    max-width: 80%;
+    padding: 8px 10px;
+    border-radius: 12px;
+    border: 1px solid #e0e0e0;
+    /* Add any mock-specific overrides here if needed */
+}
+
+/* TIGHTEN REAL YOUTUBE SINGLE LAYOUT SPACING */
+.message.assistant {
+    margin-top: 4px !important;
+    margin-bottom: 4px !important;
+    padding-top: 4px !important;
+    padding-bottom: 4px !important;
+}
+.youtube-single-bubble {
+    margin-top: 10px !important;
+    margin-bottom: 10px !important;
+    padding-top: 0px !important;
+    padding-bottom: 10px !important;
+}
+.youtube-single-bubble > p:first-child {
+    margin-top: 0 !important;
+    margin-bottom: 6px !important;
+}
+.youtube-single-bubble > *:last-child {
+    margin-bottom: 0 !important;
+}
+.youtube-single-bubble .video-item {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+.youtube-multi-bubble .page-info,
+.youtube-multi-bubble-mock .page-info {
+    position: absolute;
+    top: -40px;
+    right: 18px;
+    background: #f5f5f5;
+    color: #333;
+    font-size: 0.95em;
+    font-weight: 600;
+    border-radius: 8px;
+    padding: 4px 12px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+    z-index: 2;
+    opacity: 0.92;
+}
+.youtube-multi-bubble, .youtube-multi-bubble-mock {
+    position: relative;
+}
+
+/* PAGINATION BAR STYLES */
+.pagination-bar {
+    position: fixed !important;
+    left: 50% !important;
+    bottom: 125px !important;
+    transform: translateX(-50%) !important;
+    display: flex !important;
+    align-items: center !important;
+    background: #fff !important;
+    border-radius: 12px !important;
+    border: 1px solid #888 !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.13) !important;
+    padding: 2px 0px 2px 30px !important;
+    z-index: 9999 !important;
+    min-width: 230px !important;
+    max-width: 300px !important;
+    width: fit-content !important;
+    min-height: 40px !important;
+    max-height: 40px !important;
+    user-select: none !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+.pagination-bar-content {
+    display: flex !important;
+    align-items: center !important;
+    width: 100% !important;
+    margin-left: 7px !important;
+    margin-top: 72px !important;
+}
+
+.drag-tab {
+    position: absolute !important;
+    top: 6.5% !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 20px;
+    background: #e0e0e0 !important;
+    /* border-radius: 12px 0 0 13px !important; */
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: grab !important;
+    box-shadow: 1px 0 4px rgba(0, 0, 0, 0.08) !important;
+    z-index: 2 !important;
+    margin: 0 !important;
+    pointer-events: auto !important;
+}
+
+.drag-tab .drag-icon {
+    width: 30px !important;
+    height: 30px !important;
+    object-fit: contain !important;
+    opacity: 0.8 !important;
+    transition: opacity 0.2s !important;
+    filter: invert(0.4) !important;
+}
+
+.drag-tab:hover .drag-icon {
+    opacity: 0.9 !important;
+    filter: invert(0.6) !important;
+}
+
+button.first-page-btn,
+button.prev-page-btn,
+button.step-back-btn,
+button.more-page-btn,
+button.next-page-btn {
+    margin-top: 0 !important;
+    margin-right: 2px !important;
+    padding: 6px 8px !important;
+    border: 1px solid #ccc !important;
+    border-radius: 4px !important;
+    cursor: pointer !important;
+    font-size: 12px !important;
+    min-width: 32px !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    outline: none !important;
+}
+
+button.first-page-btn:hover,
+button.prev-page-btn:hover,
+button.step-back-btn:hover,
+button.more-page-btn:hover,
+button.next-page-btn:hover {
+    background: #e8e8e8 !important;
+    color: #000 !important;
+}
+
+button:disabled {
+    opacity: 0.5 !important;
+    cursor: not-allowed !important;
+    background: #f8f8f8 !important;
+    color: #999 !important;
+}
+
+button.next-page-btn {
+    border-top-right-radius: 8px !important;
+    border-bottom-right-radius: 8px !important;
+    border: 2px solid #b5b2b2 !important;
+}
+
+.youtube-action-btn.view-playlists-SINGLE-MOCK-btn {
+    margin-top: 0px !important;
+    margin-right: 20px !important;
+    position: relative;
+    bottom: 4px;
+    left: 30px;
+    padding: 4px 8px !important;
+}
+
+/* Mock YouTube Single Result Styles */
+.youtube-single-bubble-mock {
+    max-width: 92%;
+    margin: 8px 0;
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px 20px 10px 20px;
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+.youtube-single-bubble-mock .video-list-mock {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    gap: 32px !important;
+    justify-content: flex-start !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    list-style: none !important;
+    max-width: 750px !important;
+}
+
+.youtube-single-bubble-mock .video-item-mock {
+    position: relative !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    /* padding-top: 32px !important; */
+    background: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    min-width: unset !important;
+    max-width: unset !important;
+}
+
+.youtube-single-bubble-mock .button-thumb-group-SINGLE-mock.top-buttons {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
+    justify-content: flex-start !important;
+    margin-bottom: 10px !important;
+}
+
+.youtube-single-bubble-mock .button-thumb-group-SINGLE-mock.bottom-buttons {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    margin-top: 10px !important;
+    margin-bottom: 0 !important;
+}
+
+.youtube-thumb-img-mock {
+    max-width: 250px;
+    width: 100%;
+    aspect-ratio: 16/9;
+    object-fit: cover;
+    border-radius: 6px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+    display: block;
+    margin: 0 auto;
+}
+
+.youtube-single-bubble-mock .youtube-thumb-link-mock {
+    display: flex !important;
+    justify-content: center !important;
+}
+
+.youtube-single-bubble-mock .youtube-thumb-link-mock img {
+    max-width: 250px;
+    width: 100%;
+    aspect-ratio: 16/9;
+    object-fit: cover;
+    border-radius: 6px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+    display: block;
+    margin: 0 auto;
+}
+
+.youtube-single-bubble-mock .youtube-action-btn-mock.youtube-popup-btn-mock {
+    padding: 8px 16px;
+    margin-right: 8px;
+    background-color: #0056b3 !important;
+    color: #fff;
+    border-radius: 6px;
+    border: none;
+    font-size: 15px;
+    font-weight: bold;
+    box-shadow: rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px;
+    text-decoration: none;
+    position: relative;
+    top: -6px;
+}
+
+.youtube-single-bubble-mock .youtube-action-btn-mock.youtube-popup-btn-mock:hover {
+    background: #1976d2 !important;
+}
+
+.youtube-single-bubble-mock .youtube-action-btn-mock.youtube-direct-link-mock {
+    background: #ff0000;
+    color: #fff;
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-size: 15px;
+    font-weight: bold;
+    border: none;
+    margin-top: 0;
+    margin-bottom: 0;
+    text-align: left;
+    text-decoration: none;
+}
+
+.youtube-single-bubble-mock .video-title-SINGLE-mock {
+    text-align: center;
+    margin-top: 20px;
+    font-size: .7em;
+    color: #212529;
+    font-weight: 500;
+    margin-bottom: 10px;
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    width: 70%;
+    position: relative;
+    left: 40px;
+}
+
+.youtube-action-btn-mock.view-playlists-SINGLE-mock-btn {
+    width: 6vw;
+    margin-bottom: -34px;
+}
+
+.view-playlists-SINGLE-mock-btn-icon {
+    font-size: 1.0em;
+    position: relative;
+    top: -40px;
+}
+
+/* MOCK PAGINATION BAR STYLES */
+.mock-pagination-bar {
+    position: fixed !important;
+    right: 45px !important;
+    bottom: 125px !important;
+    display: flex !important;
+    align-items: center !important;
+    background: #fff !important;
+    border-radius: 12px !important;
+    border: 1px solid #888 !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.13) !important;
+    padding: 8px 16px 8px 40px !important;
+    z-index: 9999 !important;
+    min-width: 187px !important;
+    max-width: 187px !important;
+    width: 17px !important;
+    min-height: 40px !important;
+    user-select: none !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+.mock-pagination-bar .drag-tab {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    z-index: 2 !important;
+    width: 32px !important;
+    height: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: grab !important;
+}
+.mock-pagination-bar .drag-icon {
+    width: 24px !important;
+    height: 24px !important;
+    opacity: 0.7 !important;
+}
+.mock-pagination-bar-content {
+    display: flex !important;
+    align-items: center !important;
+    width: 100% !important;
+}
+.mock-pagination-bar button {
+    margin: 0 2px !important;
+    padding: 4px 10px !important;
+    font-size: 16px !important;
+    border: none !important;
+    border-radius: 6px !important;
+    background: #2196f3 !important;
+    color: #fff !important;
+    cursor: pointer !important;
+    transition: background 0.2s;
+}
+.mock-pagination-bar button:disabled {
+    background: #bdbdbd !important;
+    color: #fff !important;
+    cursor: not-allowed !important;
+}
+.mock-pagination-bar button:hover:not(:disabled) {
+    background: #1976d2 !important;
+}
+
+/* === UNIFIED YOUTUBE MULTI VIDEO LAYOUT === */
+.youtube-multi-bubble-mock,
+.youtube-multi-bubble {
+    margin-bottom: 10px;
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+    position: relative;
+}
+
+.youtube-multi-bubble-mock .video-list-mock,
+.youtube-multi-bubble .video-list {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 24px !important;
+    /* margin: 40px 0 0 0 !important; */
+    padding: 0 !important;
+    list-style: none !important;
+    width: 100% !important;
+}
+
+.youtube-multi-bubble-mock .video-item-mock,
+.youtube-multi-bubble .video-item {
+    background: #f9f9f9;
+    border-radius: 8px;
+    padding: 10px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 95%;
+}
+
+.youtube-multi-bubble-mock .button-thumb-group-MULTI-MOCK.top-buttons,
+.youtube-multi-bubble .button-thumb-group-MULTI.top-buttons {
+    /* width: 250px; */
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 8px;
+    justify-content: flex-start;
+    margin-top: 10px;
+    margin-bottom: 0px;
+    position: relative;
+}
+
+.youtube-multi-bubble-mock .button-thumb-group-MULTI-MOCK.bottom-buttons,
+.youtube-multi-bubble .button-thumb-group-MULTI.bottom-buttons {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 10px;
+    margin-bottom: 0;
+}
+
+.youtube-multi-bubble-mock .youtube-thumb-link,
+.youtube-multi-bubble .youtube-thumb-link {
+    /* margin-top: -30px; */
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.youtube-multi-bubble-mock .youtube-thumb-link img,
+.youtube-multi-bubble .youtube-thumb-link img {
+    width: 100%;
+    height: auto;
+    border-radius: 6px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+    display: block;
+    margin: 10px 0 0 0;
+}
+
+/* .youtube-multi-bubble-mock .video-title-MULTI-MOCK,
+.youtube-multi-bubble .video-title-MULTI {
+    width: 90%;
+    text-align: center;
+    margin-top: 12px;
+    margin-bottom: 10px;
+    font-size: 0.7em;
+    color: #212529;
+    font-weight: 500;
+    line-height: 1.4;
+} */
+
+.youtube-multi-bubble-mock .youtube-action-btn.youtube-popup-btn,
+.youtube-multi-bubble .youtube-action-btn.youtube-popup-btn {
+    padding: 8px 10px;
+    margin-right: 8px;
+    background-color: #0056b3 !important;
+    color: #fff;
+    border-radius: 6px;
+    border: none;
+    font-size: 12px;
+    font-weight: bold;
+    box-shadow: rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px;
+    text-decoration: none;
+    position: relative;
+    top: -6px;
+    /* width: 100%; */
+}
+
+.youtube-multi-bubble-mock .youtube-action-btn.youtube-popup-btn:hover,
+.youtube-multi-bubble .youtube-action-btn.youtube-popup-btn:hover {
+    background: #1976d2 !important;
+}
+
+.youtube-multi-bubble-mock .youtube-action-btn.youtube-direct-link,
+.youtube-multi-bubble .youtube-action-btn.youtube-direct-link {
+    background: #3f70f7;
+    color: white;
+    border-radius: 8px;
+    margin-top: 10px;
+    padding: 8px;
+    text-decoration: none;
+}
+
+.youtube-multi-bubble-mock .add-to-playlist-MULTI-MOCK-btn,
+.youtube-multi-bubble .add-to-playlist-MULTI-btn {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+    margin: 0 4px;
+    padding: 0;
+    line-height: 1;
+    position: absolute;
+    right: 25px;
+    top: 4px;
+    z-index: 1000;
+    pointer-events: auto;
+}
+
+.youtube-multi-bubble-mock .add-to-playlist-MULTI-MOCK-btn:hover,
+.youtube-multi-bubble .add-to-playlist-MULTI-btn:hover {
+    background-color: #388e3c;
+    transform: scale(1.1);
+}
+
+/* Unify paginator bar styles */
+.mock-pagination-bar {
+    position: fixed !important;
+    /* right: 45px !important;
+    bottom: 125px !important; */
+    display: flex !important;
+    align-items: center !important;
+    background: #fff !important;
+    border-radius: 12px !important;
+    border: 1px solid #888 !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.13) !important;
+    padding: 8px 0px 8px 40px !important;
+    z-index: 9998 !important;
+    min-width: 195px !important;
+    max-width: 350px !important;
+    width: fit-content !important;
+    min-height: 30px !important;
+    max-height: 30px !important;
+    user-select: none !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+.mock-pagination-bar .drag-tab, .pagination-bar .drag-tab {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    z-index: 2 !important;
+    width: 32px !important;
+    height: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: grab !important;
+}
+.mock-pagination-bar .drag-icon, .pagination-bar .drag-icon {
+    width: 30px !important;
+    height: 30px !important;
+    opacity: 0.7 !important;
+}
+.mock-pagination-bar-content, .pagination-bar-content {
+    display: flex !important;
+    align-items: center !important;
+    width: 100% !important;
+}
+.mock-pagination-bar button, .pagination-bar button {
+    margin: 0 2px !important;
+    padding: 6px 8px !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    border: 1px solid #ccc !important;
+    border-radius: 4px !important;
+    background: #f8f8f8 !important;
+    color: #333 !important;
+    cursor: pointer !important;
+    transition: background 0.2s;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    outline: none !important;
+    min-width: 32px !important;
+}
+.mock-pagination-bar button:disabled, .pagination-bar button:disabled {
+    background: #bdbdbd !important;
+    color: #fff !important;
+    cursor: not-allowed !important;
+}
+.mock-pagination-bar button:hover:not(:disabled), .pagination-bar button:hover:not(:disabled) {
+    background: #1976d2 !important;
+}
+.found-results-mock {
+    width: 100%;
+    text-align: left;
+    margin-bottom: -22px;
+    margin-top: 0px;
+    position: relative;
+    top: 10px;
+}
+
+/* --- Separated paginator bar styles --- */
+.mock-pagination-bar .drag-tab {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    z-index: 2 !important;
+    width: 32px !important;
+    height: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: grab !important;
+}
+.pagination-bar .drag-tab {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    z-index: 2 !important;
+    width: 32px !important;
+    height: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: grab !important;
+}
+
+.mock-pagination-bar .drag-icon {
+    width: 30px !important;
+    height: 30px !important;
+    opacity: 0.7 !important;
+}
+.pagination-bar .drag-icon {
+    width: 30px !important;
+    height: 30px !important;
+    opacity: 0.7 !important;
+}
+
+.mock-pagination-bar-content {
+    display: flex !important;
+    align-items: center !important;
+    width: 100% !important;
+    gap: 4px;
+}
+.pagination-bar-content {
+    display: flex !important;
+    align-items: center !important;
+    width: 100% !important;
+    gap: 4px;
+}
+
+.mock-pagination-bar button {
+    margin: 0 2px !important;
+    padding: 6px 8px !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    border: 1px solid #ccc !important;
+    border-radius: 4px !important;
+    background: #f8f8f8 !important;
+    color: #333 !important;
+    cursor: pointer !important;
+    transition: background 0.2s;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    outline: none !important;
+    min-width: 32px !important;
+}
+.pagination-bar button {
+    margin: 0 2px !important;
+    padding: 6px 8px !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    border: 1px solid #ccc !important;
+    border-radius: 4px !important;
+    background: #f8f8f8 !important;
+    color: #333 !important;
+    cursor: pointer !important;
+    transition: background 0.2s;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    outline: none !important;
+    min-width: 32px !important;
+}
+
+.mock-pagination-bar button:disabled {
+    background: #bdbdbd !important;
+    color: #fff !important;
+    cursor: not-allowed !important;
+}
+.pagination-bar button:disabled {
+    background: #bdbdbd !important;
+    color: #fff !important;
+    cursor: not-allowed !important;
+}
+
+.mock-pagination-bar button:hover:not(:disabled) {
+    background: #1976d2 !important;
+}
+.pagination-bar button:hover:not(:disabled) {
+    background: #1976d2 !important;
+}
+
+.youtube-results-wrapper-mock {
+    background: #f0f0f0;
+    min-height: 100px;
+    /* padding: 40px 0 32px 0; */
+    /* margin: 32px auto; */
+    width: max-content;
+    max-width: 97%;
+    padding: 10px;
+    border-radius: 16px;
+}
+.youtube-results-header-mock {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 60px;
+    max-width: 100%;
+    padding: 0 20px;
+    font-size: 1.0em;
+    color: #333;
+}
+.mock-youtube-results {
+    margin: 0 auto;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    padding: 20px;
+    width: calc(100% - 20px);
+    max-width: none;
+}
+.results-title-mock {
+    font-weight: 500;
+    color: #222;
+}
+.page-info-mock {
+    color: #666;
+    font-size: 1em;
+}
+
+/* Fix for Add to Playlist button positioning - Override any conflicting rules */
+.youtube-multi-bubble-mock .add-to-playlist-MULTI-MOCK-btn,
+.youtube-multi-bubble .add-to-playlist-MULTI-btn {
+    position: absolute !important;
+    right: 15px !important;
+    /* top: -3px !important; */
+    z-index: 1000 !important;
+}
+
+/* Ensure mock popup buttons are styled properly */
+.mock-popup-btn {
+    padding: 8px 10px !important;
+    margin-right: 8px !important;
+    background-color: #0056b3 !important;
+    color: #fff !important;
+    border-radius: 6px !important;
+    border: none !important;
+    font-size: 12px !important;
+    font-weight: bold !important;
+    text-decoration: none !important;
+    display: inline-block !important;
+}
+
+.mock-popup-btn:hover {
+    background: #1976d2 !important;
+}
+
+.plus-sign {
+    font-size: 1.2em !important;
+    margin-bottom: -3px !important;
+}
+
+.view-playlists-btn-text {
+    font-size: 1.0em !important;
+    margin-top: 2px !important;
+}
+
+/* ========================================
+   ENHANCED YOUTUBE BUTTON STYLES
+======================================== */
+
+/* View Playlists Button */
+.view-playlists-btn {
+    background: #0056b3 !important;
+    color: white !important;
+    border: none !important;
+    padding: 6px 12px !important;
+    border-radius: 6px !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    box-shadow: 0 2px 4px rgba(66, 133, 244, 0.3) !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+}
+
+.view-playlists-btn-icon {
+    font-size: 1.2em !important;
+}
+
+.view-playlists-btn:hover {
+    background: #3367d6 !important;
+    /* transform: translateY(-1px); */
+    box-shadow: 0 4px 8px rgba(66, 133, 244, 0.4) !important;
+}
+
+.view-playlists-btn:active {
+    /* transform: translateY(0); */
+    box-shadow: 0 2px 4px rgba(66, 133, 244, 0.3) !important;
+}
+
+.watch-on-youtube-icon {
+    font-size: 1.2em !important;
+}
+
+.watch-on-youtube-text {
+    font-size: 1.0em !important;
+}
+
+/* Play in Popup Button - Restored to original styling */
+.popup-btn-mock, .youtube-action-btn.popup-btn-mock {
+    background: #2d298e !important;
+    color: white !important;
+    border: none !important;
+    padding: 8px 10px !important;
+    margin-right: 6px !important;
+    border-radius: 4px !important;
+    font-size: .8em !important;
+    font-weight: 500 !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    box-shadow: 0 2px 4px rgba(255, 68, 68, 0.3) !important;
+    text-decoration: none !important;
+    display: inline-block !important;
+}
+
+.popup-btn-mock:hover, .youtube-action-btn.popup-btn-mock:hover {
+    background: #2d298ecf !important;
+}
+
+.popup-btn-mock:active, .youtube-action-btn.popup-btn-mock:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(255, 68, 68, 0.3) !important;
+}
+
+/* Add to Playlist Button - Round green with + */
+.add-to-playlist-MULTI-MOCK-btn {
+    background: #4caf50 !important;
+    color: white !important;
+    border: none !important;
+    padding: 6px 6px !important;
+    border-radius: 50% !important;
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 14px !important;
+    font-weight: bold !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    box-shadow: 0 2px 4px rgba(76, 175, 80, 0.3) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.add-to-playlist-MULTI-MOCK-btn:hover {
+    background: #45a049 !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(76, 175, 80, 0.4) !important;
+}
+
+.add-to-playlist-MULTI-MOCK-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(76, 175, 80, 0.3) !important;
+}
+
+/* Watch on YouTube Button */
+.youtube-direct-link-improved {
+    background: linear-gradient(135deg, #ff0000, #cc0000) !important;
+    color: white !important;
+    border: none !important;
+    padding: 6px 12px !important;
+    border-radius: 6px !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    box-shadow: 0 2px 6px rgba(255, 0, 0, 0.3) !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    width: 62% !important;
+    margin-top: 5px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+}
+
+.watch-on-youtube-icon {
+    font-size: 1.1em !important;
+    line-height: 1 !important;
+}
+
+.watch-on-youtube-text {
+    font-size: 0.9em !important;
+    line-height: 1 !important;
+    margin: 0 !important;
+}
+
+.youtube-direct-link-improved:hover {
+    background: linear-gradient(135deg, #e60000, #b30000) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(255, 0, 0, 0.4) !important;
+}
+
+.youtube-direct-link-improved:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(255, 0, 0, 0.3) !important;
+}
+
+/* Remove excessive padding from all YouTube buttons */
+.youtube-action-btn {
+    padding: 4px 8px !important;
+    margin: 2px !important;
+    margin-right: 8px;
+    color: white;
+    border-radius: 8px;
+    text-decoration: none;
+    box-shadow: rgba(0, 0, 0, 0.25) 0px 14px 28px, rgba(0, 0, 0, 0.22) 0px 10px 10px;
+    background-color: #0056b3 !important;
+}
+
+/* Focus states for accessibility */
+.view-playlists-btn:focus,
+.popup-btn-mock:focus,
+.add-to-playlist-MULTI-MOCK-btn:focus,
+.youtube-direct-link-improved:focus {
+    outline: 2px solid #4285f4;
+    outline-offset: 2px;
+}
+
+/* ========================================
+   YOUTUBE MOCK RESULTS LAYOUT
+======================================== */
+
+/* Header section styling */
+.youtube-header-section-mock {
+    margin-bottom: 15px;
+}
+
+.youtube-header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.youtube-header-left {
+    display: flex;
+    align-items: center;
+}
+
+.youtube-header-title {
+    margin: 0;
+    color: #1976d2;
+    font-weight: bold;
+}
+
+.youtube-header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.youtube-page-info {
+    color: #666;
+    font-size: 14px;
+}
+
+.youtube-cache-badge {
+    background: #4caf50;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+}
+
+/* Video item layout */
+.video-title-mock {
+    font-weight: 500;
+    color: #333;
+    margin-top: 8px;
+    font-size: 14px;
+    line-height: 1.3;
+}
+
+.video-channel-mock {
+    color: #666;
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+.youtube-thumb-link-mock {
+    cursor: pointer;
+}
+
+/* Button group layouts */
+.button-thumb-group-MULTI-MOCK.top-buttons {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 8px;
+}
+
+.button-thumb-group-MULTI-MOCK.bottom-buttons {
+    margin-top: 8px;
+}
+
+/* Override conflicting watch-on-youtube styles with more specific selectors */
+.youtube-direct-link-improved .watch-on-youtube-icon {
+    font-size: 1.1em !important;
+    line-height: 1 !important;
+    margin: 0 !important;
+}
+
+.youtube-direct-link-improved .watch-on-youtube-text {
+    font-size: 0.9em !important;
+    line-height: 1 !important;
+    margin: 0 !important;
+}
+
+/* Ensure button layout is proper */
+.button-thumb-group-MULTI-MOCK.bottom-buttons .youtube-direct-link-improved {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    padding: 6px 12px !important;
+    text-align: center !important;
+}
+
+/* Focus states for accessibility */
+
+.mock-pagination-bar button:disabled, .pagination-bar button:disabled {
+    background: #f8f8f8 !important;
+    color: #999 !important;
+    opacity: 0.5 !important;
+    cursor: not-allowed !important;
+}
+.mock-pagination-bar button:hover:not(:disabled), .pagination-bar button:hover:not(:disabled) {
+    background: #e8e8e8 !important;
+    color: #000 !important;
+}
+
+/* === PAGINATION BUTTON OVERRIDE STYLES === */
+/* Ensure pagination buttons have transparent icon backgrounds */
+.pagination-bar button,
+.mock-pagination-bar button {
+    background: #f8f8f8 !important;
+    color: #333 !important;
+    border: 1px solid #ccc !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    padding: 6px 8px !important;
+    margin: 0 2px !important;
+    border-radius: 4px !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    outline: none !important;
+    min-width: 32px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* Style for button icons */
+.pagination-bar .btn-icon,
+.mock-pagination-bar .btn-icon {
+    /* width: 16px !important; */
+    height: 13px !important;
+    opacity: 0.8 !important;
+    transition: opacity 0.2s !important;
+    filter: none !important;
+    background: transparent !important;
+    padding: 0px 0px 0px 0px !important;
+}
+
+.pagination-bar button:hover .btn-icon,
+.mock-pagination-bar button:hover .btn-icon {
+    opacity: 1 !important;
+}
+
+.pagination-bar button:disabled .btn-icon,
+.mock-pagination-bar button:disabled .btn-icon {
+    opacity: 0.4 !important;
+}
+
+.pagination-bar button:disabled,
+.mock-pagination-bar button:disabled {
+    background: #f8f8f8 !important;
+    color: #999 !important;
+    opacity: 0.5 !important;
+    cursor: not-allowed !important;
+    
+}
+
+.pagination-bar button:hover:not(:disabled),
+.mock-pagination-bar button:hover:not(:disabled) {
+    background: #e8e8e8 !important;
+    color: #000 !important;
+}
+
+.step-back-btn {
+    background: #f8f8f8 !important;
+    color: #333 !important;
+    border: 1px solid #ccc !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+}
+
+.real-youtube-pagination-bar {
+    position: fixed !important;
+    right: 62px !important;
+    bottom: 400px !important;
+    border: 1px solid blue;
+    padding: 0 0px 8px 0;
+    border-radius: 8px;
+    width: 230px;
+    height: 100px;
+    background-color: #fff;
+    z-index: 1001 !important;
+}
+
+.drag-handle-icon {
+    width: 22px !important;
+    height: 30px !important;
+    opacity: 0.6 !important;
+    transition: opacity 0.2s ease !important;
+}
+/* MORE button styling */
+.real-more-btn {
+    /* background: #2196f3 !important; */
+    color: white !important;
+    font-weight: bold !important;
+}
+
+.mock-more-btn {
+    background: #13c307 !important;
+    color: rgb(8, 8, 8) !important;
+    font-weight: bold !important;
+}
+
+/* Icon styling */
+.pagination-icon {
+    width: 12px;
+    height: 12px;
+}
+
+/* Dragging state */
+.real-youtube-pagination-bar.dragging,
+.mock-pagination-bar.dragging {
+    cursor: grabbing;
+}
+
+/* icon styles for pagination bars */
+.first-page-btn {
+    width: 12px;
+    height: 12px;
+}
+
+.first-page-icon {
+    width: 12px;
+    height: 12px;
+}
+
+
+.prev-page-btn {
+    width: 12px;
+    height: 12px;
+}
+
+.prev-page-icon {
+    width: 12px;
+    height: 12px;
+}
+
+.back-btn {
+    display: block;
+}
+
+.back-icon {
+    width: 16px;
+    height: 16px;
+    position: relative;
+    top: 2px;
+}
+
+.more-page-btn {
+    background: #13c307 !important;
+    color: #fff !important;
+    font-weight: bold !important;
+}
+
+.more-page-btn:hover {
+    background: #74d96d !important;
+    color: #fff !important;
+    font-weight: bold !important;
+}
+
+
+.forward-btn {
+    width: 12px;
+    height: 12px;
+}
+
+.forward-icon {
+    width: 10px;
+    height: 10px;
+}
+.back-to-top-btn {
+    /* background: #2196f3 !important; */
+    color: white !important;
+    font-weight: bold !important;
+}
+.query-start-btn {
+    /* background: #2196f3 !important; */
+    color: white !important;
+    font-weight: bold !important;
+}
+
+.next-btn {
+    /* background: #2196f3 !important; */
+    color: white !important;
+    font-weight: bold !important;
+}
+
+.pagination-drag-tab {
+    cursor: grab;
+    height: 27px;
+    width: 100%;
+    margin-bottom: 8px;
+    background-color: #d5d8d9b5;
+}
+
+/* Drag Me Icon Styles - for the new drag-me.png image */
+.drag-me-icon {
+    width: 100% !important;
+    height: 24px !important;
+    margin-bottom: -22px !important;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+
+}
+
+/* Update drag tabs to be flex column to stack the images vertically */
+.drag-tab, .pagination-drag-tab {
+    flex-direction: column !important;
+    padding: 4px 0 !important;
+}
+
+/* Drag-me icon styling */
+.drag-me-icon {
+    width: 20px;
+    height: 20px;
+    margin-right: 0px;
+    opacity: 0.8;
+    cursor: grab;
+    transition: opacity 0.2s ease;
+}
+
+
+
+.drag-me-icon:active {
+    cursor: grabbing;
+}
+
+/* Enhanced drag tab styling for both real and mock pagination bars */
+.pagination-drag-tab, .drag-tab {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 12px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    cursor: grab;
+    border-radius: 8px 8px 0 0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: all 0.2s ease;
+}
+
+.pagination-drag-tab:hover, .drag-tab:hover {
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+    /* transform: translateY(-1px); */
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.pagination-drag-tab:active, .drag-tab:active {
+    cursor: grabbing;
+    transform: translateY(0);
+}
+
+.video-channel {
+    font-size: 14px !important;
+    color: chocolate !important;
+    padding-top: 5px;
+}
+
+/* Existing pagination bar styles... */
+
+/* === REAL YOUTUBE PAGINATION BAR BUTTON STYLING === */
+.real-youtube-pagination-bar button {
+    margin: 0 2px !important;
+    padding: 6px 8px !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    border: 1px solid #ccc !important;
+    border-radius: 4px !important;
+    background: #f8f8f8 !important;
+    color: #333 !important;
+    cursor: pointer !important;
+    transition: background 0.2s;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    outline: none !important;
+    min-width: 20px !important;
+    height: 20px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.real-youtube-pagination-bar button:disabled {
+    background: #bdbdbd !important;
+    color: #fff !important;
+    cursor: not-allowed !important;
+    opacity: 0.5 !important;
+}
+
+.real-youtube-pagination-bar button:hover:not(:disabled) {
+    background: #e8e8e8 !important;
+    color: #000 !important;
+}
+
+/* Style for button icons in real pagination bar */
+.real-youtube-pagination-bar .btn-icon {
+    height: 13px !important;
+    opacity: 0.8 !important;
+    transition: opacity 0.2s !important;
+    filter: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+}
+
+.real-youtube-pagination-bar button:hover .btn-icon {
+    opacity: 1 !important;
+}
+
+.real-youtube-pagination-bar button:disabled .btn-icon {
+    opacity: 0.4 !important;
+}
+
+/* Style the pagination-drag-tab area for drag-me.png */
+.real-youtube-pagination-bar .pagination-drag-tab {
+    width: 100% !important;
+    height: 27px !important;
+    background-color: #d5d8d9b5 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: grab !important;
+    border-radius: 8px 8px 0 0 !important;
+    margin-bottom: 4px !important;
+}
+
+/* MORE button special styling for real pagination bar */
+.real-youtube-pagination-bar .more-page-btn {
+    background: #13c307 !important;
+    color: #fff !important;
+    font-weight: bold !important;
+}
+
+.real-youtube-pagination-bar .more-page-btn:hover {
+    background: #74d96d !important;
+    color: #fff !important;
+}
+
+/* === QUERY HISTORY SELECTOR STYLES === */
+.drag-tab {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 8px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    cursor: grab;
+    border-radius: 8px 8px 0 0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: all 0.2s ease;
+    width: 100%;
+    height: 0px;
+}
+
+.drag-tab:hover {
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.drag-tab:active {
+    cursor: grabbing;
+    transform: translateY(0);
+}
+
+.query-history-btn {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    min-width: 60px;
+    justify-content: center;
+    height: 20px;
+    z-index: 1002 !important;
+    position: relative;
+    top: 33px;
+    width: 92%;
+}
+
+.query-history-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+}
+
+.query-history-btn:active {
+    /* transform: translateY(0); */
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.query-history-btn:disabled {
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.5);
+    cursor: not-allowed;
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: none;
+}
+
+.query-history-icon {
+    font-size: 14px;
+}
+
+.query-history-text {
+    font-size: 12px;
+}
+
+.query-history-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: -24px;
+    right: -24px;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    display: none;
+    margin-top: 82px;
+    min-width: 250px;
+    overflow: hidden; /* Clip content to border-radius */
+}
+
+/* Webkit scrollbar styling for Chrome/Safari/Edge - now applied to the list */
+.query-history-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.query-history-list::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 8px;
+}
+
+.query-history-list::-webkit-scrollbar-thumb {
+    background: #bbb;
+    border-radius: 8px;
+    border: 2px solid white;
+}
+
+.query-history-list::-webkit-scrollbar-thumb:hover {
+    background: #999;
+}
+
+/* Make the query list scrollable with a max height */
+.query-history-list {
+    max-height: 240px; /* Slightly less than dropdown to account for header */
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #bbb transparent;
+}
+
+.query-history-dropdown.show {
+    display: block;
+}
+
+.query-history-header {
+    padding: 12px 16px;
+    background: #d6d8d9;
+    border-bottom: 1px solid #eee;
+    font-weight: 600;
+    font-size: 12px;
+    color: #333;
+    text-align: center;
+}
+
+.query-history-item {
+    padding: 10px 16px;
+    border-bottom: 1px solid #f0f0f0;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+}
+
+.query-history-item:hover {
+    background: #f8f9fa;
+}
+
+.query-history-item:last-child {
+    border-bottom: none;
+}
+
+.query-history-item.current {
+    background: #e3f2fd;
+    border-left: 4px solid #4a90e2;
+}
+
+.query-history-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    cursor: pointer;
+}
+
+.query-history-query {
+    font-weight: 500;
+    color: #333;
+    font-size: 13px;
+    line-height: 1.2;
+}
+
+.query-history-meta {
+    font-size: 11px;
+    color: #666;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.query-history-time {
+    color: #888;
+}
+
+.query-history-pages {
+    background: #e8f4fd;
+    color: #4a90e2;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-weight: 500;
+}
+
+.query-history-delete {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    cursor: pointer;
+    opacity: 0.5;
+    transition: all 0.2s ease;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.query-history-delete:hover {
+    opacity: 1;
+    background: #ffe6e6;
+    color: #d32f2f;
+    transform: scale(1.1);
+}
+
+.query-history-delete:active {
+    transform: scale(0.95);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .query-history-dropdown {
+        min-width: 250px;
+        max-height: 200px;
+    }
+    
+    .query-history-btn {
+        padding: 3px 6px;
+        font-size: 9px;
+        min-width: 50px;
+    }
+}
+
+.query-history-delete:active {
+    transform: scale(0.95);
+}
+
+.query-history-empty {
+    padding: 20px 16px;
+    text-align: center;
+    color: #999;
+    font-size: 12px;
+    font-style: italic;
+}
+
+.quota-dashboard-content {
+    height: 140px;
+    margin-top: 18px;
+    margin-bottom: -20px;
+}
+
+.query-history-time {
+    color: #888;
+}
+
+/* Compact single-line format for Query History */
+.query-history-compact {
+    font-size: 11px;
+    color: #333;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: bold;
+}
+
+.query-history-item {
+    padding: 8px 12px;
+    border-bottom: 1px solid #f0f0f0;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
+    min-height: 36px;
+}
+
+.query-history-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    cursor: pointer;
+}
+
+.query-history-query {
+    font-weight: bold;
+    color: #333;
+    font-size: 12px;
+    line-height: 1.2;
+}
+
+.query-history-meta {
+    font-size: 10px;
+    color: #666;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.query-history-pages {
+    background: #e8f4fd;
+    color: #4a90e2;
+    padding: 1px 5px;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 9px;
+    width: fit-content;
+}
+
+.query-history-delete {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 2px 4px;
+    border-radius: 3px;
+    opacity: 0.8;
+    transition: opacity 0.2s ease, background-color 0.2s ease;
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #d32f2f;
+}
+
+.query-history-delete:hover {
+    opacity: 1;
+    background: rgba(255, 0, 0, 0.1);
+    transform: scale(1.1);
+    color: #b71c1c;
+}
+
+
+
+
+    
+
+
+
+
+/* Paginator Toggle Icon - ONLY INSIDE YouTube containers */
+.show-paginator-bar {
+    position: absolute !important;
+    bottom: 15px !important;
+    right: 15px !important;
+    width: 50px !important;
+    height: 50px !important;
+    background: rgba(255, 0, 0, 0.9) !important;
+    border: 3px solid #ffffff !important;
+    border-radius: 50% !important;
+    display: none; /* DEFAULT: HIDDEN - JavaScript will control visibility */
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    font-size: 20px !important;
+    color: white !important;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6) !important;
+    transition: all 0.3s ease !important;
+    z-index: 999 !important;
+    user-select: none !important;
+    backdrop-filter: blur(10px) !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    outline: 2px solid yellow !important;
+    animation: pulse 2s infinite !important;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.show-paginator-bar:hover {
+    background: rgba(255, 0, 0, 1) !important;
+    transform: scale(1.2) !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.8) !important;
+}
+
+.show-paginator-bar:active {
+    transform: scale(0.9) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* YouTube containers MUST have relative positioning for the toggle icon */
+.youtube-multi-bubble,
+.youtube-single-bubble,
+.youtube-multi-bubble-mock,
+.youtube-single-bubble-mock {
+    position: relative !important;
+    border: 1px dashed #ccc !important;
 }

@@ -1,28 +1,17 @@
 /*
-  APP.JS
-  Version: 1
-  AppName: MultiChat_Chatty [v1]
-  Updated: 05/24/2025 @10:00AM
+  APP.js - working recipe
+  Version: 20.0.9
+  AppName: Multi-Chat [v20.0.9]
   Created by Paul Welby
+  Updated: January 9, 2025 @7:15AM
 */
-
-// =====================================================
-// IMPORTS NEEDED FOR NEW ES6 MODULES
-// =====================================================
-
-import playlistManager from './components/PlaylistManager.js';
-
-// Initialize PlaylistManager globally
-console.log('Initializing PlaylistManager...');
-window.playlistManager = playlistManager;
-console.log('PlaylistManager initialized:', window.playlistManager);
 
 // =====================================================
 // GLOBAL SCOPED CONSTANTS
 // =====================================================
 
 // SERVER URL
-const SERVER_URL = 'http://localhost:5300';
+const SERVER_URL = 'http://localhost:32009';
 
 // Time constants
 const INTERVAL = 10;  // Set timeout duration in minutes
@@ -68,7 +57,7 @@ const MIC_INITIALIZATION_DELAY = 4000;  // 4 seconds delay
 // Add the MESSAGES constant
 const MESSAGES = {
     STATUS: {
-        DEFAULT: `<br>Click the <span class="status-keyword">Conversation Mode</span> checkbox, or press the <span class="status-keyword">Microphone</span> button <br>...to enable conversations, or enter a message and press Send</span><br><br>`,
+        DEFAULT: "Click the Conversation Mode checkbox, or press the microphone button \n...to enable conversations, or enter a message and press Send",
         LISTENING: "Listening...",
         SPEAKING: "AI is speaking...",
         PROCESSING: "Processing...",
@@ -93,80 +82,6 @@ const MESSAGES = {
         EXIT: "Error occurred during exit. Please refresh the page if issues persist."
     }
 };
-
-// Add at the top with other constants
-const AUDIO_CONFIG = {
-    minChunkLength: 10,
-    maxChunkLength: 150,
-    pauseDuration: 400,
-    maxRetries: 3,
-    retryDelay: 1000,
-    defaultVoice: 'en-US-AndrewNeural',
-    rate: 0.9,
-    pitch: 1.0,
-    volume: 1.0,  // Fixed full volume
-    apiUrl: `${SERVER_URL}/api/tts`
-};
-
-// Add this at the top with other constants
-const SPEECH_CONFIG = {
-    retryDelay: 1000,
-    maxRetries: 3,
-    initDelay: 500,
-    silenceTimeout: 1500,    // Wait 1.5s of silence before processing
-    continuous: true,        // Keep recognition running
-    interimResults: true,    // Get interim results
-    language: 'en-US'
-};
-
-// Add at the top with other constants
-// const DUMMY_PREFIX = "....................-------------------------...................................";
-// const TTS_IDLE_THRESHOLD = 60000; // 60 seconds
-
-const slideoutPanel = document.getElementById('slideout-panel-left');
-const slideoutBar = document.getElementById('slideout-bar');
-const tempSlider = document.getElementById('temperature-slider');
-const tempValue = document.getElementById('temperature-value');
-const toppSlider = document.getElementById('top-p-slider');
-const topPValue = document.getElementById('top-p-value');
-
-// Custom prompt logic
-const customPromptInput = document.getElementById('custom-prompt');
-const removeCustomPromptBtn = document.getElementById('remove-custom-prompt-btn');
-let customPrompt = '';
-
-if (customPromptInput) {
-  customPromptInput.addEventListener('input', () => {
-    customPrompt = customPromptInput.value;
-  });
-}
-if (removeCustomPromptBtn) {
-  removeCustomPromptBtn.addEventListener('click', () => {
-    customPrompt = '';
-    if (customPromptInput) customPromptInput.value = '';
-  });
-}
-
-// Show panel on hover or click
-slideoutBar.addEventListener('mouseenter', () => {
-  slideoutPanel.classList.add('open');
-});
-slideoutPanel.addEventListener('mouseleave', () => {
-  slideoutPanel.classList.remove('open');
-});
-
-// (Optional) Keep open on click
-slideoutBar.addEventListener('click', () => {
-  slideoutPanel.classList.toggle('open');
-});
-
-// Update value displays
-tempSlider.addEventListener('input', () => {
-  tempValue.textContent = Number(tempSlider.value).toFixed(2);
-});
-toppSlider.addEventListener('input', () => {
-  topPValue.textContent = Number(toppSlider.value).toFixed(2);
-});
 
 // =====================================================
 // GLOBAL SCOPED VARIABLES
@@ -210,24 +125,12 @@ REGARDING GENERAL QUERIES:
 6. When asked for a response, ALWAYS provide at least 2-4 paragraphs of text.
 
 CRITICAL INSTRUCTIONS FOR IMAGE REQUESTS:
-1. When users ask for images, respond with: "Here are some relevant images for [topic]" at the end of your response.
+1. When users ask for images, respond with: "Here are some relevant images for [topic]"
 2. DO NOT provide image URLs or links
 3. DO NOT mention being an AI or having any limitations
 4. DO NOT apologize for image-related capabilities
 5. Keep responses about images brief and positive
-
-SPECIAL ABBREVIATION INSTRUCTIONS:
-1. Whenever you would output "U.S." or "U.S.A." in a response, instead output "United States" or "United States of America" respectively.
-2. Do not use the abbreviations "U.S." or "U.S.A." in your answers; always use the full country name.
 `;
-
-// Append custom prompt if present
-// let customPromptInput = document.getElementById('custom-prompt');
-let customPromptValue = customPromptInput ? customPromptInput.value.trim() : '';
-let finalSystemPrompt = systemPrompt;
-if (customPromptValue.length > 0) {
-  finalSystemPrompt = `${systemPrompt}\n\n${customPromptValue}`;
-}
 
 // =====================================================
 // GLOBAL SCOPED ELEMENTS
@@ -282,16 +185,8 @@ const state = {
     sseRetryDelay: 1000,
     savingJoke: false,
     pendingNameChange: null,
-    lastRequestTime: Date.now(),
-    lastTTS: 0, // Add to global state
-    isImagePickerOpen: false,  // Add this line to track file picker state
-    selectedImageFileName: null, // Add to global state
-    pendingInitials: null,
+    lastRequestTime: Date.now()
 };
-
-// Add to global state
-
-window.state = state;
 
 // =====================================================
 // GLOBAL SCOPED SESSION ID
@@ -588,42 +483,6 @@ async function generateGreeting() {
     return options[Math.floor(Math.random() * options.length)];
 }
 
-// Helper to convert numbered ingredients to a dashed HTML list
-function formatIngredientsAsDashedList(text) {
-    if (!text.match(/Ingredients:/i) || !text.match(/Instructions:|Directions:/i)) return text;
-
-    // Split into sections
-    const parts = text.split(/(Ingredients:|Instructions:|Directions:)/i);
-    if (parts.length < 4) return text;
-
-    let formatted = '';
-    for (let i = 0; i < parts.length; i++) {
-        if (/Ingredients:/i.test(parts[i])) {
-            formatted += '<strong>' + parts[i] + '</strong>';
-            // Convert numbered or dashed lines to <li>
-            const lines = parts[i+1]
-                .split(/\n|\r/)
-                .map(line => line.trim())
-                .filter(line => line.length > 0 && !/^Ingredients:?$/i.test(line));
-            const liLines = lines.map(line => {
-                // Remove leading numbers/dots/dashes and whitespace
-                const cleaned = line.replace(/^\s*\d+\.?\s*/, '').replace(/^[-–—•]\s*/, '');
-                return `<li style="list-style-type: '- '; margin-left: 1em;">${cleaned}</li>`;
-            });
-            formatted += `<ul style="margin: 0 0 1em 0; padding-left: 1.5em;">${liLines.join('')}</ul>`;
-            i++; // Skip the ingredients content part
-        } else {
-            // For the rest, preserve line breaks and bold section headers
-            if (/^(Instructions:|Directions:)$/i.test(parts[i])) {
-                formatted += '<strong>' + parts[i] + '</strong>';
-            } else {
-                formatted += parts[i].replace(/\n/g, '<br>');
-            }
-        }
-    }
-    return formatted;
-}
-
 // // Handle time-related queries
 // function handleTimeQuery(messageText) {
 //     const currentTime = new Date();
@@ -773,12 +632,12 @@ function getPatterns() {
 }
 
 // Add these helper functions near getGreeting
-// function getTimeOfDay() {
-//     const hour = new Date().getHours();
-//     if (hour < 12) return 'morning';
-//     if (hour < 17) return 'afternoon';
-//     return 'evening';
-// }
+function getTimeOfDay() {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'morning';
+    if (hour < 17) return 'afternoon';
+    return 'evening';
+}
 
 function getHoliday(date) {
     const month = date.getMonth() + 1; // JavaScript months are 0-based
@@ -819,41 +678,7 @@ function getHoliday(date) {
 // DOMContentLoaded event listener
 // =====================================================
 
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('DOM Content Loaded - Setting up Playlist button...');
-    // Inject metadata spacing style
-    const style = document.createElement('style');
-    style.textContent = `
-        .metadata {
-            margin-bottom: 12px;
-            padding-bottom: 4px;
-        }
-        #open-playlist-manager-btn {
-            display: none;
-            margin: 24px 8px 22px 10px;
-            background: #2196f3;
-            color: #fff;
-            border: none;
-            border-radius: 6px;
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            width: 130px;
-        }
-        #open-playlist-manager-btn:hover {
-            background: #1976d2;
-        }
-    `;
-    document.head.appendChild(style);
-
-    // Disable Conversation Mode checkbox at startup
-    if (elements.conversationModeToggle) {
-        elements.conversationModeToggle.disabled = true;
-    }
-
-    initializeApp();
-});
+document.addEventListener('DOMContentLoaded', initializeApp);
 
 
 // =====================================================
@@ -861,18 +686,49 @@ document.addEventListener('DOMContentLoaded', () => {
 // =====================================================
 
 async function initializeApp() {
+    console.log('Starting app initialization...');
+
+    // Disable conversation mode toggle initially
+    elements.conversationModeToggle.disabled = true;
+
+    // Show startup message
+    updateStatus(MESSAGES.STATUS.INITIALIZING);
+
     try {
-        console.log('Initializing app...');
-        updateStatus(MESSAGES.STATUS.INITIALIZING);
+        // Clear conversation state
+        state.conversationHistory = [];
+        elements.chatMessages.innerHTML = '';
 
-        // Initialize other components
-        await loadPersonalInfo();
-        setupEventListeners(); // Only call this ONCE
-        await populateVoiceList();
+        // Handle session management
+        const currentTime = Date.now();
+        const lastSessionTime = localStorage.getItem('sessionTimestamp');
+
+        if (!lastSessionTime || (currentTime - parseInt(lastSessionTime)) > 24 * 60 * 60 * 1000) {
+            localStorage.removeItem('sessionId');
+            localStorage.removeItem('conversationHistory');
+            localStorage.removeItem('sessionTimestamp');
+
+            window.sessionId = `session-${currentTime}-${Math.random().toString(36).substring(2, 9)}`;
+            localStorage.setItem('sessionId', window.sessionId);
+            localStorage.setItem('sessionTimestamp', currentTime.toString());
+        } else {
+            window.sessionId = localStorage.getItem('sessionId');
+        }
+
+        // Save voice preference
+        const savedVoice = localStorage.getItem('selectedVoice');
+        if (savedVoice) {
+            localStorage.setItem('selectedVoice', savedVoice);
+            elements.voiceSelect.value = savedVoice;  // Set the select element value
+        }
+
+        // Initialize core components
         await checkMicrophonePermission();
+        await populateVoiceList();
+        initializeSpeechRecognition();
 
-        // Remove this duplicate:
-        // setupEventListeners();
+        // Set up event listeners
+        setupEventListeners();
 
         // Load personal info from MongoDB
         await loadPersonalInfo();
@@ -880,16 +736,14 @@ async function initializeApp() {
         // Set up SSE connection
         setupSSEConnection();
 
+        // Update initial status
+        // updateStatus('Click the microphone button to start speech recognition or type a message and press Send.');
+
         // Add delay before enabling conversation mode
         setTimeout(() => {
-            if (elements.conversationModeToggle) {
-                elements.conversationModeToggle.disabled = false;
-            }
+            elements.conversationModeToggle.disabled = false;
             updateStatus(MESSAGES.STATUS.DEFAULT);
         }, MIC_INITIALIZATION_DELAY);
-
-        // Add TTS warm-up function
-        await warmUpTTS();
 
         console.log('App initialization completed successfully');
 
@@ -930,21 +784,8 @@ function setupEventListeners() {
             sendMessage();
         }
     });
-    elements.imageUploadBtn.addEventListener('click', () => {
-        elements.processingIndicator.style.display = 'block'; // Show immediately
-        if (!state.isImagePickerOpen) {
-            state.isImagePickerOpen = true;
-            elements.imageInput.click();
-        }
-    });
-    elements.imageInput.addEventListener('change', (event) => {
-        state.isImagePickerOpen = false;
-        handleImageUpload(event);
-    });
-    elements.imageInput.addEventListener('click', (event) => {
-        // This ensures the flag resets if the user cancels the dialog
-        event.target.value = '';
-    });
+    elements.imageUploadBtn.addEventListener('click', () => elements.imageInput.click());
+    elements.imageInput.addEventListener('change', handleImageUpload);
     elements.modelSelect.addEventListener('change', () => state.selectedModel = this.value);
     elements.conversationModeToggle.addEventListener('change', handleConversationModeToggle);
     elements.stopAudioButton.addEventListener('click', stopAudioPlayback);
@@ -1031,11 +872,7 @@ function setupSSEConnection() {
             try {
                 const data = JSON.parse(event.data);
                 if (data.type === 'heartbeat') {
-                    if (data.timestamp && !isNaN(new Date(data.timestamp).getTime())) {
-                        console.log('Heartbeat received:', new Date(data.timestamp).toLocaleTimeString());
-                    } else {
-                        console.log('Heartbeat received (no valid timestamp)');
-                    }
+                    console.log('Heartbeat received:', new Date(data.timestamp).toLocaleTimeString());
                 }
                 if (data.response) {
                     // Check for special message types
@@ -1122,19 +959,11 @@ async function checkMicrophonePermission() {
 // =====================================================
 
 // Cleanup function
-function stopAllAudio() {
+function cleanup() {
     stopListening();
     if (state.currentAudio) {
         state.currentAudio.pause();
         state.currentAudio = null;
-    }
-}
-
-function cleanup(audio) {
-    if (audio) {
-        audio.pause();
-        audio.src = '';
-        URL.revokeObjectURL(audio.src);
     }
 }
 
@@ -1180,108 +1009,36 @@ async function fetchWithRetry(url, options, maxRetries = 3) {
 // Send message function
 async function sendMessage(message, isGreeting = false) {
     try {
-        const messageText = message;  // Initialize properly
-        const patterns = getPatterns();
+        // Check for date/time requests
+        const hasDate = message.toLowerCase().match(/date/);
+        const hasTime = message.toLowerCase().match(/time/);
+        const isDateTimeRequest = hasDate || hasTime;
 
-        // NEW: Bing/web/internet search trigger (regardless of order)
-        const lowerMsg = messageText.toLowerCase();
-        const hasBingSearch = lowerMsg.includes('bing') && lowerMsg.includes('search');
-        const hasWebSearch = lowerMsg.includes('web') && lowerMsg.includes('search');
-        const hasInternetSearch = lowerMsg.includes('internet') && lowerMsg.includes('search');
-        if (hasBingSearch || hasWebSearch || hasInternetSearch) {
-            // Extract the query after the last occurrence of 'search'
-            const lastSearchIdx = lowerMsg.lastIndexOf('search');
-            let query = messageText.slice(lastSearchIdx + 6).replace(/^\s*for\s*/i, '').trim();
-            if (!query) query = messageText; // fallback if nothing after 'search'
-            addMessageToChat('user', messageText);
-            try {
-                const requestStartTime = Date.now();
-                const response = await fetch('/api/bing-search', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ query })
-                });
-                const data = await response.json();
-                const messageElement = addMessageToChat('assistant', data.response);
-                const requestDuration = data.metrics?.duration || `${((Date.now() - requestStartTime) / 1000).toFixed(2)}s`;
-                updateMetadata(messageElement, {
-                    model: 'bing-search',
-                    metrics: {
-                        model: 'bing-search',
-                        totalTokens: data.response.length,
-                        startTime: data.metrics?.startTime || requestStartTime,
-                        endTime: data.metrics?.endTime || Date.now(),
-                        duration: requestDuration
-                    }
-                });
-                return;
-            } catch (error) {
-                console.error('Search error:', error);
-                return;
-            }
-        }
-
-        // NEW: If message starts with 'search ', trigger Bing search
-        const searchStartMatch = messageText.match(/^search\s+(.+)/i);
-        if (searchStartMatch) {
-            const query = searchStartMatch[1].trim();
-            addMessageToChat('user', messageText);
-            try {
-                const requestStartTime = Date.now();
-                const response = await fetch('/api/bing-search', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ query })
-                });
-                const data = await response.json();
-                const messageElement = addMessageToChat('assistant', data.response);
-                const requestDuration = data.metrics?.duration || `${((Date.now() - requestStartTime) / 1000).toFixed(2)}s`;
-                updateMetadata(messageElement, {
-                    model: 'bing-search',
-                    metrics: {
-                        model: 'bing-search',
-                        totalTokens: data.response.length,
-                        startTime: data.metrics?.startTime || requestStartTime,
-                        endTime: data.metrics?.endTime || Date.now(),
-                        duration: requestDuration
-                    }
-                });
-                return;
-            } catch (error) {
-                console.error('Search error:', error);
-                return;
-            }
-        }
-
-        // Check for explicit date/time/datetime requests using patterns
-        const isTimeRequest = patterns.time.some(pattern => pattern.test(messageText.trim()));
-        const isDateRequest = patterns.date.some(pattern => pattern.test(messageText.trim()));
-        const isDateTimeRequest = patterns.dateTime.some(pattern => pattern.test(messageText.trim()));
-
-        if (isTimeRequest || isDateRequest || isDateTimeRequest) {
+        if (isDateTimeRequest) {
             const today = new Date();
             let response;
             const messageElement = document.createElement('div');
 
+            // const messageElement = addMessageToChat('assistant', response);
             addMessageToChat('user', message);
 
-            if (isTimeRequest && !isDateRequest && !isDateTimeRequest) {
+            // Check if asking for date, time, or both
+            if (hasTime && !hasDate) {
                 response = `The local time is ${today.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })} PST`;
-                messageElement.className = 'message time-date-bubble time-response';
-            } else if (isDateRequest && !isTimeRequest && !isDateTimeRequest) {
+                messageElement.className = 'message system-bubble time-response';
+            } else if (hasDate && !hasTime) {
                 response = `Today's date is ${today.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`;
-                messageElement.className = 'message time-date-bubble date-response';
+                messageElement.className = 'message system-bubble date-response';
             } else {
                 response = `Today's date is ${today.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} and the local time is ${today.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })} PST`;
-                messageElement.className = 'message time-date-bubble datetime-response';
+                messageElement.className = 'message system-bubble datetime-response';
             }
 
-            // Show the text response immediately
+            // Queue audio for date/time response
+            await queueAudioChunk(response);
+
             messageElement.textContent = response;
             elements.chatMessages.appendChild(messageElement);
-
-            // Then play audio (do not await before showing text)
-            queueAudioChunk(response);
             return;
         }
 
@@ -1297,6 +1054,9 @@ async function sendMessage(message, isGreeting = false) {
             await queueAudioChunk(greeting);
             return;
         }
+
+        const messageText = message;  // Initialize properly
+        const patterns = getPatterns();
 
         // Check for exit command first
         if (messageText.toLowerCase() === 'exit') {
@@ -1672,7 +1432,7 @@ async function sendMessage(message, isGreeting = false) {
                     // Regular message handling
                     const messageElement = addMessageToChat('assistant', data.response, {
                         model: data.metrics?.model,
-                        startTime: data.metrics?.startTime || Date.now(),
+                        startTime: startTime,
                         tokenCount: data.tokenCount
                     });
                 }
@@ -1859,9 +1619,7 @@ async function sendMessage(message, isGreeting = false) {
                     const searchQuery = messageText.replace(/\b(more|info|detail|image|images|picture|pictures|photo|photos)\b/gi, '').trim();
                     const imageResults = await searchAndDisplayImages(searchQuery);
                     if (imageResults && imageResults.images && imageResults.images.length > 0) {
-                        const { heading, cleanedText } = extractImageHeading(response.response);
-                        updateMessageContent(response.messageElement, cleanedText);
-                        insertAndStyleImages(imageResults.images, response.messageElement, heading);
+                        insertAndStyleImages(imageResults.images, response.messageElement);
                     }
                 }
 
@@ -1909,27 +1667,6 @@ async function getAIResponse(message, selectedModel, history, systemPrompt, sess
     let tokenCount = 0;
     let responseText = '';
 
-    // Get temperature and top_p from sliders
-    let temperature = 1.1;
-    let top_p = 1.0;
-    const tempSlider = document.getElementById('temperature-slider');
-    const toppSlider = document.getElementById('top-p-slider');
-    if (tempSlider) temperature = parseFloat(tempSlider.value) || 1.1;
-    if (toppSlider) top_p = parseFloat(toppSlider.value) || 1.0;
-
-    // Append custom prompt if present
-    let finalSystemPrompt = systemPrompt;
-    if (typeof customPrompt === 'string' && customPrompt.trim().length > 0) {
-      finalSystemPrompt = `${systemPrompt}\n\n${customPrompt.trim()}`;
-    }
-
-    console.log('Sending to /api/chat:', {
-        message,
-        temperature,
-        top_p,
-        customPrompt: customPrompt
-    });
-
     const response = await fetchWithRetry(
         '/api/chat', {
         method: 'POST',
@@ -1939,12 +1676,10 @@ async function getAIResponse(message, selectedModel, history, systemPrompt, sess
             history,
             model: selectedModel,
             systemPrompt: message.toLowerCase().includes('joke') ?
-                `${finalSystemPrompt} Provide a short, one-line joke that hasn't been told before.` :
-                finalSystemPrompt,
+                `${systemPrompt} Provide a short, one-line joke that hasn't been told before.` :
+                systemPrompt,
             session: sessionId, // Include sessionId in the request
-            timezone: state.userTimezone,  // Add timezone to request
-            temperature: temperature,
-            top_p: top_p
+            timezone: state.userTimezone  // Add timezone to request
         }),
     });
 
@@ -1983,34 +1718,25 @@ async function getAIResponse(message, selectedModel, history, systemPrompt, sess
 
                     updateStatus('AI is responding...');
 
-                    // Check for Bing search results FIRST and handle them exclusively
-                    const isBingWebResult = /# Web Results for|# News Results for/i.test(responseText);
-                    if (isBingWebResult) {
-                        messageElement.querySelector('.message-content').innerHTML = `<div class="bing-search-results">${responseText}</div>`;
-                        continue; // Skip all other processing for Bing results
-                    }
-
-                    // Only process image search if NOT a Bing result
-                    if (!isBingWebResult && responseText.toLowerCase().includes('here are some relevant images for')) {
-                        // Always extract and remove the heading from the text
-                        const { heading, cleanedText } = extractImageHeading(responseText);
-                        // Always update the message content with the cleaned text (no phrase)
-                        updateMessageContent(messageElement, cleanedText);
-                        // Now use the heading for the image section only
-                        const imageMatch = cleanedText.match(/Here are some relevant images for (.*?)[.!\n]/i);
-                        const searchQuery = (imageMatch && imageMatch[1]) ? imageMatch[1].trim() : (heading ? heading.replace(/Here are some relevant images for |\.$/gi, '').trim() : null);
-                        if (searchQuery) {
+                    // Check for image trigger phrase
+                    if (responseText.toLowerCase().includes('here are some relevant images for')) {
+                        const imageMatch = responseText.match(/here are some relevant images for (.*?)[.!\n]/i);
+                        if (imageMatch && imageMatch[1]) {
+                            const searchQuery = imageMatch[1].trim();
                             console.log('Detected image request for:', searchQuery);
+
                             try {
                                 const imageResponse = await fetch(`/api/google-image-search?q=${encodeURIComponent(searchQuery)}`);
                                 if (!imageResponse.ok) {
                                     throw new Error(`HTTP error! status: ${imageResponse.status}`);
                                 }
+
                                 const imageData = await imageResponse.json();
                                 console.log('Received image data:', imageData);
+
                                 if (imageData.images && imageData.images.length > 0) {
                                     console.log('Inserting images into chat');
-                                    insertAndStyleImages(imageData.images, messageElement, heading);
+                                    insertAndStyleImages(imageData.images, messageElement);
                                 }
                             } catch (error) {
                                 console.error('Error fetching images:', error);
@@ -2044,68 +1770,94 @@ async function getAIResponse(message, selectedModel, history, systemPrompt, sess
 
 // Add message to chat function
 function addMessageToChat(role, content, options = {}) {
-    const messageElement = document.createElement('div');
-    messageElement.className = `message ${role}`;
-    
-    // Add special bubble classes for greetings and exit messages
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${role}`;
+
+    // Initialize dataset if needed
+    if (!messageDiv.dataset) {
+        messageDiv.dataset = {};
+    }
+
+    // Add special classes for greeting and exit messages
+    if (options.type === 'greeting') {
+        messageDiv.classList.add('greeting-bubble');
+    } else if (options.type === 'exit') {
+        messageDiv.classList.add('exit-bubble');
+    }
+
+    // Set model info FIRST for all assistant messages
     if (role === 'assistant') {
-        const type = options.type || options.messageType || '';
-        if (type === 'greeting') {
-            messageElement.classList.add('greeting-bubble');
-        } else if (type === 'exit') {
-            messageElement.classList.add('exit-bubble');
+        try {
+            if (options.type === 'image-analysis') {
+                messageDiv.dataset.model = 'gpt-4o';
+            } else {
+                const modelSelect = document.getElementById('model-select');
+                messageDiv.dataset.model = modelSelect?.value || 'gpt-4o-mini';
+            }
+        } catch (e) {
+            console.warn('Error setting model info:', e);
+            messageDiv.dataset.model = 'gpt-4o-mini';
         }
     }
 
-    const contentElement = document.createElement('div');
-    contentElement.className = 'message-content';
+    // Determine if this is a system-type message
+    const isSystemType = options.type === 'greeting' ||
+        options.type === 'system' ||
+        options.type === 'time' ||
+        options.type === 'date' ||
+        options.type === 'dateTime' ||
+        options.type === 'exit';
 
-    // Only add metadata for assistant messages that are not greeting, exit, or time/date/datetime
-    let metadataElement = null;
-    if (role === 'assistant') {
-        const type = options.type || options.messageType || '';
-        const excludedTypes = ['greeting', 'exit', 'time', 'date', 'datetime'];
-        if (!excludedTypes.includes(type)) {
-            metadataElement = document.createElement('div');
-            metadataElement.className = 'metadata';
-            // Insert metadata before contentElement
-            messageElement.appendChild(metadataElement);
-        }
+    // Add metadata first for all assistant messages except system types and greetings
+    if (role === 'assistant' && !isSystemType && options.type !== 'greeting') {
+        const metadataDiv = document.createElement('div');
+        metadataDiv.className = 'metadata';
+        messageDiv.appendChild(metadataDiv);
+
+        // Add separator after metadata
+        const separator = document.createElement('hr');
+        messageDiv.appendChild(separator);
     }
 
-    messageElement.appendChild(contentElement);
-
-    // If metadataElement exists, move it to the top (in case of future changes)
-    if (metadataElement) {
-        messageElement.insertBefore(metadataElement, messageElement.firstChild);
-    }
+    // Create content container and add content
+    const contentDiv = document.createElement('div');
+    contentDiv.className = 'message-content';
 
     // Handle different content types
-    if (typeof content === 'object' && content.type === 'youtube') {
-        contentElement.innerHTML = content.html;
-    } else if (typeof content === 'string') {
-        // Check for HTML-based search results
-        if (
-            content.includes('<h2>Web Results') ||
-            content.includes('<h2>News Results') ||
-            content.includes("<ol class='search-results-list'>") ||
-            content.includes('<ol class="search-results-list">')
-        ) {
-            contentElement.innerHTML = content;
-        }
-        // For assistant recipe messages, format ingredients as dashed HTML list
-        else if (role === 'assistant' && content.match(/Ingredients:/i) && content.match(/Instructions:|Directions:/i)) {
-            content = formatIngredientsAsDashedList(content);
-            contentElement.innerHTML = content;
-        } else {
-            contentElement.textContent = content;
-        }
+    switch(options.type) {
+        case 'bing-search':
+        case 'youtube-list':
+            contentDiv.innerHTML = content;
+            break;
+        case 'image-analysis':
+            contentDiv.innerHTML = `<div class="image-analysis">${content}</div>`;
+            break;
+        case 'code':
+            contentDiv.innerHTML = `<pre><code>${content}</code></pre>`;
+            break;
+        case 'joke':
+            contentDiv.innerHTML = `<div class="joke-content">${content}</div>`;
+            break;
+        default:
+            if (content.includes('# Web Results') ||
+                content.includes('# News Results') ||
+                content.includes('<div class="youtube-results">')) {
+                contentDiv.innerHTML = content;
+    } else {
+        contentDiv.textContent = content;
+            }
     }
 
-    elements.chatMessages.appendChild(messageElement);
+    messageDiv.appendChild(contentDiv);
+    elements.chatMessages.appendChild(messageDiv);
     elements.chatMessages.scrollTop = elements.chatMessages.scrollHeight;
 
-    return messageElement;
+    // Update metadata for assistant messages
+    if (role === 'assistant' && !isSystemType) {
+        updateMetadata(messageDiv);
+    }
+
+    return messageDiv;
 }
 
 // Update message content function
@@ -2114,18 +1866,7 @@ function updateMessageContent(messageElement, content, tokenCount) {
     const metadataElement = messageElement.querySelector('.metadata');
 
     if (contentElement) {
-        // Check for HTML-based search results
-        if (
-            content.includes('<h2>Web Results') ||
-            content.includes('<h2>News Results') ||
-            content.includes("<ol class='search-results-list'>") ||
-            content.includes('<ol class="search-results-list">')
-        ) {
-            contentElement.innerHTML = content;
-        } else {
-            // For regular text content
-            contentElement.textContent = content;
-        }
+        contentElement.innerText = content;
     }
 
     if (metadataElement && tokenCount) {
@@ -2212,10 +1953,7 @@ function updateMetadata(messageElement, metadata = {}) {
                     font-size: 20px;
                     padding: 0;
                     margin: 0;
-                " onclick="printRecipe('${text.replace(
-                /'/g,
-                "\\'"
-                )}', this.closest('.message'))" title="Print Recipe">🖨️</button>
+                " onclick="printRecipe('${text.replace(/'/g, "\\'")}', this.closest('.message'))" title="Print Recipe">🖨️</button>
             `;
 
             metadataElement.appendChild(recipeButtons);
@@ -2280,9 +2018,34 @@ async function exitConversation(isTimeout = false) {
 
 // Update status function
 function updateStatus(message) {
-    elements.status.innerHTML = message;
-    elements.stopAudioButton.style.display = 
-        message === MESSAGES.STATUS.SPEAKING ? 'inline-block' : 'none';
+    if (elements.status) {
+        // Remove all status classes
+        elements.status.classList.remove(
+            'status-default',
+            'status-listening',
+            'status-video-playing',
+            'status-processing',
+            'status-error',
+            'status-initializing'
+        );
+
+        // Add appropriate class based on message
+        if (message === MESSAGES.STATUS.DEFAULT) {
+            elements.status.classList.add('status-default');
+        } else if (message === MESSAGES.STATUS.LISTENING) {
+            elements.status.classList.add('status-listening');
+        } else if (message === MESSAGES.STATUS.VIDEO_PLAYING) {
+            elements.status.classList.add('status-video-playing');
+        } else if (message === MESSAGES.STATUS.PROCESSING) {
+            elements.status.classList.add('status-processing');
+        } else if (message === MESSAGES.STATUS.ERROR) {
+            elements.status.classList.add('status-error');
+        } else if (message === MESSAGES.STATUS.INITIALIZING) {
+            elements.status.classList.add('status-initializing');
+        }
+
+        elements.status.textContent = message;
+    }
 }
 
 // Retrieve personal info function
@@ -2332,32 +2095,21 @@ async function getPersonalInfo(key = null) {
 // =====================================================
 
 // Split text into chunks function
-function splitTextIntoChunks(text, maxLength = 200, forTTS = false) {
-    // Add H.G. and J.K. to the honorifics regex
-    const honorifics = /(?:Mr\.|Mrs\.|Dr\.|Sr\.|Jr\.|Ms\.|Prof\.|Rev\.|Capt\.|Lt\.|Col\.|Gen\.|Sgt\.|Cpl\.|Pvt\.|St\.|H\.G\.|J\.K\.)/g;
-    // Replace honorifics and abbreviations with a marker
-    let tempText = text.replace(honorifics, match => match.replace(/\./g, 'DOT'));
-    // If for TTS, remove the DOT marker (so "MrDOT Smith" becomes "Mr Smith")
-    if (forTTS) tempText = tempText.replace(/DOT/g, '');
-    // If for display, restore the period
-    else tempText = tempText.replace(/DOT/g, '.');
+function splitTextIntoChunks(text, maxLength = 200) {
     // Split text into sentences, keeping the punctuation
-    const sentences = tempText.match(/[^.!?]+[.!?]+(?:\s|$)/g) || [tempText];
+    const sentences = text.match(/[^.!?]+[.!?]+(?:\s|$)/g) || [text];
     const chunks = [];
     let currentChunk = '';
 
     for (const sentence of sentences) {
-        // Restore honorifics in the sentence
-        const restoredSentence = sentence.replace(/DOT/g, '.');
-        
-        if (currentChunk.length + restoredSentence.length > maxLength) {
+        if (currentChunk.length + sentence.length > maxLength) {
             if (currentChunk) {
                 chunks.push(currentChunk.trim());
                 currentChunk = '';
             }
-            if (restoredSentence.length > maxLength) {
+            if (sentence.length > maxLength) {
                 // Split long sentences into words
-                const words = restoredSentence.split(/\s+/);
+                const words = sentence.split(/\s+/);
                 for (const word of words) {
                     if (currentChunk.length + word.length > maxLength) {
                         chunks.push(currentChunk.trim());
@@ -2366,10 +2118,10 @@ function splitTextIntoChunks(text, maxLength = 200, forTTS = false) {
                     currentChunk += (currentChunk ? ' ' : '') + word;
                 }
             } else {
-                currentChunk = restoredSentence;
+                currentChunk = sentence;
             }
         } else {
-            currentChunk += (currentChunk ? ' ' : '') + restoredSentence;
+            currentChunk += (currentChunk ? ' ' : '') + sentence;
         }
     }
     if (currentChunk) {
@@ -2427,7 +2179,7 @@ async function populateVoiceList() {
 // Update the playAudio function
 async function playAudio(text) {
     if (!text) return;
-    text = preprocessForTTS(text);
+
     try {
         state.isAISpeaking = true;
         state.isPlaying = true;
@@ -2452,82 +2204,79 @@ async function playAudio(text) {
 }
 
 // Update the playNextInQueue function
-// async function playNextInQueue() {
-//     if (!state.audioQueue.length || state.isPlaying || state.stopRequested) {
-//         if (!state.audioQueue.length || state.stopRequested) {
-//             updateStatus(state.isConversationMode ? MESSAGES.STATUS.LISTENING : MESSAGES.STATUS.READY);
-//             state.isAISpeaking = false;
-//         }
-//         return;
-//     }
+async function playNextInQueue() {
+    console.log('playNextInQueue called. Queue length:', state.audioQueue.length);
+    if (state.audioQueue.length === 0 || state.isPlaying || state.stopRequested) {
+        return;
+    }
 
-//     try {
-//         state.isPlaying = true;
-//         state.isAISpeaking = true;
-//         updateStatus(MESSAGES.STATUS.SPEAKING);
+    state.isPlaying = true;
+    state.isAISpeaking = true;
+    elements.stopAudioButton.style.display = 'inline-block';  // Show the button
+    updateStatus('AI is speaking...');
 
-//         const text = state.audioQueue[0];
-//         console.log('Playing chunk:', text);
+    // Ensure we stop listening before playing audio
+    if (state.isListening) {
+        stopListening();
+    }
 
-//         // Track last TTS time
-//         state.lastTTS = Date.now();
+    const text = state.audioQueue.shift();
 
-//         const response = await fetch(AUDIO_CONFIG.apiUrl, {
-//             method: 'POST',
-//             headers: { 'Content-Type': 'application/json' },
-//             body: JSON.stringify({
-//                 text: text,
-//                 voice: AUDIO_CONFIG.defaultVoice,
-//                 rate: AUDIO_CONFIG.rate,
-//                 pitch: AUDIO_CONFIG.pitch,
-//                 volume: AUDIO_CONFIG.volume
-//             })
-//         });
+    try {
+        console.log('Fetching audio from TTS API');
+        const response = await fetchWithRetry(`${SERVER_URL}/api/tts`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                text: text.trim(),
+                voice: elements.voiceSelect.value
+            }),
+        });
 
-//         if (!response.ok) throw new Error(`TTS API error: ${response.status}`);
-        
-//         const audioBlob = await response.blob();
-//         if (audioBlob.size === 0) throw new Error('Empty audio response');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
 
-//         if (state.currentAudio) {
-//             state.currentAudio.pause();
-//             state.currentAudio = null;
-//         }
-        
-//         const audioUrl = URL.createObjectURL(audioBlob);
-//         state.currentAudio = new Audio(audioUrl);
-//         state.currentAudio.volume = AUDIO_CONFIG.volume;
+        const audioBlob = await response.blob();
+        const audioUrl = URL.createObjectURL(audioBlob);
+        state.currentAudio = new Audio(audioUrl);
 
-//         // Wait for current chunk to finish before moving to next
-//         await new Promise((resolve, reject) => {
-//             state.currentAudio.onended = resolve;
-//             state.currentAudio.onerror = reject;
-//             state.currentAudio.play().catch(reject);
-//         });
+        state.currentAudio.onended = () => {
+            console.log('Audio playback ended');
+            URL.revokeObjectURL(audioUrl);
+            state.isPlaying = false;
+            state.isAISpeaking = false;
+            elements.stopAudioButton.style.display = 'none';  // Hide the button
 
-//         URL.revokeObjectURL(audioUrl);
-//         state.audioQueue.shift();  // Remove played chunk
-//         state.isPlaying = false;
+            if (state.audioQueue.length > 0 && !state.stopRequested) {
+                playNextInQueue();
+            } else {
+                // Update status based on conversation mode
+                updateStatus(state.isConversationMode ? MESSAGES.STATUS.LISTENING : MESSAGES.STATUS.DEFAULT);
 
-//         // Process next chunk if available
-//         if (state.audioQueue.length > 0 && !state.stopRequested) {
-//             setTimeout(() => playNextInQueue(), AUDIO_CONFIG.pauseDuration);
-//         } else {
-//             state.isAISpeaking = false;
-//             updateStatus(state.isConversationMode ? MESSAGES.STATUS.LISTENING : MESSAGES.STATUS.READY);
-//         }
+                if (state.isConversationMode && !state.isProcessing) {
+                    setTimeout(() => {
+                        initializeSpeechRecognition();
+                        startListening();
+                    }, 500);
+                }
+            }
+        };
 
-//     } catch (error) {
-//         console.error('Audio playback error:', error);
-//         state.isPlaying = false;
-//         state.isAISpeaking = false;
-//         updateStatus(state.isConversationMode ? MESSAGES.STATUS.LISTENING : MESSAGES.STATUS.READY);
-        
-//         if (state.audioQueue.length > 0) {
-//             setTimeout(() => playNextInQueue(), AUDIO_CONFIG.retryDelay);
-//         }
-//     }
-// }
+        await state.currentAudio.play();
+
+    } catch (error) {
+        console.error('Error in text-to-speech:', error);
+        state.isPlaying = false;
+        state.isAISpeaking = false;
+        elements.stopAudioButton.style.display = 'none';  // Hide the button
+        updateStatus('Error in text-to-speech');
+
+        if (state.audioQueue.length > 0) {
+            setTimeout(() => playNextInQueue(), 1000);
+        }
+    }
+}
 
 // Stop listening function
 function stopListening() {
@@ -2536,12 +2285,14 @@ function stopListening() {
     if (state.recognition) {
         try {
             state.recognition.stop();
+            state.recognition = null; // Clear the instance
         } catch (error) {
             console.error('Error stopping recognition:', error);
         }
     }
 
     state.isListening = false;
+    // updateStatus('Ready');
     console.log('Ready');
     elements.micButton.textContent = '🎤';
     if (state.inactivityTimer) {
@@ -2564,6 +2315,8 @@ function safeStartListening() {
 
     try {
         console.log('Attempting to start recognition');
+        state.recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        initializeSpeechRecognition(); // Re-initialize with new instance
         state.recognition.start();
         elements.micButton.textContent = '🔴';
     } catch (error) {
@@ -2575,23 +2328,23 @@ function safeStartListening() {
 }
 
 // Start listening function
-// function startListening() {
-//     console.log('Starting listening. Current state:', {
-//         isListening: state.isListening,
-//         isProcessing: state.isProcessing,
-//         isAISpeaking: state.isAISpeaking
-//     });
+function startListening() {
+    console.log('Starting listening. Current state:', {
+        isListening: state.isListening,
+        isProcessing: state.isProcessing,
+        isAISpeaking: state.isAISpeaking
+    });
 
-//     if (state.isProcessing || state.isAISpeaking) {
-//         console.log('Cannot start listening while processing or speaking');
-//         return;
-//     }
+    if (state.isProcessing || state.isAISpeaking) {
+        console.log('Cannot start listening while processing or speaking');
+        return;
+    }
 
-//     // Always create a fresh instance
-//     safeStartListening();
-//     state.lastAudioInput = Date.now();
-//     startInactivityTimer();
-// }
+    // Always create a fresh instance
+    safeStartListening();
+    state.lastAudioInput = Date.now();
+    startInactivityTimer();
+}
 
 // Reset audio state function
 function resetAudioState() {
@@ -2623,19 +2376,31 @@ function resetAudioState() {
 
 // Stop audio playback function
 function stopAudioPlayback() {
+    console.log('Stopping audio playback');
     state.stopRequested = true;
     state.audioQueue = [];
-    
+    console.log('Audio queue cleared');
+
     if (state.currentAudio) {
         state.currentAudio.pause();
         state.currentAudio.currentTime = 0;
         state.currentAudio = null;
+        console.log('Current audio stopped and reset');
     }
 
     state.isPlaying = false;
     state.isAISpeaking = false;
-    updateStatus(state.isConversationMode ? MESSAGES.STATUS.LISTENING : MESSAGES.STATUS.READY);
+    elements.stopAudioButton.style.display = 'none';
 
+    // Update status based on conversation mode
+    if (state.isConversationMode) {
+        updateStatus('Listening...');
+    } else {
+        // updateStatus('Ready');
+        console.log('Ready');
+    }
+
+    // Reset stopRequested after a short delay
     setTimeout(() => {
         state.stopRequested = false;
         if (state.isConversationMode && !state.isListening && !state.isRendering) {
@@ -2646,205 +2411,140 @@ function stopAudioPlayback() {
 
 // Queue audio chunk function
 async function queueAudioChunk(text) {
-    if (!text) return;
-    
-    // First, check if this chunk is part of a split initial sequence
-    // This handles cases where the AI splits "H.G. Wells" across multiple chunks
-    if (text.trim() === 'H.' || text.trim() === 'G.') {
-        // Store this chunk temporarily and wait for the next chunk
-        if (!state.pendingInitials) {
-            state.pendingInitials = text.trim();
-            return; // Skip this chunk for now
-        } else {
-            // We have both initials, combine them
-            text = state.pendingInitials + text.trim();
-            state.pendingInitials = null;
-        }
+    console.log('Queueing audio chunk:', text);
+
+    if (!text || text.trim().length === 0) {
+        console.log('Empty text, skipping audio queue');
+        return;
     }
-    
-    // Also handle cases where we have "H." at the end of a chunk
-    if (text.endsWith(' H.') || text.endsWith(' G.')) {
-        const lastChar = text.slice(-2);
-        if (!state.pendingInitials) {
-            state.pendingInitials = lastChar;
-            text = text.slice(0, -2);
-        } else {
-            text = text.slice(0, -2) + state.pendingInitials + lastChar;
-            state.pendingInitials = null;
-        }
-    }
-    
-    // Handle cases where we have "Wells" at the start of a chunk
-    if (text.trim().startsWith('Wells')) {
-        if (state.pendingInitials) {
-            text = state.pendingInitials + text.trim();
-            state.pendingInitials = null;
-        }
-    }
-    
-    // Generic pattern to match any sequence of initials (1-3 letters) followed by a last name
-    const initialPattern = /([A-Z]\.?\s*){1,3}([A-Z][a-z]+)/g;
-    
-    // First pass: Replace all initial sequences with a single unit
-    text = text.replace(initialPattern, (match) => {
-        console.log('Found initial sequence:', match);
-        // Remove all spaces and periods between initials
-        const result = match.replace(/[\s\.]+/g, '');
-        console.log('Converted to:', result);
-        return result;
-    });
-    
-    console.log('After initial replacement:', text);
-    
-    // Also handle cases where it's part of a phrase
-    text = text.replace(/(?:by|from|of|based on)\s+([A-Z]\.?\s*){1,3}([A-Z][a-z]+)/g, (match) => {
-        console.log('Found phrase with initials:', match);
-        // Keep the preposition but join the initials
-        const result = match.replace(/([A-Z]\.?\s*){1,3}([A-Z][a-z]+)/g, (name) => {
-            return name.replace(/[\s\.]+/g, '');
+
+    // Strip markdown before queuing for audio
+    const cleanText = stripMarkdown(text);
+
+    // Split text into sentences more reliably
+    const sentences = cleanText
+        .split(/(?<=[.!?])\s+/)  // Split on sentence endings only
+        .filter(Boolean)
+        .map(s => s.trim())
+        .filter(s => s.length > 0);
+
+    // Check if it's a story (has multiple paragraphs)
+    if (text.includes('\n\n')) {
+        state.stopRequested = false;
+        // Add each sentence to the queue
+        sentences.forEach(sentence => {
+            if (!state.audioQueue.includes(sentence)) {
+                state.audioQueue.push(sentence);
+            }
         });
-        console.log('Converted phrase to:', result);
-        return result;
-    });
-    
-    console.log('After phrase replacement:', text);
-    
-    // Protect honorifics and abbreviations before TTS
-    text = protectHonorifics(text);
-    text = preprocessForTTS(text);
-    console.log('After TTS preprocessing:', text);
-    
-    state.stopRequested = false;
-    state.isAISpeaking = true;
-    updateStatus(MESSAGES.STATUS.SPEAKING);
-    
-    // Split into sections, but preserve our protected names
-    const sections = text.split(/(?=Ingredients:|Instructions:)/);
-    let chunks = [];
-    sections.forEach(section => {
-        const sectionChunks = splitTextIntoChunks(section, 200, true);
-        chunks = chunks.concat(sectionChunks);
-    });
-    
-    console.log('Chunks before post-processing:', chunks);
-    
-    // Final safety check - look for any remaining split instances of initials
-    for (let i = 0; i < chunks.length - 2; i++) {
-        const current = chunks[i].trim();
-        const next = chunks[i + 1].trim();
-        const nextNext = chunks[i + 2].trim();
-        
-        // Check for any remaining split initial patterns
-        if (
-            /^[A-Z]\.?$/i.test(current) && // First initial
-            /^[A-Z]\.?$/i.test(next) &&    // Second initial
-            /^[A-Z][a-z]+/i.test(nextNext) // Last name
-        ) {
-            console.log('Found split initials:', {current, next, nextNext});
-            // Join them together without spaces or periods
-            const joined = current.replace(/\./g, '') + 
-                          next.replace(/\./g, '') + 
-                          nextNext;
-            console.log('Joined into:', joined);
-            chunks.splice(i, 3, joined);
-        }
+        console.log('Story detected, using sentence chunks:', sentences);
+    } else if (text.startsWith('🔍 Bing Search Results')) {
+        state.stopRequested = false;
+        const chunks = text.split('\n').filter(line => line.trim().length > 0);
+        state.audioQueue = chunks;
+        console.log('Bing search results detected, using multiple chunks:', chunks);
+    } else if (text.toLowerCase().includes('date') || text.toLowerCase().includes('time')) {
+        state.stopRequested = false;
+        state.audioQueue = [cleanText];
+        console.log('DateTime query detected, using single chunk:', cleanText);
+    } else {
+        sentences.forEach(sentence => {
+            if (!state.audioQueue.includes(sentence)) {
+                state.audioQueue.push(sentence);
+            }
+        });
     }
-    // NEW: Merge a chunk that is just initials (e.g., 'HG') with the next chunk if it starts with a last name (e.g., 'Wells')
-    for (let i = 0; i < chunks.length - 1; i++) {
-        const current = chunks[i].trim();
-        const next = chunks[i + 1].trim();
-        // Match 2-3 uppercase letters (no punctuation or spaces)
-        if (/^[A-Z]{2,3}$/.test(current) && /^[A-Z][a-z]+/.test(next)) {
-            console.log('Merging split initials and last name:', {current, next});
-            chunks.splice(i, 2, current + ' ' + next);
-        }
-    }
-    
-    console.log('Chunks after post-processing:', chunks);
-    state.audioQueue = state.audioQueue.concat(chunks);
-    console.log('Final queued chunks:', chunks);
-    if (!state.isPlaying) {
-        playNextInQueue();
+
+    console.log('Audio queue length:', state.audioQueue.length);
+    console.log('Audio queue contents:', state.audioQueue);
+    console.log('Current state:', {
+        isPlaying: state.isPlaying,
+        stopRequested: state.stopRequested,
+        isAISpeaking: state.isAISpeaking
+    });
+
+    if (!state.isPlaying && !state.stopRequested) {
+        console.log('Starting playback from queueAudioChunk');
+        await playNextInQueue();
+    } else {
+        console.log('Not starting playback. isPlaying:', state.isPlaying, 'stopRequested:', state.stopRequested);
     }
 }
 
-// Update playNextInQueue function to ensure sequential playback
-// async function playNextInQueue() {
-//     if (!state.audioQueue.length || state.isPlaying || state.stopRequested) {
-//         if (!state.audioQueue.length || state.stopRequested) {
-//             updateStatus(state.isConversationMode ? MESSAGES.STATUS.LISTENING : MESSAGES.STATUS.READY);
-//             state.isAISpeaking = false;
-//         }
-//         return;
-//     }
+// Play next in queue function
+async function playNextInQueue() {
+    console.log('playNextInQueue called. Queue length:', state.audioQueue.length);
+    if (state.audioQueue.length === 0 || state.isPlaying || state.stopRequested) {
+        return;
+    }
 
-//     try {
-//         state.isPlaying = true;
-//         state.isAISpeaking = true;
-//         updateStatus(MESSAGES.STATUS.SPEAKING);
+    state.isPlaying = true;
+    state.isAISpeaking = true;
+    elements.stopAudioButton.style.display = 'inline-block';  // Show the button
+    updateStatus('AI is speaking...');
 
-//         const text = state.audioQueue[0];
-//         console.log('Playing chunk:', text);
+    // Ensure we stop listening before playing audio
+    if (state.isListening) {
+        stopListening();
+    }
 
-//         // Track last TTS time
-//         state.lastTTS = Date.now();
+    const text = state.audioQueue.shift();
 
-//         const response = await fetch(AUDIO_CONFIG.apiUrl, {
-//             method: 'POST',
-//             headers: { 'Content-Type': 'application/json' },
-//             body: JSON.stringify({
-//                 text: text,
-//                 voice: AUDIO_CONFIG.defaultVoice,
-//                 rate: AUDIO_CONFIG.rate,
-//                 pitch: AUDIO_CONFIG.pitch,
-//                 volume: AUDIO_CONFIG.volume
-//             })
-//         });
+    try {
+        console.log('Fetching audio from TTS API');
+        const response = await fetchWithRetry(`${SERVER_URL}/api/tts`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                text: text.trim(),
+                voice: elements.voiceSelect.value
+            }),
+        });
 
-//         if (!response.ok) throw new Error(`TTS API error: ${response.status}`);
-        
-//         const audioBlob = await response.blob();
-//         if (audioBlob.size === 0) throw new Error('Empty audio response');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
 
-//         if (state.currentAudio) {
-//             state.currentAudio.pause();
-//             state.currentAudio = null;
-//         }
-        
-//         const audioUrl = URL.createObjectURL(audioBlob);
-//         state.currentAudio = new Audio(audioUrl);
-//         state.currentAudio.volume = AUDIO_CONFIG.volume;
+        const audioBlob = await response.blob();
+        const audioUrl = URL.createObjectURL(audioBlob);
+        state.currentAudio = new Audio(audioUrl);
 
-//         // Wait for current chunk to finish before moving to next
-//         await new Promise((resolve, reject) => {
-//             state.currentAudio.onended = resolve;
-//             state.currentAudio.onerror = reject;
-//             state.currentAudio.play().catch(reject);
-//         });
+        state.currentAudio.onended = () => {
+            console.log('Audio playback ended');
+            URL.revokeObjectURL(audioUrl);
+            state.isPlaying = false;
+            state.isAISpeaking = false;
+            elements.stopAudioButton.style.display = 'none';  // Hide the button
 
-//         URL.revokeObjectURL(audioUrl);
-//         state.audioQueue.shift();  // Remove played chunk
-//         state.isPlaying = false;
+            if (state.audioQueue.length > 0 && !state.stopRequested) {
+                playNextInQueue();
+            } else {
+                // Update status based on conversation mode
+                updateStatus(state.isConversationMode ? MESSAGES.STATUS.LISTENING : MESSAGES.STATUS.DEFAULT);
 
-//         // Process next chunk if available
-//         if (state.audioQueue.length > 0 && !state.stopRequested) {
-//             setTimeout(() => playNextInQueue(), AUDIO_CONFIG.pauseDuration);
-//         } else {
-//             state.isAISpeaking = false;
-//             updateStatus(state.isConversationMode ? MESSAGES.STATUS.LISTENING : MESSAGES.STATUS.READY);
-//         }
+                if (state.isConversationMode && !state.isProcessing) {
+                    setTimeout(() => {
+                        initializeSpeechRecognition();
+                        startListening();
+                    }, 500);
+                }
+            }
+        };
 
-//     } catch (error) {
-//         console.error('Audio playback error:', error);
-//         state.isPlaying = false;
-//         state.isAISpeaking = false;
-//         updateStatus(state.isConversationMode ? MESSAGES.STATUS.LISTENING : MESSAGES.STATUS.READY);
-        
-//         if (state.audioQueue.length > 0) {
-//             setTimeout(() => playNextInQueue(), AUDIO_CONFIG.retryDelay);
-//         }
-//     }
-// }
+        await state.currentAudio.play();
+
+    } catch (error) {
+        console.error('Error in text-to-speech:', error);
+        state.isPlaying = false;
+        state.isAISpeaking = false;
+        elements.stopAudioButton.style.display = 'none';  // Hide the button
+        updateStatus('Error in text-to-speech');
+
+        if (state.audioQueue.length > 0) {
+            setTimeout(() => playNextInQueue(), 1000);
+        }
+    }
+}
 
 
 // =====================================================
@@ -3045,69 +2745,89 @@ async function handleImageAnalysis(imageData, prompt = '') {
 
 // Handle image upload function
 function handleImageUpload(event) {
-    // Do NOT show processing indicator here; it's shown on button click
-    requestAnimationFrame(() => {
-        setTimeout(() => {
-            const file = event.target.files[0];
-            if (file) {
-                state.selectedImageFileName = file.name;
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    state.selectedImage = null;
-                    state.selectedImage = e.target.result;
-                    const messageElement = addMessageToChat('user', '');
-                    const imageElement = document.createElement('img');
-                    imageElement.src = state.selectedImage;
-                    imageElement.classList.add('uploaded-image');
-                    imageElement.style.cssText = 'max-width: 300px; border-radius: 8px; margin-top: 10px; cursor: pointer;';
-                    imageElement.onclick = function() {
-                        // Extract object name from LLM response or fallback to file name
-                        const messageElement = this.closest('.message');
-                        const assistantResponse = messageElement.nextElementSibling;
-                        let objectName = null;
-                        if (assistantResponse && assistantResponse.classList.contains('assistant')) {
-                            const responseText = assistantResponse.querySelector('.message-content').textContent;
-                            let quoted = responseText.match(/[""']([^""']+)[""']/);
-                            if (quoted && quoted[1]) {
-                                objectName = quoted[1];
-                            } else {
-                                let match = responseText.match(/This is an image of (?:the |a |an )?([A-Za-z0-9\s\-']+?)[,\.]/i)
-                                    || responseText.match(/This is the ([A-Za-z0-9\s\-']+?)[,\.]/i)
-                                    || responseText.match(/This image shows (?:the |a |an )?([A-Za-z0-9\s\-']+?)[,\.]/i)
-                                    || responseText.match(/This is ([A-Za-z0-9\s\-']+?)[,\.]/i)
-                                    || responseText.match(/This image depicts (?:the |a |an )?([A-Za-z0-9\s\-']+?)[,\.]/i)
-                                    || responseText.match(/This depicts (?:the |a |an )?([A-Za-z0-9\s\-']+?)[,\.]/i)
-                                    || responseText.match(/This photo shows (?:the |a |an )?([A-Za-z0-9\s\-']+?)[,\.]/i)
-                                    || responseText.match(/This photo depicts (?:the |a |an )?([A-Za-z0-9\s\-']+?)[,\.]/i);
-                                if (match && match[1]) {
-                                    objectName = match[1].trim();
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            // Clear any existing selected image state
+            state.selectedImage = null;
+
+            // Set the new image
+            state.selectedImage = e.target.result;
+
+            // Create a new user message with the image
+            const messageElement = addMessageToChat('user', '');
+            const imageElement = document.createElement('img');
+            imageElement.src = state.selectedImage;
+            imageElement.classList.add('uploaded-image');
+            imageElement.style.cssText = 'max-width: 300px; border-radius: 8px; margin-top: 10px; cursor: pointer;';
+
+            // Add click handler to open image in popup window with proper styling
+            imageElement.onclick = function() {
+                // Calculate center position
+                const width = 700;
+                const height = 700;
+                const left = (window.screen.width - width) / 2;
+                const top = (window.screen.height - height) / 2;
+
+                // Add position parameters to window.open
+                const popup = window.open('', 'Image Preview',
+                    `width=${width},height=${height},top=${top},left=${left}`);
+                popup.document.write(`
+                    <html>
+                        <head>
+                            <title>Image Preview</title>
+                            <style>
+                                body {
+                                    margin: 0;
+                                    padding: 20px;
+                                    background: #000;
+                                    display: flex;
+                                    flex-direction: column;
+                                    align-items: center;
                                 }
-                            }
-                        }
-                        if (!objectName) {
-                            objectName = state.selectedImageFileName || 'Image Preview';
-                        }
-                        // Show modal
-                        const modal = document.getElementById('image-analysis-modal');
-                        const modalImg = document.getElementById('image-analysis-modal-img');
-                        const modalTitle = document.getElementById('image-analysis-modal-title');
-                        modalImg.src = this.src;
-                        modalImg.alt = objectName;
-                        modalTitle.textContent = 'Image: "' + objectName + '"';
-                        modal.classList.add('show');
-                    };
-                    messageElement.querySelector('.message-content').appendChild(imageElement);
-                    elements.userInput.focus();
-                    elements.userInput.placeholder = "Add a description or ask about the image...";
-                    elements.processingIndicator.style.display = 'none';
-                    elements.imageInput.value = '';
-                };
-                reader.readAsDataURL(file);
-            } else {
-                elements.processingIndicator.style.display = 'none';
-            }
-        }, 0);
-    });
+                                .close-btn {
+                                    position: absolute;
+                                    top: 10px;
+                                    right: 10px;
+                                    color: white;
+                                    background: rgba(0,0,0,0.5);
+                                    border: none;
+                                    padding: 5px 10px;
+                                    cursor: pointer;
+                                    font-size: 18px;
+                                    border-radius: 5px;
+                                }
+                                .close-btn:hover {
+                                    background: rgba(0,0,0,0.8);
+                                }
+                                img {
+                                    max-width: 650px;
+                                    max-height: 700px;
+                                    object-fit: contain;
+                                    margin-top: 20px;
+                                    background-repeat: no-repeat;
+                                    background-position: center;
+                                    display: block;
+                                }
+                            </style>
+                        </head>
+                        <body>
+                            <button class="close-btn" onclick="window.close()">✕</button>
+                            <img src="${this.src}" alt="Preview">
+                        </body>
+                    </html>
+                `);
+            };
+
+            messageElement.querySelector('.message-content').appendChild(imageElement);
+
+            // Focus input for description
+            elements.userInput.focus();
+            elements.userInput.placeholder = "Add a description or ask about the image...";
+        };
+        reader.readAsDataURL(file);
+    }
 }
 
 // Search and display images function
@@ -3130,24 +2850,11 @@ async function searchAndDisplayImages(query) {
     }
 }
 
-// Helper to extract and remove the image heading from the text
-function extractImageHeading(text) {
-    // Match: Here are some relevant images for <subject>
-    const match = text.match(/Here are some relevant images for ([^\.\n]+)[.!\n]?/i);
-    let heading = null;
-    let cleanedText = text;
-    if (match) {
-        heading = `Here are some relevant images for ${match[1].trim()}.`;
-        // Remove ALL occurrences of the heading phrase (case-insensitive, with or without punctuation)
-        const headingRegex = new RegExp(`Here are some relevant images for ${match[1].trim()}[.!\n]?`, 'gi');
-        cleanedText = text.replace(headingRegex, '').replace(/^\s+|\s+$/g, '');
-    }
-    return { heading, cleanedText };
-}
-
-function insertAndStyleImages(images, messageElement, headingText) {
+// Insert and style images function
+function insertAndStyleImages(images, messageElement) {
     const imageSection = `
         <div class="image-section" style="margin-top: 15px; border-top: 1px solid #ccc; padding-top: 10px;">
+            <h3 style="font-size: 1.2em; margin-bottom: 10px; color: #333; font-weight: bold;">Images:</h3>
             <div class="image-container" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; max-width: 100%;">
                 ${images.map(image => `
                     <a href="${image.link}" target="_blank" rel="noopener noreferrer" class="image-link"
@@ -3260,62 +2967,56 @@ function getTimeOfDay() {
 
 // Initialize speech recognition function
 function initializeSpeechRecognition() {
-    if (!('webkitSpeechRecognition' in window)) {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
         console.error('Speech recognition not supported');
         return;
     }
 
-    try {
-        state.recognition = new webkitSpeechRecognition();
-        state.recognition.continuous = false;
-        state.recognition.interimResults = false;
-        state.recognition.lang = 'en-US';
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    state.recognition = new SpeechRecognition();
+    state.recognition.continuous = false;
+    state.recognition.interimResults = false;
 
-        state.recognition.onstart = () => {
-            state.isListening = true;
-            elements.micButton.textContent = '🔴';
-            updateStatus('Listening...');
-        };
+    state.recognition.onstart = () => {
+        console.log('Speech recognition started');
+        state.isListening = true;
+        updateStatus('Listening...');
+    };
 
-        state.recognition.onend = () => {
-            state.isListening = false;
-            elements.micButton.textContent = '🎤';
-            
-            if (state.isConversationMode && !state.isProcessing && !state.stopRequested) {
-                setTimeout(() => {
-                    if (!state.isProcessing && !state.stopRequested) {
-                        startListening();
-                    }
-                }, 1000);
-            }
-        };
+    state.recognition.onerror = (event) => {
+        console.log('Speech recognition error:', event.error);
+        state.isListening = false;
 
-        state.recognition.onerror = (event) => {
-            if (event.error === 'no-speech') {
-                // Optionally, you can restart listening here if you want continuous mode
-                // Or just ignore it
-                console.log('No speech detected, waiting for user...');
-                state.isListening = false;
-                elements.micButton.textContent = '🎤';
-                // Optionally restart listening:
-                // if (state.isConversationMode) startListening();
-                return;
-            }
-            // For all other errors, log as before
-            console.error('Recognition error:', event.error);
-            state.isListening = false;
-            elements.micButton.textContent = '🎤';
-        };
+        if (event.error === 'aborted') {
+            console.log('Recognition aborted, not auto-restarting');
+            return;
+        }
 
-        state.recognition.onresult = (event) => {
-            const transcript = event.results[0][0].transcript;
-            console.log('Heard:', transcript);
-            handleSpeechResult(event);
-        };
+        // updateStatus(`Error in speech recognition: ${event.error}`);
+    };
 
-    } catch (error) {
-        console.error('Error initializing speech recognition:', error);
-    }
+    state.recognition.onend = () => {
+        console.log('Speech recognition ended');
+        state.isListening = false;
+
+        if (state.isConversationMode && !state.isProcessing && !state.isAISpeaking && !state.stopRequested) {
+            console.log('Scheduling restart of listening...');
+            setTimeout(() => {
+                if (!state.isListening && !state.isProcessing && !state.isAISpeaking && !state.stopRequested) {
+                    console.log('Attempting to restart listening after delay');
+                    safeStartListening();
+                } else {
+                    console.log('Conditions not met for restart:', {
+                        isListening: state.isListening,
+                        isProcessing: state.isProcessing,
+                        isAISpeaking: state.isAISpeaking
+                    });
+                }
+            }, 1000);
+        }
+    };
+
+    state.recognition.onresult = handleSpeechResult;
 }
 
 // Toggle speech recognition function
@@ -3376,12 +3077,7 @@ async function handleResponse(response) {
 
 window.printRecipe = async function(recipeText, messageElement) {
     try {
-        console.log('Recipe text sent to server:', recipeText.substring(0, 200));
-
-        // Get any images from the message element FIRST
-        const images = messageElement.querySelectorAll('.image-link img');
-        const imageUrls = Array.from(images).map(img => img.src);
-        console.log('Found recipe images:', imageUrls);
+        console.log('Recipe text sent to server:', recipeText.substring(0, 200)); // Log what we're sending
 
         const response = await fetch('/api/recipe', {
             method: 'POST',
@@ -3390,143 +3086,134 @@ window.printRecipe = async function(recipeText, messageElement) {
         });
 
         const data = await response.json();
+        console.log('Server response:', data); // Log what we get back
+
         if (!data.success) throw new Error(data.error);
 
         const recipeName = data.recipe.name;
-        
-        // Split the recipe text into sections
-        const sections = recipeText.split(/(?:ingredients:|instructions:|directions:)/i);
-        
+        console.log('Recipe name from server:', recipeName); // Log the name we'll use
+
+    // Get any images from the message
+    const images = messageElement.querySelectorAll('.image-link img');
+    const imageUrls = Array.from(images).map(img => img.src);
+
+    // Split the recipe text into sections
+    const sections = recipeText.split(/(?:ingredients:|instructions:|directions:)/i);
+
+        // Get description (everything after the recipe name)
         const description = sections[0]
-            .split('\n')[0]
-            .substring(recipeName.length)
-            .replace(/^[^a-zA-Z]+/, '')
+            .split('\n')[0]  // Get first line
+            .substring(recipeName.length)  // Remove the recipe name part
+            .replace(/^[^a-zA-Z]+/, '')  // Remove any leading non-letter characters
             .trim();
 
-        const ingredients = sections[1] ? sections[1].trim().split(/\d+\./).filter(item => item.trim()) : [];
-        const instructions = sections[2] ? sections[2].trim().split(/\d+\./).filter(item => item.trim()) : [];
+    const ingredients = sections[1] ? sections[1].trim().split(/\d+\./).filter(item => item.trim()) : [];
+    const instructions = sections[2] ? sections[2].trim().split(/\d+\./).filter(item => item.trim()) : [];
 
-        // Create print window
+        // Create print window first to ensure it's ready
         const printWindow = window.open('', '_blank');
         if (!printWindow) {
             throw new Error('Pop-up blocked. Please allow pop-ups and try again.');
         }
 
-        // Create formatted HTML with recipe content first, then images section
-        const formattedText = `
-            <div class="recipe-content">
-                <div class="recipe-intro">${description}</div>
-                <h2>Ingredients</h2>
-                <ul class="ingredients-list">
-                    ${ingredients.map(item => `<li>${item.trim()}</li>`).join('')}
-                </ul>
-                <h2>Instructions</h2>
-                <ol class="instructions-list">
-                    ${instructions.map(item => `<li>${item.trim()}</li>`).join('')}
-                </ol>
-            </div>
-            ${imageUrls.length > 0 ? `
-                <div class="recipe-images">
-                    <h2>Recipe Images</h2>
-                    <div class="image-grid">
-                        ${imageUrls.map(url => `<img src="${url}" alt="Recipe Image">`).join('')}
-                    </div>
-                </div>
-            ` : ''}
-        `;
+    // Create formatted HTML
+    const formattedText = `
+            <div class="recipe-intro">${description}</div>
+        <h2>Ingredients</h2>
+            <ul class="ingredients-list">
+            ${ingredients.map(item => `<li>${item.trim()}</li>`).join('')}
+        </ul>
+        <h2>Instructions</h2>
+            <ol class="instructions-list">
+            ${instructions.map(item => `<li>${item.trim()}</li>`).join('')}
+        </ol>
+    `;
 
-        printWindow.document.write(`
-            <!DOCTYPE html>
-            <html>
-                <head>
+    printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+            <head>
                     <title>${recipeName}</title>
-                    <style>
-                        body {
-                            font-family: Arial, sans-serif;
-                            max-width: 800px;
-                            margin: 0 auto;
-                            padding: 40px;
-                        }
-                        h1 {
-                            font-size: 24px;
-                            margin-bottom: 20px;
-                            border-bottom: 2px solid #333;
-                            padding-bottom: 10px;
+                <style>
+                    body {
+                        font-family: Arial, sans-serif;
+                        max-width: 800px;
+                        margin: 0 auto;
+                        padding: 40px;
+                    }
+                    h1 {
+                        font-size: 24px;
+                        margin-bottom: 20px;
+                        border-bottom: 2px solid #333;
+                        padding-bottom: 10px;
                             text-align: center;
                             text-transform: uppercase;
                             letter-spacing: 1px;
-                        }
-                        h2 {
-                            font-size: 20px;
-                            margin: 20px 0 10px 0;
-                            color: #444;
-                        }
-                        .recipe-intro {
-                            font-style: italic;
-                            margin-bottom: 20px;
-                            color: #666;
-                        }
-                        .recipe-content {
-                            margin-bottom: 40px;
-                        }
-                        .ingredients-list {
-                            list-style-type: disc !important;
-                            padding-left: 20px;
-                            margin-bottom: 20px;
-                        }
-                        .ingredients-list li {
-                            margin-bottom: 8px;
-                            line-height: 1.4;
-                            display: list-item !important;
-                        }
-                        .instructions-list {
-                            padding-left: 20px;
-                            margin-bottom: 20px;
-                        }
-                        .instructions-list li {
-                            margin-bottom: 12px;
-                            line-height: 1.6;
-                        }
-                        .recipe-images {
-                            margin-top: 40px;
-                            border-top: 2px solid #eee;
-                            padding-top: 20px;
-                        }
-                        .image-grid {
-                            display: grid;
-                            grid-template-columns: repeat(2, 1fr);
-                            gap: 20px;
-                            margin-top: 20px;
-                        }
-                        .image-grid img {
-                            width: 100%;
-                            height: 300px;
-                            object-fit: cover;
-                            border-radius: 8px;
-                        }
-                        @media print {
-                            .recipe-images {
-                                break-before: always;
-                            }
-                            .image-grid img {
-                                max-height: 250px;
-                            }
-                        }
-                    </style>
-                </head>
-                <body>
-                    <h1>${recipeName}</h1>
-                    ${formattedText}
-                </body>
-            </html>
-        `);
-        
-        printWindow.document.close();
-        
-        // Wait for images to load before printing
+                    }
+                    h2 {
+                        font-size: 20px;
+                        margin: 20px 0 10px 0;
+                        color: #444;
+                    }
+                    .recipe-intro {
+                        font-style: italic;
+                        margin-bottom: 20px;
+                        color: #666;
+                    }
+                    .ingredients-list {
+                        list-style-type: disc !important;
+                        padding-left: 20px;
+                        margin-bottom: 20px;
+                    }
+                    .ingredients-list li {
+                        margin-bottom: 8px;
+                        line-height: 1.4;
+                        display: list-item !important;
+                    }
+                    .instructions-list {
+                        padding-left: 20px;
+                        margin-bottom: 20px;
+                    }
+                    .instructions-list li {
+                        margin-bottom: 12px;
+                        line-height: 1.6;
+                    }
+                    .image-section {
+                            page-break-before: always;
+                    }
+                    .image-grid {
+                        display: grid;
+                        grid-template-columns: repeat(2, 1fr);
+                        gap: 10px;
+                        margin: 5px 0;
+                        max-width: 800px;
+                    }
+                    .image-grid img {
+                        width: 100%;
+                        height: 250px;
+                        object-fit: cover;
+                        border-radius: 8px;
+                    }
+                </style>
+            </head>
+            <body>
+                <h1>${recipeName}</h1>
+                <div class="recipe-content">${formattedText}</div>
+                ${imageUrls.length ? `
+                    <div class="image-section">
+                        <h2 style="margin-bottom: 15px;">Recipe Images</h2>
+                        <div class="image-grid">
+                            ${imageUrls.map(url => `<img src="${url}" alt="Recipe Image">`).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+            </body>
+        </html>
+    `);
+    printWindow.document.close();
         setTimeout(() => {
-            printWindow.print();
-        }, 1000);
+    printWindow.print();
+        }, 500);  // Give the browser time to load images
 
     } catch (error) {
         console.error('Error printing recipe:', error);
@@ -3579,7 +3266,7 @@ async function storePersonalInfo(info) {
 }
 
 // Add validation when retrieving personal info
-function getPersonalInfoStorage(type) {
+function getPersonalInfo(type) {
     return localStorage.getItem(type);
 }
 
@@ -4414,180 +4101,85 @@ const handleMyJokes = {
 
 const handleYoutube = {
     isPlaying: false,
-    currentQuery: '',
-    currentPageToken: null,
-    currentSearchParams: null,  // Store complete search parameters
 
     async handleYoutubeRequest(messageText) {
         console.log('handleYoutubeRequest received:', messageText);
+        const patterns = getPatterns();
 
-        // Reset pagination state for new searches
-        if (!messageText.includes('more videos')) {
-            this.currentQuery = messageText;
-            this.currentPageToken = null;
-            this.currentSearchParams = {
-                query: messageText.replace(/^(play|search)\s+/i, '').trim(),
-                type: messageText.toLowerCase().includes('play') ? 'play' : 'search'
-            };
-        }
+        // Add user's message first
+        addMessageToChat('user', messageText);  // Add this line
+
+        // Check for play request first
+        const isPlay = patterns.youtube.playVideo.test(messageText);
+
+        // Extract query by removing YouTube-related terms
+        let query = messageText.toLowerCase()
+            .replace(/youtube/i, '')
+            .replace(/play/i, '')
+            .replace(/search/i, '')
+            .replace(/for/i, '')
+            .replace(/videos?/i, '')
+            .replace(/about/i, '')
+            .trim();
 
         try {
             const response = await fetch('/api/youtube/search', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    ...this.currentSearchParams,
-                    pageToken: this.currentPageToken
+                    query,
+                    type: isPlay ? 'play' : 'search'
                 })
             });
 
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             const data = await response.json();
 
-            // Store the next page token
-            this.currentPageToken = data.nextPageToken;
-
-            // Always treat a single video as a SINGLE layout
-            let videos = [];
-            if (data.video) {
-                videos = [data.video];
-            } else if (data.videos) {
-                videos = data.videos;
-            }
-
-            let html = '';
-            if (videos.length === 1) {
-                // SINGLE layout for any single video
-                html = `
-                    <div class="youtube-single-bubble">
-                        <p>Found result for: "${this.currentSearchParams.query}"</p>
-                        <div class="video-item">
-                            <div class="button-thumb-group-SINGLE top-buttons">
-                                <a href="#" class="youtube-action-btn youtube-popup-btn" data-video-id="${videos[0].id}" role="button" tabindex="0">Play in Popup</a>
-                                
-                                <button class="youtube-action-btn view-playlists-SINGLE-btn" title="View My Playlists" style="font-size:18px;padding:0 10px;background:none;border:none;cursor:pointer;vertical-align:middle;">
-                                  <span style="display:inline-block;vertical-align:middle;">&#9776;</span>
-                                </button>
-                                <button type="button" class="add-to-playlist-SINGLE-btn" data-video="${encodeURIComponent(JSON.stringify({videoId: videos[0].id, title: videos[0].title, thumbnail: videos[0].thumbnail}))}" title="Add to Playlist">+</button>
-                                
-                            </div>
-                            <span class="youtube-thumb-link youtube-popup-thumb" data-video-id="${videos[0].id}">
-                                <img src="https://img.youtube.com/vi/${videos[0].id}/hqdefault.jpg" alt="${videos[0].title}" title="Popup: ${videos[0].title}" />
-                            </span>
-                            
-                            <div class="button-thumb-group-SINGLE bottom-buttons">
-                                <a href="https://www.youtube.com/watch?v=${videos[0].id}" target="_blank" rel="noopener noreferrer" class="youtube-action-btn youtube-direct-link">Watch on YouTube</a>
-                            </div>
-                            
-                            <div class="video-title-SINGLE">${videos[0].title}</div>
-                        </div>
-                    </div>
-                `;
-            } else if (videos.length > 1) {
-                // MULTI layout
-                html = `
-                    <div class="youtube-multi-bubble">
-                        <p>Found results for: "${this.currentSearchParams.query}"</p>
-                        <div class="video-list">
-                            ${videos.map(video => `
-                                <div class="video-item">
-                                    <div class="button-thumb-group-MULTI top-buttons">
-                                        <a href="#" class="youtube-action-btn youtube-popup-btn" data-video-id="${video.id}" role="button" tabindex="0">Play in Popup</a>
-                                        
-                                        <button class="youtube-action-btn view-playlists-MULTI-btn" title="View My Playlists" style="font-size:18px;padding:0 10px;background:none;border:none;cursor:pointer;vertical-align:middle;">
-                                          <span style="display:inline-block;vertical-align:middle;">&#9776;</span>
-                                        </button>
-                                        <button type="button" class="add-to-playlist-MULTI-btn" data-video="${encodeURIComponent(JSON.stringify({videoId: video.id, title: video.title, thumbnail: video.thumbnail}))}" title="Add to Playlist">+</button>
-                                        
-                                    </div>
-                                    <span class="youtube-thumb-link youtube-popup-thumb" data-video-id="${video.id}">
-                                        <img src="https://img.youtube.com/vi/${video.id}/hqdefault.jpg" alt="${video.title}" title="Popup: ${video.title}" />
-                                    </span>
-                                    <div class="button-thumb-group-MULTI bottom-buttons">
-                                        <a href="https://www.youtube.com/watch?v=${video.id}" target="_blank" rel="noopener noreferrer" class="youtube-action-btn youtube-direct-link">Watch on YouTube</a>
-                                    </div>
-
-                                    <div class="video-title-MULTI">${video.title}</div>
+            if (isPlay && data.success && data.video) {
+                this.showVideo(data.video.id);
+                addMessageToChat('assistant', `Playing: ${data.video.title}`);
+            } else if (data.success && data.videos) {
+                const message = `Found these videos about "${query}":`;
+                const videoList = document.createElement('div');
+                videoList.className = 'youtube-results';
+                videoList.innerHTML = `
+                    <ol class="video-list">
+                        ${data.videos.map(video => `
+                            <li class="video-item">
+                                <div class="video-title">${video.title}</div>
+                                <div class="video-controls">
+                                    <a href="#" class="youtube-playHere-link" data-video-id="${video.id}">Play Here</a> |
+                                    <a href="https://www.youtube.com/watch?v=${video.id}" target="_blank" class="youtube-link">YouTube</a>
+                                    <div class="channel-info">By: ${video.channelTitle}</div>
                                 </div>
-                            `).join('')}
-                        </div>
-                        ${this.currentPageToken ? `
-                            <div class="more-videos-container" style="text-align: center; margin-top: 15px;">
-                                <button class="more-videos-btn" style="padding: 8px 16px; border: 1px solid hsla(11, 100%, 62.2%, 1) ; background-color: #4caf50;box-shadow: rgba(0, 0, 0, 0.25) 0px 14px 28px, rgba(0, 0, 0, 0.22) 0px 7px 10px ;color: white; border: none; border-radius: 4px; cursor: pointer;">
-                                    More Videos...
-                                </button>
-                            </div>
-                        ` : ''}
-                    </div>
-                `;
-            } else {
-                html = '<div>No results found.</div>';
+                            </li>
+                        `).join('')}
+                    </ol>`;
+
+                // Add message with both text and video list
+                const messageElement = document.createElement('div');
+                messageElement.textContent = message;
+                addMessageToChat('assistant', messageElement.outerHTML + videoList.outerHTML, {
+                    type: 'youtube-list',
+                    messageType: 'youtube'
+                });
+
+                // Add click handlers
+                setTimeout(() => {
+                    document.querySelectorAll('.youtube-playHere-link').forEach(link => {
+                        link.addEventListener('click', (e) => {
+                            e.preventDefault();
+                            const videoId = e.target.closest('.youtube-playHere-link').getAttribute('data-video-id');
+                            this.showVideo(videoId);
+                        });
+                    });
+                }, 100);
             }
-            const messageContent = { type: 'youtube', html };
-            addMessageToChat('assistant', messageContent, { type: 'youtube' });
-            
-            // Add click handlers for popup and playlist buttons
-            setTimeout(() => {
-                // Handle popup buttons
-                document.querySelectorAll('.youtube-popup-btn').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        const videoId = btn.getAttribute('data-video-id');
-                        this.openYoutubePopup(videoId);
-                    });
-                });
-
-                // Handle "More Videos" button
-                document.querySelectorAll('.more-videos-btn').forEach(btn => {
-                    btn.addEventListener('click', () => {
-                        this.handleYoutubeRequest('more videos');
-                    });
-                });
-
-                // Handle playlist buttons
-                document.querySelectorAll('.view-playlists-SINGLE-btn, .view-playlists-MULTI-btn').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        if (window.playlistManager) {
-                            window.playlistManager.show();
-                        }
-                    });
-                });
-
-                // Handle add to playlist buttons
-                document.querySelectorAll('.add-to-playlist-SINGLE-btn, .add-to-playlist-MULTI-btn').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        const videoData = JSON.parse(decodeURIComponent(btn.getAttribute('data-video')));
-                        if (window.playlistManager) {
-                            window.playlistManager.showAddToPlaylist(videoData);
-                        }
-                    });
-                });
-            }, 100);
+            return true;
         } catch (error) {
-            console.error('Error handling YouTube request:', error);
-            addMessageToChat('assistant', `Error: ${error.message}`);
-        }
-    },
-
-    openYoutubePopup(videoId) {
-        // Calculate dimensions for a wider window (90% of screen width, 16:9 aspect ratio)
-        const width = Math.floor(window.screen.width * 0.9);  // Increased from 0.8 to 0.9
-        const height = Math.floor(width * (9/16));
-        const left = Math.floor((window.screen.width - width) / 2);
-        const top = Math.floor((window.screen.height - height) / 2);
-    
-        const popup = window.open(
-            `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&vq=hd1080&hd=1`,
-            'YouTubePlayer',
-            `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=no,status=no`
-        );
-    
-        if (popup) {
-            popup.focus();
-        } else {
-            alert('Please allow popups for this site to play videos in a new window.');
+            console.error('Error with YouTube request:', error);
+            addMessageToChat('assistant', 'Sorry, there was an error processing your YouTube request.');
+            return true;
         }
     },
 
@@ -4617,98 +4209,36 @@ const handleYoutube = {
     showVideo(videoId) {
         this.createVideoContainer();
         const videoWrapper = document.getElementById('youtube-video');
-        videoWrapper.innerHTML = '';
 
-        // Create iframe with enhanced parameters
+        // Create iframe with event listener
         const iframe = document.createElement('iframe');
         iframe.width = "100%";
         iframe.height = "100%";
-        
-        // Build URL with all necessary parameters
-        const params = new URLSearchParams({
-            autoplay: '1',
-            rel: '0',
-            modestbranding: '1',
-            enablejsapi: '1',
-            origin: window.location.origin,
-            widget_referrer: window.location.href,
-            hl: 'en',
-            controls: '1',
-            fs: '1',
-            playsinline: '1',
-            iv_load_policy: '3',
-            vq: 'hd1080',  // Request 1080p quality
-            hd: '1'        // Enable HD
-        });
-        
-        // Set proper sandbox attributes to allow necessary features while maintaining security
-        iframe.sandbox = 'allow-same-origin allow-scripts allow-popups allow-presentation allow-forms';
-        
-        // Set referrer policy
-        iframe.referrerPolicy = 'strict-origin-when-cross-origin';
-        
-        // Use nocookie domain with enhanced parameters
-        iframe.src = `https://www.youtube-nocookie.com/embed/${videoId}?${params.toString()}`;
+        iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
         iframe.frameBorder = "0";
-        iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
+        iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture";
         iframe.allowFullscreen = true;
 
-        // Add loading indicator
-        const loadingDiv = document.createElement('div');
-        loadingDiv.className = 'youtube-loading';
-        loadingDiv.innerHTML = 'Loading video...';
-        videoWrapper.appendChild(loadingDiv);
-
-        // Handle iframe load event
+        // When iframe loads, update status and mic state
         iframe.onload = () => {
-            loadingDiv.remove();
-            // Check if the video is actually playing after a short delay
-            setTimeout(() => {
-                try {
-                    // If we detect the verification message, show fallback
-                    if (iframe.contentDocument && 
-                        (iframe.contentDocument.body.innerHTML.includes('Sign in') || 
-                         iframe.contentDocument.body.innerHTML.includes('confirm you\'re not a bot'))) {
-                        this.showFallbackMessage(videoId);
-                    }
-                } catch (e) {
-                    // If we can't access the iframe content (due to CORS), assume it's working
-                    console.log('Cannot check iframe content due to CORS, continuing playback');
-                }
-            }, 2000);
+            // Force stop listening and update states
+            stopListening();
+            state.isListening = false;
+            // Store previous conversation mode state
+            this.previousConversationMode = state.isConversationMode;
+            state.isConversationMode = false;  // Temporarily disable conversation mode
+
+            // Update status and mic visual state
+            updateStatus(MESSAGES.STATUS.VIDEO_PLAYING);
+            if (elements.microphoneButton) {
+                elements.microphoneButton.classList.remove('active');
+            }
         };
 
-        // Handle load errors
-        iframe.onerror = () => {
-            this.showFallbackMessage(videoId);
-        };
-
+        videoWrapper.innerHTML = '';
         videoWrapper.appendChild(iframe);
         elements.videoContainer.classList.remove('hidden');
         this.isPlaying = true;
-
-        // Update app state
-        if (state.isListening) {
-            stopListening();
-            state.isListening = false;
-        }
-        updateStatus(MESSAGES.STATUS.VIDEO_PLAYING);
-    },
-
-    showFallbackMessage(videoId) {
-        const videoWrapper = document.getElementById('youtube-video');
-        videoWrapper.innerHTML = `
-            <div class="youtube-error">
-                <p>Unable to play video in embedded player.</p>
-                <p>You can watch it directly on YouTube:</p>
-                <a href="https://www.youtube.com/watch?v=${videoId}" 
-                   target="_blank" 
-                   rel="noopener noreferrer" 
-                   class="youtube-direct-link">
-                    Watch on YouTube
-                </a>
-            </div>
-        `;
     },
 
     hideVideo() {
@@ -4717,11 +4247,32 @@ const handleYoutube = {
             videoWrapper.innerHTML = '';
             elements.videoContainer.classList.add('hidden');
             this.isPlaying = false;
-            updateStatus(MESSAGES.STATUS.DEFAULT);
+
+            // Restore previous conversation mode state
+            if (this.previousConversationMode) {
+                state.isConversationMode = true;
+                state.isListening = true;
+                // Ensure recognition is restarted
+                if (state.recognition) {
+                    state.recognition.start();
+                } else {
+                    initializeSpeechRecognition();
+                    state.recognition.start();
+                }
+                updateStatus(MESSAGES.STATUS.LISTENING);
+                // Update mic visual state
+                if (elements.microphoneButton) {
+                    elements.microphoneButton.classList.add('active');
+                    elements.microphoneButton.textContent = '🔴';  // Active mic indicator
+                }
+            } else {
+                updateStatus(MESSAGES.STATUS.DEFAULT);
+            }
+            // Clear stored state
+            this.previousConversationMode = null;
         }
     }
 };
-window.handleYoutube = handleYoutube;
 
 
 // =====================================================
@@ -4766,475 +4317,5 @@ const handleBingSearch = {
 
 
 // =====================================================
-// END OF app.js FILE v20.0.0
+// END OF app.js FILE v20.0.0 - working recipe
 // =====================================================
-
-function chunkText(text) {
-    // Special handling for recipes
-    if (text.includes('Ingredients:') || text.includes('Instructions:')) {
-        const parts = text.split(/(?:Ingredients:|Instructions:)/g);
-        const chunks = [];
-        
-        // Process each section
-        parts.forEach(part => {
-            if (!part.trim()) return;
-            
-            // Split into smaller chunks
-            const lines = part
-                .split(/\d+\.|[\n\r]+/)
-                .map(line => line.trim())
-                .filter(line => line.length > 0);
-            
-            lines.forEach(line => {
-                if (line.length > AUDIO_CONFIG.maxChunkLength) {
-                    // Split long lines at punctuation
-                    const subChunks = line
-                        .split(/([.,;])\s+/)
-                        .filter(chunk => chunk.length > 0);
-                    chunks.push(...subChunks);
-                } else {
-                    chunks.push(line);
-                }
-            });
-        });
-        
-        return chunks;
-    }
-    
-    // Regular text handling
-    return text
-        .split(/([.!?])\s+/)
-        .map(s => s.trim())
-        .filter(s => s.length > 0);
-}
-
-async function playNextInQueue() {
-    if (!state.audioQueue.length || state.isPlaying || state.stopRequested) return;
-
-    try {
-        state.isPlaying = true;
-        state.isAISpeaking = true;
-        const text = state.audioQueue[0];
-
-        const response = await fetch(AUDIO_CONFIG.apiUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                text: text,
-                voice: AUDIO_CONFIG.defaultVoice,
-                rate: AUDIO_CONFIG.rate,
-                pitch: AUDIO_CONFIG.pitch,
-                volume: AUDIO_CONFIG.volume
-            })
-        });
-
-        if (!response.ok) throw new Error(`TTS API error: ${response.status}`);
-        
-        const audioBlob = await response.blob();
-        if (audioBlob.size === 0) throw new Error('Empty audio response');
-
-        cleanup(state.currentAudio);
-        
-        const audioUrl = URL.createObjectURL(audioBlob);
-        state.currentAudio = new Audio(audioUrl);
-        state.currentAudio.volume = AUDIO_CONFIG.volume;
-
-        // Wait for audio to finish before playing next chunk
-        await new Promise((resolve, reject) => {
-            state.currentAudio.onended = resolve;
-            state.currentAudio.onerror = reject;
-            state.currentAudio.play();
-        });
-
-        state.audioQueue.shift();
-        
-        // Continue with next chunk after pause
-        if (state.audioQueue.length > 0 && !state.stopRequested) {
-            setTimeout(() => {
-                state.isPlaying = false;
-                playNextInQueue();
-            }, AUDIO_CONFIG.pauseDuration);
-        } else {
-            state.isPlaying = false;
-            state.isAISpeaking = false;
-            if (state.isConversationMode) {
-                startListening();
-            }
-        }
-
-    } catch (error) {
-        console.error('Audio playback error:', error);
-        cleanup(state.currentAudio);
-        state.audioQueue.shift();
-        state.isPlaying = false;
-        state.isAISpeaking = false;
-        
-        // Try next chunk if available
-        if (state.audioQueue.length > 0) {
-            setTimeout(() => playNextInQueue(), AUDIO_CONFIG.retryDelay);
-        }
-    }
-}
-
-async function prepareAudio(text) {
-    const sanitizedText = text
-        .replace(/[^\w\s.,!?;:'"()-]/g, ' ')
-        .replace(/\s+/g, ' ')
-        .trim();
-
-    if (!sanitizedText) return null;
-
-    // Use the correct API URL
-    const response = await fetchWithRetry(AUDIO_CONFIG.apiUrl, {
-        method: 'POST',
-        headers: { 
-            'Content-Type': 'application/json',
-            'Accept': 'audio/wav'
-        },
-        body: JSON.stringify({
-            text: sanitizedText,
-            voice: AUDIO_CONFIG.defaultVoice,
-            rate: AUDIO_CONFIG.rate,
-            pitch: AUDIO_CONFIG.pitch,
-            volume: AUDIO_CONFIG.volume
-        })
-    });
-
-    if (!response.ok) {
-        console.error(`TTS API error: ${response.status}`);
-        throw new Error(`TTS API error: ${response.status}`);
-    }
-    
-    const audioBlob = await response.blob();
-    if (audioBlob.size === 0) throw new Error('Empty audio response');
-
-    const audio = new Audio(URL.createObjectURL(audioBlob));
-    await new Promise(resolve => audio.addEventListener('canplaythrough', resolve, { once: true }));
-    
-    return audio;
-}
-
-function fadeAudio(audio, from, to, duration) {
-    return new Promise(resolve => {
-        const steps = 20;
-        const stepTime = duration / steps;
-        const stepSize = (to - from) / steps;
-        let current = from;
-        
-        const interval = setInterval(() => {
-            current += stepSize;
-            audio.volume = Math.max(0, Math.min(1, current));
-            
-            if ((stepSize > 0 && current >= to) || (stepSize < 0 && current <= to)) {
-                clearInterval(interval);
-                audio.volume = to;
-                resolve();
-            }
-        }, stepTime);
-    });
-}
-
-// Add this new function to handle microphone permissions
-async function requestMicrophonePermission() {
-    try {
-        const result = await navigator.permissions.query({ name: 'microphone' });
-        
-        if (result.state === 'denied') {
-            updateStatus(MESSAGES.ERRORS.MIC_PERMISSION);
-            throw new Error('Microphone permission denied');
-        }
-
-        if (result.state === 'prompt' || result.state === 'granted') {
-            const stream = await navigator.mediaDevices.getUserMedia({ 
-                audio: true,
-                video: false
-            });
-            stream.getTracks().forEach(track => track.stop());
-        }
-
-        return true;
-    } catch (error) {
-        console.error('Microphone permission error:', error);
-        updateStatus(MESSAGES.ERRORS.MIC_PERMISSION);
-        return false;
-    }
-}
-
-// Update startListening function
-async function startListening() {
-    if (state.isListening || state.isProcessing || state.isAISpeaking) {
-        return;
-    }
-
-    try {
-        if (!state.recognition) {
-            initializeSpeechRecognition();
-        }
-        state.recognition.start();
-        startInactivityTimer();
-    } catch (error) {
-        console.error('Failed to start listening:', error);
-        state.recognition = null;
-        setTimeout(initializeSpeechRecognition, 1000);
-    }
-}
-
-function printRecipe(recipeText, messageElement) {
-    // Create a new window for printing
-    const printWindow = window.open('', '_blank');
-    
-    // Create the print content
-    const printContent = `
-        <html>
-            <head>
-                <title>Recipe Print</title>
-                <style>
-                    body {
-                        font-family: Arial, sans-serif;
-                        line-height: 1.6;
-                        padding: 20px;
-                        max-width: 800px;
-                        margin: 0 auto;
-                    }
-                    @media print {
-                        body {
-                            padding: 0;
-                        }
-                    }
-                </style>
-            </head>
-            <body>
-                <div>${recipeText}</div>
-            </body>
-        </html>
-    `;
-    
-    // Write the content to the new window
-    printWindow.document.write(printContent);
-    printWindow.document.close();
-    
-    // Wait for content to load then print
-    printWindow.onload = function() {
-        printWindow.print();
-        // Close the window after printing (or if user cancels)
-        printWindow.onafterprint = function() {
-            printWindow.close();
-        };
-    };
-}
-
-// Helper functions for honorific handling
-function protectHonorifics(text) {
-    const honorifics = [
-        'Mr', 'Mrs', 'Ms', 'Dr', 'Sr', 'Jr', 'Prof', 'Rev', 'Fr', 'St', 'Mx', 'Capt', 'Lt', 'Col', 'Gen', 'Sgt', 'Adm', 'Maj', 'Hon', 'Pres', 'Gov', 'Amb', 'Sec', 'Supt', 'Rep', 'Sen', 'Treas', 'Dir', 'H.G', 'J.K', 'HG', 'JK'
-    ];
-    // For TTS: completely remove the period after honorifics and abbreviations
-    // Also match forms with optional spaces/periods
-    return text.replace(new RegExp(`\\b(${honorifics.join('|').replace(/\./g, '\\.?')})\\.?\\s?\\.?\\s?(?=\\w)`, 'gi'), (m) => m.replace(/\./g, ''));
-}
-
-function restoreHonorifics(text) {
-    const honorifics = [
-        'Mr', 'Mrs', 'Ms', 'Dr', 'Sr', 'Jr', 'Prof', 'Rev', 'Fr', 'St', 'Mx', 'Capt', 'Lt', 'Col', 'Gen', 'Sgt', 'Adm', 'Maj', 'Hon', 'Pres', 'Gov', 'Amb', 'Sec', 'Supt', 'Rep', 'Sen', 'Treas', 'Dir', 'H.G', 'J.K', 'HG', 'JK'
-    ];
-    // For display: ensure periods are present (for classic honorifics only)
-    return text.replace(/\b(HG|JK)\b/g, (m) => m[0] + '.' + m[1] + '.');
-}
-
-
-
-// ... existing code ...
-
-// In the SINGLE video layout section:
-// const singleVideoHtml = `
-//   <div class="youtube-single-bubble">
-//     <div class="video-title">${videos[0].title}</div>
-//     <div class="button-thumb-group top-buttons">
-//       <!-- Play in Popup and + button here -->
-//     </div>
-//     <span class="youtube-thumb-link youtube-popup-thumb" ...>
-//       <img ... />
-//     </span>
-//     <div class="button-thumb-group bottom-buttons">
-//       <!-- Watch on YouTube button here -->
-//     </div>
-//   </div>
-// `;
-
-// In the MULTI video layout section:
-// const multiVideoHtml = `
-//   <div class="youtube-multi-bubble">
-//     <div class="video-title">${video.title}</div>
-//     <div class="button-thumb-group top-buttons">
-//       <!-- Play in Popup and + button here -->
-//     </div>
-//     <span class="youtube-thumb-link youtube-popup-thumb" ...>
-//       <img ... />
-//     </span>
-//     <div class="button-thumb-group bottom-buttons">
-//       <!-- Watch on YouTube button here -->
-//     </div>
-//   </div>
-// `;
-
-// Add event listener for Add to Playlist buttons
-document.addEventListener('click', async (e) => {
-  const button = e.target.closest('.add-to-playlist-SINGLE-btn, .add-to-playlist-MULTI-btn');
-  if (button) {
-    try {
-      const videoData = JSON.parse(decodeURIComponent(button.dataset.video));
-      if (window.playlistManager) {
-        window.playlistManager.show(videoData);
-      } else {
-        console.error('PlaylistManager not initialized');
-        showToast('Unable to open playlist manager. Please try again.');
-      }
-    } catch (error) {
-      console.error('Error parsing video data:', error);
-      showToast('Error adding to playlist. Please try again.');
-    }
-  }
-});
-
-// ... existing code ...
-function showLocalVideoModal(videoUrl, title) {
-    // Remove any existing modal
-    const existing = document.getElementById('local-video-modal');
-    if (existing) existing.remove();
-    // Create modal
-    const modal = document.createElement('div');
-    modal.id = 'local-video-modal';
-    modal.style.position = 'fixed';
-    modal.style.top = '0';
-    modal.style.left = '0';
-    modal.style.width = '100vw';
-    modal.style.height = '100vh';
-    modal.style.background = 'rgba(0,0,0,0.8)';
-    modal.style.display = 'flex';
-    modal.style.alignItems = 'center';
-    modal.style.justifyContent = 'center';
-    modal.style.zIndex = '9999';
-    modal.innerHTML = `
-        <div style="background:#222;padding:24px;border-radius:12px;max-width:90vw;max-height:90vh;display:flex;flex-direction:column;align-items:center;">
-            <button id="close-local-video-modal" style="align-self:flex-end;margin-bottom:8px;font-size:1.5em;">&times;</button>
-            <h2 style="color:#fff;margin-bottom:12px;">${title}</h2>
-            <video src="${videoUrl}" controls autoplay style="max-width:80vw;max-height:70vh;border-radius:8px;background:#000;"></video>
-        </div>
-    `;
-    document.body.appendChild(modal);
-    document.getElementById('close-local-video-modal').onclick = () => modal.remove();
-    modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
-}
-
-// ... existing code ...
-// Add click handlers for YouTube popup images (SINGLE and MULTI)
-document.addEventListener('click', function(e) {
-  console.log('Global click detected on:', e.target);
-  // Look for both the span and the img elements
-  const thumb = e.target.closest('.youtube-thumb-link.youtube-popup-thumb, .youtube-popup-thumb');
-  console.log('Found youtube-popup-thumb:', !!thumb);
-  if (thumb) {
-    console.log('Thumb classes:', thumb.className);
-    console.log('Has video-id:', thumb.hasAttribute('data-video-id'));
-    console.log('Video ID:', thumb.getAttribute('data-video-id'));
-  }
-  if (thumb && thumb.hasAttribute('data-video-id')) {
-    e.preventDefault();
-    const videoId = thumb.getAttribute('data-video-id');
-    console.log('handleYoutube exists:', !!window.handleYoutube);
-    console.log('openYoutubePopup exists:', !!(window.handleYoutube && typeof window.handleYoutube.openYoutubePopup === 'function'));
-    if (window.handleYoutube && typeof window.handleYoutube.openYoutubePopup === 'function') {
-      window.handleYoutube.openYoutubePopup(videoId);
-    }
-  }
-});
-// ... existing code ...
-
-// Add showToast function to app.js:
-function showToast(message) {
-  alert(message);
-}
-
-// Add TTS warm-up function
-async function warmUpTTS() {
-    try {
-        await fetch(AUDIO_CONFIG.apiUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                text: '\u200B', // zero-width space (silent)
-                voice: AUDIO_CONFIG.defaultVoice,
-                rate: AUDIO_CONFIG.rate,
-                pitch: AUDIO_CONFIG.pitch,
-                volume: AUDIO_CONFIG.volume
-            })
-        });
-        console.log('TTS engine warmed up.');
-    } catch (error) {
-        console.warn('TTS warm-up failed:', error);
-    }
-}
-
-// Add TTS pre-processing for U.S. and U.S.A.
-function preprocessForTTS(text) {
-    let processed = text
-        // Replace specific phrases first
-        .replace(/U\.S\. Citizen/gi, 'United States citizen')
-        .replace(/U\.S\. government/gi, 'United States government')
-        // Replace abbreviations (with or without periods)
-        .replace(/U\.S\.A\./gi, 'United States of America')
-        .replace(/U\.S\.A/gi, 'United States of America')
-        .replace(/U\.S\./gi, 'United States')
-        .replace(/U\.S/gi, 'United States')
-        .replace(/\bUS\b/g, 'United States')
-        // Aggressively protect H.G. Wells and J.K. Rowling (all forms, no spaces between initials)
-        .replace(/H\s*\.?\s*G\s*\.?\s*Wells/gi, 'HG Wells')
-        .replace(/J\s*\.?\s*K\s*\.?\s*Rowling/gi, 'JK Rowling');
-    return processed;
-}
-
-// ... existing code ...
-// Slideout help/examples toggle
-const toggleHelpBtn = document.getElementById('toggle-help-btn');
-const slideoutHelp = document.getElementById('slideout-help');
-if (toggleHelpBtn && slideoutHelp) {
-  toggleHelpBtn.addEventListener('click', () => {
-    const isOpen = slideoutHelp.style.display === 'block';
-    slideoutHelp.style.display = isOpen ? 'none' : 'block';
-    toggleHelpBtn.textContent = isOpen ? '+' : '–';
-  });
-}
-// ... existing code ...
-
-// ... existing code ...
-// Example Prompts toggle for prompt field
-const examplePromptsLink = document.getElementById('example-prompts-link');
-const examplePromptsHelp = document.getElementById('example-prompts-help');
-if (examplePromptsLink && examplePromptsHelp) {
-  examplePromptsLink.addEventListener('click', () => {
-    const isOpen = examplePromptsHelp.style.display === 'block';
-    examplePromptsHelp.style.display = isOpen ? 'none' : 'block';
-    const caret = examplePromptsLink.querySelector('.caret');
-    if (caret) {
-      caret.classList.toggle('open');
-    }
-  });
-}
-// ... existing code ...
-// Remove old toggle-help-btn and slideout-help logic
-// ... existing code ...
-
-// ... existing code ...
-// Modal close logic
-window.addEventListener('DOMContentLoaded', function() {
-    const modal = document.getElementById('image-analysis-modal');
-    const closeBtn = document.getElementById('image-analysis-modal-close');
-    if (closeBtn) {
-        closeBtn.onclick = () => { modal.classList.remove('show'); };
-    }
-    modal.onclick = (e) => { if (e.target === modal) modal.classList.remove('show'); };
-});
-// ... existing code ...
-
-
-
