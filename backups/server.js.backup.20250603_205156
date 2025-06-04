@@ -1,8 +1,8 @@
 /*
   SERVER.JS
-  Version: 1
-  AppName: MultiChat_Chatty [v1]
-  Updated: 05/31/2025 @7:00PM
+  Version: 2
+  AppName: MultiChat_Chatty [v2]
+  Updated: 06/03/2025 @8:30AM
   Created by Paul Welby
 */
 
