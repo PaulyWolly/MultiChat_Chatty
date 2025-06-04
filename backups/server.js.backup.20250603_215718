@@ -73,7 +73,8 @@ console.log('OpenAI client initialized with API key:', {
 const app = express();
 
 // Set the port
-const port = process.env.PORT || 5300;
+const config = require('./config');
+const port = config.getPort();
 
 // Configure middleware with increased limits
 app.use(cors());
@@ -1603,14 +1604,35 @@ const jokeSchema = new mongoose.Schema({
     collection: 'my_jokes'  // Specify collection name
 });
 
-// Add index for faster lookups
-personalInfoSchema.index({ sessionId: 1, type: 1 });
-// Add index for joke lookups
-jokeSchema.index({ userId: 1, title: 1 });
+// YouTube Search Query Schema
+const youtubeSearchSchema = new mongoose.Schema({
+    query: { type: String, required: true },
+    userId: { type: String, required: true },
+    displayName: String, // Cleaned display name (without "youtube search" prefix)
+    totalPages: { type: Number, default: 1 },
+    lastSearched: { type: Date, default: Date.now },
+    dateCreated: { type: Date, default: Date.now },
+    cacheKeys: [String], // Array of localStorage cache keys for this query
+    videoCount: Number, // Number of videos found
+    searchMetadata: {
+        searchType: String, // 'search' or 'play'
+        lastPageViewed: Number,
+        totalResults: Number
+    }
+}, {
+    collection: 'youtube_searches'
+});
 
-// Create model
+// Add indexes for faster lookups
+personalInfoSchema.index({ sessionId: 1, type: 1 });
+jokeSchema.index({ userId: 1, title: 1 });
+youtubeSearchSchema.index({ userId: 1, query: 1 });
+youtubeSearchSchema.index({ userId: 1, lastSearched: -1 });
+
+// Create models
 const PersonalInfo = mongoose.model('PersonalInfo', personalInfoSchema);
 const Joke = mongoose.model('Joke', jokeSchema);
+const YouTubeSearch = mongoose.model('YouTubeSearch', youtubeSearchSchema);
 
 // Single MongoDB connection
 let retryCount = 0;
@@ -1746,6 +1768,139 @@ app.post('/api/debug/add-test-joke', async (req, res) => {
         res.json({ success: true, joke: testJoke });
     } catch (error) {
         console.error('Error adding test joke:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+
+// =====================================================
+// YOUTUBE SEARCH PERSISTENCE ENDPOINTS
+// =====================================================
+
+// Save YouTube search query to database
+app.post('/api/youtube/save-search', async (req, res) => {
+    try {
+        const { query, userId, displayName, totalPages, videoCount, cacheKeys, searchMetadata } = req.body;
+
+        console.log('💾 [YOUTUBE-DB] Saving search query:', { query, userId, displayName });
+
+        // Check if query already exists for this user
+        let existingSearch = await YouTubeSearch.findOne({ userId, query });
+
+        if (existingSearch) {
+            // Update existing search
+            existingSearch.lastSearched = new Date();
+            existingSearch.totalPages = totalPages || existingSearch.totalPages;
+            existingSearch.videoCount = videoCount || existingSearch.videoCount;
+            existingSearch.cacheKeys = cacheKeys || existingSearch.cacheKeys;
+            existingSearch.searchMetadata = { ...existingSearch.searchMetadata, ...searchMetadata };
+            
+            await existingSearch.save();
+            
+            console.log('💾 [YOUTUBE-DB] Updated existing search:', existingSearch._id);
+            res.json({ success: true, message: 'Search updated', search: existingSearch });
+        } else {
+            // Create new search entry
+            const newSearch = new YouTubeSearch({
+                query,
+                userId,
+                displayName: displayName || query,
+                totalPages: totalPages || 1,
+                videoCount: videoCount || 0,
+                cacheKeys: cacheKeys || [],
+                searchMetadata: searchMetadata || {}
+            });
+
+            await newSearch.save();
+            
+            console.log('💾 [YOUTUBE-DB] Saved new search:', newSearch._id);
+            res.json({ success: true, message: 'Search saved', search: newSearch });
+        }
+    } catch (error) {
+        console.error('💾 [YOUTUBE-DB] Error saving search:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Get saved YouTube searches for a user
+app.get('/api/youtube/saved-searches', async (req, res) => {
+    try {
+        const { userId } = req.query;
+
+        console.log('📚 [YOUTUBE-DB] Retrieving saved searches for user:', userId);
+
+        const savedSearches = await YouTubeSearch.find({ userId })
+            .sort({ lastSearched: -1 })
+            .limit(50); // Limit to 50 most recent searches
+
+        console.log('📚 [YOUTUBE-DB] Found', savedSearches.length, 'saved searches');
+
+        res.json({ 
+            success: true, 
+            searches: savedSearches.map(search => ({
+                _id: search._id,
+                query: search.query,
+                displayName: search.displayName,
+                totalPages: search.totalPages,
+                videoCount: search.videoCount,
+                lastSearched: search.lastSearched,
+                dateCreated: search.dateCreated,
+                searchMetadata: search.searchMetadata
+            }))
+        });
+    } catch (error) {
+        console.error('📚 [YOUTUBE-DB] Error retrieving searches:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Delete saved YouTube search
+app.delete('/api/youtube/saved-searches/:searchId', async (req, res) => {
+    try {
+        const { searchId } = req.params;
+        const { userId } = req.query;
+
+        console.log('🗑️ [YOUTUBE-DB] Deleting search:', searchId, 'for user:', userId);
+
+        const deleted = await YouTubeSearch.findOneAndDelete({ 
+            _id: searchId, 
+            userId 
+        });
+
+        if (deleted) {
+            console.log('🗑️ [YOUTUBE-DB] Successfully deleted search:', deleted.query);
+            res.json({ success: true, message: 'Search deleted' });
+        } else {
+            res.status(404).json({ success: false, error: 'Search not found' });
+        }
+    } catch (error) {
+        console.error('🗑️ [YOUTUBE-DB] Error deleting search:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Check if a query is saved in database
+app.post('/api/youtube/check-saved', async (req, res) => {
+    try {
+        const { queries, userId } = req.body;
+
+        console.log('🔍 [YOUTUBE-DB] Checking saved status for', queries.length, 'queries');
+
+        const savedQueries = await YouTubeSearch.find({ 
+            userId, 
+            query: { $in: queries } 
+        }).select('query');
+
+        const savedQuerySet = new Set(savedQueries.map(s => s.query));
+        
+        const results = {};
+        queries.forEach(query => {
+            results[query] = savedQuerySet.has(query);
+        });
+
+        res.json({ success: true, results });
+    } catch (error) {
+        console.error('🔍 [YOUTUBE-DB] Error checking saved status:', error);
         res.status(500).json({ success: false, error: error.message });
     }
 });
