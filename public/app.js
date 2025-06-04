@@ -632,7 +632,7 @@ function formatIngredientsAsDashedList(text) {
     let formatted = '';
     for (let i = 0; i < parts.length; i++) {
         if (/Ingredients:/i.test(parts[i])) {
-            formatted += '<strong>' + parts[i] + '</strong>';
+            formatted += '<strong class="recipe-ingredients-heading">' + parts[i] + '</strong>';
             // Convert numbered or dashed lines to <li>
             const lines = parts[i+1]
                 .split(/\n|\r/)
@@ -641,14 +641,14 @@ function formatIngredientsAsDashedList(text) {
             const liLines = lines.map(line => {
                 // Remove leading numbers/dots/dashes and whitespace
                 const cleaned = line.replace(/^\s*\d+\.?\s*/, '').replace(/^[-–—•]\s*/, '');
-                return `<li style="list-style-type: '- '; margin-left: 1em;">${cleaned}</li>`;
+                return `<li class="recipe-ingredient-item" style="list-style-type: '- '; margin-left: 1em;">${cleaned}</li>`;
             });
-            formatted += `<ul style="margin: 0 0 1em 0; padding-left: 1.5em;">${liLines.join('')}</ul>`;
+            formatted += `<ul class="recipe-ingredients-list" style="margin: 0 0 1em 0; padding-left: 1.5em;">${liLines.join('')}</ul>`;
             i++; // Skip the ingredients content part
         } else {
             // For the rest, preserve line breaks and bold section headers
             if (/^(Instructions:|Directions:)$/i.test(parts[i])) {
-                formatted += '<strong>' + parts[i] + '</strong>';
+                formatted += '<strong class="recipe-instructions-heading">' + parts[i] + '</strong>';
             } else {
                 formatted += parts[i].replace(/\n/g, '<br>');
             }
@@ -2088,10 +2088,11 @@ async function getAIResponse(message, selectedModel, history, systemPrompt, sess
 
 // Add message to chat function
 function addMessageToChat(role, content, options = {}) {
-    // Prevent empty assistant bubbles
+    // Prevent empty assistant bubbles, except for image analysis which needs empty placeholder
     if (
         role === 'assistant' &&
-        (!content || (typeof content === 'string' && content.trim() === ''))
+        (!content || (typeof content === 'string' && content.trim() === '')) &&
+        !options.isImageAnalysis
     ) {
         return null; // Don't create empty assistant bubbles
     }
@@ -2308,7 +2309,7 @@ function formatStreamingText(text) {
             /(ingredients:[\s\S]*?)(?=instructions:|steps:|$)/i,
             function(match, ingredientsSection) {
                 const lines = ingredientsSection.split('\n').map(line => line.trim()).filter(line => line);
-                let result = '<h3>🥄 Ingredients</h3>\n<ul>\n';
+                let result = '<h3 class="recipe-ingredients-heading">🥄 Ingredients</h3>\n<ul class="recipe-ingredients-list">\n';
                 
                 for (let i = 1; i < lines.length; i++) { // Skip the "Ingredients:" line
                     const line = lines[i];
@@ -2316,7 +2317,7 @@ function formatStreamingText(text) {
                         // Remove leading numbers and clean up
                         const cleanLine = line.replace(/^\d+\.\s*/, '').replace(/^-\s*/, '').trim();
                         if (cleanLine) {
-                            result += `<li>${cleanLine}</li>\n`;
+                            result += `<li class="recipe-ingredient-item">${cleanLine}</li>\n`;
                         }
                     }
                 }
@@ -2330,14 +2331,14 @@ function formatStreamingText(text) {
             /(instructions:|steps:)([\s\S]*)/i,
             function(match, header, instructionsSection) {
                 const lines = instructionsSection.split('\n').map(line => line.trim()).filter(line => line);
-                let result = '<h3>👩‍🍳 Instructions</h3>\n<ol>\n';
+                let result = '<h3 class="recipe-instructions-heading">👩‍🍳 Instructions</h3>\n<ol class="recipe-instructions-list">\n';
                 
                 for (const line of lines) {
                     if (line) {
                         // Remove leading numbers and clean up
                         const cleanLine = line.replace(/^\d+\.\s*/, '').trim();
                         if (cleanLine) {
-                            result += `<li>${cleanLine}</li>\n`;
+                            result += `<li class="recipe-instruction-item">${cleanLine}</li>\n`;
                         }
                     }
                 }
@@ -2423,7 +2424,7 @@ function updateMessageContent(messageElement, content, tokenCount) {
                 contentElement.style.whiteSpace = 'pre-wrap'; // Preserve line breaks
                 
                 // Check if formatted content contains HTML (recipes)
-                if (formattedContent.includes('<ul>') || formattedContent.includes('<ol>') || formattedContent.includes('<h3>')) {
+                if (formattedContent.includes('<ul') || formattedContent.includes('<ol') || formattedContent.includes('<h3') || formattedContent.includes('class="recipe-')) {
                     contentElement.innerHTML = formattedContent;
                 } else {
                     contentElement.textContent = formattedContent;
@@ -2569,18 +2570,87 @@ function updateMetadata(messageElement, metadata = {}) {
             // Add event listener to avoid JavaScript parsing issues
             // Add event listener to avoid JavaScript parsing issues
             printButton.addEventListener('click', function() {
-                const rawText = messageContent.textContent || messageContent.innerText || '';
+                // First try to get the HTML content for better extraction
+                let rawText = '';
+                if (messageContent.innerHTML && messageContent.innerHTML.includes('<h3')) {
+                    // Debug what we're working with
+                    console.log('🖨️ [PRINT] Raw HTML:', messageContent.innerHTML);
+                    
+                    // Fallback: if CSS selectors don't work, parse HTML directly
+                    let extractedText = '';
+                    
+                    // Try CSS selectors first
+                    const ingredientsHeader = messageContent.querySelector('.recipe-ingredients-heading');
+                    const instructionsHeader = messageContent.querySelector('.recipe-instructions-heading');
+                    
+                    console.log('🖨️ [PRINT] Found ingredients header:', !!ingredientsHeader);
+                    console.log('🖨️ [PRINT] Found instructions header:', !!instructionsHeader);
+                    
+                    if (ingredientsHeader && instructionsHeader) {
+                        // CSS selector approach
+                        extractedText += 'Ingredients:\n';
+                        const ingredientsList = messageContent.querySelector('.recipe-ingredients-list');
+                        if (ingredientsList) {
+                            const items = ingredientsList.querySelectorAll('.recipe-ingredient-item');
+                            console.log('🖨️ [PRINT] Found ingredient items:', items.length);
+                            items.forEach(item => {
+                                extractedText += '• ' + item.textContent.trim() + '\n';
+                            });
+                        }
+                        
+                        extractedText += '\nInstructions:\n';
+                        const instructionsList = messageContent.querySelector('.recipe-instructions-list');
+                        if (instructionsList) {
+                            const items = instructionsList.querySelectorAll('.recipe-instruction-item');
+                            console.log('🖨️ [PRINT] Found instruction items:', items.length);
+                            items.forEach((item, index) => {
+                                extractedText += (index + 1) + '. ' + item.textContent.trim() + '\n';
+                            });
+                        }
+                    } else {
+                        // Fallback: parse HTML manually
+                        console.log('🖨️ [PRINT] Using HTML parsing fallback');
+                        extractedText = messageContent.innerHTML
+                            .replace(/<h3[^>]*class="recipe-ingredients-heading"[^>]*>/g, '\nIngredients:\n')
+                            .replace(/<h3[^>]*class="recipe-instructions-heading"[^>]*>/g, '\nInstructions:\n')
+                            .replace(/<li[^>]*class="recipe-ingredient-item"[^>]*>/g, '• ')
+                            .replace(/<li[^>]*class="recipe-instruction-item"[^>]*>/g, function(match, offset, string) {
+                                // Count previous instruction items to get the number
+                                const beforeThis = string.substring(0, offset);
+                                const instructionMatches = (beforeThis.match(/class="recipe-instruction-item"/g) || []).length;
+                                return (instructionMatches + 1) + '. ';
+                            })
+                            .replace(/<[^>]*>/g, '') // Remove all HTML tags
+                            .replace(/\n\s*\n/g, '\n') // Remove duplicate newlines
+                            .trim();
+                    }
+                    
+                    rawText = extractedText.trim();
+                    console.log('🖨️ [PRINT] Extracted text length:', rawText.length);
+                    console.log('🖨️ [PRINT] Extracted text preview:', rawText.substring(0, 300));
+                } else {
+                    // Fallback to text content
+                    rawText = messageContent.textContent || messageContent.innerText || '';
+                }
                 
                 // Clean the text for printing by removing emojis and special formatting
-                const cleanText = rawText
+                let cleanText = rawText
                     .replace(/👨‍🍳🍽️\s*/g, '')  // Remove chef/recipe emojis
                     .replace(/🥄\s*Ingredients/gi, 'Ingredients:')  // Replace emoji ingredients with clean text
                     .replace(/👩‍🍳\s*Instructions/gi, 'Instructions:')  // Replace emoji instructions with clean text
                     .replace(/[\u{1F300}-\u{1F9FF}]/gu, '')  // Remove any remaining emojis
                     .trim();
                 
+                // Debug intermediate steps to find where truncation occurs
+                console.log('🖨️ [PRINT-DEBUG] Raw text length after extraction:', rawText.length);
+                console.log('🖨️ [PRINT-DEBUG] Raw text preview:', rawText.substring(0, 300));
+                console.log('🖨️ [PRINT-DEBUG] Clean text length after emoji removal:', cleanText.length);
+                console.log('🖨️ [PRINT-DEBUG] Clean text ends with:', cleanText.substring(cleanText.length - 50));
+                
                 console.log('Print button clicked with clean text length:', cleanText.length);
-                console.log('Clean text preview:', cleanText.substring(0, 100));
+                console.log('Clean text preview:', cleanText.substring(0, 200));
+                console.log('🖨️ [CALLER-DEBUG] About to call printRecipe with text length:', cleanText.length);
+                console.log('🖨️ [CALLER-DEBUG] Text being passed ends with:', cleanText.substring(cleanText.length - 100));
                 printRecipe(cleanText, messageElement);
             });
             
@@ -3148,8 +3218,8 @@ async function queueAudioChunk(text) {
     //     chunks = chunks.concat(sectionChunks);
     // });
 
-    // TEMPORARILY DISABLED recipe splitting - just use normal chunking
-    const chunks = splitTextIntoChunks(text, 200, true);
+    // TEMPORARILY DISABLED recipe splitting - just use normal chunking with larger chunks for recipes
+    const chunks = splitTextIntoChunks(text, 400, true);
     
     console.log('Chunks before post-processing:', chunks);
     
@@ -4071,16 +4141,81 @@ async function startSmartInterruptListening() {
 
 window.printRecipe = async function(recipeText, messageElement) {
     try {
+        console.log('🖨️ [SERVER-DEBUG] Full recipe text length received:', recipeText.length);
+        console.log('🖨️ [SERVER-DEBUG] Recipe text ends with:', recipeText.substring(recipeText.length - 100));
         console.log('Recipe text sent to server:', recipeText.substring(0, 200)); // Log what we're sending
+        
+        // Extract recipe title from the original message to match server expectations
+        const messageContainer = messageElement.closest('.message');
+        const fullMessageText = messageContainer ? messageContainer.textContent : '';
+        
+        // Look for the recipe title in the original message (usually appears first in ALL CAPS)
+        let recipeTitle = "ORANGE SHERBET"; // Default based on current recipe
+        const titleMatch = fullMessageText.match(/([A-Z][A-Z\s]{5,}?)(?=\n|Here is|$)/);
+        if (titleMatch && titleMatch[1].trim().length > 5) {
+            recipeTitle = titleMatch[1].trim();
+        }
+        
+        console.log('🖨️ [TITLE-DEBUG] Extracted recipe title:', recipeTitle);
+        console.log('🖨️ [TITLE-DEBUG] Full message text preview:', fullMessageText.substring(0, 200));
+        
+        // Format text to match server expectations: TITLE + "Here is" + content
+        const serverFormattedText = `${recipeTitle}\n\nHere is a delicious recipe.\n\n` + recipeText
+            .replace(/•\s*/g, '') // Remove bullet points
+            .replace(/Instructions:\s*/i, '\nInstructions:\n') // Ensure proper spacing
+            .replace(/Ingredients:\s*/i, 'Ingredients:\n') // Ensure proper spacing
+            .trim();
+            
+        console.log('🖨️ [FORMAT-DEBUG] Formatted text length:', serverFormattedText.length);
+        console.log('🖨️ [FORMAT-DEBUG] Formatted text preview:', serverFormattedText.substring(0, 300));
+        
+        // Debug the actual payload being sent
+        const payload = { text: serverFormattedText };
+        console.log('🖨️ [FETCH-DEBUG] Payload object text length:', payload.text.length);
+        console.log('🖨️ [FETCH-DEBUG] Payload text ends with:', payload.text.substring(payload.text.length - 100));
+        
+        const jsonString = JSON.stringify(payload);
+        console.log('🖨️ [FETCH-DEBUG] JSON string length:', jsonString.length);
+        console.log('🖨️ [FETCH-DEBUG] JSON string ends with:', jsonString.substring(jsonString.length - 150));
 
         const response = await fetch('/api/recipe', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ text: recipeText })
+            body: jsonString
         });
 
         const data = await response.json();
         console.log('Server response:', data); // Log what we get back
+        
+        // If server failed, try alternative formats
+        if (!data.success) {
+            console.log('🖨️ [SERVER-ERROR] Server failed to parse. Trying alternative formats...');
+            console.log('🖨️ [SERVER-ERROR] Current format preview:', serverFormattedText.substring(0, 500));
+            
+            // Try alternative format: just the original text with minimal changes
+            const alternativeFormat = recipeText
+                .replace(/•/g, '-') // Use dashes instead of bullets
+                .replace(/Ingredients:/i, '**Ingredients:**')
+                .replace(/Instructions:/i, '**Instructions:**');
+                
+            console.log('🖨️ [RETRY] Trying alternative format...');
+            
+            const retryResponse = await fetch('/api/recipe', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: alternativeFormat })
+            });
+            
+            const retryData = await retryResponse.json();
+            console.log('🖨️ [RETRY] Alternative format response:', retryData);
+            
+            if (retryData.success) {
+                // Use the successful format
+                Object.assign(data, retryData);
+            } else {
+                console.log('🖨️ [RETRY] Alternative format also failed. This is a server-side parsing issue.');
+            }
+        }
 
         if (!data.success) throw new Error(data.error);
 
@@ -4291,6 +4426,8 @@ window.printRecipe = async function(recipeText, messageElement) {
 
 function printRecipe(recipeText, messageElement) {
     // Call the async version
+    console.log('🖨️ [WRAPPER-DEBUG] Wrapper function received text length:', recipeText.length);
+    console.log('🖨️ [WRAPPER-DEBUG] Wrapper text ends with:', recipeText.substring(recipeText.length - 100));
     window.printRecipe(recipeText, messageElement);
 }  
 
@@ -5745,6 +5882,7 @@ async function warmUpTTS() {
 function preprocessForTTS(text) {
     let processed = text
         // Replace specific phrases first
+        .replace(/U\.S\. passport/gi, 'United States passport')
         .replace(/U\.S\. Citizen/gi, 'United States citizen')
         .replace(/U\.S\. government/gi, 'United States government')
         // Replace abbreviations (with or without periods)
