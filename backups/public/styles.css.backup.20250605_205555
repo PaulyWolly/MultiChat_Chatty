@@ -2,7 +2,7 @@
   STYLES.CSS
   Version: 2
   AppName: MultiChat_Chatty [v2]
-  Updated: 06/03/2025 @8:30AM
+  Updated: 06/03/2025 @10:00PM
   Created by Paul Welby
 */
 
@@ -21,7 +21,7 @@ body {
     position: relative;
     width: 98%;
     height: 95vh;
-    border: 1px solid #ccc;
+    border: 1px solid #a9a3a3;
     border-radius: 5px;
     display: flex;
     flex-direction: column;
@@ -575,7 +575,7 @@ button {
     word-wrap: break-word;
     font-size: 16px;
     font-weight: normal;
-    padding-right: 10px;
+    padding-right: 100px;
     text-align: justify;
     position: relative;
     bottom: 5px;
@@ -5582,6 +5582,53 @@ button.next-page-btn {
     background: rgba(255, 0, 0, 0.1);
     transform: scale(1.1);
     color: #b71c1c;
+}
+
+/* Save button styling */
+.query-history-save {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 2px 4px;
+    border-radius: 3px;
+    opacity: 0.8;
+    transition: opacity 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #4CAF50;
+    margin-right: 4px;
+}
+
+.query-history-save:hover {
+    opacity: 1;
+    background: rgba(76, 175, 80, 0.1);
+    transform: scale(1.1);
+    color: #388E3C;
+}
+
+/* LED indicator styling */
+.query-led {
+    display: inline-block;
+    margin-right: 6px;
+    font-size: 8px;
+    line-height: 1;
+    vertical-align: middle;
+}
+
+.query-led.green {
+    color: #4CAF50;
+    text-shadow: 0 0 3px rgba(76, 175, 80, 0.5);
+    animation: greenLEDPulse 2s infinite;
+}
+
+@keyframes greenLEDPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
 }
 
 
