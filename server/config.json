@@ -38,8 +38,7 @@
         "saveButton": "💾",
         "deleteButton": "❌"
       }
-    },
-    "googleApiKey": "YOUR_GOOGLE_API_KEY_HERE"
+    }
   },
   "production": {
     "frontend": {
@@ -51,7 +50,7 @@
       "host": "localhost"
     },
     "api": {
-      "baseUrl": "http://localhost:3000",
+      "baseUrl": "http://localhost:5301",
       "endpoints": {
         "youtube": {
           "search": "/api/youtube/search",
@@ -80,8 +79,6 @@
         "saveButton": "💾",
         "deleteButton": "❌"
       }
-    },
-    "googleApiKey": "YOUR_GOOGLE_API_KEY_HERE"
+    }
   }
 } 
-  

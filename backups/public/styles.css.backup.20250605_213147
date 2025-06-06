@@ -2,7 +2,7 @@
   STYLES.CSS
   Version: 2
   AppName: MultiChat_Chatty [v2]
-  Updated: 06/03/2025 @8:30AM
+  Updated: 06/03/2025 @10:00PM
   Created by Paul Welby
 */
 
@@ -21,7 +21,7 @@ body {
     position: relative;
     width: 98%;
     height: 95vh;
-    border: 1px solid #ccc;
+    border: 1px solid #a9a3a3;
     border-radius: 5px;
     display: flex;
     flex-direction: column;
@@ -575,7 +575,7 @@ button {
     word-wrap: break-word;
     font-size: 16px;
     font-weight: normal;
-    padding-right: 10px;
+    padding-right: 100px;
     text-align: justify;
     position: relative;
     bottom: 5px;

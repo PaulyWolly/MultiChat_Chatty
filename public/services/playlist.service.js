@@ -1,16 +1,37 @@
+const sessionId = 'global-persistent-storage-001-v1';
+
+// configLoader.js
+import { loadConfig } from './configLoader.js';
+
+let apiBaseUrl = '';
+let configLoaded = false;
+
+async function ensureConfigLoaded() {
+  if (!configLoaded) {
+    const config = await loadConfig();
+    // Use the 'development' or 'production' section as needed
+    apiBaseUrl = config.development.api.baseUrl; // or detect env dynamically
+    configLoaded = true;
+  }
+}
+
 class PlaylistService {
   constructor() {
     this.baseUrl = '/api/playlists';
   }
 
   async getPlaylists() {
+    await ensureConfigLoaded();
     try {
-      const response = await fetch(`${this.baseUrl}?sessionId=${window.sessionId}`);
+      console.log('Fetching playlists with sessionId:', sessionId);
+      const response = await fetch(`${apiBaseUrl}${this.baseUrl}?sessionId=${sessionId}`);
+      const data = await response.json();
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to fetch playlists');
+        console.error('Error response from server:', data);
+        throw new Error(data.error || 'Failed to fetch playlists');
       }
-      return response.json();
+      console.log('Received playlists:', data);
+      return data;
     } catch (error) {
       console.error('Error fetching playlists:', error);
       throw error;
@@ -18,19 +39,18 @@ class PlaylistService {
   }
 
   async createPlaylist(name) {
+    await ensureConfigLoaded();
     try {
-      const response = await fetch(`${this.baseUrl}?sessionId=${window.sessionId}`, {
+      const response = await fetch(`${apiBaseUrl}${this.baseUrl}?sessionId=${sessionId}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name })
       });
+      const data = await response.json();
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to create playlist');
+        throw new Error(data.error || 'Failed to create playlist');
       }
-      return response.json();
+      return data;
     } catch (error) {
       console.error('Error creating playlist:', error);
       throw error;
@@ -38,19 +58,18 @@ class PlaylistService {
   }
 
   async addVideoToPlaylist(playlistId, video) {
+    await ensureConfigLoaded();
     try {
-      const response = await fetch(`${this.baseUrl}/${playlistId}/videos?sessionId=${window.sessionId}`, {
+      const response = await fetch(`${apiBaseUrl}${this.baseUrl}/${playlistId}/videos?sessionId=${sessionId}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(video)
       });
+      const data = await response.json();
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to add video to playlist');
+        throw new Error(data.error || 'Failed to add video to playlist');
       }
-      return response.json();
+      return data;
     } catch (error) {
       console.error('Error adding video to playlist:', error);
       throw error;
@@ -58,15 +77,16 @@ class PlaylistService {
   }
 
   async removeVideoFromPlaylist(playlistId, videoEntryId) {
+    await ensureConfigLoaded();
     try {
-      const response = await fetch(`${this.baseUrl}/${playlistId}/videos/${videoEntryId}?sessionId=${window.sessionId}`, {
+      const response = await fetch(`${apiBaseUrl}${this.baseUrl}/${playlistId}/videos/${videoEntryId}?sessionId=${sessionId}`, {
         method: 'DELETE'
       });
+      const data = await response.json();
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to remove video from playlist');
+        throw new Error(data.error || 'Failed to remove video from playlist');
       }
-      return response.json();
+      return data;
     } catch (error) {
       console.error('Error removing video from playlist:', error);
       throw error;
@@ -74,19 +94,18 @@ class PlaylistService {
   }
 
   async renamePlaylist(playlistId, newName) {
+    await ensureConfigLoaded();
     try {
-      const response = await fetch(`${this.baseUrl}/${playlistId}?sessionId=${window.sessionId}`, {
+      const response = await fetch(`${apiBaseUrl}${this.baseUrl}/${playlistId}?sessionId=${sessionId}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: newName })
       });
+      const data = await response.json();
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to rename playlist');
+        throw new Error(data.error || 'Failed to rename playlist');
       }
-      return response.json();
+      return data;
     } catch (error) {
       console.error('Error renaming playlist:', error);
       throw error;
@@ -94,19 +113,18 @@ class PlaylistService {
   }
 
   async moveVideo(playlistId, videoEntryId, targetPlaylistId) {
+    await ensureConfigLoaded();
     try {
-      const response = await fetch(`${this.baseUrl}/${playlistId}/move?sessionId=${window.sessionId}`, {
+      const response = await fetch(`${apiBaseUrl}${this.baseUrl}/${playlistId}/move?sessionId=${sessionId}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ videoEntryId, targetPlaylistId })
       });
+      const data = await response.json();
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to move video');
+        throw new Error(data.error || 'Failed to move video');
       }
-      return response.json();
+      return data;
     } catch (error) {
       console.error('Error moving video:', error);
       throw error;
@@ -114,15 +132,16 @@ class PlaylistService {
   }
 
   async deletePlaylist(playlistId) {
+    await ensureConfigLoaded();
     try {
-      const response = await fetch(`${this.baseUrl}/${playlistId}?sessionId=${window.sessionId}`, {
+      const response = await fetch(`${apiBaseUrl}${this.baseUrl}/${playlistId}?sessionId=${sessionId}`, {
         method: 'DELETE'
       });
+      const data = await response.json();
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to delete playlist');
+        throw new Error(data.error || 'Failed to delete playlist');
       }
-      return response.json();
+      return data;
     } catch (error) {
       console.error('Error deleting playlist:', error);
       throw error;
@@ -130,19 +149,18 @@ class PlaylistService {
   }
 
   async renameVideoTitle(playlistId, videoEntryId, newTitle) {
+    await ensureConfigLoaded();
     try {
-      const response = await fetch(`${this.baseUrl}/${playlistId}/videos/${videoEntryId}/title?sessionId=${window.sessionId}`, {
+      const response = await fetch(`${apiBaseUrl}${this.baseUrl}/${playlistId}/videos/${videoEntryId}/title?sessionId=${sessionId}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title: newTitle })
       });
+      const data = await response.json();
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to rename video title');
+        throw new Error(data.error || 'Failed to rename video title');
       }
-      return response.json();
+      return data;
     } catch (error) {
       console.error('Error renaming video title:', error);
       throw error;

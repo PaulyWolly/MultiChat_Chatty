@@ -18,7 +18,31 @@
           "deleteSaved": "/api/youtube/saved-searches"
         },
         "chat": "/api/chat",
-        "tts": "/api/tts"
+        "tts": "/api/tts",
+        "jokes": {
+          "list": "/api/jokes",
+          "create": "/api/jokes",
+          "update": "/api/jokes",
+          "delete": "/api/jokes"
+        }
+      }
+    },
+    "audio": {
+      "tts": {
+        "defaultVoice": "en-US-AndrewNeural",
+        "rate": 0.9,
+        "pitch": 1.0,
+        "volume": 1.0,
+        "maxChunkLength": 150,
+        "pauseDuration": 400,
+        "retryDelay": 1000,
+        "maxRetries": 3
+      },
+      "recognition": {
+        "language": "en-US",
+        "continuous": true,
+        "interimResults": true,
+        "silenceTimeout": 1500
       }
     },
     "youtube": {
@@ -38,8 +62,7 @@
         "saveButton": "💾",
         "deleteButton": "❌"
       }
-    },
-    "googleApiKey": "YOUR_GOOGLE_API_KEY_HERE"
+    }
   },
   "production": {
     "frontend": {
@@ -60,7 +83,31 @@
           "deleteSaved": "/api/youtube/saved-searches"
         },
         "chat": "/api/chat",
-        "tts": "/api/tts"
+        "tts": "/api/tts",
+        "jokes": {
+          "list": "/api/jokes",
+          "create": "/api/jokes",
+          "update": "/api/jokes",
+          "delete": "/api/jokes"
+        }
+      }
+    },
+    "audio": {
+      "tts": {
+        "defaultVoice": "en-US-AndrewNeural",
+        "rate": 0.9,
+        "pitch": 1.0,
+        "volume": 1.0,
+        "maxChunkLength": 150,
+        "pauseDuration": 400,
+        "retryDelay": 1000,
+        "maxRetries": 3
+      },
+      "recognition": {
+        "language": "en-US",
+        "continuous": true,
+        "interimResults": true,
+        "silenceTimeout": 1500
       }
     },
     "youtube": {
@@ -80,8 +127,6 @@
         "saveButton": "💾",
         "deleteButton": "❌"
       }
-    },
-    "googleApiKey": "YOUR_GOOGLE_API_KEY_HERE"
+    }
   }
 } 
-  

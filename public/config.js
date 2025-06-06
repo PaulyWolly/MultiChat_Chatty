@@ -1,5 +1,5 @@
 // Configuration loader for frontend
-class AppConfig {
+export class AppConfig {
     constructor() {
         this.config = null;
         this.environment = 'development'; // Default to development
@@ -100,6 +100,13 @@ class AppConfig {
 
     isDevelopment() {
         return this.environment === 'development';
+    }
+
+    getTTSVoice() {
+        if (this.config && this.config.audio && this.config.audio.tts && this.config.audio.tts.defaultVoice) {
+            return this.config.audio.tts.defaultVoice;
+        }
+        return 'en-US-AndrewNeural';
     }
 }
 

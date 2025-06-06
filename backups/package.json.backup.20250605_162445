@@ -4,8 +4,10 @@
   "description": "#\u0000 \u0000d\u0000p\u0000e\u0000-\u0000g\u0000e\u0000n\u0000e\u0000-\u0000a\u0000i\u0000-\u0000c\u0000h\u0000a\u0000t\u0000-\u0000S\u0000L\u0000M\u0000-\u0000A\u0000P\u0000I\u0000M\u0000\r\u0000 \u0000",
   "main": "server.js",
   "scripts": {
+    "start:backend": "node server/server.js",
+    "start:frontend": "http-server ./public -p 5300",
+    "start:all": "concurrently --names \"BACKEND,FRONTEND\" --prefix-colors \"blue,green\" \"npm run start:backend\" \"npm run start:frontend\"",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js",
     "backup": "node BACKUP_APP.js"
   },
   "author": "",
@@ -31,5 +33,8 @@
     "mongoose": "^8.8.3",
     "node-cache": "^5.1.2",
     "openai": "^4.57.0"
+  },
+  "devDependencies": {
+    "http-server": "^14.1.1"
   }
 }

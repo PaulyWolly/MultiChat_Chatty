@@ -2932,7 +2932,8 @@ async function playAudio(text) {
         state.isPlaying = false;
         elements.stopAudioButton.style.display = 'none';
         if (state.isConversationMode) {
-            enterListeningMode();
+            updateStatus('Listening...');
+            safeStartListening();
         } else {
             updateStatus('Ready');
         }
@@ -3049,7 +3050,7 @@ function stopAudioPlayback() {
     setTimeout(() => {
         state.stopRequested = false;
         if (state.isConversationMode && !state.isListening && !state.isRendering) {
-            enterListeningMode();
+            startListening();
         }
     }, 100);
 }
@@ -5071,8 +5072,6 @@ const handleMyJokes = {
                     await queueAudioChunk(`Number ${i + 1}: ${data.jokes[i].title}`);
                 }
                 await queueAudioChunk("To hear your joke, ask Tell me my joke about, followed by the joke name");
-                
-            
             } else {
                 const message = "You haven't saved any jokes yet.";
                 const endTime = performance.now();
@@ -5234,7 +5233,8 @@ const handleMyJokes = {
             state.isAISpeaking = false;
             elements.stopAudioButton.style.display = 'none';
             if (state.isConversationMode) {
-                enterListeningMode();
+                updateStatus(MESSAGES.STATUS.LISTENING);
+                startListening();
             }
         }
     },
@@ -5365,6 +5365,130 @@ function chunkText(text) {
         .filter(s => s.length > 0);
 }
 
+// async function playNextInQueue() {
+//     console.log('🔊 [AUDIO] playNextInQueue called - Queue:', state.audioQueue.length, 'Playing:', state.isPlaying, 'stopRequested:', state.stopRequested);
+    
+//     // Check if we should skip playback
+//     if (!state.audioQueue.length || state.isPlaying || state.stopRequested || !state.isAISpeaking) {
+//         console.log('🔊 [AUDIO] Skipping playback - interrupted or no audio needed');
+//         return;
+//     }
+
+//     try {
+//         state.isPlaying = true;
+//         state.isAISpeaking = true;
+//         updateStopAudioButton();  // Show button
+
+//         // Show Stop Audio button whenever audio is playing
+//         updateStopAudioButton();
+
+//         const text = state.audioQueue[0];
+
+//         console.log('🔊 [AUDIO] About to fetch TTS for:', text);
+//         console.log('🔊 [AUDIO] TTS API URL:', AUDIO_CONFIG.apiUrl);
+//         console.log('🔊 [AUDIO] About to call fetch...');
+
+//         // Debug the exact payload
+//         const payload = {
+//             text: text,
+//             voice: AUDIO_CONFIG.defaultVoice,
+//             rate: AUDIO_CONFIG.rate,
+//             pitch: AUDIO_CONFIG.pitch,
+//             volume: AUDIO_CONFIG.volume
+//         };
+//         console.log('🔊 [AUDIO] EXACT PAYLOAD:', JSON.stringify(payload));
+
+//         let response;
+//         try {
+//             console.log('🔊 [AUDIO] Calling fetch now...');
+//             response = await fetch(AUDIO_CONFIG.apiUrl, {
+//                 method: 'POST',
+//                 headers: { 'Content-Type': 'application/json' },
+//                 body: JSON.stringify(payload)
+//             });
+//             console.log('🔊 [AUDIO] fetch completed successfully!');
+//         } catch (fetchError) {
+//             console.error('🔊 [AUDIO] CRITICAL FETCH ERROR:', fetchError);
+//             throw fetchError;
+//         }
+
+//         console.log('🔊 [AUDIO] Response status:', response.status);
+//         console.log('🔊 [AUDIO] Response headers:', [...response.headers.entries()]);
+//         console.log('🔊 [AUDIO] Response ok:', response.ok);
+
+//         if (!response.ok) throw new Error(`TTS API error: ${response.status}`);
+        
+//         console.log('🔊 [AUDIO] About to get blob...');
+//         const audioBlob1 = await response.blob();
+//         console.log('🔊 [AUDIO] Blob received - size:', audioBlob1.size, 'type:', audioBlob1.type);
+
+//         if (!response.ok) throw new Error(`TTS API error: ${response.status}`);
+//         if (audioBlob1.size === 0) throw new Error('Empty audio response');
+
+//         cleanup(state.currentAudio);
+        
+//         const audioUrl = URL.createObjectURL(audioBlob1);
+//         state.currentAudio = new Audio(audioUrl);
+//         state.currentAudio.volume = AUDIO_CONFIG.volume;
+
+//         // Wait for audio to finish before playing next chunk
+//         await new Promise((resolve, reject) => {
+//             state.currentAudio.onended = resolve;
+//             state.currentAudio.onerror = reject;
+//             // Add small delay and fade-in to prevent cut-off of first words
+//                     state.currentAudio.volume = 0.1; // Start very quiet
+//                     state.currentAudio.play();
+//                     // Fade in quickly to prevent missing first syllables
+//                     setTimeout(() => {
+//                         if (state.currentAudio) {
+//                             state.currentAudio.volume = AUDIO_CONFIG.volume;
+//                         }
+//                     }, 50); // 50ms fade-in
+//         });
+
+//         state.audioQueue.shift();
+        
+//         // Continue with next chunk after pause
+//         if (state.audioQueue.length > 0 && !state.stopRequested) {
+//             setTimeout(() => {
+//                 state.isPlaying = false;
+
+//                 // Restart interrupt listening for the next chunk during conversation mode
+//                 if (state.isConversationMode && state.isAISpeaking) {
+//                     console.log('🔇[INTERRUPT] Restarting interrupt listening for next audio chunk');
+//                     startListening();
+//                 }
+//                 playNextInQueue();
+//             }, AUDIO_CONFIG.pauseDuration);
+
+//         } else {
+//             // Immediate cleanup and status update - no delays!
+//             audioFilterState.isInterruptModeActive = false;
+//             state.isPlaying = false;
+//             state.isAISpeaking = false;
+//             updateStopAudioButton();  // Hide button
+            
+//             // INSTANT status change and listening restart
+//             if (state.isConversationMode) {
+//                 updateStatus(MESSAGES.STATUS.LISTENING);
+//                 startListening();
+//             }
+//         }
+
+//     } catch (error) {
+//         console.error('Audio playback error:', error);
+//         cleanup(state.currentAudio);
+//         state.audioQueue.shift();
+//         state.isPlaying = false;
+//         state.isAISpeaking = false;
+        
+//         // Try next chunk if available
+//         if (state.audioQueue.length > 0) {
+//             setTimeout(() => playNextInQueue(), AUDIO_CONFIG.retryDelay);
+//         }
+//     }
+// }
+
 async function playNextInQueue() {
     if (state.audioQueue.length === 0 || state.isPlaying || state.stopRequested) {
         return;
@@ -5410,31 +5534,20 @@ async function playNextInQueue() {
         audio.onended = () => {
             URL.revokeObjectURL(audioUrl);
             state.isPlaying = false;
-            // Only call enterListeningMode if this was the LAST chunk
-            if (state.audioQueue.length === 0 && state.isConversationMode) {
-                enterListeningMode();
-            } else {
                 playNextInQueue();
-            }
         };
 
         audio.onerror = (error) => {
             console.error('Audio playback error:', error);
             state.isPlaying = false;
-            // On error, always restore listening mode
-            if (state.isConversationMode) {
-                enterListeningMode();
-            }
+            playNextInQueue();
         };
 
         await audio.play();
     } catch (error) {
         console.error('Audio playback error:', error);
         state.isPlaying = false;
-        // On error, always restore listening mode
-        if (state.isConversationMode) {
-            enterListeningMode();
-        }
+        playNextInQueue();
     }
 }
 
