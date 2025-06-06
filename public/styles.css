@@ -2,7 +2,7 @@
   STYLES.CSS
   Version: 2
   AppName: MultiChat_Chatty [v2]
-  Updated: 06/03/2025 @10:00PM
+  Updated: 06/05/2025 @10:00PM
   Created by Paul Welby
 */
 
@@ -5731,4 +5731,104 @@ button.next-page-btn {
 
 .recipe-instruction-item {
     /* Customize individual instruction items */
+}
+
+/* Quota Monitor */
+
+.quota-content-restored {
+    padding: 12px;
+}
+.quota-title {
+    font-weight: bold;
+    margin-bottom: 12px;
+    font-size: 13px;
+}
+.quota-stats {
+    margin-bottom: 8px;
+    line-height: 1.3;
+}
+.quota-percentage {
+    font-weight: bold;
+}
+.quota-progress-bar-bg {
+    background: #333;
+    height: 6px;
+    border-radius: 3px;
+    margin: 8px 0;
+    overflow: hidden;
+}
+.quota-progress-bar {
+    height: 100%;
+    transition: width 0.3s ease;
+}
+.quota-actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+}
+.quota-toggle-cache-btn {
+    flex: 1;
+    padding: 6px 8px;
+    border: none;
+    border-radius: 4px;
+    font-size: 10px;
+    cursor: pointer;
+    color: white;
+}
+.quota-toggle-cache-btn.cache-on {
+    background: #f44336;
+}
+.quota-toggle-cache-btn.cache-off {
+    background: #4caf50;
+}
+
+.quota-minimize-restore-btn.quota-minimize-btn {
+    width: 20px;
+    height: 18px;
+    background: none;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    color: white;
+    font-size: 10px;
+    font-weight: bold;
+    text-align: center;
+    padding: 0;
+    margin: 0;
+    position: absolute;
+    right: 10px;
+    line-height: 0.4;
+    bottom: 145px;
+}
+
+.quota-minimize-restore-btn.quota-restore-btn {
+    width: 20px;
+    height: 14px;
+    top: 2px !important;
+    background: blue;
+    border: none;
+    cursor: pointer;
+    color: white;
+    font-size: 10px;
+    font-weight: bold;
+    text-align: center;
+    padding: 0;
+    margin: 0;
+}
+
+.quota-minimize-restore-btn:hover {
+    background: rgba(255, 0, 0, 1) !important;
+    transform: scale(1.2) !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.8) !important;
+}
+
+.quota-drag-handle {
+    background-repeat: no-repeat;
+    background-position: bottom center;
+    background-size: auto 100%;
+    cursor: grab;
+    opacity: 50%;
+    width: 100%;
+    height: 24px;
+    background-image: url(assets/img/drag-pattern1.png);
 }

@@ -36,6 +36,8 @@ const QuotaMonitor = {
                 position: fixed;
                 background: rgba(0,0,0,0.9);
                 color: white;
+                width: 15vw;
+                padding-bottom: 3px;
                 border-radius: 8px;
                 font-size: 12px;
                 z-index: 1000;
@@ -169,7 +171,8 @@ const QuotaMonitor = {
                 height: 116px;
                 padding-right: 35px;
                 padding-top: 14px;
-                cursor: grab; /* Entire content area is draggable */
+                cursor: grab; 
+                width: 20vw;
             }
             
             .quota-content-restored:active {
@@ -397,26 +400,23 @@ const QuotaMonitor = {
             return `
                 <button id="quota-minimize-btn" class="quota-minimize-restore-btn quota-minimize-btn" title="Minimize dashboard">[ − ]</button>
                 <div class="quota-content-restored">
-                    <div style="font-weight: bold; margin-bottom: 12px; font-size: 13px;">📊 YouTube API Quota</div>
-                    
-                    <div style="margin-bottom: 8px; line-height: 1.3;">
+                    <div class="quota-title">📊 YouTube API Quota</div>
+                    <div class="quota-stats">
                         <div>${usage.used}/${usage.limit} calls</div>
-                        <div style="color: ${progressColor}; font-weight: bold;">${usage.percentage.toFixed(1)}% used</div>
+                        <div class="quota-percentage" style="color: ${progressColor};">${usage.percentage.toFixed(1)}% used</div>
                         <div>${usage.remaining} remaining</div>
                     </div>
-                    
-                    <div style="background: #333; height: 6px; border-radius: 3px; margin: 8px 0; overflow: hidden;">
-                        <div style="width: ${Math.min(usage.percentage, 100)}%; height: 100%; background-color: ${progressColor}; transition: width 0.3s ease;"></div>
+                    <div class="quota-progress-bar-bg">
+                        <div class="quota-progress-bar" style="width: ${Math.min(usage.percentage, 100)}%; background-color: ${progressColor};"></div>
                     </div>
-                    
-                    <div style="display: flex; gap: 6px; margin-top: 8px;">
-                        <button class="quota-toggle-cache-btn" id="quota-toggle-cache-mode" style="flex: 1; padding: 6px 8px; border: none; border-radius: 4px; font-size: 10px; cursor: pointer; background: ${cacheOnlyMode ? '#f44336' : '#4caf50'}; color: white;">
+                    <div class="quota-actions">
+                        <button class="quota-toggle-cache-btn ${cacheOnlyMode ? 'cache-on' : 'cache-off'}" id="quota-toggle-cache-mode">
                             ${cacheOnlyMode ? '🔒 Cache-Only ON' : '🔓 Cache-Only OFF'}
                         </button>
                     </div>
                 </div>
             `;
-        }
+            }
     },
     
     // Get color based on usage percentage
@@ -562,7 +562,7 @@ const QuotaMonitor = {
         if (!dashboard.querySelector('.quota-drag-handle')) {
             const dragHandle = document.createElement('div');
             dragHandle.className = 'quota-drag-handle';
-            dragHandle.innerHTML = '⋮⋮';
+            // dragHandle.innerHTML = '⋮⋮';
             dashboard.appendChild(dragHandle);
         }
         
