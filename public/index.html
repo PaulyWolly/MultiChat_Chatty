@@ -15,6 +15,7 @@
     <link rel="stylesheet" href="styles.css" />
     <link rel="icon" type="image/png" href="chat-1.png" />
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="components/MyJokesManager/MyJokesManager.css">
   </head>
 
   <body>
@@ -51,7 +52,7 @@
           <div id="conversation-status"></div>
         </div>
         <div class="playlist-manager-btn">
-          <button id="open-playlist-manager-btn">My Playlists</button>
+          <button class="view-playlists-MULTI-btn" id="open-playlist-manager-btn">My Playlists</button>
         </div>
         <div id="input-container">
           <!-- Processing indicator -->
@@ -124,10 +125,11 @@
       </div>
     </div>
 
-    <script src="config.js"></script>
+    <script type="module" src="config.js"></script>
     <script type="module" src="components/ToastManager.js"></script>
     <script type="module" src="components/PlaylistManager.js"></script>
     <script src="quota-monitor.js"></script>
+    <script src="components/MyJokesManager/MyJokesManager.js"></script>
     <script type="module" src="app.js?v=20250603-1715"></script>
     <script>
       function enforceImageStyles() {

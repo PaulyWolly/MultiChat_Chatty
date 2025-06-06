@@ -1,8 +1,9 @@
+/** API CALLS REFACTORED BY refactor-api-calls.js 2025-06-05T01:45:09.030Z **/
 /*
   APP.JS
   Version: 2
   AppName: MultiChat_Chatty [v2]
-  Updated: 06/03/2025 @8:30AM
+  Updated: 06/03/2025 @10:00PM
   Created by Paul Welby
 */
 
@@ -11,7 +12,9 @@
 // =====================================================
 
 import playlistManager from './components/PlaylistManager.js';
+window.playlistManager = playlistManager;
 import toastManager from './components/ToastManager.js';
+
 
 // Initialize PlaylistManager globally
 console.log('Initializing PlaylistManager...');
@@ -31,6 +34,7 @@ const SHOW_VOICE_DROPDOWN = false;
 
 // SERVER URL
 const SERVER_URL = 'http://localhost:5300';
+const API_URL = 'http://localhost:5301';
 
 // Time constants
 const INTERVAL = 10;  // Set timeout duration in minutes
@@ -179,6 +183,24 @@ tempSlider.addEventListener('input', () => {
 toppSlider.addEventListener('input', () => {
   topPValue.textContent = Number(toppSlider.value).toFixed(2);
 });
+
+async function ensureAudioConfig() {
+    if (window.appConfig && typeof window.appConfig.load === 'function') {
+        await window.appConfig.load();
+        AUDIO_CONFIG.apiUrl = window.appConfig.getApiUrl('/api/tts');
+    } else {
+        AUDIO_CONFIG.apiUrl = 'http://localhost:5301/api/tts'; // fallback
+    }
+}
+
+// My Jokes Manager initialization
+window.addEventListener('DOMContentLoaded', async () => {
+    if (typeof MyJokesManager === 'function') {
+        window.myJokesManager = new MyJokesManager();
+        await window.myJokesManager.init();
+    }
+});
+
 
 // =====================================================
 // GLOBAL SCOPED VARIABLES
@@ -483,8 +505,6 @@ async function handleCommand(text) {
         }
     }
 
-    // ... rest of the patterns ...
-
     // In handleCommand function, add proper state handling for jokes listing
     for (const pattern of patterns.listJokes) {
         const match = text.match(pattern);
@@ -494,7 +514,8 @@ async function handleCommand(text) {
 
             try {
                 // First check if the server is available
-                const serverCheck = await fetch(`${SERVER_URL}/api/health`).catch(() => null);
+                await window.appConfig.load();
+                const serverCheck = await fetch(window.appConfig.getApiUrl('/api/health')).catch(() => null);
 
                 if (!serverCheck?.ok) {
                     throw new Error('Server unavailable');
@@ -558,6 +579,14 @@ async function handleCommand(text) {
         }
     }
 
+    // Check for joke update requests
+    const editMatch = messageText.match(/^edit my joke (.+)$/i) || messageText.match(/^update my joke (.+)$/i);
+    if (editMatch && window.myJokesManager && typeof window.myJokesManager.openForUpdate === 'function') {
+        const jokeTitle = editMatch[1].trim();
+        window.myJokesManager.openForUpdate(jokeTitle);
+        return true; // Prevent further processing
+    }
+
     // Check for Bing search requests
     if (text.toLowerCase().includes('search for') ||
         text.toLowerCase().includes('look up')) {
@@ -578,7 +607,8 @@ async function generateGreeting() {
     // If not in localStorage, try MongoDB
     if (!userName) {
         try {
-            const response = await fetch(`/api/personal-info/name?sessionId=${window.sessionId}`);
+    await window.appConfig.load();
+            const response = await fetch(window.appConfig.getApiUrl('/api/personal-info/name?sessionId=${window.sessionId}'));
             const data = await response.json();
             if (data && data.value) {
                 userName = data.value;
@@ -761,6 +791,15 @@ function getPatterns() {
             /^let me tell you a joke$/i,
             /^can i tell you a joke$/i
         ],
+        editJoke: [
+            /^edit (?:my )?joke (?:about |called |titled )?(.+)$/i,
+            /^update (?:my )?joke (?:about |called |titled )?(.+)$/i,
+            /^change (?:my )?joke (?:about |called |titled )?(.+)$/i,
+            /^modify (?:my )?joke (?:about |called |titled )?(.+)$/i,
+            /^update (?:my )?joke (?:about |called |titled )?(.+)$/i,
+            /^change (?:my )?joke (?:about |called |titled )?(.+)$/i,
+            /^modify (?:my )?joke (?:about |called |titled )?(.+)$/i,
+        ],
         jokes: {
             listAll: /(?:.*?)(all jokes)(?:.*?)$/i,
             listMine: /(?:.*?)(my jokes)(?:.*?)$/i,
@@ -942,7 +981,8 @@ async function initializeApp() {
 // Load personal info function
 async function loadPersonalInfo() {
     try {
-        const response = await fetch(`/api/personal-info/all?sessionId=${window.sessionId}`);
+    await window.appConfig.load();
+        const response = await fetch(window.appConfig.getApiUrl('/api/personal-info/all?sessionId=${window.sessionId}'));
         if (!response.ok) throw new Error('Failed to load personal info');
 
         const data = await response.json();
@@ -1041,7 +1081,7 @@ function setupSSEConnection() {
 
     try {
         console.log('Initializing SSE connection...');
-        state.eventSource = new EventSource(`${SERVER_URL}/api/chat?sessionId=${window.sessionId}`);
+        state.eventSource = new EventSource(`${API_URL}/api/chat?sessionId=${window.sessionId}`);
 
         state.eventSource.onopen = () => {
             console.log('━━━━━━━━━━━ SSE Connection ━━━━━━━━━━━');
@@ -1180,6 +1220,39 @@ window.addEventListener('beforeunload', () => {
         state.eventSource.close();
     }
 });
+
+// Playlist Manager event listener
+document.addEventListener('click', async (e) => {
+    const button = e.target.closest('.add-to-playlist-SINGLE-btn, .add-to-playlist-MULTI-btn, .add-to-playlist-MULTI-MOCK-btn, .add-to-playlist-SINGLE-mock-btn');
+    if (button) {
+      try {
+        const videoData = JSON.parse(decodeURIComponent(button.dataset.video));
+        if (window.playlistManager) {
+          window.playlistManager.show(videoData);
+        } else {
+          console.error('PlaylistManager not initialized');
+          showToast('Unable to open playlist manager. Please try again.');
+        }
+      } catch (error) {
+        console.error('Error parsing video data:', error);
+        showToast('Error adding to playlist. Please try again.');
+      }
+    }
+  });
+
+
+  // Playlist Manager event listener -- robust fallback
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('.view-playlists-MULTI-btn');
+    if (btn) {
+      e.preventDefault();
+      if (window.playlistManager && typeof window.playlistManager.show === 'function') {
+        window.playlistManager.show();
+      } else {
+        alert('PlaylistManager is not initialized!');
+      }
+    }
+  });
 
 
 // GLOBAL HELPER/UTILTY FUNCTIONS
@@ -1519,7 +1592,8 @@ async function sendMessage(message, isGreeting = false) {
             let name = localStorage.getItem('user_name');
 
             if (!name) {
-                const response = await fetch(`/api/personal-info/name?sessionId=${window.sessionId}`);
+    await window.appConfig.load();
+                const response = await fetch(window.appConfig.getApiUrl('/api/personal-info/name?sessionId=${window.sessionId}'));
                 if (!response.ok) throw new Error('Failed to fetch name');
                 const data = await response.json();
                 if (data.value) {
@@ -1642,7 +1716,8 @@ async function sendMessage(message, isGreeting = false) {
                 if (!value) {
                     try {
                         console.log('Checking MongoDB for:', keyword);
-                        const response = await fetch(`/api/personal-info/${keyword}?sessionId=${window.sessionId}`);
+    await window.appConfig.load();
+                        const response = await fetch(window.appConfig.getApiUrl('/api/personal-info/${keyword}?sessionId=${window.sessionId}'));
                         console.log('MongoDB response status:', response.status);
                         if (response.ok) {
                             const data = await response.json();
@@ -1718,7 +1793,7 @@ async function sendMessage(message, isGreeting = false) {
     if (state.eventSource) {
         state.eventSource.close();
     }
-    state.eventSource = new EventSource(`/api/chat?sessionId=${window.sessionId}`);
+    state.eventSource = new EventSource(`${API_URL}/api/chat?sessionId=${window.sessionId}`);
 
     // Add error handler for SSE connection
     state.eventSource.onerror = function(error) {
@@ -1838,7 +1913,8 @@ async function sendMessage(message, isGreeting = false) {
                     let userName = localStorage.getItem('user_name');
                     if (!userName) {
                         try {
-                            const response = await fetch(`/api/personal-info/name?sessionId=${window.sessionId}`);
+    await window.appConfig.load();
+                            const response = await fetch(window.appConfig.getApiUrl('/api/personal-info/name?sessionId=${window.sessionId}'));
                             if (response.ok) {
                                 const data = await response.json();
                                 if (data.value) {
@@ -2230,6 +2306,24 @@ function addMessageToChat(role, content, options = {}) {
     //     setTimeout(scrollToBottom, 17500);
     //     setTimeout(scrollToBottom, 20000);
     // }
+
+    // Handle scrolling for Youtube searches (to TOP) and normal normal chat (to BOTTOM)
+    if (options.isYoutube || content.includes('YouTube Results') || content.includes('youtube-multi-bubble')) {
+        scrollToYouTubeResults();
+    } else {
+        // Aggressive scroll to bottom for normal chat
+        const scrollToBottom = () => {
+            const chatContainer = document.getElementById("chat-messages");
+            if (chatContainer) {
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }
+        };
+        scrollToBottom();
+        setTimeout(scrollToBottom, 500);
+        setTimeout(scrollToBottom, 1500);
+        setTimeout(scrollToBottom, 3000);
+        // ...add more if needed
+    }
 
     if (options.isYoutube || content.includes('YouTube Results') || content.includes('youtube-multi-bubble')) {
         scrollToYouTubeResults();
@@ -2728,7 +2822,11 @@ async function getPersonalInfo(key = null) {
         state.isAISpeaking = true;
         updateStopAudioButton();  // Show button
 
-        const response = await fetch(`/api/personal-info?userId=${window.sessionId}${key ? `&key=${key}` : ''}`);
+        await window.appConfig.load();
+        const url = window.appConfig.getApiUrl(
+            `/api/personal-info?userId=${window.sessionId}${key ? `&key=${key}` : ''}`
+          );
+          const response = await fetch(url);
         const data = await response.json();
 
         if (data.success && data.info) {
@@ -2893,7 +2991,8 @@ async function populateVoiceList() {
             }
         }
 
-        const response = await fetch(`${SERVER_URL}/api/voices`);
+    await window.appConfig.load();
+        const response = await fetch(window.appConfig.getApiUrl('/api/voices'));
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const voices = await response.json();
 
@@ -2959,6 +3058,8 @@ async function playAudio(text) {
 
         state.isPlaying = true;
         updateStatus('AI is speaking...');
+
+        await ensureAudioConfig();
 
         const response = await fetch(AUDIO_CONFIG.apiUrl, {
             method: 'POST',
@@ -3263,7 +3364,7 @@ async function queueAudioChunk(text) {
     }
 }
 
-
+window.queueAudioChunk = queueAudioChunk;
 
 // =====================================================
 // INACTIVITY HANDLING FUNCTIONS
@@ -3340,7 +3441,8 @@ async function handleImageRequest(query) {
     // hidePaginationBar();
 
     try {
-        const response = await fetch(`/api/google-image-search?q=${encodeURIComponent(query)}`);
+    await window.appConfig.load();
+    const response = await fetch(window.appConfig.getApiUrl(`/api/google-image-search?q=${encodeURIComponent(query)}`));
         const data = await response.json();
 
         if (data.images) {
@@ -3388,7 +3490,8 @@ async function handleImageAnalysis(imageData, prompt = '') {
             tokenCount: 0
         });
 
-        const response = await fetch(`${SERVER_URL}/api/analyze-image`, {
+    await window.appConfig.load();
+        const response = await fetch(window.appConfig.getApiUrl('/api/analyze-image'), {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -3536,7 +3639,8 @@ function handleImageUpload(event) {
 async function searchAndDisplayImages(query) {
     try {
         console.log('IMAGE DEBUG: Fetching images for:', query);
-        const response = await fetch(`/api/google-image-search?q=${encodeURIComponent(query)}`);
+    await window.appConfig.load();
+    const response = await fetch(window.appConfig.getApiUrl(`/api/google-image-search?q=${encodeURIComponent(query)}`));
         if (!response.ok) {
             const errorData = await response.json();
             throw new Error(`HTTP error! status: ${response.status}, message: ${errorData.error}`);
@@ -3692,7 +3796,8 @@ async function fetchMoreImages(imagesSectionElement, query) {
         console.log('IMAGE DEBUG: Fetching more images for:', query);
         
         // Just make the same API call - let deduplication handle variety
-        const response = await fetch(`/api/google-image-search?q=${encodeURIComponent(query)}`);
+    await window.appConfig.load();
+    const response = await fetch(window.appConfig.getApiUrl(`/api/google-image-search?q=${encodeURIComponent(query)}`));
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -3748,31 +3853,32 @@ async function fetchMoreImagesWithVariation(imagesSectionElement, query) {
     console.log('IMAGE DEBUG: Trying variation:', randomVariation);
     
     try {
-        const response = await fetch(`/api/google-image-search?q=${encodeURIComponent(randomVariation)}`);
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        console.log('IMAGE DEBUG: Variation response:', data);
-        
-        if (data.images && data.images.length > 0) {
-            // Remove duplicates from variation batch
-            const existingLinks = new Set(
-                Array.from(imagesSectionElement.querySelectorAll('.image-link img')).map(img => img.src)
-            );
-            
-            const newUniqueImages = data.images.filter(item => 
-                item.link && item.title && !existingLinks.has(item.link)
-            );
-            
-            if (newUniqueImages.length > 0) {
-                console.log('IMAGE DEBUG: Adding', newUniqueImages.length, 'variation images');
-                addMoreImages(newUniqueImages, imagesSectionElement);
-            } else {
-                console.log('IMAGE DEBUG: No new images found even with variation');
+        await window.appConfig.load();
+        const response = await fetch(window.appConfig.getApiUrl(`/api/google-image-search?q=${encodeURIComponent(randomVariation)}`));
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
-        }
+            
+            const data = await response.json();
+            console.log('IMAGE DEBUG: Variation response:', data);
+            
+            if (data.images && data.images.length > 0) {
+                // Remove duplicates from variation batch
+                const existingLinks = new Set(
+                    Array.from(imagesSectionElement.querySelectorAll('.image-link img')).map(img => img.src)
+                );
+                
+                const newUniqueImages = data.images.filter(item => 
+                    item.link && item.title && !existingLinks.has(item.link)
+                );
+                
+                if (newUniqueImages.length > 0) {
+                    console.log('IMAGE DEBUG: Adding', newUniqueImages.length, 'variation images');
+                    addMoreImages(newUniqueImages, imagesSectionElement);
+                } else {
+                    console.log('IMAGE DEBUG: No new images found even with variation');
+                }
+            }
         
     } catch (error) {
         console.error('Error fetching variation images:', error);
@@ -4488,7 +4594,8 @@ function getPersonalInfoStorage(type) {
 // Retrieve personal info function
 async function retrievePersonalInfo(type) {
     try {
-        const response = await fetch(`/api/personal-info/${type}?sessionId=${window.sessionId}`);
+    await window.appConfig.load();
+        const response = await fetch(window.appConfig.getApiUrl('/api/personal-info/${type}?sessionId=${window.sessionId}'));
         if (!response.ok) throw new Error('Failed to retrieve personal info');
         return await response.json();
     } catch (error) {
@@ -4653,6 +4760,20 @@ const handleMyJokes = {
         // Get patterns first
         const patterns = getPatterns();
         console.log('Checking message against patterns');
+
+        // Check for edit joke command
+        const editJokePattern = patterns.editJoke && patterns.editJoke.find(pattern => pattern.test(messageText));
+        if (editJokePattern) {
+            const match = messageText.match(editJokePattern);
+            if (match && match[1]) {
+                const jokeTitle = match[1].trim();
+                addMessageToChat('user', messageText);
+                if (window.myJokesManager && typeof window.myJokesManager.openForUpdate === 'function') {
+                    window.myJokesManager.openForUpdate(jokeTitle);
+                    return true;
+                }
+            }
+        }
 
         // If we're in any joke recording state, handle only joke-related responses
         if (this.state.isRecording) {
@@ -4832,6 +4953,10 @@ const handleMyJokes = {
         }
 
         if (messageText.toLowerCase() === 'yes' && sessionStorage.getItem('pendingJoke')) {
+            
+            // Add message to chat
+            addMessageToChat('user', messageText);
+            
             console.log('🎭 [YES DEBUG] Processing YES response for pending joke');
             console.log('🎭 [YES DEBUG] pendingJoke in sessionStorage:', sessionStorage.getItem('pendingJoke'));
             
@@ -5065,41 +5190,53 @@ const handleMyJokes = {
     // Retrieve joke from database
     async retrieveJoke(title) {
         const startTime = performance.now();
+        // Always show what the app heard
+        addMessageToChat('user', `[Heard as: "${title}"]`);
         try {
-            // Normalize the title to match how it's stored
-            const normalizedTitle = title.toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
+            // Normalize the title for matching
+            const normalize = t => t.toLowerCase().replace(/[^a-z0-9 ]/gi, '').trim();
+            const normalizedTitle = normalize(title);
             console.log('🎭 [RETRIEVE DEBUG] Original title:', title);
             console.log('🎭 [RETRIEVE DEBUG] Normalized title:', normalizedTitle);
             
-            const response = await fetch(`/api/jokes/get-joke/${encodeURIComponent(normalizedTitle)}?sessionId=${window.sessionId}`);
+            await window.appConfig.load();
+            // Fetch all jokes for the user
+            const response = await fetch(window.appConfig.getApiUrl(`/api/jokes/list-jokes?type=my&sessionId=${window.sessionId}`));
             const data = await response.json();
-            
-            console.log('🎭 [RETRIEVE DEBUG] API response:', data);
-
-            if (data.success && data.joke) {
-                console.log('🎭 [RETRIEVE DEBUG] Joke found:', data.joke);
-                console.log('🎭 [RETRIEVE DEBUG] Joke content type:', typeof data.joke.content);
-                console.log('🎭 [RETRIEVE DEBUG] Joke content length:', data.joke.content ? data.joke.content.length : 'null/undefined');
-                console.log('🎭 [RETRIEVE DEBUG] Joke content:', JSON.stringify(data.joke.content));
-                
-                const message = "I found your joke. Would you like to hear it? Say Yes to hear it or No to cancel.";
-                const endTime = performance.now();
-                const duration = ((endTime - startTime) / 1000).toFixed(2);
-                
-                const messageElement = addMessageToChat('assistant', message);
-                updateMetadata(messageElement, {
-                    model: elements.modelSelect.value,
-                    duration: duration,
-                    tokenCount: 32
-                });
-
-                await queueAudioChunk(message);
-                sessionStorage.setItem('pendingJoke', JSON.stringify(data.joke));
-                console.log('🎭 [RETRIEVE DEBUG] Stored in sessionStorage:', JSON.stringify(data.joke));
-
-            } else {
-                console.log('🎭 [RETRIEVE DEBUG] Joke not found or failed:', data);
-                const message = `Sorry, I couldn't find a joke about "${title}".`;
+            if (data.success && data.jokes && data.jokes.length > 0) {
+                // Try to find an exact or partial match
+                let found = data.jokes.find(j => normalize(j.title) === normalizedTitle);
+                if (!found) {
+                    // Try partial match
+                    found = data.jokes.find(j => normalize(j.title).includes(normalizedTitle) || normalizedTitle.includes(normalize(j.title)));
+                }
+                if (found) {
+                    // Fetch the full joke by ID or title as before
+                    const jokeResp = await fetch(window.appConfig.getApiUrl(`/api/jokes/get-joke/${encodeURIComponent(found.title)}?sessionId=${window.sessionId}`));
+                    const jokeData = await jokeResp.json();
+                    if (jokeData.success && jokeData.joke) {
+                        const message = "I found your joke. Would you like to hear it? Say Yes to hear it or No to cancel.";
+                        const endTime = performance.now();
+                        const duration = ((endTime - startTime) / 1000).toFixed(2);
+                        const messageElement = addMessageToChat('assistant', message);
+                        updateMetadata(messageElement, {
+                            model: elements.modelSelect.value,
+                            duration: duration,
+                            tokenCount: 32
+                        });
+                        await queueAudioChunk(message);
+                        sessionStorage.setItem('pendingJoke', JSON.stringify(jokeData.joke));
+                        return;
+                    }
+                }
+                // If not found, suggest similar jokes
+                const suggestions = data.jokes
+                    .map(j => j.title)
+                    .filter(j => normalize(j).includes(normalizedTitle) || normalizedTitle.includes(normalize(j)) || normalize(j).split(' ').some(word => normalizedTitle.includes(word)));
+                let message = `Sorry, I couldn't find a joke about "${title}".`;
+                if (suggestions.length > 0) {
+                    message += ` Did you mean: ${suggestions.map(s => '"' + s + '"').join(', ')}?`;
+                }
                 const metadata = {
                     model: elements.modelSelect.value,
                     duration: `${((performance.now() - startTime) / 1000).toFixed(2)}s`,
@@ -5107,6 +5244,10 @@ const handleMyJokes = {
                     messageType: 'joke'
                 };
                 addMessageToChat('assistant', message, metadata);
+                await queueAudioChunk(message);
+            } else {
+                const message = "You haven't saved any jokes yet.";
+                addMessageToChat('assistant', message);
                 await queueAudioChunk(message);
             }
         } catch (error) {
@@ -5123,6 +5264,7 @@ const handleMyJokes = {
         }
     },
 
+
     // Cleanup method
     cleanup() {
         this.resetState();
@@ -5136,7 +5278,8 @@ const handleMyJokes = {
             state.isAISpeaking = true;
             updateStopAudioButton();  // Show button
 
-            const response = await fetch(`/api/jokes/list-jokes?type=my jokes&sessionId=${window.sessionId}`);
+            await window.appConfig.load();
+            const response = await fetch(window.appConfig.getApiUrl(`/api/jokes/list-jokes?type=my&sessionId=${window.sessionId}`));
             const data = await response.json();
 
             if (data.success && data.jokes && data.jokes.length > 0) {
@@ -5169,6 +5312,11 @@ const handleMyJokes = {
                 helpText.style.fontStyle = 'italic';
                 helpText.textContent = 'To hear your joke, ask... "Tell me my joke about [joke name]"';
                 messageElement.querySelector('.message-content').appendChild(helpText);
+
+                // Add joke action button
+                if (window.myJokesManager && typeof window.myJokesManager.addJokeActionButton === 'function') {
+                    window.myJokesManager.addJokeActionButton(messageElement);
+                }
 
                 await queueAudioChunk(messageText);
                 for (let i = 0; i < data.jokes.length; i++) {
@@ -5212,13 +5360,14 @@ const handleMyJokes = {
     },
 
     // Add this new method to handleMyJokes
-    async deleteJoke(title) {
+    deleteJoke: async function(title) {
         try {
             state.isAISpeaking = true;
             updateStopAudioButton();  // Show button
 
             // First get the joke to get its ID
-            const getResponse = await fetch(`/api/jokes/delete-joke/${encodeURIComponent(title)}`);
+            await window.appConfig.load();
+            const getResponse = await fetch(window.appConfig.getApiUrl(`/api/jokes/delete-joke/${encodeURIComponent(title)}`));
             const getData = await getResponse.json();
 
             if (!getData.success) {
@@ -5259,7 +5408,7 @@ const handleMyJokes = {
     },
 
     // Add to handleMyJokes module
-    async confirmDelete(title) {
+    confirmDelete: async function(title) {
         const message = `Are you sure you want to delete your joke "${title}"? Say YES to confirm or NO to cancel.`;
         addMessageToChat('assistant', message);
         await queueAudioChunk(message);
@@ -5268,12 +5417,13 @@ const handleMyJokes = {
     },
 
     // Add to handleMyJokes module
-    async updateJoke(title, newContent) {
+    updateJoke: async function(title, newContent) {
         try {
             state.isAISpeaking = true;
             updateStopAudioButton();  // Show button
 
-            const response = await fetch(`/api/jokes/update-joke/${encodeURIComponent(title)}`, {
+            await window.appConfig.load();
+            const response = await fetch(window.appConfig.getApiUrl(`/api/jokes/update-joke/${encodeURIComponent(title)}`), {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json'
@@ -5315,7 +5465,8 @@ const handleMyJokes = {
             state.isAISpeaking = true;
             updateStopAudioButton();  // Show button
 
-            const response = await fetch(`/api/jokes/search-jokes?term=${encodeURIComponent(searchTerm)}`);
+            await window.appConfig.load();
+            const response = await fetch(window.appConfig.getApiUrl(`/api/jokes/search-jokes?term=${encodeURIComponent(searchTerm)}`));
             const data = await response.json();
 
             if (data.success && data.jokes.length > 0) {
@@ -5488,6 +5639,8 @@ async function playNextInQueue() {
 
         const text = state.audioQueue[0];
 
+        await ensureAudioConfig();
+
         console.log('🔊 [AUDIO] About to fetch TTS for:', text);
         console.log('🔊 [AUDIO] TTS API URL:', AUDIO_CONFIG.apiUrl);
         console.log('🔊 [AUDIO] About to call fetch...');
@@ -5505,6 +5658,9 @@ async function playNextInQueue() {
         let response;
         try {
             console.log('🔊 [AUDIO] Calling fetch now...');
+
+            await ensureAudioConfig();
+
             response = await fetch(AUDIO_CONFIG.apiUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -5600,6 +5756,8 @@ async function prepareAudio(text) {
         .trim();
 
     if (!sanitizedText) return null;
+
+    await ensureAudioConfig();
 
     // Use the correct API URL
     const response = await fetchWithRetry(AUDIO_CONFIG.apiUrl, {
@@ -5772,24 +5930,29 @@ function restoreHonorifics(text) {
 
 // Add event listener for Add to Playlist buttons
 document.addEventListener('click', async (e) => {
-  const button = e.target.closest('.add-to-playlist-SINGLE-btn, .add-to-playlist-MULTI-btn, .add-to-playlist-MULTI-MOCK-btn');
-  if (button) {
-    try {
-      const videoData = JSON.parse(decodeURIComponent(button.dataset.video));
-      if (window.playlistManager) {
-        window.playlistManager.show(videoData);
-      } else {
-        console.error('PlaylistManager not initialized');
-        showToast('Unable to open playlist manager. Please try again.');
+    const button = e.target.closest(
+        `.add-to-playlist-SINGLE-btn, 
+        .add-to-playlist-MULTI-btn, 
+        .add-to-playlist-MULTI-MOCK-btn, 
+        .add-to-playlist-SINGLE-mock-btn
+    `);
+    if (button) {
+      try {
+        const videoData = JSON.parse(decodeURIComponent(button.dataset.video));
+        if (window.playlistManager) {
+          window.playlistManager.show(videoData);
+        } else {
+          console.error('PlaylistManager not initialized');
+          showToast('Unable to open playlist manager. Please try again.');
+        }
+      } catch (error) {
+        console.error('Error parsing video data:', error);
+        showToast('Error adding to playlist. Please try again.');
       }
-    } catch (error) {
-      console.error('Error parsing video data:', error);
-      showToast('Error adding to playlist. Please try again.');
     }
-  }
-});
+  });
 
-// ... existing code ...
+
 function showLocalVideoModal(videoUrl, title) {
     // Remove any existing modal
     const existing = document.getElementById('local-video-modal');
@@ -5852,6 +6015,9 @@ async function warmUpTTS() {
     ];
     for (let i = 0; i < warmUpPayloads.length; i++) {
         try {
+
+            await ensureAudioConfig();
+            
             const response = await fetch(AUDIO_CONFIG.apiUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -6359,8 +6525,8 @@ function renderMockYoutubeResults(videos, page, totalPages, subject, type = 'sea
                 <h3 class="youtube-header-title">${dynamicHeaderTitle}</h3>
             </div>
             <div class="youtube-header-right">
-                <button class="view-playlists-btn" onclick="window.playlistManager?.show(); return false;" title="View Playlists">
-                    <span class="view-playlists-btn-icon">📋</span><span class="view-playlists-btn-text">View Playlists</span>
+                <button class="view-playlists-MULTI-btn" onclick="window.playlistManager?.show(); return false;" title="View Playlists">
+                    <span class="view-playlists-btn-icon">📋</span><span class="view-playlists-MULTII-btn">View Playlists</span>
                 </button>
                 <span class="youtube-page-info">Page ${page} of ${totalPages}</span>
                 ${cacheBadge}
@@ -6960,7 +7126,7 @@ function renderRealYoutubePaginationBar(page, totalPages, subject) {
                 };
 
                 console.log('🌐 [REAL] 📞 Making fresh API call for MORE with:', fetchBody);
-                const response = await fetch('/api/youtube/search', {
+                const response = await fetch(window.appConfig.getYouTubeApiUrl('search'), {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(fetchBody)
@@ -7030,7 +7196,7 @@ function renderRealYoutubePaginationBar(page, totalPages, subject) {
                 };
 
                 console.log('🌐 [REAL] 📞 Making fallback API call for MORE with page-based pagination:', fetchBody);
-                const response = await fetch('/api/youtube/search', {
+                const response = await fetch(window.appConfig.getYouTubeApiUrl('search'), {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(fetchBody)
@@ -7479,7 +7645,7 @@ function renderRealYoutubePaginationBar(page, totalPages, subject) {
     });
 
     // Function to update the query history display
-    function updateQueryHistoryDisplay() {
+    async function updateQueryHistoryDisplay() {
         console.log('🔍 [HISTORY] Scanning ALL cached queries in localStorage...');
         
         // Always scan localStorage for ALL cached queries instead of relying on allQueriesHistory
@@ -7517,6 +7683,10 @@ function renderRealYoutubePaginationBar(page, totalPages, subject) {
         // Sort queries by timestamp (newest first)
         const sortedHistory = cachedQueries.sort((a, b) => b.timestamp - a.timestamp);
         
+        // Check which queries are saved in database
+        const queryList = sortedHistory.map(item => item.query);
+        const savedQueries = await checkSavedQueries(queryList);
+        
         // Helper function to extract just the subject from query
         function extractSubject(query) {
             // Remove common YouTube search prefixes to show just the core subject
@@ -7533,16 +7703,34 @@ function renderRealYoutubePaginationBar(page, totalPages, subject) {
             const timeAgo = formatTimeAgo(item.timestamp);
             const isCurrentQuery = window.youtubePagination.originalQuery === item.query;
             const displaySubject = extractSubject(item.query);
+            const isSavedInDB = savedQueries[item.query] || false;
+            
+            // Get UI config
+            const uiConfig = window.appConfig ? window.appConfig.getUIConfig() : {
+                ledIndicators: { saved: '🟢', unsaved: '' },
+                saveButton: '💾',
+                deleteButton: '❌'
+            };
+            
+            // LED indicator: Green for database-stored, no LED for cache-only
+            const ledIndicator = isSavedInDB ? `<span class="query-led green" title="Saved in database">${uiConfig.ledIndicators.saved}</span>` : '';
+            
+            // Save button: Only show if not already saved
+            const saveButton = !isSavedInDB ? 
+                `<button class="query-history-save" onclick="saveQueryToDB('${item.query.replace(/'/g, "\\'")}'); event.stopPropagation();" title="Save to database">${uiConfig.saveButton}</button>` : '';
             
             return `
                 <div class="query-history-item ${isCurrentQuery ? 'current' : ''}" data-query="${item.query}">
                     <div class="query-history-content">
-                        <div class="query-history-query">${displaySubject}</div>
+                        <div class="query-history-query">
+                            ${ledIndicator}${displaySubject}
+                        </div>
                         <div class="query-history-pages">${cachedPages} pg${cachedPages !== 1 ? 's' : ''}</div>
                     </div>
                     <div class="query-history-meta">
                         <span class="query-history-time">${timeAgo}</span>
-                        <button class="query-history-delete" onclick="deleteQueryFromHistory('${item.query.replace(/'/g, "\\'")}'); event.stopPropagation();" title="Delete this query and all cached data">❌</button>
+                        ${saveButton}
+                        <button class="query-history-delete" onclick="deleteQueryFromHistory('${item.query.replace(/'/g, "\\'")}'); event.stopPropagation();" title="Delete this query and all cached data">${uiConfig.deleteButton}</button>
                     </div>
                 </div>
             `;
@@ -7551,8 +7739,9 @@ function renderRealYoutubePaginationBar(page, totalPages, subject) {
         // Add click handlers for history navigation
         historyList.querySelectorAll('.query-history-item').forEach(item => {
             item.addEventListener('click', (event) => {
-                // Don't navigate if delete button was clicked
-                if (event.target.classList.contains('query-history-delete')) {
+                // Don't navigate if delete or save button was clicked
+                if (event.target.classList.contains('query-history-delete') || 
+                    event.target.classList.contains('query-history-save')) {
                     return;
                 }
                 const query = item.dataset.query;
@@ -7601,23 +7790,25 @@ function renderRealYoutubePaginationBar(page, totalPages, subject) {
         }
     }
 
-    // Helper function to count cached pages for a query
-    function countCachedPages(query) {
-        let count = 0;
-        let page = 1;
-        
-        while (page <= 10) { // Check up to 10 pages max
-            const cacheKey = `yt_${query}_search_${page}`;
-            if (localStorage.getItem(cacheKey)) {
-                count++;
-                page++;
-            } else {
-                break;
+            // Helper function to count cached pages for a query
+        function countCachedPages(query) {
+            let count = 0;
+            let page = 1;
+            
+            const cacheConfig = window.appConfig ? window.appConfig.getCacheConfig() : { keyPrefix: 'yt_' };
+            
+            while (page <= 10) { // Check up to 10 pages max
+                const cacheKey = `${cacheConfig.keyPrefix}${query}_search_${page}`;
+                if (localStorage.getItem(cacheKey)) {
+                    count++;
+                    page++;
+                } else {
+                    break;
+                }
             }
+            
+            return count;
         }
-        
-        return count;
-    }
 
     // Helper function to format time ago
     function formatTimeAgo(timestamp) {
@@ -7801,7 +7992,7 @@ const handleYoutube = {
             const fetchBody = { query: subject, type, page: actualPage };
             if (pageToken) fetchBody.pageToken = pageToken;
 
-            const response = await fetch('/api/youtube/search', {
+            const response = await fetch(window.appConfig.getYouTubeApiUrl('search'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(fetchBody)
@@ -8106,6 +8297,150 @@ function addToQueriesHistory(query) {
         console.log('🔍 Total queries in history:', window.youtubePagination.allQueriesHistory.length);
     }
 }
+
+// =====================================================
+// YOUTUBE DATABASE PERSISTENCE FUNCTIONS
+// =====================================================
+
+// Helper function to count cached pages for a query (global scope)
+function countCachedPages(query) {
+    let count = 0;
+    let page = 1;
+    
+    const cacheConfig = window.appConfig ? window.appConfig.getCacheConfig() : { keyPrefix: 'yt_' };
+    
+    while (page <= 10) { // Check up to 10 pages max
+        const cacheKey = `${cacheConfig.keyPrefix}${query}_search_${page}`;
+        if (localStorage.getItem(cacheKey)) {
+            count++;
+            page++;
+        } else {
+            break;
+        }
+    }
+    
+    return count;
+}
+
+// Save YouTube search to database
+async function saveYouTubeSearchToDB(query) {
+    try {
+        await window.appConfig.load();
+        const dbConfig = window.appConfig.getDatabaseConfig();
+        const userId = dbConfig.defaultUserId;
+        
+        // Count cached pages for this query
+        const totalPages = countCachedPages(query);
+        
+        // Extract clean display name
+        const displayName = query
+            .replace(/^youtube\s+search\s+/i, '')
+            .replace(/^youtube\s+/i, '')
+            .replace(/^search\s+/i, '')
+            .trim() || query;
+            
+        // Get cache keys for this query
+        const cacheConfig = window.appConfig.getCacheConfig();
+        const cacheKeys = [];
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith(`${cacheConfig.keyPrefix}${query}_search_`)) {
+                cacheKeys.push(key);
+            }
+        }
+        
+        console.log('💾 [DB-SAVE] Saving query to database:', { query, displayName, totalPages });
+        
+        const response = await fetch(window.appConfig.getYouTubeApiUrl('saveSearch'), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                query,
+                userId,
+                displayName,
+                totalPages,
+                videoCount: 0, // Could be enhanced to count actual videos
+                cacheKeys,
+                searchMetadata: {
+                    searchType: 'search',
+                    lastPageViewed: 1,
+                    totalResults: totalPages * 10 // Estimate
+                }
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            console.log('💾 [DB-SAVE] Successfully saved query:', data.message);
+            const uiConfig = window.appConfig.getUIConfig();
+            window.showToast(`${uiConfig.saveButton} Saved "${displayName}" to database`, 'success');
+            
+            // Refresh the query history display to show the green LED
+            updateQueryHistoryDisplay();
+        } else {
+            throw new Error(data.error || 'Failed to save query');
+        }
+        
+        return data;
+    } catch (error) {
+        console.error('💾 [DB-SAVE] Error saving query:', error);
+        window.showToast('Failed to save query to database', 'error');
+        throw error;
+    }
+}
+
+// Check which queries are saved in database
+async function checkSavedQueries(queries) {
+    try {
+        await window.appConfig.load();
+        const dbConfig = window.appConfig.getDatabaseConfig();
+        const userId = dbConfig.defaultUserId;
+        
+        const response = await fetch(window.appConfig.getYouTubeApiUrl('checkSaved'), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ queries, userId })
+        });
+        
+        // Check if response is OK and content-type is JSON
+        if (!response.ok) {
+            console.error('🔍 [DB-CHECK] Server error:', response.status, response.statusText);
+            return {};
+        }
+        
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            console.error('🔍 [DB-CHECK] Server returned non-JSON response:', contentType);
+            const text = await response.text();
+            console.error('🔍 [DB-CHECK] Response body:', text.substring(0, 200));
+            return {};
+        }
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            console.log('🔍 [DB-CHECK] Successfully checked', queries.length, 'queries');
+            return data.results; // Object mapping query -> boolean
+        } else {
+            console.error('🔍 [DB-CHECK] Failed to check saved queries:', data.error);
+            return {};
+        }
+    } catch (error) {
+        console.error('🔍 [DB-CHECK] Error checking saved queries:', error);
+        return {};
+    }
+}
+
+// Global function for save button onclick
+window.saveQueryToDB = async function(query) {
+    try {
+        console.log('💾 [GLOBAL] Save button clicked for query:', query);
+        await saveYouTubeSearchToDB(query);
+    } catch (error) {
+        console.error('💾 [GLOBAL] Error in save button handler:', error);
+    }
+};
 
 // === MOCK YOUTUBE RESULTS RENDERING ===
 

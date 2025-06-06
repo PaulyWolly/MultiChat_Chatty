@@ -56,11 +56,6 @@ class ServerConfig {
         return this.config.youtube.database;
     }
 
-    getGoogleApiKey() {
-        if (!this.config) this.load();
-        return process.env.GOOGLE_API_KEY || this.config.googleApiKey;
-    }
-
     getEnvironment() {
         return this.environment;
     }

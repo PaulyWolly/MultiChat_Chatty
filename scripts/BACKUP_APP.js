@@ -108,15 +108,17 @@ function createBackup() {
     // Ensure backup directories exist
     ensureDirectoryExists(backupRoot);
     ensureDirectoryExists(backupPublic);
+    const backupServer = path.join(backupRoot, 'server');
+    ensureDirectoryExists(backupServer);
     
     // Files to backup with their source and destination paths
     const filesToBackup = [
         // Root level files
-        {
-            source: 'server.js',
-            destination: path.join(backupRoot, `server.js.backup.${timestamp}`),
-            cleanupPrefix: 'server.js'
-        },
+        // {
+        //     source: 'server.js',
+        //     destination: path.join(backupRoot, `server.js.backup.${timestamp}`),
+        //     cleanupPrefix: 'server.js'
+        // },
         {
             source: 'package.json',
             destination: path.join(backupRoot, `package.json.backup.${timestamp}`),
@@ -194,6 +196,25 @@ function createBackup() {
         }
     });
     
+    // Backup all .js files in /server (excluding node_modules)
+    function backupServerFiles(srcDir, destDir) {
+        fs.readdirSync(srcDir).forEach(file => {
+            const srcPath = path.join(srcDir, file);
+            const destPath = path.join(destDir, file);
+            if (fs.statSync(srcPath).isDirectory()) {
+                if (file === 'node_modules') return; // skip node_modules
+                ensureDirectoryExists(destPath);
+                backupServerFiles(srcPath, destPath);
+            } else if (file.endsWith('.js')) {
+                const backupName = `${file}.backup.${timestamp}`;
+                const backupDest = path.join(destDir, backupName);
+                copyFileWithBackup(srcPath, backupDest);
+                cleanupOldBackups(destDir, file);
+            }
+        });
+    }
+    backupServerFiles('server', backupServer);
+    
     console.log('');
     console.log('=' .repeat(60));
     console.log(`🎉 Backup completed! ${successCount}/${totalFiles} files backed up successfully`);
@@ -237,7 +258,7 @@ function createBackup() {
             );
             
             if (publicFiles.length > 0) {
-                console.log(`└── public/`);
+                console.log(`├── public/`);
                 
                 // Group public files by type
                 const publicGroups = {};
@@ -250,6 +271,34 @@ function createBackup() {
                 const groupKeys = Object.keys(publicGroups).sort();
                 groupKeys.forEach((prefix, groupIndex) => {
                     const files = publicGroups[prefix].sort().reverse(); // Newest first
+                    const isLastGroup = groupIndex === groupKeys.length - 1;
+                    console.log(`│   ${isLastGroup ? '└──' : '├──'} ${prefix}: ${files.length} backup(s)`);
+                    files.forEach((file, index) => {
+                        const isLatest = index === 0;
+                        const isOldest = index === files.length - 1;
+                        const connector = isLastGroup ? '    ' : '│   ';
+                        console.log(`${connector}    ${isOldest ? '└──' : '├──'} ${file}${isLatest ? ' (latest)' : ''}`);
+                    });
+                });
+            }
+        }
+        // List server directory backups
+        if (fs.existsSync(backupServer)) {
+            const serverFiles = fs.readdirSync(backupServer).filter(file => 
+                file.includes('.backup.')
+            );
+            if (serverFiles.length > 0) {
+                console.log(`└── server/`);
+                // Group server files by type
+                const serverGroups = {};
+                serverFiles.forEach(file => {
+                    const prefix = file.split('.backup.')[0];
+                    if (!serverGroups[prefix]) serverGroups[prefix] = [];
+                    serverGroups[prefix].push(file);
+                });
+                const groupKeys = Object.keys(serverGroups).sort();
+                groupKeys.forEach((prefix, groupIndex) => {
+                    const files = serverGroups[prefix].sort().reverse(); // Newest first
                     const isLastGroup = groupIndex === groupKeys.length - 1;
                     console.log(`    ${isLastGroup ? '└──' : '├──'} ${prefix}: ${files.length} backup(s)`);
                     files.forEach((file, index) => {
