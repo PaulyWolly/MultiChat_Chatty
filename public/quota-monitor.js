@@ -75,19 +75,19 @@ const QuotaMonitor = {
             }
             
             .minimized-dashboard {
-                height: 10px;
+                height: 5px;
                 width: 15px;
-                padding: 4px 0px 9px 4px;
-                border-radius: 6px;
-                border: 1px solid rgba(255,255,255,0.1);
+                padding: 2px 0px 10px 2px;
+                border-radius: 4px;
+                border: 1px solid rgba(255, 255, 255, 0.1);
                 min-width: 150px;
                 max-width: 150px;
                 cursor: default;
-            }
+                bottom: 1px;
             
             /* Default positioning for minimized (only when not custom positioned) */
             .minimized-dashboard:not(.custom-position) {
-                bottom: 3px;
+                bottom: 1px;
                 left: 45%;
                 transform: translateX(-50%);
             }
@@ -129,12 +129,12 @@ const QuotaMonitor = {
             
             .quota-minimize-restore-btn {
                 position: absolute;
-                top: 4px;
-                right: 6px;
-                padding: 2px 0 2px 0;
+                top: 1px;
+                right: 4px;
+                padding: 2px 0 1px 0;
                 border: none;
                 border-radius: 3px;
-                font-size: 11px;
+                font-size: 10px;
                 cursor: pointer;
                 color: white;
                 line-height: 1;

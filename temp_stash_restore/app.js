@@ -819,16 +819,6 @@ function getPatterns() {
             /^let me tell you a joke$/i,
             /^can i tell you a joke$/i
         ],
-        editJoke: [
-            /^edit my joke about (.+)$/i,
-            /^update my joke about (.+)$/i,
-            /^edit the joke about (.+)$/i,
-            /^update the joke about (.+)$/i,
-            /^edit my joke (.+)$/i,
-            /^update my joke (.+)$/i,
-            /^modify my joke about (.+)$/i,
-            /^change my joke about (.+)$/i
-        ],
         jokes: {
             listAll: /(?:.*?)(all jokes)(?:.*?)$/i,
             listMine: /(?:.*?)(my jokes)(?:.*?)$/i,
@@ -1580,20 +1570,20 @@ async function sendMessage(message, isGreeting = false) {
         } 
 
         // Intercept "edit my joke about ..." commands
-        const editJokeMatch = messageText.match(patterns.editJoke[0]);
-        if (editJokeMatch) {
-            const jokeTitle = editJokeMatch[1].trim();
-            if (window.myJokesManager && typeof window.myJokesManager.findJokeByTitle === 'function') {
-                window.myJokesManager.findJokeByTitle(jokeTitle).then(joke => {
-                    if (joke) {
-                        window.myJokesManager.showPanel('update', joke);
-                    } else {
-                        addMessageToChat('assistant', `Sorry, I couldn't find a joke titled "${jokeTitle}".`);
-                    }
-                });
-            }
-            return; // Prevent sending to AI
-        }
+        // const editJokeMatch = messageText.match(/^edit my joke about (.+)$/i);
+        // if (editJokeMatch) {
+        //     const jokeTitle = editJokeMatch[1].trim();
+        //     if (window.myJokesManager && typeof window.myJokesManager.findJokeByTitle === 'function') {
+        //         window.myJokesManager.findJokeByTitle(jokeTitle).then(joke => {
+        //             if (joke) {
+        //                 window.myJokesManager.showPanel('update', joke);
+        //             } else {
+        //                 addMessageToChat('assistant', `Sorry, I couldn't find a joke titled "${jokeTitle}".`);
+        //             }
+        //         });
+        //     }
+        //     return; // Prevent sending to AI
+        // }
         
 
         // Check for YouTube request
@@ -1756,7 +1746,7 @@ async function sendMessage(message, isGreeting = false) {
                 const response = `I'll remember that the ${keyword} is "${value}"`;
                 const messageElement = addMessageToChat('assistant', response);
                 const endTime = Date.now();
-                const durationInSeconds = ((endTime - startTime) / 1000).toFixed(2);  // Minimum 0.01s
+                const durationInSeconds = ((endTime - startTime) / 1000).toFixed(2);
                 // Queue audio if enabled
                 // if (state.selectedVoice) {
                 //     await queueAudioChunk(response);
@@ -2932,7 +2922,8 @@ async function playAudio(text) {
         state.isPlaying = false;
         elements.stopAudioButton.style.display = 'none';
         if (state.isConversationMode) {
-            enterListeningMode();
+            updateStatus('Listening...');
+            safeStartListening();
         } else {
             updateStatus('Ready');
         }
@@ -3049,7 +3040,7 @@ function stopAudioPlayback() {
     setTimeout(() => {
         state.stopRequested = false;
         if (state.isConversationMode && !state.isListening && !state.isRendering) {
-            enterListeningMode();
+            startListening();
         }
     }, 100);
 }
@@ -3671,7 +3662,7 @@ async function fetchMoreImagesWithVariation(imagesSectionElement, query) {
     console.log('IMAGE DEBUG: Trying variation:', randomVariation);
     
     try {
-        const response = await fetch(window.appConfig.getApiUrl(`/api/google-image-search?q=${encodeURIComponent(randomVariation)}`));
+        const response = await fetch(window.appConfig.getApiUrl('/api/google-image-search?q=${encodeURIComponent(randomVariation)}'));
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
@@ -4292,7 +4283,7 @@ function getPersonalInfoStorage(type) {
 // Retrieve personal info function
 async function retrievePersonalInfo(type) {
     try {
-        const response = await fetch(window.appConfig.getApiUrl(`/api/personal-info/${type}?sessionId=${window.sessionId}`));
+        const response = await fetch(window.appConfig.getApiUrl('/api/personal-info/${type}?sessionId=${window.sessionId}'));
         if (!response.ok) throw new Error('Failed to retrieve personal info');
         return await response.json();
     } catch (error) {
@@ -4447,6 +4438,7 @@ const handleMyJokes = {
 
     // Handle incoming messages
     async handleJokeRequest(messageText) {
+
         // Hide the pagination bar
         //hidePaginationBar();
 
@@ -4456,68 +4448,6 @@ const handleMyJokes = {
         // Get patterns first
         const patterns = getPatterns();
         console.log('Checking message against patterns');
-
-        // Check for edit joke commands using patterns
-        const editJokeMatch = patterns.editJoke.find(pattern => pattern.test(messageText.toLowerCase()));
-        if (editJokeMatch) {
-            console.log('Edit joke pattern matched:', editJokeMatch);
-            addMessageToChat('user', messageText);
-
-            // Extract the joke title
-            const jokeTitle = messageText.match(editJokeMatch)[1].trim();
-            console.log('Searching for joke with title (edit mode):', jokeTitle);
-
-            // Temporarily stop listening while retrieving
-            if (state.isConversationMode) {
-                stopListening();
-            }
-
-            try {
-                // Use the same normalization as retrieveJoke
-                const normalize = t => t.toLowerCase().replace(/[^a-z0-9 ]/gi, '').trim();
-                await window.appConfig.load();
-                const response = await fetch(window.appConfig.getApiUrl(`/api/jokes/list-jokes?type=my&sessionId=${window.sessionId}`));
-                const data = await response.json();
-                let found = null;
-                if (data.success && data.jokes && data.jokes.length > 0) {
-                    const normalizedTitle = normalize(jokeTitle);
-                    found = data.jokes.find(j => normalize(j.title) === normalizedTitle);
-                    if (!found) {
-                        found = data.jokes.find(j => normalize(j.title).includes(normalizedTitle) || normalizedTitle.includes(normalize(j.title)));
-                    }
-                }
-                if (found) {
-                    // Open the edit modal with the joke data
-                    window.myJokesManager.showPanel('update', found);
-                    // Provide feedback
-                    const msg = `Opening editor for your joke: "${found.title}".`;
-                    addMessageToChat('assistant', msg);
-                    await queueAudioChunk(msg);
-                } else {
-                    const errorMessage = `Sorry, I couldn't find a joke titled "${jokeTitle}".`;
-                    addMessageToChat('assistant', errorMessage);
-                    await queueAudioChunk(errorMessage);
-                }
-            } catch (error) {
-                console.error('Error in joke edit:', error);
-                const errorMessage = "Sorry, there was an error retrieving your joke for editing.";
-                addMessageToChat('assistant', errorMessage);
-                await queueAudioChunk(errorMessage);
-            }
-
-            // Restore conversation mode after a short delay
-            if (state.isConversationMode) {
-                setTimeout(() => {
-                    if (!state.isAISpeaking && !state.isProcessing) {
-                        console.log('Restoring conversation mode after joke edit');
-                        startListening();
-                        updateStatus(MESSAGES.STATUS.LISTENING);
-                    }
-                }, 1000);
-            }
-
-            return true;
-        }
 
         // If we're in any joke recording state, handle only joke-related responses
         if (this.state.isRecording) {
@@ -4930,72 +4860,61 @@ const handleMyJokes = {
     // Retrieve joke from database
     async retrieveJoke(title) {
         const startTime = performance.now();
-        addMessageToChat('user', `[Heard as: "${title}"]`);
         try {
-            // Normalize the title for matching
-            const normalize = t => t.toLowerCase().replace(/[^a-z0-9 ]/gi, '').trim();
-            const normalizedTitle = normalize(title);
+            // Normalize the title to match how it's stored
+            const normalizedTitle = title.toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
             console.log('🎭 [RETRIEVE DEBUG] Original title:', title);
             console.log('🎭 [RETRIEVE DEBUG] Normalized title:', normalizedTitle);
-            await window.appConfig.load();
-            // Fetch all jokes for the user
-            const response = await fetch(window.appConfig.getApiUrl(`/api/jokes/list-jokes?type=my&sessionId=${window.sessionId}`));
+            
+            const response = await fetch(window.appConfig.getApiUrl('/api/jokes/get-joke/${encodeURIComponent(normalizedTitle)}?sessionId=${window.sessionId}'));
             const data = await response.json();
-            if (data.success && data.jokes && data.jokes.length > 0) {
-                // Try to find an exact or partial match (case-insensitive, trimmed)
-                let found = data.jokes.find(j => normalize(j.title) === normalizedTitle);
-                if (!found) {
-                    // Try partial match
-                    found = data.jokes.find(j => normalize(j.title).includes(normalizedTitle) || normalizedTitle.includes(normalize(j.title)));
-                }
-                if (found) {
-                    // Fetch the full joke by ID or title as before
-                    const jokeResp = await fetch(window.appConfig.getApiUrl(`/api/jokes/get-joke/${encodeURIComponent(found.title)}?sessionId=${window.sessionId}`));
-                    const jokeData = await jokeResp.json();
-                    if (jokeData.success && jokeData.joke) {
+            
+            console.log('🎭 [RETRIEVE DEBUG] API response:', data);
+
+            if (data.success && data.joke) {
+                console.log('🎭 [RETRIEVE DEBUG] Joke found:', data.joke);
+                console.log('🎭 [RETRIEVE DEBUG] Joke content type:', typeof data.joke.content);
+                console.log('🎭 [RETRIEVE DEBUG] Joke content length:', data.joke.content ? data.joke.content.length : 'null/undefined');
+                console.log('🎭 [RETRIEVE DEBUG] Joke content:', JSON.stringify(data.joke.content));
+                
                         const message = "I found your joke. Would you like to hear it? Say Yes to hear it or No to cancel.";
                         const endTime = performance.now();
                         const duration = ((endTime - startTime) / 1000).toFixed(2);
+                
                         const messageElement = addMessageToChat('assistant', message);
                         updateMetadata(messageElement, {
                             model: elements.modelSelect.value,
                             duration: duration,
                             tokenCount: 32
                         });
+
                         await queueAudioChunk(message);
-                        sessionStorage.setItem('pendingJoke', JSON.stringify(jokeData.joke));
-                        // Always restore listening mode after audio
-                        if (state.isConversationMode) {
-                            startListening();
-                            updateStatus(MESSAGES.STATUS.LISTENING);
-                        }
-                        return;
-                    }
-                }
-                // If not found, suggest similar jokes
-                const suggestions = data.jokes
-                    .map(j => j.title)
-                    .filter(j => normalize(j).includes(normalizedTitle) || normalizedTitle.includes(normalize(j)) || normalize(j).split(' ').some(word => normalizedTitle.includes(word)));
-                const notFoundMsg = `Sorry, I couldn't find a joke titled "${title}".` + (suggestions.length ? ` Did you mean: ${suggestions.join(', ')}?` : '');
-                addMessageToChat('assistant', notFoundMsg);
-                await queueAudioChunk(notFoundMsg);
-                // Always restore listening mode after audio
-                if (state.isConversationMode) {
-                    startListening();
-                    updateStatus(MESSAGES.STATUS.LISTENING);
-                }
-                return;
+                sessionStorage.setItem('pendingJoke', JSON.stringify(data.joke));
+                console.log('🎭 [RETRIEVE DEBUG] Stored in sessionStorage:', JSON.stringify(data.joke));
+
+            } else {
+                console.log('🎭 [RETRIEVE DEBUG] Joke not found or failed:', data);
+                const message = `Sorry, I couldn't find a joke about "${title}".`;
+                const metadata = {
+                    model: elements.modelSelect.value,
+                    duration: `${((performance.now() - startTime) / 1000).toFixed(2)}s`,
+                    tokens: '37 tokens',
+                    messageType: 'joke'
+                };
+                addMessageToChat('assistant', message, metadata);
+                await queueAudioChunk(message);
             }
         } catch (error) {
             console.error('Error retrieving joke:', error);
             const errorMessage = "Sorry, there was an error retrieving your joke.";
-            addMessageToChat('assistant', errorMessage);
+            const metadata = {
+                model: elements.modelSelect.value,
+                duration: `${((performance.now() - startTime) / 1000).toFixed(2)}s`,
+                tokens: '30 tokens',
+                messageType: 'error'
+            };
+            addMessageToChat('assistant', errorMessage, metadata);
             await queueAudioChunk(errorMessage);
-            // Always restore listening mode after error
-            if (state.isConversationMode) {
-                startListening();
-                updateStatus(MESSAGES.STATUS.LISTENING);
-            }
         }
     },
 
@@ -5071,8 +4990,6 @@ const handleMyJokes = {
                     await queueAudioChunk(`Number ${i + 1}: ${data.jokes[i].title}`);
                 }
                 await queueAudioChunk("To hear your joke, ask Tell me my joke about, followed by the joke name");
-                
-            
             } else {
                 const message = "You haven't saved any jokes yet.";
                 const endTime = performance.now();
@@ -5116,7 +5033,7 @@ const handleMyJokes = {
             updateStopAudioButton();  // Show button
 
             // First get the joke to get its ID
-            const getResponse = await fetch(window.appConfig.getApiUrl(`/api/jokes/delete-joke/${encodeURIComponent(title)}`));
+            const getResponse = await fetch(window.appConfig.getApiUrl('/api/jokes/delete-joke/${encodeURIComponent(title)}'));
             const getData = await getResponse.json();
 
             if (!getData.success) {
@@ -5124,7 +5041,7 @@ const handleMyJokes = {
             }
 
             // Then delete using the ID
-            const response = await fetch(window.appConfig.getApiUrl(`/api/jokes/delete-joke/${getData.joke.id}`),
+            const response = await fetch(window.appConfig.getApiUrl('/api/jokes/delete-joke/${getData.joke.id}'),
                 {
                     method: 'DELETE'
                 }
@@ -5170,7 +5087,7 @@ const handleMyJokes = {
             state.isAISpeaking = true;
             updateStopAudioButton();  // Show button
 
-            const response = await fetch(window.appConfig.getApiUrl(`/api/jokes/update-joke/${encodeURIComponent(title)}`), {
+            const response = await fetch(window.appConfig.getApiUrl('/api/jokes/update-joke/${encodeURIComponent(title)}'), {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json'
@@ -5212,7 +5129,7 @@ const handleMyJokes = {
             state.isAISpeaking = true;
             updateStopAudioButton();  // Show button
 
-            const response = await fetch(window.appConfig.getApiUrl(`/api/jokes/search-jokes?term=${encodeURIComponent(searchTerm)}`));
+            const response = await fetch(window.appConfig.getApiUrl('/api/jokes/search-jokes?term=${encodeURIComponent(searchTerm)}'));
             const data = await response.json();
 
             if (data.success && data.jokes.length > 0) {
@@ -5234,7 +5151,8 @@ const handleMyJokes = {
             state.isAISpeaking = false;
             elements.stopAudioButton.style.display = 'none';
             if (state.isConversationMode) {
-                enterListeningMode();
+                updateStatus(MESSAGES.STATUS.LISTENING);
+                startListening();
             }
         }
     },
@@ -5365,6 +5283,130 @@ function chunkText(text) {
         .filter(s => s.length > 0);
 }
 
+// async function playNextInQueue() {
+//     console.log('🔊 [AUDIO] playNextInQueue called - Queue:', state.audioQueue.length, 'Playing:', state.isPlaying, 'stopRequested:', state.stopRequested);
+    
+//     // Check if we should skip playback
+//     if (!state.audioQueue.length || state.isPlaying || state.stopRequested || !state.isAISpeaking) {
+//         console.log('🔊 [AUDIO] Skipping playback - interrupted or no audio needed');
+//         return;
+//     }
+
+//     try {
+//         state.isPlaying = true;
+//         state.isAISpeaking = true;
+//         updateStopAudioButton();  // Show button
+
+//         // Show Stop Audio button whenever audio is playing
+//         updateStopAudioButton();
+
+//         const text = state.audioQueue[0];
+
+//         console.log('🔊 [AUDIO] About to fetch TTS for:', text);
+//         console.log('🔊 [AUDIO] TTS API URL:', AUDIO_CONFIG.apiUrl);
+//         console.log('🔊 [AUDIO] About to call fetch...');
+
+//         // Debug the exact payload
+//         const payload = {
+//             text: text,
+//             voice: AUDIO_CONFIG.defaultVoice,
+//             rate: AUDIO_CONFIG.rate,
+//             pitch: AUDIO_CONFIG.pitch,
+//             volume: AUDIO_CONFIG.volume
+//         };
+//         console.log('🔊 [AUDIO] EXACT PAYLOAD:', JSON.stringify(payload));
+
+//         let response;
+//         try {
+//             console.log('🔊 [AUDIO] Calling fetch now...');
+//             response = await fetch(AUDIO_CONFIG.apiUrl, {
+//                 method: 'POST',
+//                 headers: { 'Content-Type': 'application/json' },
+//                 body: JSON.stringify(payload)
+//             });
+//             console.log('🔊 [AUDIO] fetch completed successfully!');
+//         } catch (fetchError) {
+//             console.error('🔊 [AUDIO] CRITICAL FETCH ERROR:', fetchError);
+//             throw fetchError;
+//         }
+
+//         console.log('🔊 [AUDIO] Response status:', response.status);
+//         console.log('🔊 [AUDIO] Response headers:', [...response.headers.entries()]);
+//         console.log('🔊 [AUDIO] Response ok:', response.ok);
+
+//         if (!response.ok) throw new Error(`TTS API error: ${response.status}`);
+        
+//         console.log('🔊 [AUDIO] About to get blob...');
+//         const audioBlob1 = await response.blob();
+//         console.log('🔊 [AUDIO] Blob received - size:', audioBlob1.size, 'type:', audioBlob1.type);
+
+//         if (!response.ok) throw new Error(`TTS API error: ${response.status}`);
+//         if (audioBlob1.size === 0) throw new Error('Empty audio response');
+
+//         cleanup(state.currentAudio);
+        
+//         const audioUrl = URL.createObjectURL(audioBlob1);
+//         state.currentAudio = new Audio(audioUrl);
+//         state.currentAudio.volume = AUDIO_CONFIG.volume;
+
+//         // Wait for audio to finish before playing next chunk
+//         await new Promise((resolve, reject) => {
+//             state.currentAudio.onended = resolve;
+//             state.currentAudio.onerror = reject;
+//             // Add small delay and fade-in to prevent cut-off of first words
+//                     state.currentAudio.volume = 0.1; // Start very quiet
+//                     state.currentAudio.play();
+//                     // Fade in quickly to prevent missing first syllables
+//                     setTimeout(() => {
+//                         if (state.currentAudio) {
+//                             state.currentAudio.volume = AUDIO_CONFIG.volume;
+//                         }
+//                     }, 50); // 50ms fade-in
+//         });
+
+//         state.audioQueue.shift();
+        
+//         // Continue with next chunk after pause
+//         if (state.audioQueue.length > 0 && !state.stopRequested) {
+//             setTimeout(() => {
+//                 state.isPlaying = false;
+
+//                 // Restart interrupt listening for the next chunk during conversation mode
+//                 if (state.isConversationMode && state.isAISpeaking) {
+//                     console.log('🔇[INTERRUPT] Restarting interrupt listening for next audio chunk');
+//                     startListening();
+//                 }
+//                 playNextInQueue();
+//             }, AUDIO_CONFIG.pauseDuration);
+
+//         } else {
+//             // Immediate cleanup and status update - no delays!
+//             audioFilterState.isInterruptModeActive = false;
+//             state.isPlaying = false;
+//             state.isAISpeaking = false;
+//             updateStopAudioButton();  // Hide button
+            
+//             // INSTANT status change and listening restart
+//             if (state.isConversationMode) {
+//                 updateStatus(MESSAGES.STATUS.LISTENING);
+//                 startListening();
+//             }
+//         }
+
+//     } catch (error) {
+//         console.error('Audio playback error:', error);
+//         cleanup(state.currentAudio);
+//         state.audioQueue.shift();
+//         state.isPlaying = false;
+//         state.isAISpeaking = false;
+        
+//         // Try next chunk if available
+//         if (state.audioQueue.length > 0) {
+//             setTimeout(() => playNextInQueue(), AUDIO_CONFIG.retryDelay);
+//         }
+//     }
+// }
+
 async function playNextInQueue() {
     if (state.audioQueue.length === 0 || state.isPlaying || state.stopRequested) {
         return;
@@ -5410,31 +5452,20 @@ async function playNextInQueue() {
         audio.onended = () => {
             URL.revokeObjectURL(audioUrl);
             state.isPlaying = false;
-            // Only call enterListeningMode if this was the LAST chunk
-            if (state.audioQueue.length === 0 && state.isConversationMode) {
-                enterListeningMode();
-            } else {
                 playNextInQueue();
-            }
         };
 
         audio.onerror = (error) => {
             console.error('Audio playback error:', error);
             state.isPlaying = false;
-            // On error, always restore listening mode
-            if (state.isConversationMode) {
-                enterListeningMode();
-            }
+            playNextInQueue();
         };
 
         await audio.play();
     } catch (error) {
         console.error('Audio playback error:', error);
         state.isPlaying = false;
-        // On error, always restore listening mode
-        if (state.isConversationMode) {
-            enterListeningMode();
-        }
+        playNextInQueue();
     }
 }
 
