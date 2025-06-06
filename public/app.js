@@ -2,7 +2,7 @@
   APP.JS
   Version: 2
   AppName: MultiChat_Chatty [v2]
-  Updated: 06/03/2025 @8:30AM
+  Updated: 06/05/2025 @10:00PM
   Created by Paul Welby
 */
 
@@ -367,6 +367,7 @@ function enterListeningMode() {
     }
     if (window.state?.isConversationMode && typeof startListening === 'function') {
         startListening();
+        window.state.isListening = true; // Ensure mic is active
     }
 }
 
@@ -3048,9 +3049,6 @@ function stopAudioPlayback() {
 
     setTimeout(() => {
         state.stopRequested = false;
-        if (state.isConversationMode && !state.isListening && !state.isRendering) {
-            enterListeningMode();
-        }
     }, 100);
 }
 
@@ -3882,28 +3880,7 @@ function initializeSpeechRecognition() {
                 
                 if (INTERRUPT_KEYWORDS.some(keyword => transcript.includes(keyword))) {
                     console.log('🔇 [SMART-FILTER] Smart interrupt detected! Stopping audio...');
-                    stopAllAudio();
-
-                    state.audioQueue = [];
-                    console.log('🔇 [SMART-FILTER] Audio queue cleared on interrupt');
-                    
-                    // Ensure proper cleanup and recovery
-                    updateStatus('Interrupted!');
-                    console.log('🔇 [INTERRUPT] Audio interrupted!');
-                    
-                    // Force immediate state cleanup
-                    state.isAISpeaking = false;
-                    state.isPlaying = false;
-                    // Properly disable interrupt mode and recover
-                    setTimeout(() => {
-                        disableSmartInterruptMode();
-                        if (state.isConversationMode) {
-                            updateStatus(MESSAGES.STATUS.LISTENING);
-                            if (!state.isListening) {
-                                startListening();
-                            }
-                        }
-                    }, 200);
+                    stopAudioPlayback();
                     return;
                 }
                 
@@ -5407,6 +5384,9 @@ async function playNextInQueue() {
         const audioUrl = URL.createObjectURL(audioBlob);
         const audio = new Audio(audioUrl);
 
+        // In playNextInQueue, after creating the audio object:
+        state.currentAudio = audio;
+
         audio.onended = () => {
             URL.revokeObjectURL(audioUrl);
             state.isPlaying = false;
@@ -5428,6 +5408,17 @@ async function playNextInQueue() {
         };
 
         await audio.play();
+
+        // After await audio.play();
+        if (state.stopRequested) {
+            if (state.currentAudio) {
+                state.currentAudio.pause();
+                state.currentAudio.currentTime = 0;
+                state.currentAudio = null;
+            }
+            state.isPlaying = false;
+            return;
+        }
     } catch (error) {
         console.error('Audio playback error:', error);
         state.isPlaying = false;
@@ -5529,32 +5520,25 @@ async function startListening() {
         console.log('Cannot start listening - already active or processing');
         return;
     }
-    
     // Allow listening during AI speech for interrupts
     if (state.isAISpeaking) {
         console.log('🔇[INTERRUPT] Starting interrupt-mode listening during AI speech');
-        // Ensure interrupt mode is properly set
         audioFilterState.isInterruptModeActive = true;
     }
-
     try {
         if (!state.recognition) {
             initializeSpeechRecognition();
         }
-
         // Check if recognition is already active before starting
         if (state.recognition && !state.isListening) {
             state.recognition.start();
             startInactivityTimer();
+            state.isListening = true; // Set listening state after starting
         }
     } catch (error) {
         console.error('Failed to start listening:', error);
-        
-        // Reset recognition state and create new instance
         state.isListening = false;
         state.recognition = null;
-        
-        // Try to reinitialize after a short delay
         setTimeout(() => {
             initializeSpeechRecognition();
         }, 1000);
@@ -5714,11 +5698,6 @@ document.addEventListener('click', function(e) {
   // Look for both the span and the img elements, and also the popup button
   const thumb = e.target.closest('.youtube-thumb-link.youtube-popup-thumb, .youtube-popup-thumb, .youtube-popup-btn');
   console.log('Found youtube-popup element:', !!thumb);
-  if (thumb) {
-    console.log('Element classes:', thumb.className);
-    console.log('Has video-id:', thumb.hasAttribute('data-video-id'));
-    console.log('Video ID:', thumb.getAttribute('data-video-id'));
-  }
   if (thumb && thumb.hasAttribute('data-video-id')) {
     e.preventDefault();
     const videoId = thumb.getAttribute('data-video-id');
@@ -6076,9 +6055,6 @@ function updateButtonStates() {
     });
 }
 
-// === LEGACY PAGINATION BAR REMOVED === 
-// This was dead code that was causing conflicts
-
 // Function to completely clean up broken YouTube elements
 function cleanupBrokenYouTubeElements() {
     console.log('🧹 Starting cleanup of YouTube elements...');
@@ -6151,12 +6127,6 @@ function cleanupBrokenYouTubeElements() {
     console.log('🗑️ Removed', brokenElementsRemoved, 'broken elements');
     console.log('✅ Cleanup complete');
 }
-
-// DISABLED: Helper function to add user query bubble before YouTube response
-// function addYouTubeUserQuery(originalQuery) {
-//     // Just pass the clean text - let addMessageToChat handle the HTML structure
-//     addMessageToChat('user', originalQuery, { isUserQuery: true });
-// }
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
 // ████████████████████████████████ YOUTUBE MODULES ████████████████████████████████████
@@ -6309,7 +6279,8 @@ function renderMockYoutubeResults(videos, page, totalPages, subject, type = 'sea
     addMessageToChat('assistant', youtubeMultiBubble.outerHTML, { 
         mock: !isRealData, 
         isYoutubePagination: true,
-        subject: subject
+        subject: subject,
+        isYoutube: true // Always set this for YouTube results
     });
     
     // ENSURE HEADER CONTEXT: Update header after rendering to ensure correct context
@@ -6353,7 +6324,8 @@ function renderMockSingleYoutubeResult(video, subject, type = 'search') {
     addMessageToChat('assistant', mockSingleBubble, { 
         mock: true, 
         isYoutubePagination: false,
-        subject: subject
+        subject: subject,
+        isYoutube: true // Always set this for YouTube results
     });
 }
 
@@ -6556,31 +6528,6 @@ function renderRealYoutubeResults(videos, page, totalPages, subject, type = 'sea
     
     console.log('🌐 [REAL] ✅ Valid videos to render:', validVideos.length);
     
-    // DISABLED: YouTube user query bubbles removed
-
-    
-    // Reason: Navigation can lead to different queries than original user input
-
-    
-    // For initial search: Add user query bubble first
-
-    
-    // if (!isPagination) {
-
-    
-    //     // Use originalMessageText if provided, otherwise fallback to subject
-
-    
-    //     addYouTubeUserQuery(originalMessageText || subject);
-
-    
-    // }
-    
-    // Standard YouTube layout system for ALL real results
-    console.log('🌐 [REAL] Using standard YouTube layout for real results (page', page, ')');
-    
-    // Note: Token synchronization is now handled in the API handler, no need to sync here
-    
     // Clean up any existing empty bubbles before rendering (SINGLE cleanup call)
     cleanupBrokenYouTubeElements();
     
@@ -6713,7 +6660,8 @@ function renderYoutubeResults(videos, page, totalPages, subject, type = 'search'
     addMessageToChat('assistant', youtubeMultiBubble.outerHTML, { 
         mock: false, 
         isYoutubePagination: true,
-        subject: subject
+        subject: subject,
+        isYoutube: true // Always set this for YouTube results
     });
 
     // ALWAYS scroll to TOP of YouTube results (override normal bottom scrolling)

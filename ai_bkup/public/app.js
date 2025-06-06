@@ -367,6 +367,7 @@ function enterListeningMode() {
     }
     if (window.state?.isConversationMode && typeof startListening === 'function') {
         startListening();
+        window.state.isListening = true; // Ensure mic is active
     }
 }
 
@@ -5546,6 +5547,7 @@ async function startListening() {
         if (state.recognition && !state.isListening) {
             state.recognition.start();
             startInactivityTimer();
+            state.isListening = true; // Set listening state after starting
         }
     } catch (error) {
         console.error('Failed to start listening:', error);

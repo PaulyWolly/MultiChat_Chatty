@@ -62,14 +62,14 @@ async function promptForHeader(current) {
       type: 'input',
       name: 'AppName',
       message: `Display App Name (for UI, headers, etc.): (type 'Q' or 'X' to exit)`,
-      initial: `Multi-Chat [v${Version}]`,
+      initial: `MultiChat_Chatty [v${Version}]`,
       validate: makeExitValidator('AppName'),
     },
     {
       type: 'input',
       name: 'NpmName',
       message: `npm package name (for package.json): (type 'Q' or 'X' to exit)`,
-      initial: sanitizeNpmName(`multichat-v${Version}-working`),
+      initial: sanitizeNpmName(`multichat_chatty-v${Version}`),
       validate: input =>
         /^[a-z0-9-._~]+$/.test(input.trim()) ||
         'Invalid npm package name! Use only lowercase letters, numbers, dashes, dots, underscores, or tildes.',
