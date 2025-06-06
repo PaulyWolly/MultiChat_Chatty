@@ -1005,12 +1005,13 @@ app.get('/api/jokes/get-joke/:title', async (req, res) => {
         const { sessionId } = req.query;
         console.log('Get joke request:', { title, sessionId });
 
-        const joke = await Joke.findOne({
-            title: new RegExp(title, 'i'),
-            userId: sessionId
-        });
+        // Normalize both the stored title and the input title for robust matching
+        const normalize = t => t.toLowerCase().replace(/[^a-z0-9 ]/gi, '').trim();
+        const normalizedTitle = normalize(title);
+        const jokes = await Joke.find({ userId: sessionId });
+        const found = jokes.find(j => normalize(j.title) === normalizedTitle);
 
-        res.json({ success: true, joke });
+        res.json({ success: true, joke: found || null });
     } catch (error) {
         console.error('Error retrieving joke:', error);
         res.status(500).json({ success: false, error: error.message });
@@ -1076,19 +1077,23 @@ app.put('/api/jokes/update-joke/:id', async (req, res) => {
         
         console.log('🎭 [SERVER UPDATE] Updated joke result:', result);
         
-        if (!result) {
-            console.log('🎭 [SERVER UPDATE] Update failed');
-            return res.status(500).json({ 
-                success: false, 
-                error: 'Update failed' 
+        if (!result.value) {
+            return res.status(404).json({
+                success: false,
+                error: 'Failed to update joke'
             });
         }
-        
-        console.log('🎭 [SERVER UPDATE] Successfully updated joke:', result);
-        res.json({ success: true, joke: result });
+
+        return res.json({
+            success: true,
+            joke: result.value
+        });
     } catch (error) {
-        console.error('🎭 [SERVER UPDATE ERROR] Error updating joke:', error);
-        res.status(500).json({ success: false, error: error.message });
+        console.error('🎭 [SERVER UPDATE] Error updating joke:', error);
+        return res.status(500).json({
+            success: false,
+            error: 'Internal server error'
+        });
     }
 });
 
