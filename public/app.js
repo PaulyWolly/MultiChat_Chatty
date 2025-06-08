@@ -344,6 +344,154 @@ function isValidSessionId(sid) {
 // HELPER FUNCTIONS
 // =====================================================
 
+// Function to save YouTube query to database
+async function saveYouTubeQuery(query) {
+    try {
+        const displayName = query.replace(/^youtube\s+search\s+/i, '').replace(/^youtube\s+/i, '').replace(/^search\s+/i, '').trim() || query;
+        const totalPages = countCachedPages(query);
+        const cacheKeys = Array.from({ length: totalPages }, (_, i) => `yt_${query}_search_${i + 1}`);
+        
+        const response = await fetch(window.appConfig.getApiUrl('/api/youtube/save-search'), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                query,
+                userId: window.sessionId,
+                displayName,
+                totalPages,
+                videoCount: 0,
+                cacheKeys,
+                searchMetadata: {
+                    searchType: 'search',
+                    lastPageViewed: window.youtubePagination?.currentPage || 1,
+                    totalResults: window.youtubePagination?.totalPages || 1
+                }
+            })
+        });
+        
+        const data = await response.json();
+        if (data && data.success) {
+            window.showToast('💾 Query saved to database!', 'success');
+            console.log('🔍 [HISTORY - SUCCESS] Query saved to database:', query);
+            setTimeout(updateQueryHistoryDisplay, 300); // Add a short delay for UI update
+        } else {
+            throw new Error(data.error || 'Failed to save query');
+        }
+    } catch (error) {
+        console.error('🔍 [HISTORY - ERROR] Error saving query:', error);
+        window.showToast('Failed to save query', 'error');
+        return false;
+    }
+}
+
+// Add a helper function at the top of the file
+function normalizeQuery(query) {
+    return (typeof query === 'string' ? query : '').trim().toLowerCase();
+}
+
+// In all places where queries are saved, checked, or used as keys, use normalizeQuery(query)
+
+// Example for saving:
+//const normalizedQuery = normalizeQuery(item.query);
+// Use normalizedQuery in fetch to /api/youtube/save-search
+
+// Use normalizedQueries in fetch to /api/youtube/check-saved
+// When building savedStatus, use normalized keys
+// When rendering, use normalized keys to check savedStatus
+
+
+// Unified scroll handler for both YouTube and non-YouTube content
+// function handleScroll(options = {}, content = '') {
+//     const chatContainer = document.querySelector('#chat-messages');
+//     if (!chatContainer) return;
+
+//     // YouTube content scrolls to TOP
+//     if (options.isYoutube || content.includes('YouTube Results') || content.includes('youtube-multi-bubble')) {
+//         // Find ALL YouTube-related messages
+//         const youtubeMessages = document.querySelectorAll('.message');
+//         let targetMessage = null;
+        
+//         // Find the LAST message that contains YouTube content
+//         for (let i = youtubeMessages.length - 1; i >= 0; i--) {
+//             const message = youtubeMessages[i];
+//             if (message.querySelector('.youtube-multi-bubble, .youtube-single-bubble, .youtube-multi-bubble-mock, .youtube-single-bubble-mock')) {
+//                 targetMessage = message;
+//                 break;
+//             }
+//         }
+        
+//         if (targetMessage) {
+//             // Get the TOP of the message container (not the bubble inside it)
+//             const messageTop = targetMessage.offsetTop;
+//             chatContainer.scrollTop = messageTop - 90;
+//             console.log('📍 [SCROLL] Scrolled to TOP of YouTube message container');
+            
+//             // FORCE the scroll to stick by setting it again after a tiny delay
+//             setTimeout(() => {
+//                 chatContainer.scrollTop = messageTop - 90;
+//                 console.log('📍 [SCROLL] FORCED scroll to stick at TOP');
+//             }, 50);
+//         } else {
+//             chatContainer.scrollTop = 0;
+//             console.log('📍 [SCROLL] No YouTube message found');
+//         }
+//     } else {
+//         // Non-YouTube content scrolls to BOTTOM
+//         const scrollToBottom = () => {
+//             chatContainer.scrollTop = chatContainer.scrollHeight;
+//             console.log('📍 [SCROLL] Scrolled to bottom, scrollTop:', chatContainer.scrollTop, 'scrollHeight:', chatContainer.scrollHeight);
+//         };
+        
+//         // Immediate scroll
+//         scrollToBottom();
+        
+//         // Multiple delayed scrolls to handle content that takes time to render
+//         // This is especially important for My Jokes listings and other complex HTML content
+//         setTimeout(scrollToBottom, 100);   // Quick follow-up
+//         setTimeout(scrollToBottom, 300);   // After initial render
+//         setTimeout(scrollToBottom, 600);   // After animations/transitions
+//         setTimeout(scrollToBottom, 1000);  // Final cleanup scroll
+//         setTimeout(scrollToBottom, 1500);  // Extra safety for slow content
+//     }
+// }
+
+function handleScroll({ content = '', options = {}, role = '' }) {
+    const isYouTube = options.isYoutube || content.includes('YouTube Results') || content.includes('youtube-multi-bubble');
+    const isRecipe = options.isRecipe || (content.toLowerCase().includes('ingredients:') && (content.toLowerCase().includes('instructions:') || content.toLowerCase().includes('steps:')));
+    const isBing = options.isBing || content.toLowerCase().includes('bing search results') || content.toLowerCase().includes('bing.com');
+    const isImageQuery = options.isImageQuery || content.includes('image-results') || content.includes('image-gallery') || content.includes('img-responsive') || content.includes('image-section');
+    const isStory = !isYouTube && !isRecipe && !isBing && !isImageQuery && content.length > 600; // heuristic for long story
+
+    if (isYouTube) {
+        scrollToYouTubeResults();
+    } else if (isStory) {
+        // For stories, scroll to bottom as content unfolds
+        const scrollToBottom = () => {
+            const chatContainer = document.getElementById('chat-messages');
+            const footer = document.querySelector('.chat-footer, .footer, .input-bar, .input-container'); // adjust selector as needed
+            const footerHeight = footer ? footer.offsetHeight : 0;
+            if (chatContainer) {
+                chatContainer.scrollTop = chatContainer.scrollHeight - footerHeight;
+            }
+        };
+
+        // Scroll immediately, then keep scrolling as content arrives
+        scrollToBottom();
+        
+        setTimeout(scrollToBottom, 500);
+        setTimeout(scrollToBottom, 1500);
+        setTimeout(scrollToBottom, 3000);
+        setTimeout(scrollToBottom, 5000);
+        setTimeout(scrollToBottom, 7500);
+        setTimeout(scrollToBottom, 10000);
+        setTimeout(scrollToBottom, 12500);
+        setTimeout(scrollToBottom, 15000);
+        setTimeout(scrollToBottom, 17500);
+        setTimeout(scrollToBottom, 20000);
+    }
+    // For Bing, Recipe, or Image queries: do NOT scroll
+}
+
 // =====================================================
 // MODE SWITCHING FUNCTIONS
 // =====================================================
@@ -2338,80 +2486,11 @@ function addMessageToChat(role, content, options = {}) {
 
     elements.chatMessages.appendChild(messageElement);
 
-    // Clean scroll logic: YouTube content scrolls to TOP, everything else scrolls to BOTTOM
-    // Clean scroll logic: YouTube content scrolls to TOP, everything else scrolls to BOTTOM continuously
-    if (options.isYoutube || content.includes('YouTube Results') || content.includes('youtube-multi-bubble')) {
-        scrollToYouTubeResults();
-    } else {
-        // For non-YouTube content, keep scrolling to bottom as content loads
-        const scrollToBottom = () => {
-        const chatContainer = document.getElementById('chat-messages');
-        if (chatContainer) {
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-        }
-        };
-        
-        // Scroll immediately, then keep scrolling as content arrives
-        scrollToBottom();
-        setTimeout(scrollToBottom, 500);
-        setTimeout(scrollToBottom, 1500);
-        setTimeout(scrollToBottom, 3000);
-        setTimeout(scrollToBottom, 5000);
-        setTimeout(scrollToBottom, 7500);
-        setTimeout(scrollToBottom, 10000);
-        setTimeout(scrollToBottom, 12500);
-        setTimeout(scrollToBottom, 15000);
-        setTimeout(scrollToBottom, 17500);
-        setTimeout(scrollToBottom, 20000);
-    }
+    // Use the new handleScroll helper for all scroll handling
+    handleScroll({ content, options, role });
 
     return messageElement;
-    
-    // Always scroll to YouTube results for ANY YouTube content, otherwise scroll to bottom
-    // if (options.isYoutube || content.includes('YouTube Results') || content.includes('youtube-multi-bubble')) {
-    //     scrollToYouTubeResults();
-    // } else {
-    //     // For all non-YouTube responses, scroll to bottom of chat (normal flow)
-    //     console.log('📍 [SCROLL] Non-YouTube content - scrolling to bottom');
-    //     setTimeout(() => {
-    //         const chatContainer = document.getElementById('chat-messages');
-    //         if (chatContainer) {
-    //             chatContainer.scrollTop = chatContainer.scrollHeight;
-    //             console.log('📍 [SCROLL] Scrolled to bottom successfully');
-    //         }
-    //     }, 500);
-    // }
-    
-        
 
-    // if (options.isYoutube || content.includes('YouTube Results') || content.includes('youtube-multi-bubble')) {
-    //     scrollToYouTubeResults();
-    // }
-
-    // const scrollToBottom = () => {
-    //     const chatContainer = document.getElementById('chat-messages') || document.querySelector('#chat-container');
-    //     console.log('📍 [SCROLL] Found chat container:', chatContainer?.className || chatContainer?.id || 'NONE FOUND');
-    //     console.log('📍 [SCROLL] Container scrollHeight:', chatContainer?.scrollHeight);
-    
-    //     if (chatContainer) {
-    //         chatContainer.scrollTop = chatContainer.scrollHeight;
-    //         console.log('📍 [SCROLL] Set scrollTop to:', chatContainer.scrollTop);
-    //     } else {
-    //         console.log('📍 [SCROLL] No container found - cannot scroll');
-    //     }
-    // };
-
-    // if (options.isYoutube || content.includes('YouTube Results') || content.includes('youtube-multi-bubble')) {
-    //     scrollToYouTubeResults();
-    // }
-    
-    // // Scroll immediately, then keep scrolling as content arrives
-    // scrollToBottom();
-    // setTimeout(scrollToBottom, 500);
-    // setTimeout(scrollToBottom, 1500);
-    // setTimeout(scrollToBottom, 3000);
-
-    // return messageElement;
 
 }
 
@@ -2467,6 +2546,16 @@ function updateMessageContent(messageElement, content, tokenCount) {
     if (!messageElement) {
         console.error('updateMessageContent called with null messageElement');
         return;
+    }
+
+    messageElement.querySelector('.message-content').textContent = content;
+
+    // Scroll to bottom after updating
+    const chatContainer = document.getElementById('chat-messages');
+    const footer = document.querySelector('.chat-footer, .footer, .input-bar, .input-container');
+    const footerHeight = footer ? footer.offsetHeight : 0;
+    if (chatContainer) {
+        chatContainer.scrollTop = chatContainer.scrollHeight - footerHeight;
     }
     
     const contentElement = messageElement.querySelector('.message-content');
@@ -7315,12 +7404,12 @@ function renderRealYoutubePaginationBar(page, totalPages, subject) {
     });
 
     // Function to update the query history display
-    function updateQueryHistoryDisplay() {
+    async function updateQueryHistoryDisplay() {
+
+        let savedStatus = {}; // Always define it at the top of the function
+
         console.log('🔍 [HISTORY] Scanning ALL cached queries in localStorage...');
-        
-        // Always scan localStorage for ALL cached queries instead of relying on allQueriesHistory
         const cachedQueries = [];
-        
         for (let i = 0; i < localStorage.length; i++) {
             const key = localStorage.key(i);
             if (key && key.startsWith('yt_') && key.includes('_search_1')) {
@@ -7342,53 +7431,91 @@ function renderRealYoutubePaginationBar(page, totalPages, subject) {
                 }
             }
         }
-        
         console.log('🔍 [HISTORY] Total cached queries found:', cachedQueries.length);
-        
         if (cachedQueries.length === 0) {
             historyList.innerHTML = '<div class="query-history-empty">No query history available</div>';
             return;
         }
-        
         // Sort queries by timestamp (newest first)
         const sortedHistory = cachedQueries.sort((a, b) => b.timestamp - a.timestamp);
+        // Check which queries are saved in database
+        const queryList = sortedHistory.map(item => normalizeQuery(item.query));
         
-        // Helper function to extract just the subject from query
+        try {
+
+            const payload = {
+                queries: queryList,
+                userId: window.sessionId // or whatever your session/user ID variable is
+            };
+            console.log('[DEBUG] Payload:', payload);
+
+            console.log('[DEBUG] Checking saved status for queries:', queryList);
+            const response = await fetch(window.appConfig.getApiUrl('/api/youtube/check-saved'), {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            
+            const data = await response.json();
+            console.log('[DEBUG] Saved status "data" from backend:', data);
+
+            try {
+                // fetch and parse data 
+                if (data && data.results) {
+                    savedStatus = data.results;
+                    console.log('[DEBUG] Saved status "savedStatus" from backend:', savedStatus);
+                }
+            } catch (e) {
+                console.error('Failed to check saved status:', e);
+            }
+
+            // Now, savedStatus is always defined (at least as an empty object)
+            historyList.innerHTML = sortedHistory.map((item, index) => {
+                const normalizedQuery = normalizeQuery(item.query);
+                const isSaved = !!savedStatus[normalizedQuery];
+            }).join('');
+
+        } catch (e) {
+            console.error('Failed to check saved status:', e);
+        }
+        
         function extractSubject(query) {
-            // Remove common YouTube search prefixes to show just the core subject
             const cleanQuery = query
                 .replace(/^youtube\s+search\s+/i, '')
                 .replace(/^youtube\s+/i, '')
                 .replace(/^search\s+/i, '')
                 .trim();
-            return cleanQuery || query; // Fallback to original if cleaning results in empty string
+            return cleanQuery || query;
         }
-        
         historyList.innerHTML = sortedHistory.map((item, index) => {
+            const normalizedQuery = normalizeQuery(item.query);
             const cachedPages = countCachedPages(item.query);
             const timeAgo = formatTimeAgo(item.timestamp);
             const isCurrentQuery = window.youtubePagination.originalQuery === item.query;
             const displaySubject = extractSubject(item.query);
-            
+            const isSaved = !!savedStatus[normalizedQuery];
+            const ledIndicator = isSaved ? '<span title="Saved to database" style="color: #43a047; font-size: 10px; margin-right: 4px;">🟢</span>' : '';
+            const saveButton = isSaved
+                ? '<button class="query-history-save" disabled title="Already saved" style="opacity:0.5;cursor:default;">💾</button>'
+                : `<button class="query-history-save" data-query="${item.query}" title="Save to database">💾</button>`;
             return `
                 <div class="query-history-item ${isCurrentQuery ? 'current' : ''}" data-query="${item.query}">
                     <div class="query-history-content">
-                        <div class="query-history-query">${displaySubject}</div>
+                        <div class="query-history-query">${ledIndicator}${displaySubject}</div>
                         <div class="query-history-pages">${cachedPages} pg${cachedPages !== 1 ? 's' : ''}</div>
                     </div>
                     <div class="query-history-meta">
                         <span class="query-history-time">${timeAgo}</span>
+                        ${saveButton}
                         <button class="query-history-delete" onclick="deleteQueryFromHistory('${item.query.replace(/'/g, "\\'")}'); event.stopPropagation();" title="Delete this query and all cached data">❌</button>
                     </div>
                 </div>
             `;
         }).join('');
-        
-        // Add click handlers for history navigation
+        // Add click handlers for history navigation and save
         historyList.querySelectorAll('.query-history-item').forEach(item => {
             item.addEventListener('click', (event) => {
-                // Don't navigate if delete button was clicked
-                if (event.target.classList.contains('query-history-delete')) {
+                if (event.target.classList.contains('query-history-delete') || event.target.classList.contains('query-history-save')) {
                     return;
                 }
                 const query = item.dataset.query;
@@ -7396,6 +7523,104 @@ function renderRealYoutubePaginationBar(page, totalPages, subject) {
                 historyDropdown.classList.remove('show');
             });
         });
+
+        // Add click handlers for save buttons
+        historyList.querySelectorAll('.query-history-save').forEach(btn => {
+            if (btn.disabled) return;
+            btn.addEventListener('click', async (event) => {
+                event.stopPropagation();
+
+                let query = btn.getAttribute('data-query');
+                if (!query) return;
+                const normalizedQuery = normalizeQuery(query); // Normalize for consistency
+
+                const displayName = query.replace(/^youtube\s+search\s+/i, '')
+                        .replace(/^youtube\s+/i, '')
+                        .replace(/^search\s+/i, '')
+                        .trim() || query;
+
+                // Initialize cache keys and metadata
+                const cacheKeys = [`yt_${normalizedQuery}_search_1`];
+                const searchMetadata = {
+                    searchType: 'search',
+                    lastPageViewed: 1,
+                    totalResults: 1
+                };
+
+                btn.disabled = true;
+                btn.title = 'Saving...';
+                try {
+                    const response = await fetch(window.appConfig.getApiUrl('/api/youtube/save-search'), {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            query: normalizeQuery(query),
+                            userId: window.sessionId,
+                            displayName,
+                            totalPages: page - 1,
+                            videoCount: 0,
+                            cacheKeys,
+                            searchMetadata
+                        })
+                    });
+
+                    console.log('+++++[FETCH - SAVE QUERY] response object body +++++ Saving query:', {
+                        query,
+                        userId: window.sessionId,
+                        displayName,
+                        totalPages: page - 1,
+                        videoCount: 0,
+                        cacheKeys,
+                        searchMetadata
+                      });
+
+                      console.log('+++++[FETCH - SAVE QUERY]+++++ About to send fetch to:', window.appConfig.getApiUrl('/api/youtube/save-search'));
+
+                    const data = await response.json();
+                    if (data && data.success) {
+                        window.showToast('💾 Query saved to database!', 'success');
+                        // Optimistically update the UI for this query
+                        const item = document.querySelector(`.query-history-item[data-query="${query}"]`);
+                        if (item) {
+                            // Show green LED
+                            let led = item.querySelector('.query-led');
+                            if (!led) {
+                                led = document.createElement('span');
+                                led.className = 'query-led green';
+                                led.title = 'Saved to database';
+                                led.innerHTML = '🟢';
+                                item.querySelector('.query-history-content').prepend(led);
+                            } else {
+                                led.className = 'query-led green';
+                                led.title = 'Saved to database';
+                                led.innerHTML = '🟢';
+                            }
+                            // Hide/disable save button
+                            const saveBtn = item.querySelector('.query-history-save');
+                            if (saveBtn) {
+                                saveBtn.disabled = true;
+                                saveBtn.title = 'Already saved';
+                                saveBtn.style.opacity = 0.5;
+                                saveBtn.style.cursor = 'default';
+                            }
+                        }
+                        // Optionally, still refresh the whole list after a short delay
+                        setTimeout(updateQueryHistoryDisplay, 1000);
+                    } else {
+                        window.showToast('Failed to save query', 'error');
+                        console.error('🔍 [HISTORY - FAIL] Failed to save query:', query);
+                        btn.disabled = false;
+                        btn.title = 'Save to database';
+                    }
+                } catch (e) {
+                    window.showToast('Error saving query', 'error');
+                    console.error('🔍 [HISTORY - ERROR] Error saving query:', e);
+                    btn.disabled = false;
+                    btn.title = 'Save to database';
+                }
+            });
+        });
+
     }
 
     // Function to navigate to a specific query
@@ -7581,7 +7806,14 @@ const handleYoutube = {
         const actualPage = isPagination ? currentPage : 1;
         const cacheKey = `yt_${subject}_${type}_${actualPage}`;
         console.log('🔍 [CACHE-FIRST] Checking cache with key:', cacheKey);
-        
+
+        let data = localStorage.getItem(cacheKey);
+        if (data) {
+            data = JSON.parse(data);
+            data.timestamp = Date.now();
+            localStorage.setItem(cacheKey, JSON.stringify(data));
+        }
+
         // STEP 1: CHECK CACHE FIRST (for ALL requests - new searches AND pagination)
         const cachedData = getCacheWithAgeCheck(cacheKey, 24); // 24 hour cache expiry
         if (cachedData) {
