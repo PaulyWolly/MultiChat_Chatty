@@ -89,20 +89,39 @@ export class PlaylistManager {
     console.log('PlaylistManager initialization complete');
   }
 
-  async show(video = null) {
-    console.log('PlaylistManager.show() called with video:', video);
-    this.currentVideo = video;
-    try {
-      await this.loadPlaylists();
-      this.renderPendingVideo();
+  async show(arg) {
+    // If called with a video object, set currentVideo and just open the dialog
+    if (arg && typeof arg === 'object' && (arg.id || arg.videoId) && arg.title) {
+      this.currentVideo = arg;
       this.dialog.style.display = 'flex';
       this.dialog.style.justifyContent = 'center';
       this.dialog.style.alignItems = 'center';
-      console.log('Dialog should now be visible');
-    } catch (error) {
-      console.error('Error showing playlist manager:', error);
-      this.showError('Failed to load playlists. Please try again.');
+      this.renderPendingVideo();
+      return;
     }
+    // Otherwise, treat as a query string for playlist selection/creation
+    const playlistName = window.extractCleanQuery ? window.extractCleanQuery(arg) : (arg?.trim() || '');
+    await this.loadPlaylists();
+    if (playlistName) {
+      const existing = this.playlists.find(pl => pl.name.toLowerCase() === playlistName.toLowerCase());
+      if (existing) {
+        this.selectPlaylist(existing._id);
+      } else {
+        const newPlaylist = await this.createPlaylist(playlistName);
+        await this.loadPlaylists();
+        // Find the new playlist by name (case-insensitive)
+        const created = this.playlists.find(pl => pl.name.toLowerCase() === playlistName.toLowerCase());
+        if (created) {
+          this.selectPlaylist(created._id);
+        }
+      }
+    } else {
+      this.renderPlaylists();
+    }
+    this.dialog.style.display = 'flex';
+    this.dialog.style.justifyContent = 'center';
+    this.dialog.style.alignItems = 'center';
+    this.renderPendingVideo();
   }
 
   hide() {
@@ -490,15 +509,12 @@ export class PlaylistManager {
     });
   }
 
-  async createPlaylist() {
-    const input = this.dialog.querySelector('.new-playlist-input');
-    const name = input.value.trim();
+  async createPlaylist(name) {
     if (!name) return;
 
     try {
-      await playlistService.createPlaylist(name);
-      input.value = '';
-      await this.loadPlaylists();
+      const response = await playlistService.createPlaylist(name);
+      return response.playlist;
     } catch (error) {
       this.showError('Failed to create playlist. Please try again.');
     }

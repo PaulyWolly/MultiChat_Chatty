@@ -4983,13 +4983,13 @@ button.next-page-btn {
 
 .real-youtube-pagination-bar {
     position: fixed !important;
-    right: 62px !important;
-    bottom: 400px !important;
+    right: 70px !important;
+    bottom: 470px !important;
     border: 1px solid blue;
     padding: 0 0px 8px 0;
     border-radius: 8px;
     width: 230px;
-    height: 100px;
+    height: 105px;
     background-color: #fff;
     z-index: 1001 !important;
 }
@@ -5336,7 +5336,7 @@ button.next-page-btn {
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
     z-index: 1000;
     display: none;
-    margin-top: 82px;
+    margin-top: 84px;
     min-width: 250px;
     overflow: hidden; /* Clip content to border-radius */
 }
@@ -5363,7 +5363,7 @@ button.next-page-btn {
 
 /* Make the query list scrollable with a max height */
 .query-history-list {
-    max-height: 240px; /* Slightly less than dropdown to account for header */
+    max-height: 300px; /* Slightly less than dropdown to account for header */
     overflow-y: auto;
     scrollbar-width: thin;
     scrollbar-color: #bbb transparent;
@@ -5381,6 +5381,7 @@ button.next-page-btn {
     font-size: 12px;
     color: #333;
     text-align: center;
+    cursor: default !important;
 }
 
 .query-history-item {
@@ -5631,14 +5632,6 @@ button.next-page-btn {
     50% { opacity: 0.7; }
 }
 
-
-
-
-    
-
-
-
-
 /* Paginator Toggle Icon - ONLY INSIDE YouTube containers */
 .show-paginator-bar {
     position: absolute !important;
@@ -5783,10 +5776,11 @@ button.next-page-btn {
 }
 
 .quota-minimize-restore-btn.quota-minimize-btn {
-    width: 100%;
-    height: 100%;
+    width: 20px;
+    height: 18px;
     background: none;
     border: none;
+    border-radius: 4px;
     cursor: pointer;
     color: white;
     font-size: 10px;
@@ -5794,11 +5788,16 @@ button.next-page-btn {
     text-align: center;
     padding: 0;
     margin: 0;
+    position: absolute;
+    right: 10px;
+    line-height: 0.4;
+    bottom: 145px;
 }
 
 .quota-minimize-restore-btn.quota-restore-btn {
-    width: 100%;
-    height: 100%;
+    width: 20px;
+    height: 14px;
+    top: 2px !important;
     background: blue;
     border: none;
     cursor: pointer;
@@ -5814,4 +5813,15 @@ button.next-page-btn {
     background: rgba(255, 0, 0, 1) !important;
     transform: scale(1.2) !important;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.8) !important;
+}
+
+.quota-drag-handle {
+    background-repeat: no-repeat;
+    background-position: bottom center;
+    background-size: auto 100%;
+    cursor: grab;
+    opacity: 50%;
+    width: 100%;
+    height: 24px;
+    background-image: url(assets/img/drag-pattern1.png);
 }

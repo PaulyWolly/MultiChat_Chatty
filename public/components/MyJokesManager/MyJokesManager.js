@@ -35,6 +35,28 @@ class MyJokesManager {
         this.submitJoke = this.submitJoke.bind(this);
     }
 
+
+    // =====================================================
+    // HELPER FUNCTIONS
+    // =====================================================
+
+    async speakJokeContent(jokeContent) {
+        // Set AISPEAKING status before playing
+        state.isAISpeaking = true;
+        updateStopAudioButton();  // Show button
+        updateStatus(MESSAGES.STATUS.SPEAKING);  // Update status to show AI is speaking
+
+        // Split on newlines or punctuation, trim, and filter out empty lines
+        const lines = jokeContent.split(/\\n|\\r|[.!?]/).map(l => l.trim()).filter(Boolean);
+        for (const line of lines) {
+            await queueAudioChunk(line);
+        }
+    }
+
+    // =====================================================
+    // INITIALIZATION
+    // =====================================================
+
     /**
      * Initialize the MyJokesManager component
      */

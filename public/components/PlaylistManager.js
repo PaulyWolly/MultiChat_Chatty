@@ -7,6 +7,8 @@ export class PlaylistManager {
     this.playlists = [];
     this.selectedPlaylistId = null;
     this.playlistSortAsc = true; // Track sort order
+    this.sortMode = 'recent'; // 'recent', 'asc', 'desc'
+    this.recentPlaylistIds = JSON.parse(localStorage.getItem('recentPlaylistIds') || '[]');
     this.init();
   }
 
@@ -62,12 +64,39 @@ export class PlaylistManager {
 
     // Add event listeners
     this.dialog.querySelector('.close-btn').addEventListener('click', () => this.hide());
-    this.dialog.querySelector('.create-playlist-btn').addEventListener('click', () => this.createPlaylist());
+    this.dialog.querySelector('.create-playlist-btn').addEventListener('click', async () => {
+      const input = this.dialog.querySelector('.new-playlist-input');
+      const name = input.value.trim();
+      if (name) {
+        const newPlaylist = await this.createPlaylist(name);
+        input.value = '';
+        await this.loadPlaylists();
+        // Select the new playlist if it was created
+        if (newPlaylist && newPlaylist.name) {
+          const created = this.playlists.find(pl => pl.name.toLowerCase() === newPlaylist.name.toLowerCase());
+          if (created) {
+            this.selectPlaylist(created._id);
+          }
+        }
+      }
+    });
     // Add Enter key support for new playlist input
-    this.dialog.querySelector('.new-playlist-input').addEventListener('keydown', (e) => {
+    this.dialog.querySelector('.new-playlist-input').addEventListener('keydown', async (e) => {
       if (e.key === 'Enter') {
         e.preventDefault();
-        this.createPlaylist();
+        const input = this.dialog.querySelector('.new-playlist-input');
+        const name = input.value.trim();
+        if (name) {
+          const newPlaylist = await this.createPlaylist(name);
+          input.value = '';
+          await this.loadPlaylists();
+          if (newPlaylist && newPlaylist.name) {
+            const created = this.playlists.find(pl => pl.name.toLowerCase() === newPlaylist.name.toLowerCase());
+            if (created) {
+              this.selectPlaylist(created._id);
+            }
+          }
+        }
       }
     });
     // this.dialog.querySelector('.add-to-playlist-header-btn').addEventListener('click', () => this.addCurrentVideoToPlaylist());
@@ -89,20 +118,63 @@ export class PlaylistManager {
     console.log('PlaylistManager initialization complete');
   }
 
-  async show(video = null) {
-    console.log('PlaylistManager.show() called with video:', video);
-    this.currentVideo = video;
-    try {
+  async show(arg, playlistNameArg = null) {
+    // If called with a video object and a playlist name, set currentVideo and select/create the playlist
+    if (arg && typeof arg === 'object' && (arg.id || arg.videoId) && arg.title && playlistNameArg) {
+      this.currentVideo = arg;
+      const playlistName = window.extractCleanQuery ? window.extractCleanQuery(playlistNameArg) : (playlistNameArg?.trim() || '');
       await this.loadPlaylists();
-      this.renderPendingVideo();
+      if (playlistName) {
+        const existing = this.playlists.find(pl => pl.name.toLowerCase() === playlistName.toLowerCase());
+        if (existing) {
+          this.selectPlaylist(existing._id);
+        } else {
+          const newPlaylist = await this.createPlaylist(playlistName);
+          await this.loadPlaylists();
+          const created = this.playlists.find(pl => pl.name.toLowerCase() === playlistName.toLowerCase());
+          if (created) {
+            this.selectPlaylist(created._id);
+          }
+        }
+      }
       this.dialog.style.display = 'flex';
       this.dialog.style.justifyContent = 'center';
       this.dialog.style.alignItems = 'center';
-      console.log('Dialog should now be visible');
-    } catch (error) {
-      console.error('Error showing playlist manager:', error);
-      this.showError('Failed to load playlists. Please try again.');
+      this.renderPendingVideo();
+      return;
     }
+    // If called with just a video object, fallback to previous behavior
+    if (arg && typeof arg === 'object' && (arg.id || arg.videoId) && arg.title) {
+      this.currentVideo = arg;
+      await this.loadPlaylists();
+      this.dialog.style.display = 'flex';
+      this.dialog.style.justifyContent = 'center';
+      this.dialog.style.alignItems = 'center';
+      this.renderPendingVideo();
+      return;
+    }
+    // Otherwise, treat as a query string for playlist selection/creation
+    const playlistName = window.extractCleanQuery ? window.extractCleanQuery(arg) : (arg?.trim() || '');
+    await this.loadPlaylists();
+    if (playlistName) {
+      const existing = this.playlists.find(pl => pl.name.toLowerCase() === playlistName.toLowerCase());
+      if (existing) {
+        this.selectPlaylist(existing._id);
+      } else {
+        const newPlaylist = await this.createPlaylist(playlistName);
+        await this.loadPlaylists();
+        const created = this.playlists.find(pl => pl.name.toLowerCase() === playlistName.toLowerCase());
+        if (created) {
+          this.selectPlaylist(created._id);
+        }
+      }
+    } else {
+      this.renderPlaylists();
+    }
+    this.dialog.style.display = 'flex';
+    this.dialog.style.justifyContent = 'center';
+    this.dialog.style.alignItems = 'center';
+    this.renderPendingVideo();
   }
 
   hide() {
@@ -139,54 +211,32 @@ export class PlaylistManager {
       const f = filter.trim().toLowerCase();
       filtered = this.playlists.filter(p => p.name.toLowerCase().includes(f));
     }
-    // --- Custom sort logic ---
-    // 1. Always show the selected playlist at the top
-    // 2. If none selected, show the most recently created playlist at the top
-    // 3. Allow user to sort the rest ASC/DESC by name
-    // 4. Keep sort control working
     let sorted;
-    if (!filter || !filter.trim()) {
-      let rest = filtered.slice();
-      let topPlaylist = null;
-      if (this.selectedPlaylistId) {
-        const idx = rest.findIndex(p => p._id === this.selectedPlaylistId);
-        if (idx !== -1) {
-          topPlaylist = rest.splice(idx, 1)[0];
+    if (this.sortMode === 'recent') {
+      // MRU order first, then the rest alphabetically
+      const mru = [];
+      const rest = [];
+      filtered.forEach(p => {
+        if (this.recentPlaylistIds.includes(p._id)) {
+          mru.push(p);
+        } else {
+          rest.push(p);
         }
-      }
-      if (!topPlaylist && rest.length > 0) {
-        // If nothing selected, use the most recent
-        rest.sort((a, b) => {
-          const dateA = new Date(a.createdAt || 0);
-          const dateB = new Date(b.createdAt || 0);
-          return dateB - dateA;
-        });
-        topPlaylist = rest.shift();
-      }
-      // Sort the rest by name ASC/DESC
-      rest.sort((a, b) => {
-        if (a.name.toLowerCase() < b.name.toLowerCase()) return this.playlistSortAsc ? -1 : 1;
-        if (a.name.toLowerCase() > b.name.toLowerCase()) return this.playlistSortAsc ? 1 : -1;
-        return 0;
       });
-      sorted = topPlaylist ? [topPlaylist, ...rest] : rest;
+      // Sort MRU by their order in recentPlaylistIds
+      mru.sort((a, b) => this.recentPlaylistIds.indexOf(a._id) - this.recentPlaylistIds.indexOf(b._id));
+      // Sort rest alphabetically
+      rest.sort((a, b) => a.name.localeCompare(b.name));
+      sorted = [...mru, ...rest];
     } else {
-      // If filtering, maintain alphabetical sort
+      // ASC/DESC
       sorted = filtered.slice().sort((a, b) => {
         if (a.name.toLowerCase() < b.name.toLowerCase()) return this.playlistSortAsc ? -1 : 1;
         if (a.name.toLowerCase() > b.name.toLowerCase()) return this.playlistSortAsc ? 1 : -1;
         return 0;
       });
     }
-    console.log('Playlist sort state:', { sortAsc: this.playlistSortAsc, filter, sorted });
-    container.innerHTML = sorted.map(playlist => `
-      <div class="playlist-item${playlist._id === this.selectedPlaylistId ? ' active' : ''}" data-id="${playlist._id}" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center; padding:6px 10px; border-radius:6px; margin-bottom:2px; background:${playlist._id === this.selectedPlaylistId ? '#e3f2fd' : 'transparent'};">
-        <span class="playlist-name">${playlist.name}</span>
-        <span class="playlist-count" style="color:#888;font-size:0.95em;">(${playlist.videos.length})</span>
-      </div>
-    `).join('');
-
-    // --- Playlist List Outer Wrapper ---
+    // Add sort controls
     let outer = this.dialog.querySelector('.playlist-list-outer');
     if (!outer) {
       outer = document.createElement('div');
@@ -200,17 +250,36 @@ export class PlaylistManager {
     // Remove any existing sort control
     const oldSort = outer.querySelector('.playlist-sort-control');
     if (oldSort) oldSort.remove();
-    // Add sort control absolutely positioned in the wrapper
+    // Add sort controls
     const sortArrow = this.playlistSortAsc ? '▲' : '▼';
     const sortControl = document.createElement('div');
     sortControl.className = 'playlist-sort-control';
-    sortControl.innerHTML = `<span class="playlist-sort-label">Sort</span> <span class="playlist-sort-arrow">${sortArrow}</span>`;
+    sortControl.innerHTML = `
+      
+      <button class="playlist-sort-recent-btn" style="margin-left:8px;${this.sortMode==='recent'?'font-weight:bold;':''}">Recent</button>
+      <span class="playlist-sort-arrow" style="margin-left:8px;cursor:pointer;">${sortArrow}</span>
+    `;
     outer.appendChild(sortControl);
+    // Recent sort button
+    sortControl.querySelector('.playlist-sort-recent-btn').onclick = (e) => {
+      e.stopPropagation();
+      this.sortMode = 'recent';
+      this.renderPlaylists(this.dialog.querySelector('.playlist-search-input').value);
+    };
+    // ASC/DESC sort arrow
     sortControl.querySelector('.playlist-sort-arrow').onclick = (e) => {
       e.stopPropagation();
       this.playlistSortAsc = !this.playlistSortAsc;
+      this.sortMode = this.playlistSortAsc ? 'asc' : 'desc';
       this.renderPlaylists(this.dialog.querySelector('.playlist-search-input').value);
     };
+    // Render playlists
+    container.innerHTML = sorted.map(playlist => `
+      <div class="playlist-item${playlist._id === this.selectedPlaylistId ? ' active' : ''}" data-id="${playlist._id}" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center; padding:6px 10px; border-radius:6px; margin-bottom:2px; background:${playlist._id === this.selectedPlaylistId ? '#e3f2fd' : 'transparent'};">
+        <span class="playlist-name">${playlist.name}</span>
+        <span class="playlist-count" style="color:#888;font-size:0.95em;">(${playlist.videos.length})</span>
+      </div>
+    `).join('');
 
     container.querySelectorAll('.playlist-item').forEach(item => {
       item.addEventListener('click', (e) => {
@@ -300,6 +369,7 @@ export class PlaylistManager {
 
   async selectPlaylist(playlistId) {
     this.selectedPlaylistId = playlistId;
+    this.updateRecentPlaylists(playlistId);
     const playlist = this.playlists.find(p => p._id === playlistId);
     if (playlist) {
       this.dialog.querySelector('.current-playlist-name').textContent = playlist.name;
@@ -490,15 +560,15 @@ export class PlaylistManager {
     });
   }
 
-  async createPlaylist() {
-    const input = this.dialog.querySelector('.new-playlist-input');
-    const name = input.value.trim();
+  async createPlaylist(name) {
     if (!name) return;
-
     try {
-      await playlistService.createPlaylist(name);
-      input.value = '';
-      await this.loadPlaylists();
+      const response = await playlistService.createPlaylist(name);
+      // Add to MRU
+      if (response && response.playlist && response.playlist._id) {
+        this.updateRecentPlaylists(response.playlist._id);
+      }
+      return response.playlist;
     } catch (error) {
       this.showError('Failed to create playlist. Please try again.');
     }
@@ -686,6 +756,17 @@ export class PlaylistManager {
       msgDiv.style.fontWeight = 'bold';
       setTimeout(() => { msgDiv.innerHTML = ''; }, 10000);
     }
+  }
+
+  updateRecentPlaylists(playlistId) {
+    // Remove if already present
+    this.recentPlaylistIds = this.recentPlaylistIds.filter(id => id !== playlistId);
+    // Add to top
+    this.recentPlaylistIds.unshift(playlistId);
+    // Limit to 20 MRU
+    this.recentPlaylistIds = this.recentPlaylistIds.slice(0, 20);
+    localStorage.setItem('recentPlaylistIds', JSON.stringify(this.recentPlaylistIds));
+    // TODO: Call backend API to persist MRU order
   }
 }
 

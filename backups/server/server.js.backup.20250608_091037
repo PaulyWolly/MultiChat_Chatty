@@ -13,7 +13,9 @@ const dotenv           = require('dotenv');
 
 const path = require('path');
 // Load environment variables FIRST
-dotenv.config({ path: path.join(__dirname, '.env') });
+const envPath = path.join(__dirname, '.env');
+console.log('Looking for .env file at:', envPath);
+dotenv.config({ path: envPath });
 
 const { MongoClient }  = require('mongodb');
 const sdk              = require('microsoft-cognitiveservices-speech-sdk');
@@ -1840,7 +1842,8 @@ app.post('/api/debug/add-test-joke', async (req, res) => {
 // Save YouTube search query to database
 app.post('/api/youtube/save-search', async (req, res) => {
     try {
-        const { query, userId, displayName, totalPages, videoCount, cacheKeys, searchMetadata } = req.body;
+        let { query, userId, displayName, totalPages, videoCount, cacheKeys, searchMetadata } = req.body;
+        query = (query || '').trim().toLowerCase();
 
         console.log('💾 [YOUTUBE-DB] Saving search query:', { query, userId, displayName });
 
@@ -1942,22 +1945,21 @@ app.delete('/api/youtube/saved-searches/:searchId', async (req, res) => {
 // Check if a query is saved in database
 app.post('/api/youtube/check-saved', async (req, res) => {
     try {
-        const { queries, userId } = req.body;
+        let { queries, userId } = req.body;
+        queries = (queries || []).map(q => (q || '').trim().toLowerCase());
+        console.log('🔍 [YOUTUBE-DB] Checking saved status for', queries.length, 'queries for user:', userId);
 
-        console.log('🔍 [YOUTUBE-DB] Checking saved status for', queries.length, 'queries');
-
+        // Use the Mongoose model to find saved queries for this user
         const savedQueries = await YouTubeSearch.find({ 
             userId, 
             query: { $in: queries } 
         }).select('query');
 
         const savedQuerySet = new Set(savedQueries.map(s => s.query));
-        
         const results = {};
         queries.forEach(query => {
             results[query] = savedQuerySet.has(query);
         });
-
         res.json({ success: true, results });
     } catch (error) {
         console.error('🔍 [YOUTUBE-DB] Error checking saved status:', error);

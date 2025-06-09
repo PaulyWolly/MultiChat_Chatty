@@ -1,7 +1,7 @@
 /*
   APP.JS
   Version: 2
-  AppName: MultiChat_Chatty [v2]
+  AppName: MultiChat_Chatty [v2] - Using new recipe code
   Updated: 06/05/2025 @10:00PM
   Created by Paul Welby
 */
@@ -15,6 +15,9 @@ import toastManager from './components/ToastManager.js';
 
 // Initialize PlaylistManager globally
 console.log('Initializing PlaylistManager...');
+
+console.log('>>>>>>> [APP] App.js loaded - using new recipe code from /app_working_recipe');
+
 window.playlistManager = playlistManager;
 console.log('PlaylistManager initialized:', window.playlistManager);
 
@@ -105,6 +108,7 @@ const MESSAGES = {
         EXIT: "Error occurred during exit. Please refresh the page if issues persist."
     }
 };
+window.MESSAGES = MESSAGES;
 
 // Add at the top with other constants
 const AUDIO_CONFIG = {
@@ -344,6 +348,124 @@ function isValidSessionId(sid) {
 // HELPER FUNCTIONS
 // =====================================================
 
+function isRecipe(text) {
+    // Check if text contains both "Ingredients:" and "Instructions:" or "Directions:"
+    return text.includes('Ingredients:') &&
+           (text.includes('Instructions:') || text.includes('Directions:'));
+}
+
+// Add TTS warm-up function
+async function warmUpTTS() {
+    console.log('🔊 [AUDIO] Starting TTS warm-up...');
+    
+    const warmUpPayloads = [
+        '\u200B', // zero-width space
+        ' ',      // regular space
+        '.',      // period
+        ',',      // comma
+    ];
+    
+    for (let i = 0; i < warmUpPayloads.length; i++) {
+        try {
+            const response = await fetch(window.appConfig.getApiUrl('/api/tts'), {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    text: warmUpPayloads[i],
+                    voice: window.appConfig.getTTSVoice(),
+                    rate: 0.9,
+                    pitch: 1,
+                    volume: 0 // always silent
+                })
+            });
+            
+            if (!response.ok) {
+                console.warn(`🔊 [AUDIO] Warm-up request ${i + 1} failed:`, response.status);
+                continue;
+            }
+            
+            const audioBlob = await response.blob();
+            if (audioBlob.size === 0) {
+                console.warn(`🔊 [AUDIO] Warm-up request ${i + 1} returned empty audio`);
+                continue;
+            }
+            
+            const audioUrl = URL.createObjectURL(audioBlob);
+            const audio = new Audio(audioUrl);
+            
+            // Wait for audio to be loaded
+            await new Promise((resolve, reject) => {
+                audio.onloadeddata = resolve;
+                audio.onerror = reject;
+                // Set a timeout in case loading takes too long
+                setTimeout(reject, 5000);
+            });
+            
+            URL.revokeObjectURL(audioUrl);
+            console.log(`🔊 [AUDIO] Warm-up request ${i + 1} successful`);
+            
+            // Small delay between requests to avoid rate limiting
+            await new Promise(resolve => setTimeout(resolve, 100));
+        } catch (error) {
+            console.warn(`🔊 [AUDIO] Warm-up request ${i + 1} error:`, error);
+            // Continue to next request
+        }
+    }
+    
+    console.log('🔊 [AUDIO] TTS warm-up complete');
+}
+
+// Helper function to count cached pages for a query
+function countCachedPages(query) {
+    let count = 0;
+    let page = 1;
+    const type = (query.toLowerCase().includes('channel:') ||
+                    query.toLowerCase().startsWith('youtube channel') ||
+                    query.toLowerCase().startsWith('youtube search channel')) ? 'channel' : 'search';
+    while (page <= 10) {
+        const cacheKey = `yt_${query}_${type}_${page}`;
+        if (localStorage.getItem(cacheKey)) {
+            count++;
+            page++;
+        } else {
+            break;
+        }
+    }
+    return count;
+}
+
+// Helper function to extract just the subject from query
+function extractSubject(query) {
+    // For channel queries
+    const channelPattern1 = /^youtube\s+channel\s+(.+)/i;
+    const channelPattern2 = /^youtube\s+search\s+channel:(.+)/i;
+    let match = query.match(channelPattern1) || query.match(channelPattern2);
+    if (match) {
+        return match[1].trim() + ' (c)';
+    }
+    // For normal queries
+    const cleanQuery = query
+        .replace(/^youtube\s+search\s+/i, '')
+        .replace(/^youtube\s+/i, '')
+        .replace(/^search\s+/i, '')
+        .trim();
+    return cleanQuery || query;
+}
+
+// Add or update the getCurrentYouTubeQuery helper if not present
+function getCurrentYouTubeQuery() {
+    // Try to get the current query from your pagination or header state
+    if (window.youtubePagination && window.youtubePagination.originalQuery) {
+        return window.youtubePagination.originalQuery;
+    }
+    // Fallback: try to extract from header or other state
+    const header = document.querySelector('.youtube-header-title');
+    if (header) {
+        return header.textContent.replace(/^YouTube Results:?\s*/i, '').replace(/"/g, '').trim();
+    }
+    return '';
+}
+
 // Function to save YouTube query to database
 async function saveYouTubeQuery(query) {
     try {
@@ -389,71 +511,6 @@ function normalizeQuery(query) {
     return (typeof query === 'string' ? query : '').trim().toLowerCase();
 }
 
-// In all places where queries are saved, checked, or used as keys, use normalizeQuery(query)
-
-// Example for saving:
-//const normalizedQuery = normalizeQuery(item.query);
-// Use normalizedQuery in fetch to /api/youtube/save-search
-
-// Use normalizedQueries in fetch to /api/youtube/check-saved
-// When building savedStatus, use normalized keys
-// When rendering, use normalized keys to check savedStatus
-
-
-// Unified scroll handler for both YouTube and non-YouTube content
-// function handleScroll(options = {}, content = '') {
-//     const chatContainer = document.querySelector('#chat-messages');
-//     if (!chatContainer) return;
-
-//     // YouTube content scrolls to TOP
-//     if (options.isYoutube || content.includes('YouTube Results') || content.includes('youtube-multi-bubble')) {
-//         // Find ALL YouTube-related messages
-//         const youtubeMessages = document.querySelectorAll('.message');
-//         let targetMessage = null;
-        
-//         // Find the LAST message that contains YouTube content
-//         for (let i = youtubeMessages.length - 1; i >= 0; i--) {
-//             const message = youtubeMessages[i];
-//             if (message.querySelector('.youtube-multi-bubble, .youtube-single-bubble, .youtube-multi-bubble-mock, .youtube-single-bubble-mock')) {
-//                 targetMessage = message;
-//                 break;
-//             }
-//         }
-        
-//         if (targetMessage) {
-//             // Get the TOP of the message container (not the bubble inside it)
-//             const messageTop = targetMessage.offsetTop;
-//             chatContainer.scrollTop = messageTop - 90;
-//             console.log('📍 [SCROLL] Scrolled to TOP of YouTube message container');
-            
-//             // FORCE the scroll to stick by setting it again after a tiny delay
-//             setTimeout(() => {
-//                 chatContainer.scrollTop = messageTop - 90;
-//                 console.log('📍 [SCROLL] FORCED scroll to stick at TOP');
-//             }, 50);
-//         } else {
-//             chatContainer.scrollTop = 0;
-//             console.log('📍 [SCROLL] No YouTube message found');
-//         }
-//     } else {
-//         // Non-YouTube content scrolls to BOTTOM
-//         const scrollToBottom = () => {
-//             chatContainer.scrollTop = chatContainer.scrollHeight;
-//             console.log('📍 [SCROLL] Scrolled to bottom, scrollTop:', chatContainer.scrollTop, 'scrollHeight:', chatContainer.scrollHeight);
-//         };
-        
-//         // Immediate scroll
-//         scrollToBottom();
-        
-//         // Multiple delayed scrolls to handle content that takes time to render
-//         // This is especially important for My Jokes listings and other complex HTML content
-//         setTimeout(scrollToBottom, 100);   // Quick follow-up
-//         setTimeout(scrollToBottom, 300);   // After initial render
-//         setTimeout(scrollToBottom, 600);   // After animations/transitions
-//         setTimeout(scrollToBottom, 1000);  // Final cleanup scroll
-//         setTimeout(scrollToBottom, 1500);  // Extra safety for slow content
-//     }
-// }
 
 function handleScroll({ content = '', options = {}, role = '' }) {
     const isYouTube = options.isYoutube || content.includes('YouTube Results') || content.includes('youtube-multi-bubble');
@@ -490,6 +547,33 @@ function handleScroll({ content = '', options = {}, role = '' }) {
         setTimeout(scrollToBottom, 20000);
     }
     // For Bing, Recipe, or Image queries: do NOT scroll
+}
+
+// --- MIGRATION SCRIPT: Add timestamp to all yt_*_search_* cache entries if missing ---
+(function migrateYouTubeCacheTimestamps() {
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('yt_') && key.includes('_search_')) {
+            try {
+                const val = localStorage.getItem(key);
+                if (!val) continue;
+                const obj = JSON.parse(val);
+                if (!obj.timestamp) {
+                    obj.timestamp = Date.now();
+                    localStorage.setItem(key, JSON.stringify(obj));
+                    console.log('[MIGRATION] Added timestamp to', key);
+                }
+            } catch (e) {
+                // Ignore parse errors
+            }
+        }
+    }
+})();
+
+// Helper function to set YouTube cache with timestamp
+function setYouTubeCacheWithTimestamp(cacheKey, data) {
+    if (!data.timestamp) data.timestamp = Date.now();
+    localStorage.setItem(cacheKey, JSON.stringify(data));
 }
 
 // =====================================================
@@ -561,12 +645,7 @@ function updateStopAudioButton() {
     
     elements.stopAudioButton.style.display = shouldShow ? 'inline-block' : 'none';
 }
-
-function isRecipe(text) {
-    // Check if text contains both "Ingredients:" and "Instructions:" or "Directions:"
-    return text.includes('Ingredients:') &&
-           (text.includes('Instructions:') || text.includes('Directions:'));
-}
+window.updateStopAudioButton = updateStopAudioButton;
 
 async function handleCommand(text) {
 
@@ -1181,11 +1260,21 @@ async function loadPersonalInfo() {
 // Setup event listeners function
 function setupEventListeners() {
     elements.micButton.addEventListener('click', toggleSpeechRecognition);
-    elements.sendButton.addEventListener('click', () => sendMessage());
+    elements.sendButton.addEventListener('click', () => {
+        const value = elements.userInput.value.trim();
+        if (value) {
+            sendMessage(value);
+            elements.userInput.value = '';
+        }
+    });
     elements.userInput.addEventListener('keypress', (event) => {
         if (event.key === 'Enter' && !event.shiftKey) {
             event.preventDefault();
-            sendMessage();
+            const value = elements.userInput.value.trim();
+            if (value) {
+                sendMessage(value);
+                elements.userInput.value = '';
+            }
         }
     });
     elements.imageUploadBtn.addEventListener('click', () => {
@@ -1388,7 +1477,7 @@ function setupSSEConnection() {
         state.eventSource.onmessage = function(event) {
             try {
                 const data = JSON.parse(event.data);
-                console.log('SSE message received:', data);
+                // console.log('SSE message received:', data);
                 
                 if (data.type === 'status') {
                     updateStatus(data.message);
@@ -1495,14 +1584,6 @@ function stopAllAudio() {
 }
 
 function stopAllAudioListening() {
-    if (state.interruptRecognition) {
-        try {
-            state.interruptRecognition.stop();
-            console.log('🔇 [INTERRUPT] Stopped interrupt recognition');
-        } catch (error) {
-            console.log('🔇 [INTERRUPT] Error stopping interrupt recognition:', error);
-        }
-    }
 
     stopListening();
     if (state.currentAudio) {
@@ -1744,6 +1825,14 @@ async function sendMessage(message, isGreeting = false) {
             return; // Prevent sending to AI
         }
         
+
+        // Check for YouTube channel search
+        const channelPattern1 = /^youtube\s+channel\s+(.+)/i;
+        const channelPattern2 = /^youtube\s+search\s+channel:(.+)/i;
+        if (channelPattern1.test(messageText) || channelPattern2.test(messageText)) {
+            await handleYoutube.handleYoutubeRequest(messageText);
+            return;
+        }
 
         // Check for YouTube request
         if (patterns.youtube.searchVideos.test(messageText) || patterns.youtube.playVideo.test(messageText)) {
@@ -2362,6 +2451,32 @@ async function getAIResponse(message, selectedModel, history, systemPrompt, sess
                         continue; // Skip all other processing for Bing results
                     }
 
+                    // Check for image trigger phrase
+                    if (responseText.toLowerCase().includes('here are some relevant images for')) {
+                        const imageMatch = responseText.match(/here are some relevant images for (.*?)[.!?\n]/i);
+                        if (imageMatch && imageMatch[1]) {
+                            const searchQuery = imageMatch[1].trim();
+                            console.log('Detected image request for:', searchQuery);
+
+                            try {
+                                const imageResponse = await fetch(`/api/google-image-search?q=${encodeURIComponent(searchQuery)}`);
+                                if (!imageResponse.ok) {
+                                    throw new Error(`HTTP error! status: ${imageResponse.status}`);
+                                }
+
+                                const imageData = await imageResponse.json();
+                                console.log('Received image data:', imageData);
+
+                                if (imageData.images && imageData.images.length > 0) {
+                                    console.log('Inserting images into chat');
+                                    insertAndStyleImages(imageData.images, messageElement);
+                                }
+                            } catch (error) {
+                                console.error('Error fetching images:', error);
+                            }
+                        }
+                    }
+
                     // Queue audio for complete sentences
                     const sentences = currentChunk.match(/[^.!?]+[.!?]+/g);
                     if (sentences) {
@@ -2465,10 +2580,10 @@ function addMessageToChat(role, content, options = {}) {
             contentElement.innerHTML = content;
         }
         // For assistant recipe messages, format ingredients as dashed HTML list
-        else if (role === 'assistant' && content.match(/Ingredients:/i) && content.match(/Instructions:|Directions:/i)) {
-            content = formatIngredientsAsDashedList(content);
-            contentElement.innerHTML = content;
-        }
+        // else if (role === 'assistant' && content.match(/Ingredients:/i) && content.match(/Instructions:|Directions:/i)) {
+        //     content = formatIngredientsAsDashedList(content);
+        //     contentElement.innerHTML = content;
+        // }
         else if (options.renderAsHTML) {
             contentElement.innerHTML = content;
         }
@@ -2488,6 +2603,7 @@ function addMessageToChat(role, content, options = {}) {
 
     // Use the new handleScroll helper for all scroll handling
     handleScroll({ content, options, role });
+    // Remove any additional scroll-to-bottom logic for YouTube results here (if present)
 
     return messageElement;
 
@@ -2643,45 +2759,45 @@ function updateMetadata(messageElement, metadata = {}) {
 
     // Check for recipe content and handle recipe buttons
     const messageContent = messageElement.querySelector('.message-content');
-    if (messageContent) {
-        const text = messageContent.textContent;
-        const hasIngredients = text.toLowerCase().includes('ingredients:');
-        const hasInstructions = text.toLowerCase().includes('instructions:') ||
-                                text.toLowerCase().includes('steps:');
+    // if (messageContent) {
+    //     const text = messageContent.textContent;
+    //     const hasIngredients = text.toLowerCase().includes('ingredients:');
+    //     const hasInstructions = text.toLowerCase().includes('instructions:') ||
+    //                             text.toLowerCase().includes('steps:');
     
-        if (hasIngredients && hasInstructions) {
-            // Make metadata div a flex container
-            metadataElement.style.display = 'flex';
-            metadataElement.style.alignItems = 'center';
-            metadataElement.style.justifyContent = 'space-between';
+    //     if (hasIngredients && hasInstructions) {
+    //         // Make metadata div a flex container
+    //         metadataElement.style.display = 'flex';
+    //         metadataElement.style.alignItems = 'center';
+    //         metadataElement.style.justifyContent = 'space-between';
     
-            // Create recipe buttons container
-            const recipeButtons = document.createElement('span');
-            recipeButtons.className = 'recipe-buttons';
-            recipeButtons.style.cssText = `
-                display: flex;
-                gap: 5px;
-                margin-left: auto;
-            `;    
+    //         // Create recipe buttons container
+    //         const recipeButtons = document.createElement('span');
+    //         recipeButtons.className = 'recipe-buttons';
+    //         recipeButtons.style.cssText = `
+    //             display: flex;
+    //             gap: 5px;
+    //             margin-left: auto;
+    //         `;    
 
-            // Add the buttons
-            recipeButtons.innerHTML = `
-                <button style="
-                background: transparent;
-                border: none;
-                cursor: pointer;
-                font-size: 20px;
-                padding: 0;
-                margin: 0;
-                " onclick="printRecipe('${text.replace(
-                /'/g,
-                "\\'"
-                )}', this.closest('.message'))" title="Print Recipe">🖨️</button>
-            `;
+    //         // Add the buttons
+    //         recipeButtons.innerHTML = `
+    //             <button style="
+    //             background: transparent;
+    //             border: none;
+    //             cursor: pointer;
+    //             font-size: 20px;
+    //             padding: 0;
+    //             margin: 0;
+    //             " onclick="printRecipe('${text.replace(
+    //             /'/g,
+    //             "\\'"
+    //             )}', this.closest('.message'))" title="Print Recipe">🖨️</button>
+    //         `;
 
-            metadataElement.appendChild(recipeButtons);
-        }
-    }
+    //         metadataElement.appendChild(recipeButtons);
+    //     }
+    // }
 }
 
 // Check if the user's message is an AI greeting response
@@ -2744,6 +2860,7 @@ function updateStatus(message) {
     elements.status.innerHTML = message;
     updateStopAudioButton();
 }
+window.updateStatus = updateStatus;
 
 // Retrieve personal info function
 async function getPersonalInfo(key = null) {
@@ -2752,7 +2869,7 @@ async function getPersonalInfo(key = null) {
         updateStopAudioButton();  // Show button
 
         const url = `/api/personal-info?userId=${window.sessionId}${key ? `&key=${key}` : ''}`;
-        const response = await fetch(window.appConfig.getApiUrl(url));
+        const response = await fetch(url);
         
         const data = await response.json();
 
@@ -2794,56 +2911,38 @@ async function getPersonalInfo(key = null) {
 // =====================================================
 
 // Split text into chunks function
-function splitTextIntoChunks(text, maxLength = 500, forTTS = false) {
-    console.log('🔄 [CHUNK DEBUG] Input text length:', text.length);
-    console.log('🔄 [CHUNK DEBUG] Input text:', text);
-    
-    // Add H.G. and J.K. to the honorifics regex
-    const honorifics = /(?:Mr\.|Mrs\.|Dr\.|Sr\.|Jr\.|Ms\.|Prof\.|Rev\.|Capt\.|Lt\.|Col\.|Gen\.|Sgt\.|Cpl\.|Pvt\.|St\.|H\.G\.|J\.K\.)/g;
-    // Replace honorifics and abbreviations with a marker
-    let tempText = text.replace(honorifics, match => match.replace(/\./g, 'DOT'));
-    // If for TTS, remove the DOT marker (so "MrDOT Smith" becomes "Mr Smith")
-    if (forTTS) tempText = tempText.replace(/DOT/g, '');
-    // If for display, restore the period
-    else tempText = tempText.replace(/DOT/g, '.');
-    
+function splitTextIntoChunks(text, maxLength = 200) {
     // Split text into sentences, keeping the punctuation
-    // Improved regex to better handle quoted speech and complex sentences
-    const sentences = tempText.match(/[^.!?]*[.!?]+/g) || [tempText];
-    console.log('🔄 [CHUNK DEBUG] Split into sentences count:', sentences.length);
-    console.log('🔄 [CHUNK DEBUG] Sentences:', sentences);
-    
+    const sentences = text.match(/[^.!?]+[.!?]+(?:\s|$)/g) || [text];
     const chunks = [];
     let currentChunk = '';
 
     for (const sentence of sentences) {
-        const trimmedSentence = sentence.trim();
-        if (!trimmedSentence) continue;
-        
-        // Restore honorifics for this sentence
-        const restoredSentence = trimmedSentence.replace(/DOT/g, '.');
-        
-        // Check if adding this sentence would exceed the limit
-        if (currentChunk && (currentChunk + ' ' + restoredSentence).length > maxLength) {
-            // Push current chunk and start new one
+        if (currentChunk.length + sentence.length > maxLength) {
+            if (currentChunk) {
             chunks.push(currentChunk.trim());
-            currentChunk = restoredSentence;
+                currentChunk = '';
+            }
+            if (sentence.length > maxLength) {
+                // Split long sentences into words
+                const words = sentence.split(/\s+/);
+                for (const word of words) {
+                    if (currentChunk.length + word.length > maxLength) {
+                        chunks.push(currentChunk.trim());
+                        currentChunk = '';
+                    }
+                    currentChunk += (currentChunk ? ' ' : '') + word;
+                }
         } else {
-            // Add to current chunk
-            currentChunk += (currentChunk ? ' ' : '') + restoredSentence;
+                currentChunk = sentence;
         }
+        } else {
+            currentChunk += (currentChunk ? ' ' : '') + sentence;
     }
-    
-    // Don't forget the last chunk
+    }
     if (currentChunk) {
         chunks.push(currentChunk.trim());
     }
-    
-    console.log('🔄 [CHUNK DEBUG] Final chunks:', chunks.length);
-    chunks.forEach((chunk, i) => {
-        console.log(`🔄 [CHUNK DEBUG] Chunk ${i + 1}:`, chunk);
-    });
-    
     return chunks;
 }
 
@@ -3104,8 +3203,6 @@ function resetAudioState() {
     state.stopRequested = false;
     state.isPlaying = false;
 
-    // Disable smart interrupt mode after playback
-    disableSmartInterruptMode();
     state.isAISpeaking = false;
     state.audioQueue = [];
 
@@ -3129,23 +3226,20 @@ function stopAudioPlayback() {
     }
 
     state.isPlaying = false;
-
-    // Disable smart interrupt mode after playback
-    disableSmartInterruptMode();
-        
     state.isAISpeaking = false;
     updateStatus(state.isConversationMode ? MESSAGES.STATUS.LISTENING : MESSAGES.STATUS.READY);
 
     setTimeout(() => {
         state.stopRequested = false;
+        if (state.isConversationMode) {
+            startListening();
+        }
     }, 100);
 }
 
 // Queue audio chunk function
 async function queueAudioChunk(text) {
 
-    // [INTERRUPT] Add this at the top of queueAudioChunk function - 
-    if (!text) return;
     
     // First, check if this chunk is part of a split initial sequence
     // This handles cases where the AI splits "H.G. Wells" across multiple chunks
@@ -3218,8 +3312,6 @@ async function queueAudioChunk(text) {
     if (!state.isAISpeaking) {
         state.isAISpeaking = true;
         updateStopAudioButton();  // Show button
-
-        enableSmartInterruptMode();
     }
 
     console.log('Queueing audio chunk:', text);
@@ -3231,7 +3323,7 @@ async function queueAudioChunk(text) {
         chunks = chunks.concat(sectionChunks);
     });
     
-    console.log('Chunks before post-processing:', chunks);
+    console.log('[CHUNKS] Chunks before post-processing:', chunks);
     
     // Final safety check - look for any remaining split instances of initials
     for (let i = 0; i < chunks.length - 2; i++) {
@@ -3265,11 +3357,13 @@ async function queueAudioChunk(text) {
         }
     }
     
-    console.log('Chunks after post-processing:', chunks);
+    console.log('[CHUNKS] Chunks after post-processing:', chunks);
     state.audioQueue = state.audioQueue.concat(chunks);
-    console.log('Final queued chunks:', chunks);
+    console.log('[CHUNKS - QUEUE] Queue before playback:', state.audioQueue);
+    console.log('[CHUNKS - QUEUE] Final queued chunks:', chunks);
     if (!state.isPlaying) {
         playNextInQueue();
+        console.log('[CHUNKS - QUEUE] playNextInQueue called for - !state.isPlaying');
     }
 }
 
@@ -3505,8 +3599,9 @@ function handleImageUpload(event) {
                             } else {
                                 let match = responseText.match(/This is an image of (?:the |a |an )?([A-Za-z0-9\s\-']+?)[,\.]/i)
                                     || responseText.match(/This is the ([A-Za-z0-9\s\-']+?)[,\.]/i)
-                                    || responseText.match(/This image shows (?:the |a |an )?([A-Za-z0-9\s\-']+?)[,\.]/i)
+                                    || responseText.match(/This is the ([A-Za-z0-9\s\-']+?)[,\.]/i)
                                     || responseText.match(/This is ([A-Za-z0-9\s\-']+?)[,\.]/i)
+                                    || responseText.match(/This image shows (?:the |a |an )?([A-Za-z0-9\s\-']+?)[,\.]/i)
                                     || responseText.match(/This image depicts (?:the |a |an )?([A-Za-z0-9\s\-']+?)[,\.]/i)
                                     || responseText.match(/This depicts (?:the |a |an )?([A-Za-z0-9\s\-']+?)[,\.]/i)
                                     || responseText.match(/This photo shows (?:the |a |an )?([A-Za-z0-9\s\-']+?)[,\.]/i)
@@ -3884,8 +3979,6 @@ function getTimeOfDay() {
 // SPEECH RECOGNITION FUNCTIONS
 // =====================================================
 
-// Global interrupt keywords for voice stopping during AI speech
-const INTERRUPT_KEYWORDS = ['stop', 'stop audio', 'cancel', 'quiet', 'silence', 'enough'];
 
 // Initialize speech recognition function
 function initializeSpeechRecognition() {
@@ -3905,11 +3998,7 @@ function initializeSpeechRecognition() {
             state.isListening = true;
             elements.micButton.textContent = '🔴';
             // Set status based on current mode
-            if (audioFilterState.isInterruptModeActive) {
-                updateStatus(MESSAGES.STATUS.SPEAKING);
-            } else {
-                updateStatus(MESSAGES.STATUS.LISTENING);
-            }
+            updateStatus(MESSAGES.STATUS.LISTENING);
         };
 
         // Stop listening
@@ -3924,9 +4013,9 @@ function initializeSpeechRecognition() {
             state.isListening = false;
             elements.micButton.textContent = '🎤';
             
-            if (state.isConversationMode && !state.isProcessing && !state.stopRequested) {
+            if (state.isConversationMode && !state.isProcessing && !state.stopRequested && !state.isAISpeaking) {
                 setTimeout(() => {
-                    if (!state.isProcessing && !state.stopRequested) {
+                    if (!state.isProcessing && !state.stopRequested && !state.isAISpeaking) {
                         startListening();
                     }
                 }, 100);
@@ -3957,26 +4046,6 @@ function initializeSpeechRecognition() {
             const confidence = event.results[0][0].confidence;
             console.log('🎤 Heard:', transcript, `(confidence: ${confidence?.toFixed(2) || 'unknown'})`);
             
-            // SMART INTERRUPT MODE: Enhanced filtering during AI speech
-            if (audioFilterState.isInterruptModeActive || state.isAISpeaking) {
-                console.log('🔇 [SMART-FILTER] Processing in interrupt mode...');
-                
-                // Require higher confidence for interrupts
-                if (confidence && confidence < AUDIO_FILTER_CONFIG.interruptThreshold) {
-                    console.log('🔇 [SMART-FILTER] Confidence too low, ignoring');
-                    return;
-                }
-                
-                if (INTERRUPT_KEYWORDS.some(keyword => transcript.includes(keyword))) {
-                    console.log('🔇 [SMART-FILTER] Smart interrupt detected! Stopping audio...');
-                    stopAudioPlayback();
-                    return;
-                }
-                
-                console.log('🔇 [SMART-FILTER] Non-interrupt command ignored during AI speech');
-                return;
-            }
-            
             // NORMAL MODE: Process regular commands
             console.log('💬 [NORMAL MODE] Processing command:', transcript);
             handleSpeechResult(event);
@@ -3986,6 +4055,81 @@ function initializeSpeechRecognition() {
         console.error('Error initializing speech recognition:', error);
     }
 }
+
+// =====================================================
+// SPEECH RECOGNITION FUNCTIONS
+// =====================================================
+
+// Initialize speech recognition function
+// function initializeSpeechRecognition() {
+//     if (!('webkitSpeechRecognition' in window)) {
+//         console.error('Speech recognition not supported');
+//         return;
+//     }
+
+//     try {
+//         state.recognition = new webkitSpeechRecognition();
+//         state.recognition.continuous = false;
+//         state.recognition.interimResults = false;
+//         state.recognition.lang = 'en-US';
+
+//         // Start listening
+//         state.recognition.onstart = () => {
+//             state.isListening = true;
+//             elements.micButton.textContent = '🔴';
+//             // Set status based on current mode
+//             updateStatus(MESSAGES.STATUS.LISTENING);
+//         };
+
+//         // Stop listening
+//         state.recognition.onstop = function() {
+//             state.isListening = false;
+//             elements.micButton.textContent = '🎤';
+//             updateStatus(MESSAGES.STATUS.LISTENING);
+//         };
+
+//         // End listening
+//         state.recognition.onend = () => {
+//             state.isListening = false;
+//             elements.micButton.textContent = '🎤';
+            
+//             if (state.isConversationMode && !state.isProcessing && !state.stopRequested && !state.isAISpeaking) {
+//                 setTimeout(() => {
+//                     if (!state.isProcessing && !state.stopRequested && !state.isAISpeaking) {
+//                         startListening();
+//                     }
+//                 }, 100);
+//             }
+//         };
+
+//         // Error handling
+//         state.recognition.onerror = (event) => {
+//             if (event.error === 'no-speech') {
+//                 console.log('[SPEECH RECOGNITION] No speech detected, waiting for user...');
+//                 state.isListening = false;
+//                 elements.micButton.textContent = '🎤';
+//                 return;
+//             }
+//             console.error('Recognition error:', event.error);
+//             state.isListening = false;
+//             elements.micButton.textContent = '🎤';
+//         };
+
+//         // Result handling
+//         state.recognition.onresult = (event) => {
+//             const transcript = event.results[0][0].transcript.trim().toLowerCase();
+//             const confidence = event.results[0][0].confidence;
+//             console.log('🎤 Heard:', transcript, `(confidence: ${confidence?.toFixed(2) || 'unknown'})`);
+            
+//             // NORMAL MODE: Process regular commands
+//             console.log('💬 [NORMAL MODE] Processing command:', transcript);
+//             handleSpeechResult(event);
+//         };
+
+//     } catch (error) {
+//         console.error('Error initializing speech recognition:', error);
+//     }
+// }
 
 // Toggle speech recognition function
 function toggleSpeechRecognition() {
@@ -4039,268 +4183,160 @@ async function handleResponse(response) {
     }  // <-- Add this closing brace
 }
 
-// =====================================================
-// SMART AUDIO FILTERING FOR VOICE INTERRUPTS
-// =====================================================
-
-// Audio filtering configuration for Andrew-en voice
-const AUDIO_FILTER_CONFIG = {
-    duckingVolume: 0.15,          // Reduce AI voice to 15% during interrupt
-    originalVolume: 1.0,          // Original AI voice volume  
-    interruptThreshold: 0.4,      // Minimum confidence for interrupt
-    andrewFreqRange: [80, 250],   // Andrew-en fundamental frequency range
-};
-
-// Audio filtering state
-const audioFilterState = {
-    isInterruptModeActive: false,
-    originalAudioVolume: 1.0,
-};
-
-// Enable smart interrupt mode during AI speech
-function enableSmartInterruptMode() {
-    console.log('🔇 [SMART-FILTER] Enabling smart interrupt mode...');
-    
-    // 1. Duck AI audio volume significantly  
-    if (state.currentAudio) {
-        audioFilterState.originalAudioVolume = state.currentAudio.volume;
-        state.currentAudio.volume = AUDIO_FILTER_CONFIG.duckingVolume;
-        console.log(`🔇 [SMART-FILTER] AI volume ducked to ${AUDIO_FILTER_CONFIG.duckingVolume * 100}%`);
-    }
-    
-    // 2. Enable interrupt mode flag
-    audioFilterState.isInterruptModeActive = true;
-
-    // 3. Show stop audio button during interrupt mode
-    updateStopAudioButton();
-
-    // 4. Start listening for interrupts only if not already listening
-    if (state.isConversationMode && !state.isListening && !state.isProcessing) {
-        console.log('🔇 [SMART-FILTER] Starting interrupt listening...');
-        setTimeout(() => {
-            updateStatus(MESSAGES.STATUS.SPEAKING);
-            startListening();
-        }, 200);
-    }
-}
-
-// Disable smart interrupt mode
-function disableSmartInterruptMode() {
-    console.log('🔇 [SMART-FILTER] Disabling smart interrupt mode...');
-    
-    // 1. Restore original AI volume
-    if (state.currentAudio && audioFilterState.originalAudioVolume) {
-        state.currentAudio.volume = audioFilterState.originalAudioVolume;
-    }
-    
-    // 2. Disable interrupt mode
-    audioFilterState.isInterruptModeActive = false;
-    
-    // 3. Hide stop audio button
-    elements.stopAudioButton.style.display = 'none';
-    
-    // Properly restart normal listening after interrupt mode
-    if (state.isConversationMode && !state.isListening && !state.isProcessing) {
-        console.log('🔇 [SMART-FILTER] Restarting normal listening after interrupt mode...');
-        setTimeout(() => {
-            if (!state.isListening && !state.isAISpeaking) {
-                updateStatus(MESSAGES.STATUS.LISTENING);
-                startListening();
-            }
-        }, 100);
-    }
-}
-
-// Start smart interrupt listening with higher sensitivity
-async function startSmartInterruptListening() {
-    if (!state.recognition) {
-        initializeSpeechRecognition();
-    }
-    
-    try {
-        console.log('🔇 [SMART-FILTER] Starting smart interrupt listening...');
-        
-        // Configure for high-sensitivity interrupt detection
-        state.recognition.continuous = true;
-        state.recognition.interimResults = false;
-        
-        // Start recognition
-        state.recognition.start();
-        
-        updateStatus(MESSAGES.STATUS.SPEAKING);
-        
-    } catch (error) {
-        console.error('🔇 [SMART-FILTER] Failed to start smart interrupt:', error);
-    }
-}
 
 // =====================================================
 // RECIPE HANDLING FUNCTIONS
 // =====================================================
 
-window.printRecipe = async function(recipeText, messageElement) {
+// we now call the RecipeManager class to handle the recipe
+// window.recipeManager = new RecipeManager();
 
-    // Hide the pagination bar
-    //hidePaginationBar();
 
-    try {
-        console.log('Recipe text sent to server:', recipeText.substring(0, 200));
+// window.printRecipe = async function(recipeText, messageElement) {
+//     try {
+//         console.log('Recipe text sent to server:', recipeText.substring(0, 200)); // Log what we're sending
 
-        // Get any images from the message element FIRST
-        const images = messageElement.querySelectorAll('.image-link img');
-        const imageUrls = Array.from(images).map(img => img.src);
-        console.log('Found recipe images:', imageUrls);
+//         const response = await fetch('/api/recipe', {
+//             method: 'POST',
+//             headers: { 'Content-Type': 'application/json' },
+//             body: JSON.stringify({ text: recipeText })
+//         });
 
-        const response = await fetch(window.appConfig.getApiUrl('/api/recipe'), {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ text: recipeText })
-        });
+//         const data = await response.json();
+//         console.log('Server response:', data); // Log what we get back
 
-        const data = await response.json();
-        if (!data.success) throw new Error(data.error);
+//         if (!data.success) throw new Error(data.error);
 
-        const recipeName = data.recipe.name;
+//         const recipeName = data.recipe.name;
+//         console.log('Recipe name from server:', recipeName); // Log the name we'll use
+
+//         // Get any images from the message
+//         const images = messageElement.querySelectorAll('.image-link img');
+//         const imageUrls = Array.from(images).map(img => img.src);
         
-        // Split the recipe text into sections
-        const sections = recipeText.split(/(?:ingredients:|instructions:|directions:)/i);
+//         // Split the recipe text into sections
+//         const sections = recipeText.split(/(?:ingredients:|instructions:|directions:)/i);
         
-        const description = sections[0]
-                .split('\n')[0]
-            .substring(recipeName.length)
-                .replace(/^[^a-zA-Z]+/, '')
-                .trim();
+//         // Get description (everything after the recipe name)
+//         const description = sections[0]
+//             .split('\n')[0]  // Get first line
+//             .substring(recipeName.length)  // Remove the recipe name part
+//             .replace(/^[^a-zA-Z]+/, '')  // Remove any leading non-letter characters
+//                 .trim();
 
-        const ingredients = sections[1] ? sections[1].trim().split(/\d+\./).filter(item => item.trim()) : [];
-        const instructions = sections[2] ? sections[2].trim().split(/\d+\./).filter(item => item.trim()) : [];
+//         const ingredients = sections[1] ? sections[1].trim().split(/\d+\./).filter(item => item.trim()) : [];
+//         const instructions = sections[2] ? sections[2].trim().split(/\d+\./).filter(item => item.trim()) : [];
 
-        // Create print window
-        const printWindow = window.open('', '_blank');
-        if (!printWindow) {
-            throw new Error('Pop-up blocked. Please allow pop-ups and try again.');
-        }
+//         // Create print window first to ensure it's ready
+//         const printWindow = window.open('', '_blank');
+//         if (!printWindow) {
+//             throw new Error('Pop-up blocked. Please allow pop-ups and try again.');
+//         }
 
-        // Create formatted HTML with recipe content first, then images section
-        const formattedText = `
-            <div class="recipe-content">
-            <div class="recipe-intro">${description}</div>
-            <h2>Ingredients</h2>
-            <ul class="ingredients-list">
-                ${ingredients.map(item => `<li>${item.trim()}</li>`).join('')}
-            </ul>
-            <h2>Instructions</h2>
-            <ol class="instructions-list">
-                ${instructions.map(item => `<li>${item.trim()}</li>`).join('')}
-            </ol>
-            </div>
-            ${imageUrls.length > 0 ? `
-                <div class="recipe-images">
-                    <h2>Recipe Images</h2>
-                    <div class="image-grid">
-                        ${imageUrls.map(url => `<img src="${url}" alt="Recipe Image">`).join('')}
-                    </div>
-                </div>
-            ` : ''}
-        `;
+//         // Create formatted HTML
+//         const formattedText = `
+//             <div class="recipe-intro">${description}</div>
+//             <h2>Ingredients</h2>
+//             <ul class="ingredients-list">
+//                 ${ingredients.map(item => `<li>${item.trim()}</li>`).join('')}
+//             </ul>
+//             <h2>Instructions</h2>
+//             <ol class="instructions-list">
+//                 ${instructions.map(item => `<li>${item.trim()}</li>`).join('')}
+//             </ol>
+//         `;
 
-        printWindow.document.write(`
-            <!DOCTYPE html>
-            <html>
-                <head>
-                    <title>${recipeName}</title>
-                    <style>
-                        body {
-                            font-family: Arial, sans-serif;
-                            max-width: 800px;
-                            margin: 0 auto;
-                            padding: 40px;
-                        }
-                        h1 {
-                            font-size: 24px;
-                            margin-bottom: 20px;
-                            border-bottom: 2px solid #333;
-                            padding-bottom: 10px;
-                            text-align: center;
-                            text-transform: uppercase;
-                            letter-spacing: 1px;
-                        }
-                        h2 {
-                            font-size: 20px;
-                            margin: 20px 0 10px 0;
-                            color: #444;
-                        }
-                        .recipe-intro {
-                            font-style: italic;
-                            margin-bottom: 20px;
-                            color: #666;
-                        }
-                        .recipe-content {
-                            margin-bottom: 40px;
-                        }
-                        .ingredients-list {
-                            list-style-type: disc !important;
-                            padding-left: 20px;
-                            margin-bottom: 20px;
-                        }
-                        .ingredients-list li {
-                            margin-bottom: 8px;
-                            line-height: 1.4;
-                            display: list-item !important;
-                        }
-                        .instructions-list {
-                            padding-left: 20px;
-                            margin-bottom: 20px;
-                        }
-                        .instructions-list li {
-                            margin-bottom: 12px;
-                            line-height: 1.6;
-                        }
-                        .recipe-images {
-                            margin-top: 40px;
-                            border-top: 2px solid #eee;
-                            padding-top: 20px;
-                        }
-                        .image-grid {
-                            display: grid;
-                            grid-template-columns: repeat(2, 1fr);
-                            gap: 20px;
-                            margin-top: 20px;
-                        }
-                        .image-grid img {
-                            width: 100%;
-                            height: 300px;
-                            object-fit: cover;
-                            border-radius: 8px;
-                        }
-                        @media print {
-                            .recipe-images {
-                                break-before: always;
-                            }
-                            .image-grid img {
-                                max-height: 250px;
-                            }
-                        }
-                    </style>
-                </head>
-                <body>
-                    <h1>${recipeName}</h1>
-                    ${formattedText}
-                </body>
-            </html>
-        `);
-        
-        printWindow.document.close();
-        
-        // Wait for images to load before printing
-        setTimeout(() => {
-            printWindow.print();
-        }, 1000);
+//         printWindow.document.write(`
+//             <!DOCTYPE html>
+//             <html>
+//                 <head>
+//                     <title>${recipeName}</title>
+//                     <style>
+//                         body {
+//                             font-family: Arial, sans-serif;
+//                             max-width: 800px;
+//                             margin: 0 auto;
+//                             padding: 40px;
+//                         }
+//                         h1 {
+//                             font-size: 24px;
+//                             margin-bottom: 20px;
+//                             border-bottom: 2px solid #333;
+//                             padding-bottom: 10px;
+//                             text-align: center;
+//                             text-transform: uppercase;
+//                             letter-spacing: 1px;
+//                         }
+//                         h2 {
+//                             font-size: 20px;
+//                             margin: 20px 0 10px 0;
+//                             color: #444;
+//                         }
+//                         .recipe-intro {
+//                             font-style: italic;
+//                             margin-bottom: 20px;
+//                             color: #666;
+//                         }
+//                         .ingredients-list {
+//                             list-style-type: disc !important;
+//                             padding-left: 20px;
+//                             margin-bottom: 20px;
+//                         }
+//                         .ingredients-list li {
+//                             margin-bottom: 8px;
+//                             line-height: 1.4;
+//                             display: list-item !important;
+//                         }
+//                         .instructions-list {
+//                             padding-left: 20px;
+//                             margin-bottom: 20px;
+//                         }
+//                         .instructions-list li {
+//                             margin-bottom: 12px;
+//                             line-height: 1.6;
+//                         }
+//                         .image-section {
+//                                 page-break-before: always;
+//                         }
+//                         .image-grid {
+//                             display: grid;
+//                             grid-template-columns: repeat(2, 1fr);
+//                             gap: 10px;
+//                             margin: 5px 0;
+//                             max-width: 800px;
+//                         }
+//                         .image-grid img {
+//                             width: 100%;
+//                             height: 250px;
+//                             object-fit: cover;
+//                             border-radius: 8px;
+//                         }
+//                     </style>
+//                 </head>
+//                 <body>
+//                     <h1>${recipeName}</h1>
+//                     <div class="recipe-content">${formattedText}</div>
+//                     ${imageUrls.length ? `
+//                         <div class="image-section">
+//                             <h2 style="margin-bottom: 15px;">Recipe Images</h2>
+//                             <div class="image-grid">
+//                                 ${imageUrls.map(url => `<img src="${url}" alt="Recipe Image">`).join('')}
+//                             </div>
+//                         </div>
+//                     ` : ''}
+//                 </body>
+//             </html>
+//         `);
+//         printWindow.document.close();
+//         setTimeout(() => {
+//             printWindow.print();
+//         }, 500);  // Give the browser time to load images
 
-    } catch (error) {
-        console.error('Error printing recipe:', error);
-        updateStatus(MESSAGES.ERRORS.CONNECTION);
-    }
-};
+//     } catch (error) {
+//         console.error('Error printing recipe:', error);
+//         updateStatus(MESSAGES.ERRORS.CONNECTION);
+//     }
+// };
 
 // =====================================================
 // PERSONAL INFO HANDLING FUNCTIONS
@@ -4617,7 +4653,7 @@ const handleMyJokes = {
         }
 
         // Check for save joke commands using patterns
-        if (patterns.saveJoke.some(pattern => pattern.test(messageText))) {
+        if (patterns.saveJoke.some(pattern => pattern.test(messageText.toLowerCase()))) {
             console.log('Detected save a joke command');
             addMessageToChat('user', messageText);
 
@@ -4799,10 +4835,6 @@ const handleMyJokes = {
                     return true;
                 }
                 
-                console.log('🎭 [JOKE DEBUG] About to display joke content in chat...');
-                state.isAISpeaking = true;
-                updateStopAudioButton();  // Show button
-                
                 // Ensure content is a string and trim any whitespace
                 const jokeContent = String(jokeData.content).trim();
 
@@ -4823,15 +4855,22 @@ const handleMyJokes = {
                 console.log('🎭 [JOKE DEBUG] Final processed content:', JSON.stringify(jokeContent));
                 console.log('🎭 [JOKE DEBUG] Calling addMessageToChat...');
                 
-                addMessageToChat('assistant', formatStoryParagraphs(enhancedJokeContent), { 
-                    renderAsHTML: true 
-                });
+                // 1. Show the joke in the chat bubble
+                addMessageToChat('assistant', formatStoryParagraphs(enhancedJokeContent), { renderAsHTML: true });
 
+                // 2. Only now set AISpeaking and show Stop Audio
+                state.isAISpeaking = true;
+                updateStopAudioButton();  // Show button
+                
+                // 3. Play the joke audio
                 console.log('🎭 [JOKE DEBUG] addMessageToChat completed, now queuing audio...');
-                
+                if (window.myJokesManager && typeof window.myJokesManager.speakJokeContent === 'function') {
+                    await window.myJokesManager.speakJokeContent(jokeContent);
+                } else {
                 await queueAudioChunk(jokeContent);
-                console.log('🎭 [JOKE DEBUG] Audio queued, removing from sessionStorage...');
+                }
                 
+                console.log('🎭 [JOKE DEBUG] Audio queued, removing from sessionStorage...');
                 sessionStorage.removeItem('pendingJoke');
                 console.log('🎭 [JOKE DEBUG] Joke display process completed successfully');
             } catch (error) {
@@ -5019,6 +5058,9 @@ const handleMyJokes = {
                     const jokeResp = await fetch(window.appConfig.getApiUrl(`/api/jokes/get-joke/${encodeURIComponent(found.title)}?sessionId=${window.sessionId}`));
                     const jokeData = await jokeResp.json();
                     if (jokeData.success && jokeData.joke) {
+                        state.isAISpeaking = true;
+                        updateStopAudioButton();  // Show button
+                        updateStatus(MESSAGES.STATUS.AISPEAKING);
                         const message = "I found your joke. Would you like to hear it? Say Yes to hear it or No to cancel.";
                         const endTime = performance.now();
                         const duration = ((endTime - startTime) / 1000).toFixed(2);
@@ -5115,8 +5157,8 @@ const handleMyJokes = {
                 // Add help text
                 const helpText = document.createElement('p');
                 helpText.style.marginTop = '10px';
-                helpText.style.fontStyle = 'italic';
-                helpText.textContent = 'To hear your joke, ask... "Tell me my joke about [joke name]"';
+                helpText.style.marginBottom = '20px';
+                helpText.innerHTML = 'To hear your joke, ask... <span style="font-style: italic;font-weight: bold;margin-bottom: 10px;">"Tell me my joke about [ joke name ]"</span>';
                 messageElement.querySelector('.message-content').appendChild(helpText);
 
                 // Add the My Jokes Manager 'Add a Joke' button
@@ -5392,66 +5434,155 @@ const handleBingSearch = {
 // END OF app.js FILE v20.0.0
 // =====================================================
 
-function chunkText(text) {
-    // Special handling for recipes
-    if (text.includes('Ingredients:') || text.includes('Instructions:')) {
-        const parts = text.split(/(?:Ingredients:|Instructions:)/g);
-        const chunks = [];
+// function chunkText(text) {
+//     // Special handling for recipes
+//     if (text.includes('Ingredients:') || text.includes('Instructions:')) {
+//         const parts = text.split(/(?:Ingredients:|Instructions:)/g);
+//         const chunks = [];
         
-        // Process each section
-        parts.forEach(part => {
-            if (!part.trim()) return;
+//         // Process each section
+//         parts.forEach(part => {
+//             if (!part.trim()) return;
             
-            // Split into smaller chunks
-            const lines = part
-                .split(/\d+\.|[\n\r]+/)
-                .map(line => line.trim())
-                .filter(line => line.length > 0);
+//             // Split into smaller chunks
+//             const lines = part
+//                 .split(/\d+\.|[\n\r]+/)
+//                 .map(line => line.trim())
+//                 .filter(line => line.length > 0);
             
-            lines.forEach(line => {
-                if (line.length > AUDIO_CONFIG.maxChunkLength) {
-                    // Split long lines at punctuation
-                    const subChunks = line
-                        .split(/([.,;])\s+/)
-                        .filter(chunk => chunk.length > 0);
-                    chunks.push(...subChunks);
-                } else {
-                    chunks.push(line);
-                }
-            });
-        });
+//             lines.forEach(line => {
+//                 if (line.length > AUDIO_CONFIG.maxChunkLength) {
+//                     // Split long lines at punctuation
+//                     const subChunks = line
+//                         .split(/([.,;])\s+/)
+//                         .filter(chunk => chunk.length > 0);
+//                     chunks.push(...subChunks);
+//                 } else {
+//                     chunks.push(line);
+//                 }
+//             });
+//         });
         
-        return chunks;
-    }
+//         return chunks;
+//     }
     
-    // Regular text handling
-    return text
-        .split(/([.!?])\s+/)
-        .map(s => s.trim())
-        .filter(s => s.length > 0);
-}
+//     // Regular text handling
+//     return text
+//         .split(/([.!?])\s+/)
+//         .map(s => s.trim())
+//         .filter(s => s.length > 0);
+// }
+
+// async function playNextInQueue() {
+//     if (!state.audioQueue.length || state.isPlaying || state.stopRequested) {
+//         if (!state.audioQueue.length || state.stopRequested) {
+//             updateStatus(state.isConversationMode ? MESSAGES.STATUS.LISTENING : MESSAGES.STATUS.READY);
+//             state.isAISpeaking = false;
+//         }
+//         return;
+//     }
+
+//     state.isPlaying = true;
+//     state.isAISpeaking = true;
+//     updateStatus(MESSAGES.STATUS.SPEAKING);
+
+//     const text = state.audioQueue[0]; // Do not shift yet
+
+//     try {
+//         const response = await fetch(window.appConfig.getApiUrl('/api/tts'), {
+//             method: 'POST',
+//             headers: { 'Content-Type': 'application/json' },
+//             body: JSON.stringify({
+//                 text,
+//                 voice: window.appConfig.getTTSVoice(),
+//                 rate: 0.9,
+//                 pitch: 1,
+//                 volume: 1
+//             })
+//         });
+
+//         if (!response.ok) throw new Error(`TTS API error: ${response.status}`);
+
+//         const audioBlob = await response.blob();
+//         if (audioBlob.size === 0) throw new Error('Empty audio response');
+
+//         if (state.currentAudio) {
+//             state.currentAudio.pause();
+//             state.currentAudio = null;
+//         }
+
+//         const audioUrl = URL.createObjectURL(audioBlob);
+//         state.currentAudio = new Audio(audioUrl);
+//         state.currentAudio.volume = 1;
+
+//         state.currentAudio.onended = () => {
+//             URL.revokeObjectURL(audioUrl);
+//             state.audioQueue.shift();
+//             state.isPlaying = false;
+//             if (state.audioQueue.length > 0 && !state.stopRequested) {
+//                 setTimeout(playNextInQueue, 0); // Schedule next chunk
+//             } else {
+//                 updateStatus(state.isConversationMode ? MESSAGES.STATUS.LISTENING : MESSAGES.STATUS.READY);
+//                 state.isAISpeaking = false;
+//             }
+//         };
+
+//         state.currentAudio.onerror = (error) => {
+//             console.error('🔊 [AUDIO] Playback error:', error);
+//             state.audioQueue.shift();
+//             state.isPlaying = false;
+//             if (state.audioQueue.length > 0 && !state.stopRequested) {
+//                 setTimeout(playNextInQueue, 0); // Schedule next chunk
+//             } else {
+//                 updateStatus(state.isConversationMode ? MESSAGES.STATUS.LISTENING : MESSAGES.STATUS.READY);
+//                 state.isAISpeaking = false;
+//             }
+//         };
+
+//         await state.currentAudio.play();
+
+//         // If stop is requested after playback starts
+//         if (state.stopRequested) {
+//             if (state.currentAudio) {
+//                 state.currentAudio.pause();
+//                 state.currentAudio.currentTime = 0;
+//                 state.currentAudio = null;
+//             }
+//             state.isPlaying = false;
+//             return;
+//         }
+//     } catch (error) {
+//         console.error('🔊 [AUDIO] Playback error:', error);
+//         state.audioQueue.shift();
+//         state.isPlaying = false;
+//         if (state.audioQueue.length > 0 && !state.stopRequested) {
+//             setTimeout(playNextInQueue, 0); // Schedule next chunk
+//         } else {
+//             updateStatus(state.isConversationMode ? MESSAGES.STATUS.LISTENING : MESSAGES.STATUS.READY);
+//             state.isAISpeaking = false;
+//         }
+//     }
+// }
 
 async function playNextInQueue() {
-    if (state.audioQueue.length === 0 || state.isPlaying || state.stopRequested) {
+    if (!state.audioQueue.length || state.isPlaying || state.stopRequested) {
+        if (!state.audioQueue.length || state.stopRequested) {
+            updateStatus(state.isConversationMode ? MESSAGES.STATUS.LISTENING : MESSAGES.STATUS.READY);
+            state.isAISpeaking = false;
+        }
         return;
     }
 
     state.isPlaying = true;
-    const text = state.audioQueue.shift();
+    state.isAISpeaking = true;
+    updateStatus(MESSAGES.STATUS.SPEAKING);
+
+    const text = state.audioQueue[0]; // Do not shift yet
 
     try {
-        console.log('🔊 [AUDIO] playNextInQueue called - Queue:', state.audioQueue.length, 'Playing:', state.isPlaying, 'stopRequested:', state.stopRequested);
-        console.log('🔊 [AUDIO] About to fetch TTS for:', text);
-        
-        const apiUrl = window.appConfig.getApiUrl('/api/tts');
-        console.log('🔊 [AUDIO] TTS API URL:', apiUrl);
-        
-        console.log('🔊 [AUDIO] About to call fetch...');
-        const response = await fetch(apiUrl, {
+        const response = await fetch(window.appConfig.getApiUrl('/api/tts'), {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 text,
                 voice: window.appConfig.getTTSVoice(),
@@ -5460,45 +5591,48 @@ async function playNextInQueue() {
                 volume: 1
             })
         });
-        console.log('🔊 [AUDIO] fetch completed successfully!');
-        console.log('🔊 [AUDIO] Response status:', response.status);
-        console.log('🔊 [AUDIO] Response headers:', Array.from(response.headers.entries()));
-        console.log('🔊 [AUDIO] Response ok:', response.ok);
 
-        if (!response.ok) {
-            throw new Error(`TTS API error: ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`TTS API error: ${response.status}`);
 
         const audioBlob = await response.blob();
+        if (audioBlob.size === 0) throw new Error('Empty audio response');
+
+        if (state.currentAudio) {
+            state.currentAudio.pause();
+            state.currentAudio = null;
+        }
+
         const audioUrl = URL.createObjectURL(audioBlob);
-        const audio = new Audio(audioUrl);
+        state.currentAudio = new Audio(audioUrl);
+        state.currentAudio.volume = 1;
 
-        // In playNextInQueue, after creating the audio object:
-        state.currentAudio = audio;
-
-        audio.onended = () => {
+        state.currentAudio.onended = () => {
             URL.revokeObjectURL(audioUrl);
+            state.audioQueue.shift();
             state.isPlaying = false;
-            // Only call enterListeningMode if this was the LAST chunk
-            if (state.audioQueue.length === 0 && state.isConversationMode) {
-                enterListeningMode();
+            if (state.audioQueue.length > 0 && !state.stopRequested) {
+                setTimeout(playNextInQueue, 0); // Schedule next chunk
             } else {
-                playNextInQueue();
+                updateStatus(state.isConversationMode ? MESSAGES.STATUS.LISTENING : MESSAGES.STATUS.READY);
+                state.isAISpeaking = false;
             }
         };
 
-        audio.onerror = (error) => {
-            console.error('Audio playback error:', error);
+        state.currentAudio.onerror = (error) => {
+            console.error('🔊 [AUDIO] Playback error:', error);
+            state.audioQueue.shift();
             state.isPlaying = false;
-            // On error, always restore listening mode
-            if (state.isConversationMode) {
-                enterListeningMode();
+            if (state.audioQueue.length > 0 && !state.stopRequested) {
+                setTimeout(playNextInQueue, 0); // Schedule next chunk
+            } else {
+                updateStatus(state.isConversationMode ? MESSAGES.STATUS.LISTENING : MESSAGES.STATUS.READY);
+                state.isAISpeaking = false;
             }
         };
 
-        await audio.play();
+        await state.currentAudio.play();
 
-        // After await audio.play();
+        // If stop is requested after playback starts
         if (state.stopRequested) {
             if (state.currentAudio) {
                 state.currentAudio.pause();
@@ -5509,14 +5643,26 @@ async function playNextInQueue() {
             return;
         }
     } catch (error) {
-        console.error('Audio playback error:', error);
+        console.error('🔊 [AUDIO] Playback error:', error);
+        state.audioQueue.shift();
         state.isPlaying = false;
-        // On error, always restore listening mode
-        if (state.isConversationMode) {
-            enterListeningMode();
+        if (state.audioQueue.length > 0 && !state.stopRequested) {
+            setTimeout(playNextInQueue, 0); // Schedule next chunk
+        } else {
+            updateStatus(state.isConversationMode ? MESSAGES.STATUS.LISTENING : MESSAGES.STATUS.READY);
+            state.isAISpeaking = false;
         }
     }
 }
+
+// Minor improvement to queueAudioChunk (just for clarity, not a logic change):
+// ... existing code for queueAudioChunk ...
+// At the end:
+// state.audioQueue = state.audioQueue.concat(chunks);
+// if (!state.isPlaying) {
+//     playNextInQueue();
+// }
+
 
 async function prepareAudio(text) {
     const sanitizedText = text
@@ -5609,11 +5755,6 @@ async function startListening() {
         console.log('Cannot start listening - already active or processing');
         return;
     }
-    // Allow listening during AI speech for interrupts
-    if (state.isAISpeaking) {
-        console.log('🔇[INTERRUPT] Starting interrupt-mode listening during AI speech');
-        audioFilterState.isInterruptModeActive = true;
-    }
     try {
         if (!state.recognition) {
             initializeSpeechRecognition();
@@ -5634,51 +5775,37 @@ async function startListening() {
     }
 }
 
-function printRecipe(recipeText, messageElement) {
-    // Create a new window for printing
-    const printWindow = window.open('', '_blank');
-    
-    // Create the print content
-    const printContent = `
-        <html>
-            <head>
-                <title>Recipe Print</title>
-                <style>
-                    body {
-                        font-family: Arial, sans-serif;
-                        line-height: 1.6;
-                        padding: 20px;
-                        max-width: 800px;
-                        margin: 0 auto;
-                    }
-                    @media print {
-                        body {
-                            padding: 0;
-                        }
-                    }
-                </style>
-            </head>
-            <body>
-                <div>${recipeText}</div>
-            </body>
-        </html>
-    `;
-    
-    // Write the content to the new window
-    printWindow.document.write(printContent);
-    printWindow.document.close();
-    
-    // Wait for content to load then print
-    printWindow.onload = function() {
-        printWindow.print();
-        // Close the window after printing (or if user cancels)
-        printWindow.onafterprint = function() {
-            printWindow.close();
-        };
-    };
-}
+// function printRecipe(recipeText, messageElement) {
+//     // Remove any existing modal
+//     const existing = document.getElementById('local-video-modal');
+//     if (existing) existing.remove();
+//     // Create modal
+//     const modal = document.createElement('div');
+//     modal.id = 'local-video-modal';
+//     modal.style.position = 'fixed';
+//     modal.style.top = '0';
+//     modal.style.left = '0';
+//     modal.style.width = '100vw';
+//     modal.style.height = '100vh';
+//     modal.style.background = 'rgba(0,0,0,0.8)';
+//     modal.style.display = 'flex';
+//     modal.style.alignItems = 'center';
+//     modal.style.justifyContent = 'center';
+//     modal.style.zIndex = '9999';
+//     modal.innerHTML = `
+//         <div style="background:#222;padding:24px;border-radius:12px;max-width:90vw;max-height:90vh;display:flex;flex-direction:column;align-items:center;">
+//             <button id="close-local-video-modal" style="align-self:flex-end;margin-bottom:8px;font-size:1.5em;">&times;</button>
+//             <h2 style="color:#fff;margin-bottom:12px;">${title}</h2>
+//             <video src="${videoUrl}" controls autoplay style="max-width:80vw;max-height:70vh;border-radius:8px;background:#000;"></video>
+//         </div>
+//     `;
+//     document.body.appendChild(modal);
+//     document.getElementById('close-local-video-modal').onclick = () => modal.remove();
+//     modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+// }
 
 // Helper functions for honorific handling
+
 function protectHonorifics(text) {
     const honorifics = [
         'Mr', 'Mrs', 'Ms', 'Dr', 'Sr', 'Jr', 'Prof', 'Rev', 'Fr', 'St', 'Mx', 'Capt', 'Lt', 'Col', 'Gen', 'Sgt', 'Adm', 'Maj', 'Hon', 'Pres', 'Gov', 'Amb', 'Sec', 'Supt', 'Rep', 'Sen', 'Treas', 'Dir', 'H.G', 'J.K', 'HG', 'JK'
@@ -5697,49 +5824,15 @@ function restoreHonorifics(text) {
 }
 
 
-
-// ... existing code ...
-
-// In the SINGLE video layout section:
-// const singleVideoHtml = `
-//   <div class="youtube-single-bubble">
-//     <div class="video-title">${videos[0].title}</div>
-//     <div class="button-thumb-group top-buttons">
-//       <!-- Play in Popup and + button here -->
-//     </div>
-//     <span class="youtube-thumb-link youtube-popup-thumb" ...>
-//       <img ... />
-//     </span>
-//     <div class="button-thumb-group bottom-buttons">
-//       <!-- Watch on YouTube button here -->
-//     </div>
-//   </div>
-// `;
-
-// In the MULTI video layout section:
-// const multiVideoHtml = `
-//   <div class="youtube-multi-bubble">
-//     <div class="video-title">${video.title}</div>
-//     <div class="button-thumb-group top-buttons">
-//       <!-- Play in Popup and + button here -->
-//     </div>
-//     <span class="youtube-thumb-link youtube-popup-thumb" ...>
-//       <img ... />
-//     </span>
-//     <div class="button-thumb-group bottom-buttons">
-//       <!-- Watch on YouTube button here -->
-//     </div>
-//   </div>
-// `;
-
 // Add event listener for Add to Playlist buttons
 document.addEventListener('click', async (e) => {
   const button = e.target.closest('.add-to-playlist-SINGLE-btn, .add-to-playlist-MULTI-btn, .add-to-playlist-MULTI-MOCK-btn');
     if (button) {
       try {
         const videoData = JSON.parse(decodeURIComponent(button.dataset.video));
+        const playlistName = decodeURIComponent(button.dataset.playlist);
         if (window.playlistManager) {
-          window.playlistManager.show(videoData);
+            window.playlistManager.show(videoData, playlistName);
         } else {
           console.error('PlaylistManager not initialized');
           showToast('Unable to open playlist manager. Please try again.');
@@ -5797,43 +5890,6 @@ document.addEventListener('click', function(e) {
     }
   }
 });
-
-
-// Add TTS warm-up function
-async function warmUpTTS() {
-    const warmUpPayloads = [
-        '\u200B', // zero-width space
-        ' ',      // regular space
-        '.',      // period
-        ',',      // comma
-    ];
-    for (let i = 0; i < warmUpPayloads.length; i++) {
-        try {
-            const response = await fetch(AUDIO_CONFIG.apiUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                    text: warmUpPayloads[i],
-                voice: AUDIO_CONFIG.defaultVoice,
-                rate: AUDIO_CONFIG.rate,
-                pitch: AUDIO_CONFIG.pitch,
-                    volume: 0 // always silent
-            })
-        });
-            if (!response.ok) continue;
-            const audioBlob = await response.blob();
-            if (audioBlob.size === 0) continue;
-            const audioUrl = URL.createObjectURL(audioBlob);
-            const audio = new Audio(audioUrl);
-            await new Promise((resolve) => { audio.onloadeddata = resolve; });
-            URL.revokeObjectURL(audioUrl);
-            // Small delay between requests to avoid rate limiting
-            await new Promise(resolve => setTimeout(resolve, 100));
-        } catch (e) {
-            // Silent fail, continue to next
-        }
-    }
-}
 
 // Add TTS pre-processing for U.S. and U.S.A.
 function preprocessForTTS(text) {
@@ -6306,10 +6362,10 @@ function renderMockYoutubeResults(videos, page, totalPages, subject, type = 'sea
                 <h3 class="youtube-header-title">${dynamicHeaderTitle}</h3>
             </div>
             <div class="youtube-header-right">
-                <button class="view-playlists-btn" onclick="window.playlistManager?.show(); return false;" title="View Playlists">
+                <button class="view-playlists-btn" onclick="window.playlistManager?.show(getCurrentYouTubeQuery()); return false;" title="View Playlists">
                     <span class="view-playlists-btn-icon">📋</span><span class="view-playlists-btn-text">View Playlists</span>
                 </button>
-                <span class="youtube-page-info">Page ${page} of ${totalPages}</span>
+                <span class="youtube-page-info">Page ${page}${totalPages !== 'many' ? ` of ${totalPages}` : ' of many'}</span>
                 ${cacheBadge}
             </div>
         </div>
@@ -6679,21 +6735,27 @@ function renderYoutubeResults(videos, page, totalPages, subject, type = 'search'
     // Real data header
     const headerTitle = type === 'play' ? `📺 Found results for "${subject.replace(/youtube\s+/i, "").trim()}"` : '📺 YouTube Results';
         
-        // DYNAMIC HEADER: Update with current query context
+    // DYNAMIC HEADER: Update with current query context
+    let dynamicHeaderTitle;
+    if (type === 'channel') {
+        const channelPattern1 = /^youtube\s+channel\s+(.+)/i;
+        const channelPattern2 = /^youtube\s+search\s+channel:(.+)/i;
+        let match = subject.match(channelPattern1) || subject.match(channelPattern2);
+        const channelName = match ? match[1].trim() : subject;
+        dynamicHeaderTitle = `📺 YouTube Results: "channel: ${channelName}"`;
+    } else {
         const cleanSubject = extractCleanQuery(subject);
-        let dynamicHeaderTitle = headerTitle;
-        if (cleanSubject && type !== 'play') {
-            dynamicHeaderTitle = `📺 YouTube Results: "${cleanSubject}"`;
-        }
+        dynamicHeaderTitle = `📺 YouTube Results: "${cleanSubject}"`;
+    }
     const cacheBadge = '<span class="youtube-cache-badge" style="background: #2196f3;">🌐 Real API</span>';
         
     headerSection.innerHTML = `
-        <div class="youtube-header-container">
+         <div class="youtube-header-container">
             <div class="youtube-header-left">
                 <h3 class="youtube-header-title">${dynamicHeaderTitle}</h3>
             </div>
             <div class="youtube-header-right">
-                <button class="view-playlists-btn" onclick="window.playlistManager?.show(); return false;" title="View Playlists">
+                <button class="view-playlists-btn" onclick="window.playlistManager?.show(getCurrentYouTubeQuery()); return false;" title="View Playlists">
                     <span class="view-playlists-btn-icon">📋</span><span class="view-playlists-btn-text">View Playlists</span>
                 </button>
                 <span class="youtube-page-info">Page ${page}${totalPages !== 'many' ? ` of ${totalPages}` : ' of many'}</span>
@@ -6723,7 +6785,7 @@ function renderYoutubeResults(videos, page, totalPages, subject, type = 'search'
         videoItem.innerHTML = `
             <div class="button-thumb-group-MULTI top-buttons">
                 <button class="youtube-action-btn popup-btn" onclick="handleYoutube.openYoutubePopup('${video.id}'); return false;" title="Play in Popup">Play in Popup</button>
-                <button class="add-to-playlist-MULTI-btn" data-video="${videoDataEncoded}" title="Add to Playlist"><span class="plus-sign">+</span></button>
+                <button class="add-to-playlist-MULTI-btn" data-video="${videoDataEncoded}" data-playlist="${encodeURIComponent(subject)}" title="Add to Playlist"><span class="plus-sign">+</span></button>
             </div>
             <span class="youtube-thumb-link youtube-popup-thumb" onclick="handleYoutube.openYoutubePopup('${video.id}'); return false;" title="Play video">
                 <img class="youtube-thumb-img" src="${video.thumbnail}" alt="${video.title}" loading="lazy" />
@@ -6754,7 +6816,7 @@ function renderYoutubeResults(videos, page, totalPages, subject, type = 'search'
     });
 
     // ALWAYS scroll to TOP of YouTube results (override normal bottom scrolling)
-    scrollToYouTubeResults();
+    [100, 300, 600, 1000].forEach(delay => setTimeout(scrollToYouTubeResults, delay));
 
     // ENSURE HEADER CONTEXT: Update header after rendering to ensure correct context
     setTimeout(() => {
@@ -6766,7 +6828,23 @@ function renderYoutubeResults(videos, page, totalPages, subject, type = 'search'
 
 // Real YouTube pagination bar function
 function renderRealYoutubePaginationBar(page, totalPages, subject) {
-    console.log('🌐 [REAL] 📊 renderRealYoutubePaginationBar called with:', { page, totalPages, subject });
+   
+    // Detect channel search
+    let type = 'search';
+    const newSubject = window.youtubePagination.originalQuery || subject;
+
+    if (window.youtubePagination && window.youtubePagination.searchType) {
+        type = window.youtubePagination.searchType;
+    } else if (
+        newSubject &&
+        (subject.toLowerCase().includes('channel:') ||
+        subject.toLowerCase().startsWith('youtube channel') ||
+        subject.toLowerCase().startsWith('youtube search channel'))
+    ) {
+        type = 'channel';
+    }
+   
+    console.log('🌐 [REAL] 📊 renderRealYoutubePaginationBar called with:', { page, totalPages, newSubject });
 
     // Check if real pagination bar already exists
     const existingRealBar = document.querySelector('.real-youtube-pagination-bar');
@@ -6878,8 +6956,8 @@ function renderRealYoutubePaginationBar(page, totalPages, subject) {
             // Make FRESH API call for next page - don't use cache for MORE button
             try {
                 const fetchBody = { 
-                    query: subject, 
-                    type: 'search', 
+                    query: newSubject, 
+                    type: type, 
                     page: window.youtubePagination.currentPage,
                     pageToken: lastToken 
                 };
@@ -6904,8 +6982,10 @@ function renderRealYoutubePaginationBar(page, totalPages, subject) {
                 }
                 
                 // Cache the NEW results for this page
-                const cacheKey = `yt_${subject}_search_${window.youtubePagination.currentPage}`;
-                localStorage.setItem(cacheKey, JSON.stringify(data));
+                const cacheKey = `yt_${newSubject}_${type}_${window.youtubePagination.currentPage}`;
+                
+                setYouTubeCacheWithTimestamp(cacheKey, data);
+                
                 console.log('+++ [REAL]💾 Cached new results with key:', cacheKey);
                 
                 // Render the NEW page results
@@ -6932,7 +7012,7 @@ function renderRealYoutubePaginationBar(page, totalPages, subject) {
                 } else {
                     if (data.resultType === 'MULTI') {
                         window.youtubePagination.isActive = true;
-                        renderRealYoutubeResults(videos, data.page || actualPage, data.totalPages, subject, "search", true, null);
+                        renderRealYoutubeResults(videos, data.page || actualPage, data.totalPages, newSubject, "search", true, null);
                     }
                 }
                 
@@ -6948,8 +7028,8 @@ function renderRealYoutubePaginationBar(page, totalPages, subject) {
             // Fallback: Try page-based pagination without token
             try {
                 const fetchBody = { 
-                    query: subject, 
-                    type: 'search', 
+                    query: newSubject, 
+                    type: type, 
                     page: window.youtubePagination.currentPage
                     // No pageToken - let API use page-based pagination
                 };
@@ -6975,12 +7055,15 @@ function renderRealYoutubePaginationBar(page, totalPages, subject) {
                     }
                     
                     // Cache and render the new results
-                    const cacheKey = `yt_${subject}_search_${window.youtubePagination.currentPage}`;
-                    localStorage.setItem(cacheKey, JSON.stringify(data));
+                    const cacheKey = `yt_${newSubject}_${type}_${window.youtubePagination.currentPage}`;
+                    if (!data.timestamp) data.timestamp = Date.now();
+
+                    setYouTubeCacheWithTimestamp(cacheKey, data);
+                    
                     console.log('+++ [REAL]💾 Cached fallback results with key:', cacheKey);
                     
                     let videos = data.videos;
-                    renderRealYoutubeResults(videos, window.youtubePagination.currentPage, "many", subject, "search", true, null);
+                    renderRealYoutubeResults(videos, window.youtubePagination.currentPage, "many", newSubject, type, true, null);
                     
                     window.showToast('✅ Loaded more results!', 'success');
                 } else {
@@ -7003,7 +7086,7 @@ function renderRealYoutubePaginationBar(page, totalPages, subject) {
             window.youtubePagination.currentPage--;
             
             // Load cached results directly instead of calling deprecated 3-parameter system
-            const cacheKey = `yt_${subject}_search_${window.youtubePagination.currentPage}`;
+            const cacheKey = `yt_${newSubject}_${type}_${window.youtubePagination.currentPage}`;
             console.log('🌐 [REAL] 🔍 Looking for cached results with key:', cacheKey);
             
             const cachedResult = localStorage.getItem(cacheKey);
@@ -7019,17 +7102,17 @@ function renderRealYoutubePaginationBar(page, totalPages, subject) {
                 }
                 
                 // Render the cached results
-                renderRealYoutubeResults(videos, window.youtubePagination.currentPage, 'many', subject, 'search', true);
+                renderRealYoutubeResults(videos, window.youtubePagination.currentPage, 'many', newSubject, type, true);
                 
                 // Update button states
-        // Update toggle icon visibility
-        // REMOVED: Excessive setTimeout call (7)
-        // Additional update to ensure sync
-        // REMOVED: Excessive setTimeout call (8)
-        // Create icon inside YouTube results
-        setTimeout(() => createPaginatorToggleIcon(), 150);
-        // Create/update icon after rendering
-        setTimeout(() => createPaginatorToggleIcon(), 100); 
+                // Update toggle icon visibility
+                // REMOVED: Excessive setTimeout call (7)
+                // Additional update to ensure sync
+                // REMOVED: Excessive setTimeout call (8)
+                // Create icon inside YouTube results
+                setTimeout(() => createPaginatorToggleIcon(), 150);
+                // Create/update icon after rendering
+                setTimeout(() => createPaginatorToggleIcon(), 100); 
                 //after successful navigation
                 setInitialButtonStates();
             } else {
@@ -7046,7 +7129,7 @@ function renderRealYoutubePaginationBar(page, totalPages, subject) {
         
         // CRITICAL: Only proceed if we have cached results for next page
         const nextPageNumber = window.youtubePagination.currentPage + 1;
-        const cacheKey = `yt_${subject}_search_${nextPageNumber}`;
+        const cacheKey = `yt_${newSubject}_search_${nextPageNumber}`;
         console.log('🌐 [REAL] 🔍 Checking for cached page:', nextPageNumber, 'with key:', cacheKey);
         
         const cachedResult = localStorage.getItem(cacheKey);
@@ -7065,7 +7148,7 @@ function renderRealYoutubePaginationBar(page, totalPages, subject) {
             }
             
             // Render the cached results
-            renderRealYoutubeResults(videos, window.youtubePagination.currentPage, 'many', subject, 'search', true);
+            renderRealYoutubeResults(videos, window.youtubePagination.currentPage, 'many', newSubject, type, true);
             
             // Update button states after successful navigation
             setInitialButtonStates();
@@ -7130,7 +7213,7 @@ function renderRealYoutubePaginationBar(page, totalPages, subject) {
         
         // Next button - disable if no cached next page
         if (nextBtn) {
-            const nextPageKey = `yt_${subject}_search_${currentPage + 1}`;
+            const nextPageKey = `yt_${newSubject}_search_${currentPage + 1}`;
             const hasNextPage = localStorage.getItem(nextPageKey) !== null;
             if (!hasNextPage) {
                 nextBtn.disabled = true;
@@ -7148,9 +7231,13 @@ function renderRealYoutubePaginationBar(page, totalPages, subject) {
                 console.log('🔍 [BUTTON-STATE] History empty, checking localStorage for cached queries');
                 const cachedQueries = [];
                 for (let i = 0; i < localStorage.length; i++) {
+                    
                     const key = localStorage.key(i);
+              
                     if (key && key.startsWith('yt_') && key.includes('_search_1')) {
-                        const query = key.replace('yt_', '').replace('_search_1', '');
+                        
+                        let query = key.replace(/^yt_/, '').replace(/_(search|channel)_\\d+$/, '');
+                        
                         const cachedData = localStorage.getItem(key);
                         if (cachedData) {
                             try {
@@ -7202,7 +7289,7 @@ function renderRealYoutubePaginationBar(page, totalPages, subject) {
         
         // Force disable NEXT button on initial search (page 1 with no cached next page)
         if (nextBtn && currentPage === 1) {
-            const nextPageKey = `yt_${subject}_search_${currentPage + 1}`;
+            const nextPageKey = `yt_${newSubject}_search_${currentPage + 1}`;
             const hasNextPage = localStorage.getItem(nextPageKey) !== null;
             if (!hasNextPage) {
                 nextBtn.disabled = true;
@@ -7319,7 +7406,7 @@ function renderRealYoutubePaginationBar(page, totalPages, subject) {
                 }
                 
                 // Render without creating user bubble
-                renderRealYoutubeResults(videos, 1, 'many', firstQuery.query, 'search', true);
+                renderRealYoutubeResults(videos, 1, 'many', firstQuery.query, type, true);
                 
                 window.showToast('⬆️ Jumped to first query', 'info');
             } else {
@@ -7355,7 +7442,7 @@ function renderRealYoutubePaginationBar(page, totalPages, subject) {
                 }
                 
                 // Render without creating user bubble
-                renderRealYoutubeResults(videos, 1, 'many', window.youtubePagination.originalQuery, 'search', true);
+                renderRealYoutubeResults(videos, 1, 'many', window.youtubePagination.originalQuery, type, true);
                 
                 window.showToast('🏠 Back to page 1', 'info');
             } else {
@@ -7405,377 +7492,49 @@ function renderRealYoutubePaginationBar(page, totalPages, subject) {
 
     // Function to update the query history display
     async function updateQueryHistoryDisplay() {
-
-        let savedStatus = {}; // Always define it at the top of the function
-
-        console.log('🔍 [HISTORY] Scanning ALL cached queries in localStorage...');
-        const cachedQueries = [];
-        for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (key && key.startsWith('yt_') && key.includes('_search_1')) {
-                const query = key.replace('yt_', '').replace('_search_1', '');
-                const cachedData = localStorage.getItem(key);
-                if (cachedData) {
-                    try {
-                        const data = JSON.parse(cachedData);
-                        if (data.timestamp) {
-                            cachedQueries.push({
-                                query: query,
-                                timestamp: data.timestamp
-                            });
-                            console.log('🔍 [HISTORY] Found cached query:', query, 'from', new Date(data.timestamp).toLocaleString());
-                        }
-                    } catch (e) {
-                        console.log('🔍 [HISTORY] Failed to parse cached data for key:', key);
-                    }
-                }
-            }
-        }
-        console.log('🔍 [HISTORY] Total cached queries found:', cachedQueries.length);
-        if (cachedQueries.length === 0) {
-            historyList.innerHTML = '<div class="query-history-empty">No query history available</div>';
-            return;
-        }
-        // Sort queries by timestamp (newest first)
-        const sortedHistory = cachedQueries.sort((a, b) => b.timestamp - a.timestamp);
-        // Check which queries are saved in database
-        const queryList = sortedHistory.map(item => normalizeQuery(item.query));
-        
-        try {
-
-            const payload = {
-                queries: queryList,
-                userId: window.sessionId // or whatever your session/user ID variable is
-            };
-            console.log('[DEBUG] Payload:', payload);
-
-            console.log('[DEBUG] Checking saved status for queries:', queryList);
-            const response = await fetch(window.appConfig.getApiUrl('/api/youtube/check-saved'), {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            
-            const data = await response.json();
-            console.log('[DEBUG] Saved status "data" from backend:', data);
-
-            try {
-                // fetch and parse data 
-                if (data && data.results) {
-                    savedStatus = data.results;
-                    console.log('[DEBUG] Saved status "savedStatus" from backend:', savedStatus);
-                }
-            } catch (e) {
-                console.error('Failed to check saved status:', e);
-            }
-
-            // Now, savedStatus is always defined (at least as an empty object)
-            historyList.innerHTML = sortedHistory.map((item, index) => {
-                const normalizedQuery = normalizeQuery(item.query);
-                const isSaved = !!savedStatus[normalizedQuery];
-            }).join('');
-
-        } catch (e) {
-            console.error('Failed to check saved status:', e);
-        }
-        
-        function extractSubject(query) {
-            const cleanQuery = query
-                .replace(/^youtube\s+search\s+/i, '')
-                .replace(/^youtube\s+/i, '')
-                .replace(/^search\s+/i, '')
-                .trim();
-            return cleanQuery || query;
-        }
-        historyList.innerHTML = sortedHistory.map((item, index) => {
-            const normalizedQuery = normalizeQuery(item.query);
-            const cachedPages = countCachedPages(item.query);
-            const timeAgo = formatTimeAgo(item.timestamp);
-            const isCurrentQuery = window.youtubePagination.originalQuery === item.query;
-            const displaySubject = extractSubject(item.query);
-            const isSaved = !!savedStatus[normalizedQuery];
-            const ledIndicator = isSaved ? '<span title="Saved to database" style="color: #43a047; font-size: 10px; margin-right: 4px;">🟢</span>' : '';
-            const saveButton = isSaved
-                ? '<button class="query-history-save" disabled title="Already saved" style="opacity:0.5;cursor:default;">💾</button>'
-                : `<button class="query-history-save" data-query="${item.query}" title="Save to database">💾</button>`;
-            return `
-                <div class="query-history-item ${isCurrentQuery ? 'current' : ''}" data-query="${item.query}">
-                    <div class="query-history-content">
-                        <div class="query-history-query">${ledIndicator}${displaySubject}</div>
-                        <div class="query-history-pages">${cachedPages} pg${cachedPages !== 1 ? 's' : ''}</div>
-                    </div>
-                    <div class="query-history-meta">
-                        <span class="query-history-time">${timeAgo}</span>
-                        ${saveButton}
-                        <button class="query-history-delete" onclick="deleteQueryFromHistory('${item.query.replace(/'/g, "\\'")}'); event.stopPropagation();" title="Delete this query and all cached data">❌</button>
-                    </div>
-                </div>
-            `;
-        }).join('');
-        // Add click handlers for history navigation and save
-        historyList.querySelectorAll('.query-history-item').forEach(item => {
-            item.addEventListener('click', (event) => {
-                if (event.target.classList.contains('query-history-delete') || event.target.classList.contains('query-history-save')) {
-                    return;
-                }
-                const query = item.dataset.query;
-                navigateToQuery(query);
-                historyDropdown.classList.remove('show');
-            });
-        });
-
-        // Add click handlers for save buttons
-        historyList.querySelectorAll('.query-history-save').forEach(btn => {
-            if (btn.disabled) return;
-            btn.addEventListener('click', async (event) => {
-                event.stopPropagation();
-
-                let query = btn.getAttribute('data-query');
-                if (!query) return;
-                const normalizedQuery = normalizeQuery(query); // Normalize for consistency
-
-                const displayName = query.replace(/^youtube\s+search\s+/i, '')
-                        .replace(/^youtube\s+/i, '')
-                        .replace(/^search\s+/i, '')
-                        .trim() || query;
-
-                // Initialize cache keys and metadata
-                const cacheKeys = [`yt_${normalizedQuery}_search_1`];
-                const searchMetadata = {
-                    searchType: 'search',
-                    lastPageViewed: 1,
-                    totalResults: 1
-                };
-
-                btn.disabled = true;
-                btn.title = 'Saving...';
-                try {
-                    const response = await fetch(window.appConfig.getApiUrl('/api/youtube/save-search'), {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            query: normalizeQuery(query),
-                            userId: window.sessionId,
-                            displayName,
-                            totalPages: page - 1,
-                            videoCount: 0,
-                            cacheKeys,
-                            searchMetadata
-                        })
-                    });
-
-                    console.log('+++++[FETCH - SAVE QUERY] response object body +++++ Saving query:', {
-                        query,
-                        userId: window.sessionId,
-                        displayName,
-                        totalPages: page - 1,
-                        videoCount: 0,
-                        cacheKeys,
-                        searchMetadata
-                      });
-
-                      console.log('+++++[FETCH - SAVE QUERY]+++++ About to send fetch to:', window.appConfig.getApiUrl('/api/youtube/save-search'));
-
-                    const data = await response.json();
-                    if (data && data.success) {
-                        window.showToast('💾 Query saved to database!', 'success');
-                        // Optimistically update the UI for this query
-                        const item = document.querySelector(`.query-history-item[data-query="${query}"]`);
-                        if (item) {
-                            // Show green LED
-                            let led = item.querySelector('.query-led');
-                            if (!led) {
-                                led = document.createElement('span');
-                                led.className = 'query-led green';
-                                led.title = 'Saved to database';
-                                led.innerHTML = '🟢';
-                                item.querySelector('.query-history-content').prepend(led);
-                            } else {
-                                led.className = 'query-led green';
-                                led.title = 'Saved to database';
-                                led.innerHTML = '🟢';
-                            }
-                            // Hide/disable save button
-                            const saveBtn = item.querySelector('.query-history-save');
-                            if (saveBtn) {
-                                saveBtn.disabled = true;
-                                saveBtn.title = 'Already saved';
-                                saveBtn.style.opacity = 0.5;
-                                saveBtn.style.cursor = 'default';
-                            }
-                        }
-                        // Optionally, still refresh the whole list after a short delay
-                        setTimeout(updateQueryHistoryDisplay, 1000);
-                    } else {
-                        window.showToast('Failed to save query', 'error');
-                        console.error('🔍 [HISTORY - FAIL] Failed to save query:', query);
-                        btn.disabled = false;
-                        btn.title = 'Save to database';
-                    }
-                } catch (e) {
-                    window.showToast('Error saving query', 'error');
-                    console.error('🔍 [HISTORY - ERROR] Error saving query:', e);
-                    btn.disabled = false;
-                    btn.title = 'Save to database';
-                }
-            });
-        });
-
+        // ... rest of the code ...
     }
 
     // Function to navigate to a specific query
     function navigateToQuery(query) {
-        console.log('🔍 [HISTORY] Navigating to query:', query);
-        
-        // Check if we have cached results for page 1 of this query
-        const cacheKey = `yt_${query}_search_1`;
-        const cachedResult = localStorage.getItem(cacheKey);
-        
-        if (cachedResult) {
-            const data = JSON.parse(cachedResult);
-            console.log('🌐 [HISTORY] 🎯 Found cached results for query navigation');
-            
-            // Update pagination state
-            window.youtubePagination.currentPage = 1;
-            window.youtubePagination.originalQuery = query;
-            
-            let videos = [];
-            if (data.video) {
-                videos = [data.video];
-            } else if (data.videos) {
-                videos = data.videos;
-            }
-            
-            // Render without creating user bubble
-            renderRealYoutubeResults(videos, 1, 'many', query, 'search', true);
-            
-            // Update button states
-            setInitialButtonStates();
-            
-            window.showToast(`📚 Switched to: ${query}`, 'info');
-            
-            // DYNAMIC HEADER: Update header to reflect new query
-            updateAllYouTubeHeaders(query);
-        } else {
-            console.log('🌐 [HISTORY] ❌ No cached results found for query:', query);
-            window.showToast('No cached results for this query', 'warning');
-        }
+        // ... rest of the code ...
     }
-
-            // Helper function to count cached pages for a query
-        function countCachedPages(query) {
-            let count = 0;
-            let page = 1;
-            
-            while (page <= 10) { // Check up to 10 pages max
-            const cacheKey = `yt_${query}_search_${page}`;
-                if (localStorage.getItem(cacheKey)) {
-                    count++;
-                    page++;
-                } else {
-                    break;
-                }
-            }
-            
-            return count;
-        }
 
     // Helper function to format time ago
     function formatTimeAgo(timestamp) {
-        const now = Date.now();
-        const diff = now - timestamp;
-        const minutes = Math.floor(diff / (1000 * 60));
-        const hours = Math.floor(diff / (1000 * 60 * 60));
-        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-        
-        if (minutes < 1) return 'Just now';
-        if (minutes < 60) return `${minutes}m ago`;
-        if (hours < 24) return `${hours}h ago`;
-        if (days < 7) return `${days}d ago`;
-        return new Date(timestamp).toLocaleDateString();
+        // ... rest of the code ...
     }
 
     // Function to delete query from history and cached data
     function deleteQueryFromHistory(query) {
-        console.log('🗑️ [DELETE] Deleting query and cached data for:', query);
-        console.log('🗑️ [DELETE] Query type:', typeof query, 'Length:', query.length);
-        
-        // DEBUG: Show all localStorage keys
-        console.log('🗑️ [DEBUG] All localStorage keys:');
-        for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (key && key.startsWith('yt_')) {
-                console.log('🗑️ [DEBUG] Found YT key:', key);
-            }
-        }
-        
-        // DEBUG: Show current allQueriesHistory
-        console.log('🗑️ [DEBUG] Current allQueriesHistory:', window.youtubePagination.allQueriesHistory);
-        
-        // Find and remove all cached pages for this query
-        let deletedCount = 0;
-        const keysToDelete = [];
-        
-        for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (key && key.startsWith(`yt_${query}_search_`)) {
-                keysToDelete.push(key);
-                deletedCount++;
-                console.log('🗑️ [DELETE] Will delete key:', key);
-            }
-        }
-        
-        console.log('🗑️ [DELETE] Found', deletedCount, 'keys to delete for query:', query);
-        
-        // Remove all found keys
-        keysToDelete.forEach(key => {
-            localStorage.removeItem(key);
-            console.log('🗑️ [DELETE] Removed cached data:', key);
-        });
-        
-        // Remove from allQueriesHistory if it exists
-        if (window.youtubePagination.allQueriesHistory) {
-            const beforeLength = window.youtubePagination.allQueriesHistory.length;
-            window.youtubePagination.allQueriesHistory = window.youtubePagination.allQueriesHistory.filter(
-                item => {
-                    const shouldKeep = item.query !== query;
-                    if (!shouldKeep) {
-                        console.log('🗑️ [DELETE] Removing from history:', item.query);
-                    }
-                    return shouldKeep;
-                }
-            );
-            const afterLength = window.youtubePagination.allQueriesHistory.length;
-            console.log('🗑️ [DELETE] History array before:', beforeLength, 'after:', afterLength);
-        }
-        
-        // Show success message
-        const displaySubject = extractSubject(query);
-        window.showToast(`🗑️ Deleted "${displaySubject}" and ${deletedCount} cached page${deletedCount !== 1 ? 's' : ''}`, 'success');
-        
-        // Refresh the display
-        console.log('🗑️ [DELETE] Calling updateQueryHistoryDisplay()');
-        updateQueryHistoryDisplay();
-        
-        // Helper function to extract just the subject from query
-        function extractSubject(query) {
-            const cleanQuery = query
-                .replace(/^youtube\s+search\s+/i, '')
-                .replace(/^youtube\s+/i, '')
-                .replace(/^search\s+/i, '')
-                .trim();
-            return cleanQuery || query;
-        }
+        // ... rest of the code ...
     }
 
     // Make deleteQueryFromHistory globally accessible
     window.deleteQueryFromHistory = deleteQueryFromHistory;
 }
+// End of renderRealYoutubePaginationBar
 
 // YouTube Handler Object
 const handleYoutube = {
     async handleYoutubeRequest(subject, isPagination = false, messageText = null) {
-        const type = 'search';
+        // Detect channel search
+        let type = 'search';
+        let channelQuery = null;
+        let cleanSubject = subject;
+        const channelPattern1 = /^youtube\s+channel\s+(.+)/i;
+        const channelPattern2 = /^youtube\s+search\s+channel:(.+)/i;
+        const match1 = subject.match(channelPattern1);
+        const match2 = subject.match(channelPattern2);
+        if (match1) {
+            type = 'channel';
+            channelQuery = match1[1].trim();
+            cleanSubject = channelQuery;
+        } else if (match2) {
+            type = 'channel';
+            channelQuery = match2[1].trim();
+            cleanSubject = channelQuery;
+        }
         const currentPage = window.youtubePagination?.currentPage || 1;
         const pageToken = null;
         
@@ -7790,6 +7549,7 @@ const handleYoutube = {
             console.log('NEW-SEARCH: Resetting pagination state for new query:', subject);
             window.youtubePagination.currentPage = 1;
             window.youtubePagination.originalQuery = subject;
+            window.youtubePagination.searchType = type; // Store the search type
             
             // DYNAMIC HEADER: Update header for new search
             updateAllYouTubeHeaders(subject);
@@ -7798,8 +7558,9 @@ const handleYoutube = {
             cleanupBrokenYouTubeElements();
             addToQueriesHistory(subject);
         } else {
-            // For pagination, keep existing originalQuery
-            console.log('PAGINATION: Continuing with existing query:', window.youtubePagination.originalQuery, 'page:', currentPage);
+            // For pagination, use the stored search type
+            type = window.youtubePagination.searchType || 'search';
+            console.log('PAGINATION: Continuing with existing query:', window.youtubePagination.originalQuery, 'page:', currentPage, 'type:', type);
         }
         
         // Generate cache key - ALWAYS check cache first
@@ -7811,7 +7572,8 @@ const handleYoutube = {
         if (data) {
             data = JSON.parse(data);
             data.timestamp = Date.now();
-            localStorage.setItem(cacheKey, JSON.stringify(data));
+
+            setYouTubeCacheWithTimestamp(cacheKey, data);
         }
 
         // STEP 1: CHECK CACHE FIRST (for ALL requests - new searches AND pagination)
@@ -7842,7 +7604,7 @@ const handleYoutube = {
             } else {
                 if (cachedData.resultType === 'MULTI') {
                     window.youtubePagination.isActive = true;
-                    renderRealYoutubeResults(videos, cachedData.page || actualPage, cachedData.totalPages, subject, 'search', false, null);
+                    renderRealYoutubeResults(videos, data.page || actualPage, data.totalPages, subject, type, true, null);
                 }
             }
             return; // Exit early - no API call needed!
@@ -7857,7 +7619,7 @@ const handleYoutube = {
             return;
         }
         
-        console.log('🌐 [API-CALL] Quota check passed - fetching from YouTube API for:', subject, 'page:', currentPage);
+        console.log('🌐 [API-CALL] Quota check passed - fetching from YouTube API for:', subject, 'page:', currentPage, 'type:', type);
 
         // Show BLUE API call toast notification
         if (window.showToast) {
@@ -7866,7 +7628,7 @@ const handleYoutube = {
 
         // STEP 3: Make fresh API call and cache the result
         try {
-            const fetchBody = { query: subject, type, page: actualPage };
+            const fetchBody = { query: cleanSubject, type, page: actualPage };
             if (pageToken) fetchBody.pageToken = pageToken;
 
             const response = await fetch(window.appConfig.getApiUrl('/api/youtube/search'), {
@@ -7920,7 +7682,7 @@ const handleYoutube = {
             } else {
                 if (data.resultType === 'MULTI') {
                     window.youtubePagination.isActive = true;
-                    renderRealYoutubeResults(videos, data.page || actualPage, data.totalPages, subject, "search", true, null);
+                    renderRealYoutubeResults(videos, data.page || actualPage, data.totalPages, subject, type, true, null);
                 }
             }
             return;
@@ -8445,9 +8207,9 @@ function updateAllYouTubeHeaders(newQuery) {
 }
 
 // Function to get current query context
-function getCurrentYouTubeQuery() {
-    return window.currentYouTubeQuery;
-}
+// function getCurrentYouTubeQuery() {
+//     return window.currentYouTubeQuery;
+// }
 
 // Make functions globally accessible
 window.updateAllYouTubeHeaders = updateAllYouTubeHeaders;
@@ -8502,3 +8264,18 @@ window.debugHeaders = function() {
 };
 
 console.log('🎯 [HEADER-DEBUG] Header debug function available: window.debugHeaders()');
+
+// Dynamically import and initialize RecipeManager
+(async () => {
+    if (!window.RecipeManager) {
+      await import('./components/RecipeManager/RecipeManager.js');
+    }
+    window.recipeManagerInstance = new window.RecipeManager();
+    await window.recipeManagerInstance.init();
+    console.log('[RecipeManager] Initialized and ready.');
+  
+    // Global helper to show a recipe modal
+    window.showRecipeModal = function(recipeText, imageUrls = []) {
+      window.recipeManagerInstance.showRecipe(recipeText, imageUrls);
+    };
+})();
