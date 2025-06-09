@@ -2192,6 +2192,73 @@ app.post('/api/youtube/search', async (req, res) => {
         }
     }
 
+    if (type === 'channel') {
+        // Channel video search
+        const perPage = 12;
+        const pageNum = Math.max(1, Number(page) || 1);
+        try {
+            const result = await getCachedOrFetch(cacheKey, async () => {
+                console.log('🔍 Real API: Channel search:', query, 'page:', pageNum);
+                // Step 1: Find the channelId by name
+                const channelSearch = await youtube.search.list({
+                    part: ['snippet'],
+                    q: query,
+                    maxResults: 1,
+                    type: 'channel'
+                });
+                if (!channelSearch?.data?.items?.length) {
+                    return { success: false, videos: [], error: 'No channel found for this query' };
+                }
+                const channelId = channelSearch.data.items[0].id.channelId;
+                // Step 2: Fetch videos from the channel
+                const videoSearch = await youtube.search.list({
+                    part: ['snippet'],
+                    channelId,
+                    maxResults: perPage,
+                    type: 'video',
+                    order: 'date',
+                    pageToken: req.body.pageToken || undefined
+                });
+                if (!videoSearch?.data?.items?.length) {
+                    return { success: false, videos: [], error: 'No videos found for this channel' };
+                }
+                const videoIds = videoSearch.data.items.map(item => item.id.videoId);
+                const videoDetails = await youtube.videos.list({
+                    part: ['snippet', 'contentDetails'],
+                    id: videoIds.join(',')
+                });
+                const videos = videoDetails.data.items.map(video => ({
+                    id: video.id,
+                    title: video.snippet.title,
+                    description: video.snippet.description,
+                    channelTitle: video.snippet.channelTitle,
+                    publishedAt: video.snippet.publishedAt,
+                    duration: video.contentDetails.duration,
+                    thumbnail: video.snippet.thumbnails?.high?.url || ''
+                }));
+                return {
+                    success: true,
+                    videos,
+                    resultType: 'MULTI',
+                    isMock: false,
+                    page: pageNum,
+                    nextPageToken: videoSearch.data.nextPageToken,
+                    fromCache: false
+                };
+            }, 102); // search.list (channel) + search.list (video) + videos.list
+            return res.json(result);
+        } catch (error) {
+            console.error('YouTube API error for channel search:', error);
+            return res.status(500).json({
+                success: false,
+                error: 'YouTube API request failed (channel search)',
+                details: error.message,
+                videos: [],
+                isMock: false
+            });
+        }
+    }
+
     // Fallback for unrecognized types
     return res.json({ success: false, videos: [], resultType: 'NONE', isMock: false });
 });
