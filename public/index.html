@@ -32,6 +32,7 @@
           <option value="">Default Voice</option>
           <!-- Other voice options will be populated dynamically -->
         </select>
+        <button id="help-btn" class="header-help-btn" style="margin-right: 16px;">Help</button>
         <div id="mode-toggle">
           <label for="conversation-mode">Conversation Mode:</label>
           <input
@@ -77,6 +78,19 @@
       </div>
     </div>
 
+    <!-- Help Modal (hidden by default) -->
+    <div id="help-modal" class="help-modal">
+      <div class="help-modal-content">
+        <button id="help-modal-close" class="help-modal-close">&times;</button>
+        <h2>Help &amp; Support</h2>
+        <div id="help-modal-body">
+          <p>Welcome to the MultiChat_Chatty Help Center!<br>
+          Use the search bar or browse topics to get help with features.<br><br>
+          <strong>Tip:</strong> This help system will grow as new features are added.</p>
+        </div>
+      </div>
+    </div>
+
     <!-- Slideout Panel Left -->
     <div id="slideout-bar"></div>
     <div id="slideout-panel-left">
@@ -112,7 +126,9 @@
           </div>
         </label>
         <button id="remove-custom-prompt-btn" style="margin-top:8px;">Remove Custom Prompt</button>
-        <!-- Add more controls here -->
+        <div style="margin-top:18px;">
+          <a href="#" id="sidebar-help-link" style="color:#1976d2;text-decoration:underline;">Help</a>
+        </div>
       </div>
     </div>
 
@@ -128,8 +144,9 @@
     <script type="module" src="config.js"></script>
     <script type="module" src="components/ToastManager.js"></script>
     <script type="module" src="components/PlaylistManager.js"></script>
-    <script src="quota-monitor.js"></script>
+    <script src="js/quota-monitor.js"></script>
     <script src="components/MyJokesManager/MyJokesManager.js"></script>
+    <script src="components/RecipeManager/RecipeManager.js"></script>
     <script type="module" src="app.js?v=20250603-1715"></script>
     <script>
       function enforceImageStyles() {
@@ -153,7 +170,33 @@
 
       document.addEventListener("DOMContentLoaded", function () {
         setInterval(enforceImageStyles, 1000);
+        // Help modal logic
+        const helpBtn = document.getElementById('help-btn');
+        const helpModal = document.getElementById('help-modal');
+        const helpModalClose = document.getElementById('help-modal-close');
+        const sidebarHelpLink = document.getElementById('sidebar-help-link');
+        function openHelpModal(e) {
+          if (e) e.preventDefault();
+          helpModal.classList.add('open');
+        }
+        function closeHelpModal(e) {
+          if (e) e.preventDefault();
+          helpModal.classList.remove('open');
+        }
+        helpBtn && helpBtn.addEventListener('click', openHelpModal);
+        sidebarHelpLink && sidebarHelpLink.addEventListener('click', openHelpModal);
+        helpModalClose && helpModalClose.addEventListener('click', closeHelpModal);
+        // Close modal on outside click
+        window.addEventListener('click', function(event) {
+          if (event.target === helpModal) {
+            helpModal.classList.remove('open');
+          }
+        });
       });
+
+      if (window.QuotaMonitor) {
+        window.QuotaMonitor.init();
+      }
     </script>
   </body>
 </html>
