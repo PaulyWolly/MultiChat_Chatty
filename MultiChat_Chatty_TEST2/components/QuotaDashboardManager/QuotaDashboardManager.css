@@ -1,0 +1,329 @@
+/* Quota Dashboard Component Styles */
+.quota-dashboard {
+    position: fixed;
+    background: rgba(0,0,0,0.9);
+    color: white;
+    width: 15vw;
+    padding-bottom: 3px;
+    border-radius: 8px;
+    font-size: 12px;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    cursor: move;
+    user-select: none;
+    border: 2px solid rgba(255,255,255,0.1);
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    will-change: transform;
+}
+
+.quota-toggle-cache-mode-btn {
+    background: rgb(27, 156, 20);
+    width: 100%;
+    font-size: 12px;
+}
+
+.quota-reset-counter-btn {
+    background: #2196f3;
+    width: 100%;
+    font-size: 12px;
+}
+
+.quota-dashboard.dragging {
+    cursor: grabbing !important;
+    transition: none !important;
+    will-change: transform, left, top;
+}
+
+.quota-dashboard:hover {
+    box-shadow: 0 6px 16px rgba(0,0,0,0.4);
+}
+
+.quota-dashboard:active {
+    cursor: grabbing;
+}
+
+.minimized-dashboard {
+    height: 5px;
+    width: 15px;
+    padding: 2px 0px 10px 2px;
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    min-width: 150px;
+    max-width: 150px;
+    cursor: default;
+    bottom: 1px;
+}
+
+.minimized-dashboard:not(.custom-position) {
+    bottom: 1px;
+    left: 45%;
+    transform: translateX(-50%);
+}
+
+.restored-dashboard {
+    height: 150px;
+    width: 240px;
+    padding: 12px;
+    min-width: 240px;
+    max-width: 240px;
+    cursor: grab;
+}
+
+.restored-dashboard:active {
+    cursor: grabbing;
+}
+
+.restored-dashboard:not(.custom-position) {
+    top: 10px;
+    right: 10px;
+}
+
+.restored-dashboard.custom-position {
+    top: auto;
+    right: auto;
+    bottom: auto;
+    left: auto;
+    transform: none;
+}
+
+.minimized-dashboard.custom-position {
+    bottom: auto;
+    left: auto;
+    transform: none;
+}
+
+.quota-minimize-restore-btn {
+    position: absolute;
+    top: 1px;
+    right: 4px;
+    padding: 2px 0 1px 0;
+    border: none;
+    border-radius: 3px;
+    font-size: 10px;
+    cursor: pointer;
+    color: white;
+    line-height: 1;
+    font-weight: bold;
+    z-index: 1;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.quota-minimize-btn {
+    background: #ff9800;
+}
+
+.quota-restore-btn {
+    background: #2196f3;
+}
+
+.quota-minimize-restore-btn:hover {
+    opacity: 0.8;
+    transform: scale(1.05);
+}
+
+.quota-content-minimized {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    line-height: 14px;
+    padding-right: 35px;
+}
+
+.quota-content-restored {
+    height: 116px;
+    padding-right: 35px;
+    padding-top: 14px;
+    cursor: grab;
+    width: 20vw;
+}
+
+.quota-content-restored:active {
+    cursor: grabbing;
+}
+
+.quota-drag-handle {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    color: rgba(255,255,255,0.5);
+    font-size: 10px;
+    line-height: 8px;
+    cursor: grab;
+    padding: 2px;
+    pointer-events: auto;
+    transition: color 0.2s ease;
+}
+
+.quota-drag-handle:hover {
+    color: rgba(255,255,255,0.8);
+}
+
+.quota-drag-handle:active {
+    cursor: grabbing;
+}
+
+.quota-title {
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.quota-stats {
+    margin-bottom: 8px;
+    line-height: 1.3;
+}
+
+.quota-progress-bar-bg {
+    background: #333;
+    height: 6px;
+    border-radius: 3px;
+    margin: 8px 0;
+    overflow: hidden;
+}
+
+.quota-progress-bar {
+    height: 100%;
+    transition: width 0.3s;
+}
+
+.quota-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.quota-toggle-cache-btn {
+    padding: 4px 12px;
+    border: none;
+    border-radius: 4px;
+    background: #f5f5f5;
+    color: #333;
+    cursor: pointer;
+    font-size: 12px;
+    transition: background 0.2s;
+}
+
+.quota-toggle-cache-btn.cache-on {
+    background: #4caf50;
+    color: #fff;
+}
+
+.quota-toggle-cache-btn.cache-off {
+    background: #2196f3;
+    color: #fff;
+}
+
+#quota-dashboard .quota-minimize-btn,
+#quota-dashboard .quota-restore-btn {
+    padding: 0 !important;
+    font-size: 20px !important;
+    font-family: inherit !important;
+    box-sizing: border-box;
+    /* ...other styles you want to enforce... */
+}
+
+#quota-dashboard-restored { display: block; }
+#quota-dashboard-minimized { display: none; }
+
+.minimized-visible #quota-dashboard-restored { display: none; }
+.minimized-visible #quota-dashboard-minimized { display: flex !important; }
+
+/* Common styles */
+.quota-dashboard-content {
+  background: #111;
+  color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+  position: fixed;
+  z-index: 9999;
+  font-family: inherit;
+}
+
+/* Restored (main) state */
+#quota-dashboard-restored {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  min-width: 320px;
+  max-width: 400px;
+  height: 180px;
+  padding-top: 28px;
+  display: block;
+}
+
+/* Minimized state */
+#quota-dashboard-minimized {
+  position: fixed;
+  left: 50%;
+  right: 50%;
+  bottom: 0;
+  top: auto;
+  transform: translateX(-50%);
+  min-width: 160px;
+  max-width: 200px;
+  height: 32px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px 10px 0 0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  padding: 0;
+  display: none;
+}
+
+/* Toggle visibility */
+.minimized-visible #quota-dashboard-restored { display: none; }
+.minimized-visible #quota-dashboard-minimized { display: flex !important; }
+
+/* Buttons */
+.quota-restore-btn,
+.quota-minimize-btn {
+    all: unset;
+    display: inline-block;
+    position: absolute;
+    top: 4px;
+    right: 8px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #fff;
+    color: #111;
+    font-size: 20px;
+    text-align: center;
+    cursor: pointer;
+    z-index: 10000;
+    padding: 5px;
+    transition: background 0.2s, color 0.2s;
+}
+
+.quota-restore-btn:hover,
+.quota-minimize-btn:hover {
+  background: #d32f2f;
+  color: #fff;
+}
+
+/* Minimized button tweaks */
+#quota-dashboard-minimized .quota-minimize-btn {
+  position: static;
+  margin-right: 8px;
+  background: #fff;
+  color: #111;
+}
+#quota-dashboard-minimized .quota-minimize-btn:hover {
+  background: #d32f2f;
+  color: #fff;
+}
+
+/* Hide drag handle in minimized state if you have one */
+#quota-dashboard-minimized .quota-drag-handle {
+  display: none;
+}
+.quote-title-restore {
+  font-size: 13px;
+  font-weight: bold;
+  margin: 12px 0 8px 16px;
+}
+.quote-title-minimize {
+  font-size: 13px;
+  font-weight: bold;
+  margin: 12px 0 8px 16px;
+}   
