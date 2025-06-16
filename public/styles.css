@@ -1,8 +1,8 @@
 /*
   STYLES.CSS
   Version: 2
-  AppName: MultiChat_Chatty [v2]
-  Updated: 06/05/2025 @10:00PM
+  AppName: MultiChat_Chatty -= DEV1 =- [v2]
+  Updated: 06/16/2025 @6:00AM
   Created by Paul Welby
 */
 
@@ -35,6 +35,7 @@ body {
     padding: 10px;
     border-bottom: 1px solid #ccc;
     background: #d5e4f6;
+    height: 45px;
 }
 
 
@@ -68,7 +69,7 @@ body {
     display: flex;
     padding: 10px;
     border-top: 1px solid #ccc;
-    height: 55px;
+    height: 50px;
     align-items: center;
 }
 
@@ -113,12 +114,10 @@ status {
     display: flex;
     align-items: center;
     background-color: #f5f5f5;
-    /* Light grey background */
-    padding: 5px 5px 0px 20px;
+    padding: 0px 5px 0px 20px;
     border-radius: 8px;
     width: 35vw;
     height: 6.5vh;
-    /* Fixed width */
     margin-left: 200px;
 }
 
@@ -3888,7 +3887,7 @@ button {
 .message.assistant {
     margin-top: 4px !important;
     margin-bottom: 4px !important;
-    padding-top: 4px !important;
+    padding-top: 0px !important;
     padding-bottom: 4px !important;
 }
 .youtube-single-bubble {
@@ -4996,7 +4995,7 @@ button.next-page-btn {
 .real-youtube-pagination-bar {
     position: fixed !important;
     right: 70px !important;
-    bottom: 470px !important;
+    bottom: 500px !important;
     border: 1px solid blue;
     padding: 0 0px 8px 0;
     border-radius: 8px;
@@ -5375,7 +5374,7 @@ button.next-page-btn {
 
 /* Make the query list scrollable with a max height */
 .query-history-list {
-    max-height: 300px; /* Slightly less than dropdown to account for header */
+    max-height: 300px;
     overflow-y: auto;
     scrollbar-width: thin;
     scrollbar-color: #bbb transparent;
@@ -5506,11 +5505,6 @@ button.next-page-btn {
     font-style: italic;
 }
 
-.quota-dashboard-content {
-    height: 140px;
-    margin-top: 18px;
-    margin-bottom: -20px;
-}
 
 .query-history-time {
     color: #888;
@@ -5568,7 +5562,7 @@ button.next-page-btn {
     padding: 1px 5px;
     border-radius: 8px;
     font-weight: 500;
-    font-size: 9px;
+    font-size: .65em;
     width: fit-content;
 }
 
@@ -5720,7 +5714,7 @@ button.next-page-btn {
 }
 
 .recipe-ingredient-item {
-    /* display:block; */
+    display:block;
     margin-bottom: -4px;
     line-height: 1.2;
     list-style-type: square;
@@ -5728,10 +5722,10 @@ button.next-page-btn {
 
 .recipe-instructions-list {
     /* Customize instructions list spacing - you can reduce margins here */
-    display:block;
+    display: block;
     margin-top: 12px;
-    margin-bottom: 4px;
-    line-height: 1.2;
+    margin-bottom: 20px;
+    /* line-height: 1.2; */
 }
 
 .recipe-instruction-item {
@@ -5743,100 +5737,10 @@ button.next-page-btn {
 .quota-content-restored {
     padding: 12px;
 }
-.quota-title {
-    font-weight: bold;
-    margin-bottom: 12px;
-    font-size: 13px;
-}
-.quota-stats {
-    margin-bottom: 8px;
-    line-height: 1.3;
-}
-.quota-percentage {
-    font-weight: bold;
-}
-.quota-progress-bar-bg {
-    background: #333;
-    height: 6px;
-    border-radius: 3px;
-    margin: 8px 0;
-    overflow: hidden;
-}
-.quota-progress-bar {
-    height: 100%;
-    transition: width 0.3s ease;
-}
-.quota-actions {
-    display: flex;
-    gap: 6px;
-    margin-top: 8px;
-}
-.quota-toggle-cache-btn {
-    flex: 1;
-    padding: 6px 8px;
-    border: none;
-    border-radius: 4px;
-    font-size: 10px;
-    cursor: pointer;
-    color: white;
-}
-.quota-toggle-cache-btn.cache-on {
-    background: #f44336;
-}
-.quota-toggle-cache-btn.cache-off {
-    background: #4caf50;
-}
 
-.quota-minimize-restore-btn.quota-minimize-btn {
-    width: 20px;
-    height: 18px;
-    background: none;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    color: white;
-    font-size: 10px;
-    font-weight: bold;
-    text-align: center;
-    padding: 0;
-    margin: 0;
-    position: absolute;
-    right: 10px;
-    line-height: 0.4;
-    bottom: 145px;
-}
 
-.quota-minimize-restore-btn.quota-restore-btn {
-    width: 20px;
-    height: 14px;
-    top: 2px !important;
-    background: blue;
-    border: none;
-    cursor: pointer;
-    color: white;
-    font-size: 10px;
-    font-weight: bold;
-    text-align: center;
-    padding: 0;
-    margin: 0;
-}
 
-.quota-minimize-restore-btn:hover {
-    background: rgba(255, 0, 0, 1) !important;
-    transform: scale(1.2) !important;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.8) !important;
-}
 
-.quota-drag-handle {
-    background-repeat: no-repeat;
-    background-position: bottom center;
-    background-size: auto 100%;
-    cursor: grab;
-    opacity: 50%;
-    width: 100%;
-    height: 24px;
-    background-image: url(assets/img/drag-pattern1.png);
-}
 
 /* Help Modal Styles */
 .help-modal {
@@ -5884,3 +5788,519 @@ button.next-page-btn {
   from { opacity: 0; transform: translateY(40px);}
   to { opacity: 1; transform: translateY(0);}
 }
+
+/* === BEGIN: Quota Dashboard Styles (from working quota-monitor.js) === */
+.quota-dashboard {
+    position: fixed;
+    background: rgba(0,0,0,0.9);
+    color: white;
+    width: 15vw;
+    padding-bottom: 3px;
+    border-radius: 8px;
+    font-size: 12px;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    cursor: move;
+    user-select: none;
+    border: 2px solid rgba(255,255,255,0.1);
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    will-change: transform;
+}
+
+.quota-toggle-cache-mode-btn {
+    background:rgb(27, 156, 20);
+    width: 100%;
+    font-size: 12px;
+}
+
+.quota-reset-counter-btn {
+    background: #2196f3;
+    width: 100%;
+    font-size: 12px;
+}
+
+.quota-dashboard.dragging {
+    cursor: grabbing !important;
+    transition: none !important;
+    will-change: transform, left, top;
+}
+
+.quota-dashboard:hover {
+    box-shadow: 0 6px 16px rgba(0,0,0,0.4);
+}
+
+.quota-dashboard:active {
+    cursor: grabbing;
+}
+
+.minimized-dashboard {
+    height: 5px;
+    width: 15px;
+    padding: 2px 0px 10px 2px;
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    min-width: 150px;
+    max-width: 150px;
+    cursor: default;
+    bottom: 1px;
+}
+
+.minimized-dashboard:not(.custom-position) {
+    bottom: 1px;
+    left: 45%;
+    transform: translateX(-50%);
+}
+
+.restored-dashboard {
+    height: 145px;
+    width: 240px;
+    padding: 12px;
+    min-width: 240px;
+    max-width: 240px;
+    cursor: grab;
+}
+
+.restored-dashboard:active {
+    cursor: grabbing;
+}
+
+.restored-dashboard:not(.custom-position) {
+    top: 10px;
+    right: 10px;
+}
+
+.restored-dashboard.custom-position {
+    top: auto;
+    right: auto;
+    bottom: auto;
+    left: auto;
+    transform: none;
+}
+
+.minimized-dashboard.custom-position {
+    bottom: auto;
+    left: auto;
+    transform: none;
+}
+
+.quota-minimize-restore-btn {
+    position: absolute;
+    top: 7px;
+    right: 6px;
+    padding: 2px 0 1px 0;
+    border: none;
+    border-radius: 3px;
+    font-size: 10px;
+    cursor: pointer;
+    color: white;
+    line-height: 1;
+    font-weight: bold;
+    z-index: 1;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.quota-minimize-btn {
+    background: #ff9800;
+}
+
+.quota-restore-btn {
+    background: #2196f3;
+}
+
+.quota-minimize-restore-btn:hover {
+    opacity: 0.8;
+    transform: scale(1.05);
+}
+
+.quota-content-minimized {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    line-height: 14px;
+    padding-right: 35px;
+}
+
+.quota-content-restored {
+    height: 116px;
+    padding-right: 35px;
+    padding-top: 14px;
+    cursor: grab;
+    width: 20vw;
+    position: relative;
+    left: -10px;
+    bottom: 0px;
+}
+
+.quota-content-restored:active {
+    cursor: grabbing;
+}
+
+.quota-drag-handle {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    color: rgba(255,255,255,0.5);
+    font-size: 10px;
+    line-height: 8px;
+    cursor: grab;
+    padding: 2px;
+    pointer-events: auto;
+    transition: color 0.2s ease;
+}
+
+.quota-drag-handle:hover {
+    color: rgba(255,255,255,0.8);
+}
+
+.quota-drag-handle:active {
+    cursor: grabbing;
+}
+
+.minimized-dashboard .quota-drag-handle {
+    display: none;
+}
+
+.restored-dashboard .quota-drag-handle {
+    display: block;
+}
+
+.minimized-dashboard {
+    pointer-events: auto;
+}
+
+.minimized-dashboard * {
+    pointer-events: auto;
+}
+
+.quota-dashboard.dragging * {
+    pointer-events: none;
+}
+
+.quota-dashboard.dragging .quota-minimize-restore-btn {
+    pointer-events: auto;
+}
+
+.quota-toggle-cache-mode-btn:hover {
+    opacity: 0.8;
+}
+
+.quota-title {
+    font-size: 15px;
+    font-weight: bold;
+    margin-bottom: 6px;
+    color: #fff;
+}
+
+.quota-stats {
+    font-size: 13px;
+    margin-bottom: 6px;
+    color: #fff;
+}
+
+.quota-percentage {
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.quota-progress-bar-bg {
+    width: 70%;
+    height: 8px;
+    background: #555;
+    border-radius: 4px;
+    margin-bottom: 8px;
+    overflow: hidden;
+}
+
+.quota-progress-bar {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.3s cubic-bezier(0.4,0,0.2,1), background 0.3s cubic-bezier(0.4,0,0.2,1);
+}
+
+.quota-actions {
+    margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 14vw;
+}
+
+.quota-toggle-cache-btn {
+    background: #333;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 4px 0;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.quota-toggle-cache-btn.cache-on {
+    background: #f44336;
+}
+
+.quota-toggle-cache-btn.cache-off {
+    background: #4caf50;
+}
+/* === END: Quota Dashboard Styles === */
+
+.print-icon-topright {
+    position: relative;
+    right: 5px !important;
+    z-index: 2;
+    float: right;
+    border: none;
+    font-size: 20px;
+    padding: 0;
+}
+.message-content {
+    position: relative;
+}
+
+.recipe-title {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: -20px;
+    color: black;
+}
+
+.recipe-ingredients-heading, .recipe-instructions-heading {
+    margin-top: 0px;
+    /* margin-bottom: -10px; */
+    line-height: 1.2;
+    color: black;
+    font-size: 1.0em;
+}
+
+.recipe-ingredients-section {
+    margin-top: 20px;
+    margin-bottom: -10px;
+    line-height: 1.2;
+    color: black;
+    font-size: 1.0em;
+}
+
+.recipe-instructions-section {
+    margin-top: 20px;
+    margin-bottom: -10px;
+    line-height: 1.2;
+    color: black;
+    font-size: 1.0em;
+}
+
+.recipe-ingredients-list {
+    /* margin-left: 20px;
+    margin-bottom: -10px; */
+    line-height: 1.2;
+    color: black;
+    font-size: 1.0em;
+}
+
+.recipe-instructions-list {
+    /* margin-left: 20px;
+    margin-bottom: -10px; */
+    line-height: 1.2;
+    color: black;
+    font-size: 1.0em;
+}
+
+.recipe-ingredient-item, .recipe-instruction-item {
+    margin-left: -20px;
+    margin-bottom: 4px;
+    line-height: 1.2;
+    color: black;
+    font-size: 1.0em;
+    line-height: 1.2;
+    color: black;
+    font-size: 1.0em;
+    display: block;
+}
+
+.recipe-container {
+    font-family: Arial, sans-serif;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.recipe-title {
+    font-size: 24px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 15px;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.recipe-description {
+    font-style: italic;
+    color: #666;
+    margin-bottom: 25px;
+    text-align: center;
+    line-height: 1.4;
+}
+
+.recipe-section-heading {
+    font-size: 20px;
+    color: #444;
+    margin: 20px 0 15px 0;
+    padding-bottom: 5px;
+    border-bottom: 2px solid #eee;
+}
+
+.recipe-ingredients-container {
+    margin-bottom: 30px;
+}
+
+.recipe-ingredients-list {
+    list-style-type: disc;
+    padding-left: 20px;
+    margin: 0;
+}
+
+.recipe-ingredient-item {
+    margin-bottom: 8px;
+    line-height: 1.4;
+    color: #333;
+}
+
+.recipe-instructions-container {
+    margin-bottom: 20px;
+}
+
+.recipe-instructions-list {
+    padding-left: 20px;
+    margin: 0;
+}
+
+.recipe-instruction-item {
+    margin-bottom: 12px;
+    line-height: 1.6;
+    color: #333;
+}
+
+.print-icon-topright {
+    position: relative;
+    top: -5px;
+    right: 10px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 20px;
+    transition: transform 0.2s;
+}
+
+.print-icon-topright:hover {
+    transform: scale(1.1);
+}
+
+/* Recipe Styles */
+.recipe-container {
+    padding: 1rem;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.recipe-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.recipe-description {
+    font-size: 1rem;
+    color: #666;
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+}
+
+.recipe-section {
+    margin-bottom: 1.5rem;
+}
+
+.recipe-section-title {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #444;
+    margin-bottom: 0.75rem;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 0.5rem;
+}
+
+.recipe-ingredients {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.recipe-ingredient {
+    padding: 0.5rem 0;
+    color: #555;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.recipe-instructions {
+    padding-left: 1.5rem;
+    margin: 0;
+}
+
+.recipe-instruction {
+    padding: 0.5rem 0;
+    color: #555;
+    line-height: 1.5;
+}
+
+/* Ensure recipe content is properly spaced in the chat */
+.message-content .recipe-container {
+    margin: 0.5rem 0;
+}
+
+/* Query History Dropdown - Align page count and time */
+.query-history-pages-time {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-top: 2px;
+    margin-bottom: 2px;
+}
+.query-history-pages {
+    font-weight: bold;
+    color: #1976d2;
+}
+.query-history-time {
+    color: #888;
+    font-size: 0.65em;
+    margin-left: 8px;
+}
+
+/* Minimized paginator bar styles */
+.minimized-paginator-bar {
+    position: fixed;
+    right: 557px;
+    bottom: 1px;
+    z-index: 9999;
+    background: #1976d2;
+    color: #fff;
+    padding: 7px 12px;
+    border-radius: 24px 24px 8px 8px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.18);
+    cursor: pointer;
+    font-size: .7em;
+    display: flex;
+    height: 5px;
+    width: 150px;
+    line-height: .7;
+    align-items: center;
+    transition: box-shadow 0.2s, background 0.2s;
+}
+.minimized-paginator-bar:hover {
+  background: #1565c0;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.28);
+}
+
