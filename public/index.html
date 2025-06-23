@@ -1,8 +1,8 @@
 <!--
   INDEX.html
-  Version: 2
-  AppName: MultiChat_Chatty -= DEV1 =- [v2]
-  Updated: 06/16/2025 @6:00AM
+  Version: 2a
+  AppName: MultiChat_Chatty -DEV2a- [v2a]
+  Updated: 06/23/2025 @8:20AM
   Created by Paul Welby
 -->
 
@@ -11,7 +11,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MultiChat_Chatty -= DEV1 =- [v2]</title>
+    <title>MultiChat_Chatty -DEV2a- 06-22@2302 [v2a]</title>
     <link rel="stylesheet" href="styles.css" />
     <link rel="icon" type="image/png" href="chat-1.png" />
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -26,7 +26,7 @@
           <option value="phi-3-mini-4k-instruct">Phi-3-mini-4k-instruct</option>
         </select>
 
-        <h3>MultiChat_Chatty -= DEV1 =- [v2] 06/16/2025 @6:00AM</h3>
+        <h3>MultiChat_Chatty -DEV2a- 06-22@2302 [v2a] 06/23/2025 @8:20AM</h3>
 
         <div id="mode-toggle">
           <label for="conversation-mode">Conversation Mode:</label>
@@ -141,11 +141,14 @@
     <script type="module">
         window.appConfig = window.configExport.default;
     </script>
+    <!-- Load all manager modules as ES6 modules -->
     <script type="module" src="components/ToastManager.js"></script>
     <script type="module" src="components/PlaylistManager.js"></script>
-    <script src="quota-monitor.js"></script>
-    <script src="components/MyJokesManager/MyJokesManager.js"></script>
-    <script src="components/RecipeManager/RecipeManager.js"></script>
+    <script type="module" src="components/QuotaMonitor/QuotaMonitor.js"></script>
+    <script type="module" src="components/AudioManager.js"></script>
+    <script type="module" src="components/MyJokesManager/MyJokesManager.js"></script>
+    <script type="module" src="components/YouTubeSearch/YouTubeSearchManager.js"></script>
+    <!-- Load main app as module -->
     <script type="module" src="app.js?v=20250603-1715"></script>
     <script>
       function enforceImageStyles() {

@@ -1,8 +1,8 @@
 /*
   STYLES.CSS
-  Version: 2
-  AppName: MultiChat_Chatty -= DEV1 =- [v2]
-  Updated: 06/16/2025 @6:00AM
+  Version: 2a
+  AppName: MultiChat_Chatty -DEV2a- [v2a]
+  Updated: 06/23/2025 @8:20AM
   Created by Paul Welby
 */
 
@@ -6304,3 +6304,44 @@ button.next-page-btn {
   box-shadow: 0 4px 18px rgba(0,0,0,0.28);
 }
 
+/* In-chat Recipe Card Styles */
+.recipe-container {
+    background: #fffbe7;
+    border: 1.5px solid #ffe082;
+    border-radius: 12px;
+    padding: 18px 22px;
+    margin: 12px 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    max-width: 600px;
+  }
+  
+  .recipe-title {
+    font-size: 1.3em;
+    font-weight: bold;
+    color: #b8860b;
+    margin-bottom: 8px;
+  }
+  
+  .recipe-intro {
+    font-style: italic;
+    color: #555;
+    margin-bottom: 12px;
+  }
+  
+  .recipe-ingredients, .recipe-instructions {
+    margin-bottom: 14px;
+  }
+  
+  .recipe-ingredients h3, .recipe-instructions h3 {
+    font-size: 1.1em;
+    color: #795548;
+    margin-bottom: 6px;
+  }
+  
+  .recipe-ingredients ul, .recipe-instructions ol {
+    margin: 0 0 0 18px;
+  }
+  
+  .recipe-ingredients li, .recipe-instructions li {
+    margin-bottom: 4px;
+  }

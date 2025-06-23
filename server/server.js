@@ -6,6 +6,8 @@
   Created by Paul Welby
 */
 
+const fetch = require('node-fetch');
+
 // Required dependencies
 const express          = require('express');
 const cors             = require('cors');
@@ -107,15 +109,122 @@ app.use(cors());
 app.use(express.json({limit: '50mb'}));
 app.use(express.urlencoded({limit: '50mb', extended: true}));
 
+// Serve config to the frontend FIRST
+app.use('/config', express.static(path.join(__dirname, '../config')));
+
 // Mount playlist API routes
 const playlistRoutes = require('./routes/playlists.routes');
+const youtubeHistoryRoutes = require('./routes/youtubeHistory.routes.js');
+
+// Mount the routes
 app.use('/api/playlists', playlistRoutes);
+app.use('/api/youtube/history', youtubeHistoryRoutes);
 
 // Serve static frontend files
 app.use(express.static(path.join(__dirname, '../public')));
 
-// Serve config to the frontend
-app.use('/config', express.static(path.join(__dirname, '../config')));
+// =====================================================
+// API ROUTES
+// =====================================================
+
+// YouTube Search Route
+app.get('/api/youtube/search', async (req, res) => {
+    const { q: query, page = 1 } = req.query;
+
+    if (!query) {
+        return res.status(400).json({ success: false, message: 'Search query is required' });
+    }
+
+    try {
+        console.log(chalk.blue(`[YOUTUBE-API] Searching for: "${query}" on page ${page}`));
+
+        let pageToken = null;
+        // To get to page N, we need to fetch pages 1 through N-1 to get the correct pageToken.
+        if (page > 1) {
+            console.log(chalk.cyan(`[YOUTUBE-API] Fast-forwarding to page ${page}...`));
+            let currentPage = 1;
+            let response = await youtube.search.list({ part: 'snippet', q: query, type: 'video', maxResults: 12, pageToken: null });
+            
+            while (currentPage < page && response.data.nextPageToken) {
+                pageToken = response.data.nextPageToken;
+                response = await youtube.search.list({ part: 'snippet', q: query, type: 'video', maxResults: 12, pageToken });
+                currentPage++;
+            }
+            console.log(chalk.cyan(`[YOUTUBE-API] Reached target page. Using pageToken: ${pageToken}`));
+        }
+
+        const searchResponse = await youtube.search.list({
+            part: 'snippet',
+            q: query,
+            type: 'video',
+            maxResults: 12,
+            pageToken: pageToken
+        });
+
+        if (!searchResponse.data.items || searchResponse.data.items.length === 0) {
+            return res.json({ success: true, videos: [], totalPages: 0 });
+        }
+
+        const videoIds = searchResponse.data.items.map(item => item.id.videoId).join(',');
+
+        const videoResponse = await youtube.videos.list({
+            part: 'snippet,contentDetails,statistics',
+            id: videoIds
+        });
+
+        const videos = videoResponse.data.items.map(item => ({
+            id: item.id,
+            title: item.snippet.title,
+            thumbnail: item.snippet.thumbnails.high.url,
+            channel: item.snippet.channelTitle,
+            views: item.statistics.viewCount,
+            duration: item.contentDetails.duration,
+            publishedAt: item.snippet.publishedAt
+        }));
+
+        const totalResults = searchResponse.data.pageInfo.totalResults;
+        const totalPages = Math.ceil(totalResults / 12);
+
+        res.json({
+            success: true,
+            videos,
+            totalPages
+        });
+
+    } catch (error) {
+        console.error(chalk.red('[YOUTUBE-API] Error:'), error.message);
+        res.status(500).json({ success: false, message: 'Failed to fetch YouTube search results.' });
+    }
+});
+
+// =====================================================
+// SERVER-SENT EVENTS (SSE)
+// =====================================================
+let clients = [];
+
+function sendToAllClients(data) {
+  clients.forEach(client => client.res.write(`data: ${JSON.stringify(data)}\n\n`));
+}
+
+app.get('/api/events', (req, res) => {
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.flushHeaders();
+
+  const clientId = Date.now();
+  const newClient = {
+    id: clientId,
+    res: res
+  };
+  clients.push(newClient);
+  console.log(chalk.blue(`[SSE] Client connected: ${clientId}`));
+
+  req.on('close', () => {
+    clients = clients.filter(client => client.id !== clientId);
+    console.log(chalk.yellow(`[SSE] Client disconnected: ${clientId}`));
+  });
+});
 
 console.log(chalk.magenta('Starting server initialization...'));
 console.log(chalk.magenta('Serving config from:'), chalk.magenta(path.join(__dirname, '..', 'config')));
@@ -742,10 +851,17 @@ app.post('/api/chat', async (req, res) => {
 
         // 3. Handle model-specific responses
         if (model === 'gpt-4o-mini' || !model) { // Default to gpt-4o-mini if no model specified
+            let finalSystemPrompt = systemPrompt || "You are a helpful assistant.";
+
+            // Check if the message is a recipe request
+            if (message.toLowerCase().includes('recipe for') || message.toLowerCase().includes('how to make')) {
+                finalSystemPrompt += "\n\nIMPORTANT: When providing a recipe, do NOT capitalize the title. For example, instead of 'LIMONCELLO', write 'Limoncello'.";
+            }
+            
             const completion = await openai.chat.completions.create({
                 model: "gpt-4o-mini",
                 messages: [
-                    { role: "system", content: systemPrompt || "You are a helpful assistant." },
+                    { role: "system", content: finalSystemPrompt },
                     ...(Array.isArray(history) ? history : []),
                     { role: "user", content: message }
                 ],
@@ -959,45 +1075,37 @@ app.post('/api/datetime', async (req, res) => {
 // GET /api/jokes/list-jokes - List all jokes
 app.get('/api/jokes/list-jokes', async (req, res) => {
     try {
-        const { type } = req.query;
+        // Correctly parse 'showAll' which comes in as a string 'true' or 'false'
+        const showAll = req.query.showAll === 'true';
+        const { sessionId } = req.query;
         const collection = mongoose.connection.collection('my_jokes');
 
         console.log('Jokes API Request:', {
-            type,
-            sessionId: req.query.sessionId
+            showAll: showAll, // Log the parsed boolean
+            sessionId
         });
 
-        // First try to find jokes with current sessionId
-        let query = { userId: req.query.sessionId };
-        let jokes = await collection.find(query).toArray();
+        const query = { userId: sessionId };
+        const totalJokes = await collection.countDocuments(query);
+        let jokes;
 
-        // If no jokes found with current sessionId, migrate from old session
-        if (jokes.length === 0) {
-            const oldJokes = await collection.find({ userId: /^session-/ }).toArray();
-            if (oldJokes.length > 0) {
-                const oldUserId = oldJokes[0].userId;
-                console.log('Migrating jokes from', oldUserId, 'to', req.query.sessionId);
-
-                // Migrate jokes to new sessionId
-                await collection.updateMany(
-                    { userId: oldUserId },
-                    { $set: { userId: req.query.sessionId } }
-                );
-
-                // Get jokes with new sessionId
-                jokes = await collection.find(query).toArray();
-            }
+        // Use the boolean 'showAll' to determine which query to run
+        if (showAll) {
+            jokes = await collection.find(query).toArray();
+        } else {
+            jokes = await collection.find(query).limit(5).toArray();
         }
 
         res.json({
             success: true,
-            jokes: jokes
+            jokes: jokes,
+            totalJokes: totalJokes
         });
     } catch (error) {
         console.error('Error fetching jokes:', error);
         res.status(500).json({
             success: false,
-            error: 'Failed to fetch jokes'
+            message: 'An error occurred while fetching jokes.'
         });
     }
 });
@@ -1211,51 +1319,52 @@ app.get('/api/debug/jokes', async (req, res) => {
 // MODEL HANDLERS
 // =====================================================
 
+// === Robust Recipe Formatter ===
+function formatRecipeText(text) {
+    if (!text) return text;
+    // Insert line breaks before Ingredients: and Instructions:
+    let processed = text.replace(/(Ingredients:)/i, '\n$1')
+                        .replace(/(Instructions:)/i, '\n$1');
+    // Convert ALL CAPS title to Title Case if it appears at the start
+    processed = processed.replace(/^([A-Z ]{4,})\n/, (match, p1) => {
+        return p1.toLowerCase().replace(/\b\w/g, c => c.toUpperCase()) + '\n';
+    });
+    // Fallback: If only one line after splitting, try splitting by period
+    let lines = processed.split('\n').map(l => l.trim()).filter(l => l);
+    if (lines.length === 1) {
+        lines = processed.split('. ').map(l => l.trim()).filter(l => l);
+        processed = lines.join('\n');
+    }
+    return processed;
+}
+
 // GPT-4o-mini model handler
 async function handleGPT4oMiniResponse(response, res, message, startTime) {
     console.log('Starting GPT-4o-mini response handling');
-
-    // const startTime = Date.now();
     let tokenCount = 0;
     let fullResponse = '';
     let currentParagraph = '';
     let lastSentContent = '';
     let isEnded = false;
-
+    let isRecipeRequest = message.toLowerCase().includes('recipe for') || message.toLowerCase().includes('how to make');
     try {
         for await (const chunk of response) {
             if (isEnded) break;
-
-            // Add debug logging
-            console.log('Received chunk:', JSON.stringify(chunk));
-
-            // Check if chunk and choices exist before accessing
             if (!chunk || !chunk.choices || !Array.isArray(chunk.choices) || chunk.choices.length === 0) {
-                console.warn('Invalid chunk format:', chunk);
                 continue;
             }
-
             if (chunk.choices[0]?.delta?.content) {
                 const content = chunk.choices[0].delta.content;
                 fullResponse += content;
                 currentParagraph += content;
-
-                // Update token count
                 tokenCount += Math.ceil(content.length / 4);
-
-                // Check for special markers or line breaks
-                if (content.includes('[/P1]') ||
-                   content.includes('[/P2]') ||
-                   content.includes('[/P3]') ||
-                   content.includes('[/IMG]') ||
-                   content.includes('\n\n')) {
-
-                   // Clean up markers and add proper spacing
-                   let cleanParagraph = currentParagraph
-                       .replace(/\[P1\]|\[P2\]|\[P3\]|\[IMG\]|\[\/P1\]|\[\/P2\]|\[\/P3\]|\[\/IMG\]/g, '')
-                       .trim();
-
+                if (content.includes('[/P1]') || content.includes('[/P2]') || content.includes('[/P3]') || content.includes('[/IMG]') || content.includes('\n\n')) {
+                    let cleanParagraph = currentParagraph.replace(/\[P1\]|\[P2\]|\[P3\]|\[IMG\]|\[\/P1\]|\[\/P2\]|\[\/P3\]|\[\/IMG\]/g, '').trim();
                     if (cleanParagraph && cleanParagraph !== lastSentContent) {
+                        // If this is a recipe, format it before sending
+                        if (isRecipeRequest) {
+                            cleanParagraph = formatRecipeText(cleanParagraph);
+                        }
                         if (!res.writableEnded) {
                             res.write(`data: ${JSON.stringify({
                                 response: cleanParagraph + '\n\n',
@@ -1275,12 +1384,15 @@ async function handleGPT4oMiniResponse(response, res, message, startTime) {
                 }
             }
         }
-
         // Send any remaining content and final metrics
         if (currentParagraph.trim() && currentParagraph.trim() !== lastSentContent) {
+            let toSend = currentParagraph.trim();
+            if (isRecipeRequest) {
+                toSend = formatRecipeText(toSend);
+            }
             if (!res.writableEnded) {
                 res.write(`data: ${JSON.stringify({
-                    response: currentParagraph.trim(),
+                    response: toSend,
                     tokenCount: tokenCount,
                     metrics: {
                         duration: Date.now() - startTime,
@@ -1292,14 +1404,12 @@ async function handleGPT4oMiniResponse(response, res, message, startTime) {
                 })}\n\n`);
             }
         }
-
         // Send final completion signal
         if (!res.writableEnded) {
-            console.log('Sending completion signal');
             res.write(`data: ${JSON.stringify({
                 done: true,
-                complete: true,  // Additional flag for completion
-                response: null,  // Indicate no more content
+                complete: true,
+                response: null,
                 metrics: {
                     duration: Date.now() - startTime,
                     promptTokens: Math.ceil(message.length / 4),
@@ -1308,32 +1418,11 @@ async function handleGPT4oMiniResponse(response, res, message, startTime) {
                     model: 'gpt-4o-mini'
                 }
             })}\n\n`);
-
-            // // Reset processing state
-            // state.isProcessing = false;
-
-            // // If in conversation mode and not speaking, restart listening
-            // if (state.isConversationMode && !state.isAISpeaking) {
-            //     console.log('Restarting listening after completion');
-            //     setTimeout(() => {
-            //         if (!state.isAISpeaking && !state.isProcessing) {
-            //             startListening();
-            //             updateStatus('Listening...');
-            //         }
-            //     }, 1000);
-            // }
-
-            // // Remove processing alert
-            // document.querySelector('.processing-alert')?.remove();
-
             res.end();
             isEnded = true;
         }
     } catch (error) {
         console.error('Error in handleGPT4oMiniResponse:', error);
-        // state.isProcessing = false;  // Reset processing state even on error
-        document.querySelector('.processing-alert')?.remove();
-
         if (!res.writableEnded) {
             res.write(`data: ${JSON.stringify({
                 error: error.message,
@@ -1347,6 +1436,8 @@ async function handleGPT4oMiniResponse(response, res, message, startTime) {
 }
 
 // Phi-3-mini-4k-instruct model handler
+
+
 async function handlePhi3Mini4kInstructResponse(completion, res, message, startTime) {
     if (!completion) {
         throw new Error('No completion provided to Phi-3 handler');
@@ -1428,7 +1519,8 @@ app.get('/api/google-image-search', async (req, res) => {
         const images = response.data.items.map(item => ({
             link: item.link,
             title: item.title,
-            thumbnail: item.image?.thumbnailLink
+            thumbnail: item.image?.thumbnailLink,
+            contextLink: item.image?.contextLink
         }));
 
         res.json({ images });
@@ -1612,14 +1704,15 @@ app.post('/api/recipe', async (req, res) => {
         const { text } = req.body;
 
         // Extract recipe name - simpler pattern
-        const recipeMatch = text.match(/([A-Z][A-Z\s]+)(?=Here is|$)/);
+        const recipeMatch = text.match(/^(.*?)(?=\s*Here is)/is);
 
         if (recipeMatch) {
-            const recipeName = recipeMatch[1]
-                .replace(/\s+/g, ' ')  // Clean up spaces
-                .trim();  // Just trim, already in uppercase
+            let recipeName = recipeMatch[1].trim();
 
-            console.log('Recipe name extracted:', recipeName);
+            // Convert to Title Case
+            recipeName = recipeName.toLowerCase().replace(/\b\w/g, char => char.toUpperCase());
+
+            console.log('Recipe name extracted and formatted:', recipeName);
 
             // Send back formatted recipe data
             res.json({
@@ -1658,7 +1751,6 @@ app.post('/api/recipe', async (req, res) => {
         });
     }
 });
-
 
 // =====================================================
 // MONGO DB CONNECTION AND SCHEMAS
@@ -2143,7 +2235,13 @@ app.post('/api/youtube/search', async (req, res) => {
                 };
             }, 101); // search.list (100) + videos.list (1)
 
-            return res.json(result);
+            return res.json({
+                ...result,
+                quota: {
+                    used: dailyQuotaUsed,
+                    limit: 10000
+                }
+            });
         } catch (error) {
             console.error('YouTube API error for single video search:', error);
             return res.status(500).json({ 
@@ -2206,7 +2304,13 @@ app.post('/api/youtube/search', async (req, res) => {
                 };
             }, 101); // search.list (100) + videos.list (1)
 
-            return res.json(result);
+            return res.json({
+                ...result,
+                quota: {
+                    used: dailyQuotaUsed,
+                    limit: 10000
+                }
+            });
         } catch (error) {
             console.error('YouTube API error for multi-search:', error);
             return res.status(500).json({ 
@@ -2273,7 +2377,13 @@ app.post('/api/youtube/search', async (req, res) => {
                     fromCache: false
                 };
             }, 102); // search.list (channel) + search.list (video) + videos.list
-            return res.json(result);
+            return res.json({
+                ...result,
+                quota: {
+                    used: dailyQuotaUsed,
+                    limit: 10000
+                }
+            });
         } catch (error) {
             console.error('YouTube API error for channel search:', error);
             return res.status(500).json({
@@ -2363,4 +2473,6 @@ app.get('/api/chat', async (req, res) => {
     // TODO: Implement real chat history if needed
     res.json({ success: true, history: [] });
 });
+
+
 
