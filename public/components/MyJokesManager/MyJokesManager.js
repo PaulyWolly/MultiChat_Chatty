@@ -14,7 +14,7 @@
  * @author MultiChat_Chatty
  */
 
-class MyJokesManager {
+export default class MyJokesManager {
     constructor() {
         this.panel = null;
         this.titleInput = null;
@@ -1173,11 +1173,4 @@ class MyJokesManager {
         this.isInitialized = false;
         console.log('🎭 [MyJokesManager] Component destroyed');
     }
-}
-
-// Export for use in main app
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = MyJokesManager;
-} else {
-    window.MyJokesManager = MyJokesManager;
 } 
