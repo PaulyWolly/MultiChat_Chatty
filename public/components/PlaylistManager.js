@@ -1,6 +1,6 @@
 import playlistService from '../services/playlist.service.js';
 
-export class PlaylistManager {
+export default class PlaylistManager {
   constructor() {
     this.dialog = null;
     this.currentVideo = null;
@@ -775,7 +775,6 @@ const playlistManager = new PlaylistManager();
 // Make it globally accessible
 window.playlistManager = playlistManager;
 
-export default playlistManager;
 
 // Add global click handler for hamburger icons
 document.addEventListener('click', (e) => {

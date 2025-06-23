@@ -76,10 +76,27 @@ class Config {
     }
 
     getApiUrl(endpoint) {
-        if (!this.config?.api?.baseUrl || !this.config?.api?.endpoints?.[endpoint]) {
+        if (!this.config?.api?.baseUrl) {
             return null;
         }
-        return `${this.config.api.baseUrl}${this.config.api.endpoints[endpoint]}`;
+        
+        // Handle nested endpoints like 'youtube.search'
+        const endpointParts = endpoint.split('.');
+        let endpointPath = this.config?.api?.endpoints;
+        
+        for (const part of endpointParts) {
+            if (endpointPath && endpointPath[part]) {
+                endpointPath = endpointPath[part];
+            } else {
+                return null;
+            }
+        }
+        
+        if (typeof endpointPath !== 'string') {
+            return null;
+        }
+        
+        return `${this.config.api.baseUrl}${endpointPath}`;
     }
 
     getYouTubeConfig() {
