@@ -4,7 +4,7 @@
  * Handles toast creation, styling, and removal
  */
 
-class ToastManager {
+export default class ToastManager {
     constructor() {
         this.container = null;
         this.init();
@@ -198,9 +198,6 @@ class ToastManager {
 
 // Create and export a singleton instance
 const toastManager = new ToastManager();
-
-// Export both the class and the instance
-export { ToastManager, toastManager as default };
 
 // For backwards compatibility, also expose global showToast function
 window.showToast = (message, type, duration) => toastManager.showToast(message, type, duration); 

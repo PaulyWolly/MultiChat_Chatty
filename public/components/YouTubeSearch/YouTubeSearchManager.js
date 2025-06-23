@@ -8,7 +8,7 @@
  * @author MultiChat_Chatty
  */
 
-class YouTubeSearchManager {
+export default class YouTubeSearchManager {
     constructor() {
         this.savedQueries = new Map();
         this.isInitialized = false;
@@ -23,7 +23,7 @@ class YouTubeSearchManager {
         try {
             console.log('📚 [YOUTUBE-DB] Initializing YouTubeSearchManager');
             await this.loadSavedQueries();
-            this.isInitialized = true;
+        this.isInitialized = true;
         } catch (error) {
             console.error('📚 [YOUTUBE-DB] Initialization error:', error);
         }
@@ -34,7 +34,7 @@ class YouTubeSearchManager {
      */
     async loadSavedQueries() {
         try {
-            const response = await fetch(window.appConfig.getApiUrl(`/api/youtube/saved-searches?userId=${window.sessionId}`));
+            const response = await fetch(window.appConfig.getApiUrl('youtube.deleteSaved') + `?userId=${window.sessionId}`);
             const data = await response.json();
             
             if (data.success) {
@@ -88,7 +88,7 @@ class YouTubeSearchManager {
             };
             
             // Send save request
-            const response = await fetch(window.appConfig.getApiUrl('/api/youtube/save-search'), {
+            const response = await fetch(window.appConfig.getApiUrl('youtube.saveSearch'), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -97,7 +97,7 @@ class YouTubeSearchManager {
             });
             
             const data = await response.json();
-            
+
             if (data.success) {
                 console.log('💾 [YOUTUBE-DB] Successfully saved query:', data.search);
                 this.savedQueries.set(query, data.search);
@@ -162,7 +162,4 @@ class YouTubeSearchManager {
             deleteButton: '❌'
         };
     }
-}
-
-// Create and export the singleton instance
-window.youtubeSearchManager = new YouTubeSearchManager(); 
+} 

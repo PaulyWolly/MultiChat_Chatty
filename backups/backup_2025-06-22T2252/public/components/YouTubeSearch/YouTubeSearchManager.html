@@ -1,0 +1,32 @@
+<div class="youtube-result-bubble">
+    <div class="youtube-results-header">
+        <h3>YouTube Results for: "<span class="youtube-query-subject"></span>"</h3>
+    </div>
+    <div class="youtube-video-grid">
+        <!-- Video items will be inserted here -->
+    </div>
+    <div class="youtube-pagination-bar">
+        <!-- Pagination controls will be inserted here -->
+    </div>
+</div>
+
+<template id="youtube-video-item-template">
+    <div class="youtube-video-item">
+        <img class="youtube-video-thumbnail" src="" alt="">
+        <p class="youtube-video-title"></p>
+    </div>
+</template>
+
+<template id="youtube-pagination-bar-template">
+    <div class="real-youtube-pagination-bar">
+        <button class="youtube-back-button" disabled>&lt;&lt; Back</button>
+        <span class="youtube-page-info"></span>
+        <button class="youtube-next-button" disabled>Next &gt;&gt;</button>
+        <div class="query-history-dropdown">
+            <button class="query-history-button">📜 Query History</button>
+            <div class="query-history-list-container">
+                <div class="query-history-list"></div>
+            </div>
+        </div>
+    </div>
+</template> 

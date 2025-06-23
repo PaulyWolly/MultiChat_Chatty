@@ -1,0 +1,865 @@
+import playlistService from '../services/playlist.service.js';
+
+export default class PlaylistManager {
+  constructor() {
+    this.dialog = null;
+    this.currentVideo = null;
+    this.playlists = [];
+    this.selectedPlaylistId = null;
+    this.playlistSortAsc = true; // Track sort order
+    this.sortMode = 'recent'; // 'recent', 'asc', 'desc'
+    this.recentPlaylistIds = JSON.parse(localStorage.getItem('recentPlaylistIds') || '[]');
+    this.init();
+  }
+
+  async init() {
+    console.log('PlaylistManager.init() called');
+    // Create dialog element
+    this.dialog = document.createElement('div');
+    this.dialog.className = 'playlist-manager-dialog';
+    this.dialog.style.display = 'none';  // Start hidden
+    this.dialog.style.position = 'fixed';
+    this.dialog.style.top = '0';
+    this.dialog.style.left = '0';
+    this.dialog.style.width = '100%';
+    this.dialog.style.height = '100%';
+    this.dialog.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+    this.dialog.style.zIndex = '9999';
+    
+    this.dialog.innerHTML = `
+      <div class="playlist-manager-content">
+        <div class="playlist-manager-header">
+          <h2>Playlist Manager</h2>
+          <span class="add-to-playlist-header-btn-container"></span>
+          <button class="close-btn">&times;</button>
+        </div>
+        <div class="playlist-manager-body">
+          <div class="playlist-controls-row">
+            <div class="playlist-search-wrapper">
+              <input type="text" class="playlist-search-input" placeholder="Search/filter playlists...">
+              <button class="playlist-search-clear" style="display:none;" tabindex="-1" aria-label="Clear search">&times;</button>
+            </div>
+            <div class="playlist-create-controls">
+              <input type="text" class="new-playlist-input" placeholder="New playlist name">
+              <button class="create-playlist-btn">Create Playlist</button>
+            </div>
+          </div>
+          <div class="playlist-manager-row">
+            <div class="playlists-container" style="max-height: 220px; min-height: 120px; overflow-y: auto; margin-bottom: 0;"></div>
+            <div class="pending-video-container"></div>
+          </div>
+          
+          <div class="playlist-manager-message" style="margin: 12px 0 0 0; text-align: right;"></div>
+          <div class="current-playlist-header" style="margin-top: 8px;"></div>
+          <div class="videos-container"></div>
+        </div>
+      </div>
+    `;
+
+    // <button onclick="window.playlistManager.showPlaylistMessage('Video has been added to playlist!')">Test Message</button>
+
+    // Add to DOM immediately
+    document.body.appendChild(this.dialog);
+    console.log('Dialog added to DOM');
+
+    // Add event listeners
+    this.dialog.querySelector('.close-btn').addEventListener('click', () => this.hide());
+    this.dialog.querySelector('.create-playlist-btn').addEventListener('click', async () => {
+      const input = this.dialog.querySelector('.new-playlist-input');
+      const name = input.value.trim();
+      if (name) {
+        const newPlaylist = await this.createPlaylist(name);
+        input.value = '';
+        await this.loadPlaylists();
+        // Select the new playlist if it was created
+        if (newPlaylist && newPlaylist.name) {
+          const created = this.playlists.find(pl => pl.name.toLowerCase() === newPlaylist.name.toLowerCase());
+          if (created) {
+            this.selectPlaylist(created._id);
+          }
+        }
+      }
+    });
+    // Add Enter key support for new playlist input
+    this.dialog.querySelector('.new-playlist-input').addEventListener('keydown', async (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const input = this.dialog.querySelector('.new-playlist-input');
+        const name = input.value.trim();
+        if (name) {
+          const newPlaylist = await this.createPlaylist(name);
+          input.value = '';
+          await this.loadPlaylists();
+          if (newPlaylist && newPlaylist.name) {
+            const created = this.playlists.find(pl => pl.name.toLowerCase() === newPlaylist.name.toLowerCase());
+            if (created) {
+              this.selectPlaylist(created._id);
+            }
+          }
+        }
+      }
+    });
+    // this.dialog.querySelector('.add-to-playlist-header-btn').addEventListener('click', () => this.addCurrentVideoToPlaylist());
+    
+    // Add search input event and clear button logic
+    const searchInput = this.dialog.querySelector('.playlist-search-input');
+    const clearBtn = this.dialog.querySelector('.playlist-search-clear');
+    searchInput.addEventListener('input', (e) => {
+      this.renderPlaylists(e.target.value);
+      clearBtn.style.display = e.target.value ? 'block' : 'none';
+    });
+    clearBtn.addEventListener('click', () => {
+      searchInput.value = '';
+      clearBtn.style.display = 'none';
+      this.renderPlaylists('');
+      searchInput.focus();
+    });
+    
+    console.log('PlaylistManager initialization complete');
+  }
+
+  async show(arg) {
+    let playlistName = '';
+    let source = 'unknown';
+
+    if (typeof arg === 'string') {
+        playlistName = arg;
+    } else if (typeof arg === 'object' && arg !== null) {
+        playlistName = arg.query || '';
+        source = arg.source || 'unknown';
+    }
+
+    const cleanPlaylistName = window.extractCleanQuery ? window.extractCleanQuery(playlistName) : playlistName.trim();
+    
+    // Set the search input and trigger filtering BEFORE loading everything else
+    const searchInput = this.dialog.querySelector('.playlist-search-input');
+    searchInput.value = cleanPlaylistName;
+    // Manually trigger the input event to filter the list
+    searchInput.dispatchEvent(new Event('input', { bubbles: true }));
+
+    await this.loadPlaylists();
+
+    if (cleanPlaylistName) {
+        const existing = this.playlists.find(pl => pl.name.toLowerCase() === cleanPlaylistName.toLowerCase());
+        if (existing) {
+            this.selectPlaylist(existing._id, source); 
+        } else {
+            const newPlaylist = await this.createPlaylist(cleanPlaylistName);
+            await this.loadPlaylists(); 
+            const created = this.playlists.find(pl => pl.name.toLowerCase() === cleanPlaylistName.toLowerCase());
+            if (created) {
+                this.selectPlaylist(created._id, source);
+            }
+        }
+    } else {
+        this.renderPlaylists();
+    }
+
+    this.dialog.style.display = 'flex';
+    this.dialog.style.justifyContent = 'center';
+    this.dialog.style.alignItems = 'center';
+    this.renderPendingVideo(); // This might need adjustment based on what `currentVideo` is
+  }
+
+  hide() {
+    this.dialog.style.display = 'none';
+    this.currentVideo = null;
+  }
+
+  showError(message) {
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'error-message';
+    errorDiv.textContent = message;
+    this.dialog.querySelector('.playlist-manager-content').insertBefore(
+      errorDiv,
+      this.dialog.querySelector('.playlist-manager-body')
+    );
+    setTimeout(() => errorDiv.remove(), 5000);
+  }
+
+  async loadPlaylists() {
+    try {
+      const response = await playlistService.getPlaylists();
+      this.playlists = response.playlists;
+      this.renderPlaylists();
+    } catch (error) {
+      console.error('Failed to load playlists:', error);
+      throw error;
+    }
+  }
+
+  renderPlaylists(filter = '') {
+    const container = this.dialog.querySelector('.playlists-container');
+    let filtered = this.playlists;
+    if (filter && filter.trim()) {
+      const f = filter.trim().toLowerCase();
+      filtered = this.playlists.filter(p => p.name.toLowerCase().includes(f));
+    }
+    let sorted;
+    if (this.sortMode === 'recent') {
+      // MRU order first, then the rest alphabetically
+      const mru = [];
+      const rest = [];
+      filtered.forEach(p => {
+        if (this.recentPlaylistIds.includes(p._id)) {
+          mru.push(p);
+        } else {
+          rest.push(p);
+        }
+      });
+      // Sort MRU by their order in recentPlaylistIds
+      mru.sort((a, b) => this.recentPlaylistIds.indexOf(a._id) - this.recentPlaylistIds.indexOf(b._id));
+      // Sort rest alphabetically
+      rest.sort((a, b) => a.name.localeCompare(b.name));
+      sorted = [...mru, ...rest];
+    } else {
+      // ASC/DESC
+      sorted = filtered.slice().sort((a, b) => {
+        if (a.name.toLowerCase() < b.name.toLowerCase()) return this.playlistSortAsc ? -1 : 1;
+        if (a.name.toLowerCase() > b.name.toLowerCase()) return this.playlistSortAsc ? 1 : -1;
+        return 0;
+      });
+    }
+    // Add sort controls
+    let outer = this.dialog.querySelector('.playlist-list-outer');
+    if (!outer) {
+      outer = document.createElement('div');
+      outer.className = 'playlist-list-outer';
+      const playlistList = this.dialog.querySelector('.playlists-container');
+      if (playlistList) {
+        playlistList.parentElement.insertBefore(outer, playlistList);
+        outer.appendChild(playlistList);
+      }
+    }
+    // Remove any existing sort control
+    const oldSort = outer.querySelector('.playlist-sort-control');
+    if (oldSort) oldSort.remove();
+    // Add sort controls
+    const sortArrow = this.playlistSortAsc ? '▲' : '▼';
+    const sortControl = document.createElement('div');
+    sortControl.className = 'playlist-sort-control';
+    sortControl.innerHTML = `
+      
+      <button class="playlist-sort-recent-btn" style="margin-left:8px;${this.sortMode==='recent'?'font-weight:bold;':''}">Recent</button>
+      <span class="playlist-sort-arrow" style="margin-left:8px;cursor:pointer;">${sortArrow}</span>
+    `;
+    outer.appendChild(sortControl);
+    // Recent sort button
+    sortControl.querySelector('.playlist-sort-recent-btn').onclick = (e) => {
+      e.stopPropagation();
+      this.sortMode = 'recent';
+      this.renderPlaylists();
+    };
+    // ASC/DESC sort arrow
+    sortControl.querySelector('.playlist-sort-arrow').onclick = (e) => {
+      e.stopPropagation();
+      this.playlistSortAsc = !this.playlistSortAsc;
+      this.sortMode = this.playlistSortAsc ? 'asc' : 'desc';
+      this.renderPlaylists(this.dialog.querySelector('.playlist-search-input').value);
+    };
+    // Render playlists
+    container.innerHTML = sorted.map(playlist => `
+      <div class="playlist-item${playlist._id === this.selectedPlaylistId ? ' active' : ''}" data-id="${playlist._id}" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center; padding:6px 10px; border-radius:6px; margin-bottom:2px; background:${playlist._id === this.selectedPlaylistId ? '#e3f2fd' : 'transparent'};">
+        <span class="playlist-name">${playlist.name}</span>
+        <span class="playlist-count" style="color:#888;font-size:0.95em;">(${playlist.videos.length})</span>
+      </div>
+    `).join('');
+
+    container.querySelectorAll('.playlist-item').forEach(item => {
+      item.addEventListener('click', (e) => {
+        if (e.target.classList.contains('edit-playlist-btn') || e.target.classList.contains('submit-rename-btn') || e.target.classList.contains('rename-playlist-input')) return;
+        this.selectPlaylist(item.dataset.id);
+      });
+      item.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        item.classList.add('drag-over');
+      });
+      item.addEventListener('dragleave', () => {
+        item.classList.remove('drag-over');
+      });
+      item.addEventListener('drop', async (e) => {
+        console.log('🎯 [PlaylistManager] drop event fired on playlist:', item.dataset.id);
+        e.preventDefault();
+        item.classList.remove('drag-over');
+        try {
+          const dragData = e.dataTransfer.getData('application/json');
+          console.log('📦 [PlaylistManager] drag data received:', dragData);
+          const video = JSON.parse(dragData);
+          console.log('✅ [PlaylistManager] video parsed successfully:', video);
+          await this.addVideoToPlaylistById(item.dataset.id, video);
+          this.selectPlaylist(item.dataset.id);
+          console.log('✅ [PlaylistManager] video added to playlist successfully');
+        } catch (err) {
+          console.error('❌ [PlaylistManager] drop error:', err);
+          this.showError('Failed to add video by drag-and-drop.');
+        }
+      });
+      item.style.cursor = 'pointer';
+    });
+
+    // Render the active playlist name with pencil above the table
+    const headerContainer = this.dialog.querySelector('.current-playlist-header');
+    headerContainer.style.marginTop = '8px';
+    const playlist = this.playlists.find(p => p._id === this.selectedPlaylistId);
+    if (playlist) {
+      this.renderCurrentPlaylistHeader(playlist, source);
+    } else {
+      headerContainer.innerHTML = '<span class="current-playlist-name">Select a playlist</span>';
+    }
+
+    // Scroll active item into view
+    const activeItem = container.querySelector('.playlist-item.active');
+    if (activeItem) {
+      activeItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }
+
+  async selectPlaylist(playlistId, source = 'unknown') {
+    this.selectedPlaylistId = playlistId;
+    this.updateRecentPlaylists(playlistId);
+    this.renderPlaylists(); 
+
+    const playlist = this.playlists.find(p => p._id === playlistId);
+    if (!playlist) return;
+
+    this.renderCurrentPlaylistHeader(playlist, source);
+    this.renderVideos(playlist.videos);
+  }
+
+  renderCurrentPlaylistHeader(playlist, source = 'unknown') {
+    const header = this.dialog.querySelector('.current-playlist-header');
+    let headerName = playlist.name;
+
+    if (source === 'youtube') {
+        headerName = `Playlist: ${playlist.name}`;
+    }
+
+    header.innerHTML = `
+      <h3>
+        <span class="playlist-icon"></span>
+        <span class="playlist-name-display">${headerName}</span>
+        <button class="edit-playlist-btn" title="Rename Playlist">✏️</button>
+        <button class="delete-playlist-btn" title="Delete Playlist">🗑️</button>
+      </h3>
+      <div class="playlist-sort-controls">
+        <span class="sort-label">Sort by:</span>
+        <button class="sort-videos-btn" data-sort="asc">Title A-Z</button>
+        <button class="sort-videos-btn" data-sort="desc">Title Z-A</button>
+        <button class="sort-videos-btn" data-sort="default">Original Order</button>
+      </div>
+    `;
+
+    header.querySelector('.edit-playlist-btn').addEventListener('click', () => {
+        // ... (rename logic)
+    });
+    header.querySelector('.delete-playlist-btn').addEventListener('click', () => {
+        // ... (delete logic)
+    });
+    header.querySelectorAll('.sort-videos-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const sortType = e.target.dataset.sort;
+            this.renderVideos(playlist.videos, sortType);
+        });
+    });
+  }
+
+  renderVideos(videos, sort) {
+    const container = this.dialog.querySelector('.videos-container');
+    if (!videos || videos.length === 0) {
+      container.innerHTML = '<div class="empty-playlist-message">No videos in this playlist</div>';
+      return;
+    }
+
+    container.style.marginTop = '8px';
+    container.innerHTML = `
+    <div class="playlist-table-blue-bg">
+        <div class="playlist-table-wrapper">
+            <table class="playlist-videos-table" style="table-layout: fixed; width: 100%;">
+                <colgroup>
+                    <col class="playlist-col-thumb">
+                    <col class="playlist-col-title">
+                    <col class="playlist-col-actions">
+                </colgroup>
+                <thead>
+                    <tr>
+                        <th class="playlist-video-header">Video</th>
+                        <th class="playlist-title-header">Title</th>
+                        <th class="playlist-actions-header">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${videos.map(video => `
+                        <tr class="playlist-video-row" data-entry-id="${video._id}">
+                            <td class="playlist-thumb-cell"><img class="video-thumbnail youtube-popup-thumb" src="${video.thumbnail}" alt="${video.title}" title="${video.title}" style="cursor:pointer;" data-video-id="${video.videoId}" /></td>
+                            <td class="video-title-cell">
+                                <span class="video-title-text">${video.title}</span>
+                            </td>
+                            <td class="playlist-actions-cell" style="text-align:right;">
+                                <button class="action-btn view-video-btn" title="View/Play" data-video-id="${video.videoId}" data-local-url="${video.localUrl || ''}" data-entry-id="${video._id}">&#128065;</button>
+                                <button class="edit-video-title-btn" title="Edit Title" style="background:none;border:none;cursor:pointer;font-size:1.1em;margin-left:8px;vertical-align:middle;">✏️</button>
+                                <button class="action-btn remove-video-btn" title="Remove" data-id="${video._id}">&#128465;</button>
+                                <select class="move-to-playlist" data-entry-id="${video._id}">
+                                    <option value="">Move to...</option>
+                                    ${this.playlists.filter(p => p._id !== this.selectedPlaylistId).map(p => `<option value="${p._id}">${p.name}</option>`).join('')}
+                                </select>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    `;
+
+    // Remove Refresh button handler
+    // const refreshBtn = container.querySelector('.refresh-playlist-btn');
+    // if (refreshBtn) {
+    //   refreshBtn.addEventListener('click', async () => {
+    //     await this.loadPlaylists();
+    //     const playlist = this.playlists.find(p => p._id === this.selectedPlaylistId);
+    //     if (playlist) {
+    //       this.renderVideos(playlist.videos);
+    //     }
+    //   });
+    // }
+
+    // Add event listeners for actions
+    container.querySelectorAll('.view-video-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        console.log('Eye icon clicked');
+        const videoId = btn.dataset.videoId;
+        console.log('Video ID:', videoId);
+        console.log('handleYoutube exists:', !!window.handleYoutube);
+        console.log('openYoutubePopup exists:', !!(window.handleYoutube && typeof window.handleYoutube.openYoutubePopup === 'function'));
+        
+        if (videoId && window.handleYoutube && typeof window.handleYoutube.openYoutubePopup === 'function') {
+          window.handleYoutube.openYoutubePopup(videoId);
+          this.hide();
+        } else {
+          showToast('Unable to play video. Please try again.');
+        }
+      });
+    });
+    container.querySelectorAll('.remove-video-btn').forEach(btn => {
+      btn.addEventListener('click', () => this.removeVideo(btn.dataset.id));
+    });
+    container.querySelectorAll('.move-to-playlist').forEach(select => {
+      select.addEventListener('change', async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const videoEntryId = select.dataset.entryId;
+        const targetPlaylistId = e.target.value;
+        console.log('Move video:', { videoEntryId, targetPlaylistId });
+        
+        if (targetPlaylistId) {
+          try {
+            await this.moveVideo(videoEntryId, targetPlaylistId);
+            // Reset the select element
+            e.target.value = '';
+          } catch (error) {
+            console.error('Error moving video:', error);
+            e.target.value = '';
+            this.showError('Failed to move video. Please try again.');
+          }
+        }
+      });
+    });
+    // Add click event for video image to open popup
+    container.querySelectorAll('.youtube-popup-thumb').forEach(img => {
+      console.log('Adding click handler to image:', img);  // Log when we add the handler
+      img.addEventListener('click', (e) => {
+        console.log('IMAGE CLICKED!');  // Simple log to verify click
+        console.log('Image clicked');
+        const videoId = img.getAttribute('data-video-id');
+        console.log('Image Video ID:', videoId);
+        console.log('handleYoutube exists:', !!window.handleYoutube);
+        console.log('openYoutubePopup exists:', !!(window.handleYoutube && typeof window.handleYoutube.openYoutubePopup === 'function'));
+        
+        if (videoId && window.handleYoutube && typeof window.handleYoutube.openYoutubePopup === 'function') {
+          window.handleYoutube.openYoutubePopup(videoId);
+          this.hide();
+        } else {
+          showToast('Unable to play video. Please try again.');
+        }
+      });
+    });
+
+    // Add inline edit logic for video titles
+    container.querySelectorAll('.edit-video-title-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const row = btn.closest('tr');
+        const cell = row.querySelector('.video-title-cell');
+        const titleSpan = cell.querySelector('.video-title-text');
+        const oldTitle = titleSpan.textContent;
+        // Replace with input and submit button
+        cell.innerHTML = `<input type="text" class="edit-title-input" value="${oldTitle}" style="font-size:1em;width:70%;margin-right:6px;">` +
+          `<button class="submit-title-btn" title="Save" style="font-size:1.1em;vertical-align:middle;">✔</button>` +
+          `<button class="cancel-title-btn" title="Cancel" style="font-size:1.1em;vertical-align:middle;margin-left:4px;">✖</button>`;
+        const input = cell.querySelector('.edit-title-input');
+        input.focus();
+        // Submit on button click or Enter
+        cell.querySelector('.submit-title-btn').addEventListener('click', async (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const newTitle = input.value.trim();
+          console.log('Submit button clicked with new title:', newTitle);
+          if (newTitle) {
+            try {
+              console.log('Calling renameVideoTitle with:', { videoEntryId: row.dataset.entryId, newTitle });
+              await this.renameVideoTitle(row.dataset.entryId, newTitle);
+              // Update UI immediately after successful rename
+              cell.innerHTML = `<span class="video-title-text">${newTitle}</span>`;
+            } catch (error) {
+              console.error('Error renaming title:', error);
+              cell.innerHTML = `<span class="video-title-text">${oldTitle}</span>`;
+              this.showError('Failed to update video title.');
+            }
+          }
+        });
+        input.addEventListener('keydown', async (ev) => {
+          if (ev.key === 'Enter') {
+            ev.preventDefault();
+            const newTitle = input.value.trim();
+            if (newTitle) {
+              try {
+                await this.renameVideoTitle(row.dataset.entryId, newTitle);
+                cell.innerHTML = `<span class="video-title-text">${newTitle}</span>`;
+              } catch (error) {
+                console.error('Error renaming title:', error);
+                cell.innerHTML = `<span class="video-title-text">${oldTitle}</span>`;
+                this.showError('Failed to update video title.');
+              }
+            }
+          } else if (ev.key === 'Escape') {
+            cell.innerHTML = `<span class="video-title-text">${oldTitle}</span>`;
+          }
+        });
+        // Cancel button
+        cell.querySelector('.cancel-title-btn').addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          cell.innerHTML = `<span class="video-title-text">${oldTitle}</span>`;
+        });
+      });
+    });
+
+    // Enable drag & drop for each video row in the playlist
+    container.querySelectorAll('.playlist-video-row').forEach(row => {
+      row.setAttribute('draggable', 'true');
+      row.addEventListener('dragstart', (e) => {
+        const entryId = row.getAttribute('data-entry-id');
+        const video = videos.find(v => v._id === entryId);
+        if (video) {
+          e.dataTransfer.setData('application/json', JSON.stringify(video));
+        }
+      });
+    });
+    
+  }
+
+  async createPlaylist(name) {
+    if (!name) return;
+    try {
+      const response = await playlistService.createPlaylist(name);
+      // Add to MRU
+      if (response && response.playlist && response.playlist._id) {
+        this.updateRecentPlaylists(response.playlist._id);
+      }
+      return response.playlist;
+    } catch (error) {
+      this.showError('Failed to create playlist. Please try again.');
+    }
+  }
+
+  async renamePlaylist(playlistId, name) {
+    if (!playlistId) return;
+    try {
+      await playlistService.renamePlaylist(playlistId, name);
+      await this.loadPlaylists();
+    } catch (error) {
+      this.showError('Failed to rename playlist. Please try again.');
+    }
+  }
+
+  async removeVideo(videoEntryId) {
+    if (!this.selectedPlaylistId) return;
+    const confirmed = await showCustomConfirm('Are you sure you want to delete this video from the playlist? This cannot be undone.');
+    if (!confirmed) return;
+    try {
+      await playlistService.removeVideoFromPlaylist(this.selectedPlaylistId, videoEntryId);
+      // Immediately update UI after deletion
+      const playlist = this.playlists.find(p => p._id === this.selectedPlaylistId);
+      if (playlist) {
+        playlist.videos = playlist.videos.filter(v => v._id !== videoEntryId && v._id?.toString() !== videoEntryId);
+        this.renderVideos(playlist.videos);
+      }
+      await this.loadPlaylists();
+    } catch (error) {
+      this.showError('Failed to remove video. Please try again.');
+    }
+  }
+
+  async moveVideo(videoEntryId, targetPlaylistId) {
+    if (!this.selectedPlaylistId) return;
+    try {
+      // Find the video in the current playlist to get its videoId
+      const playlist = this.playlists.find(p => p._id === this.selectedPlaylistId);
+      if (!playlist) {
+        throw new Error('Source playlist not found');
+      }
+      
+      const video = playlist.videos.find(v => v._id === videoEntryId || v._id?.toString() === videoEntryId);
+      if (!video) {
+        throw new Error('Video not found in source playlist');
+      }
+
+      console.log('Attempting to move video:', videoEntryId, 'to playlist:', targetPlaylistId);
+      await playlistService.moveVideo(this.selectedPlaylistId, videoEntryId, targetPlaylistId);
+      
+      // After successful move, reload playlists and re-render
+      await this.loadPlaylists();
+      
+      // Update the current playlist view
+      const updatedPlaylist = this.playlists.find(p => p._id === this.selectedPlaylistId);
+      if (updatedPlaylist) {
+        this.renderVideos(updatedPlaylist.videos);
+      }
+      
+      // Update the playlist list
+      this.renderPlaylists();
+      
+      showToast('Video moved successfully!');
+    } catch (error) {
+      console.error('Failed to move video:', error);
+      showToast('Failed to move video. Please try again.');
+      this.showError('Failed to move video. Please try again.');
+    }
+  }
+
+  renderPendingVideo() {
+    console.log('🔧 [PlaylistManager] renderPendingVideo() called');
+    const pendingContainer = this.dialog.querySelector('.pending-video-container');
+    if (!pendingContainer) {
+      console.error('❌ [PlaylistManager] pending-video-container not found');
+      return;
+    }
+    console.log('✅ [PlaylistManager] pending-video-container found');
+    
+    pendingContainer.innerHTML = '';
+    if (!this.currentVideo) {
+      console.log('⚠️ [PlaylistManager] No currentVideo, showing placeholder');
+      pendingContainer.innerHTML = `<div class="pending-placeholder">Pending videos you can 'Drag & Drop' onto a playlist on the LEFT will show here</div>`;
+      return;
+    }
+    
+    console.log('✅ [PlaylistManager] currentVideo exists:', this.currentVideo);
+    
+    // Truncate title to 30 characters
+    const truncatedTitle = (this.currentVideo.title && this.currentVideo.title.length > 30)
+      ? this.currentVideo.title.slice(0, 50) + '...'
+      : this.currentVideo.title || 'Untitled Video';
+    pendingContainer.innerHTML = `
+      <div class="pending-video" draggable="true" id="pending-video">
+        <span class="drag-icon" style="font-size: 2.2em; margin-right: 14px; cursor: grab; color: #2196f3;">&#9776;</span>
+        <img src="${this.currentVideo.thumbnail}" alt="" />
+        <span style="font-weight:bold; margin-left:10px;">${truncatedTitle}</span>
+        <span style="color:#2196f3;margin-left:18px;">Drag to playlist</span>
+      </div>
+    `;
+    
+    const pending = pendingContainer.querySelector('.pending-video');
+    if (!pending) {
+      console.error('❌ [PlaylistManager] .pending-video element not found after rendering');
+      return;
+    }
+    
+    console.log('✅ [PlaylistManager] .pending-video element found, adding dragstart listener');
+    pending.addEventListener('dragstart', (e) => {
+      console.log('🎯 [PlaylistManager] dragstart event fired for pending video');
+      e.dataTransfer.setData('application/json', JSON.stringify(this.currentVideo));
+      console.log('✅ [PlaylistManager] drag data set:', this.currentVideo);
+    });
+    
+    console.log('✅ [PlaylistManager] renderPendingVideo() completed successfully');
+  }
+
+  async addCurrentVideoToPlaylist() {
+    if (!this.selectedPlaylistId || !this.currentVideo) return;
+    try {
+      await playlistService.addVideoToPlaylist(this.selectedPlaylistId, {
+        videoId: this.currentVideo.id || this.currentVideo.videoId,
+        title: this.currentVideo.title && this.currentVideo.title.trim() ? this.currentVideo.title : 'Untitled Video',
+        thumbnail: this.currentVideo.thumbnail
+      });
+      this.showPlaylistMessage('Video has been added to playlist!');
+      await this.loadPlaylists();
+      this.renderVideos(this.playlists.find(p => p._id === this.selectedPlaylistId)?.videos || []);
+      this.currentVideo = null;
+      this.renderPendingVideo();
+    } catch (error) {
+      if (error.message && error.message.includes('DUPLICATE_VIDEO')) {
+        showToast('Video already exists in your playlist');
+      } else {
+        this.showError('Failed to add video to playlist.');
+      }
+    }
+    this.currentVideo = null;
+    this.renderPendingVideo();
+  }
+
+  async addVideoToPlaylistById(playlistId, video) {
+    try {
+      await playlistService.addVideoToPlaylist(playlistId, {
+        videoId: video.id || video.videoId,
+        title: video.title && video.title.trim() ? video.title : 'Untitled Video',
+        thumbnail: video.thumbnail
+      });
+      this.showPlaylistMessage('Video has been added to playlist! ' +
+        '<span class="playlist-message-emoji-stack">' +
+          '<span class="playlist-message-happy-emoji">😄</span>' +
+          '<span class="playlist-message-sparkle-emoji">✨</span>' +
+          '<span class="playlist-message-thumbs-emoji">👍</span>' +
+        '</span>');
+      await this.loadPlaylists();
+      this.renderVideos(this.playlists.find(p => p._id === playlistId)?.videos || []);
+      this.currentVideo = null;
+      this.renderPendingVideo();
+    } catch (error) {
+      if (error.message && error.message.includes('DUPLICATE_VIDEO')) {
+        showToast('Video already exists in your playlist');
+      } else {
+        this.showError('Failed to add video to playlist.');
+      }
+    }
+    this.currentVideo = null;
+    this.renderPendingVideo();
+  }
+
+  async renameVideoTitle(videoEntryId, newTitle) {
+    console.log('renameVideoTitle called with:', { videoEntryId, newTitle, selectedPlaylistId: this.selectedPlaylistId });
+    if (!this.selectedPlaylistId || !videoEntryId || !newTitle) {
+      console.log('Missing required parameters:', { selectedPlaylistId: this.selectedPlaylistId, videoEntryId, newTitle });
+      return;
+    }
+    try {
+      console.log('Calling playlistService.renameVideoTitle');
+      await playlistService.renameVideoTitle(this.selectedPlaylistId, videoEntryId, newTitle);
+      console.log('Successfully renamed video title');
+      await this.loadPlaylists();
+      const playlist = this.playlists.find(p => p._id === this.selectedPlaylistId);
+      if (playlist) {
+        console.log('Re-rendering videos after rename');
+        this.renderVideos(playlist.videos);
+      }
+      showToast('Video title updated!');
+    } catch (error) {
+      console.error('Error in renameVideoTitle:', error);
+      this.showError('Failed to update video title.');
+    }
+  }
+
+  showPlaylistMessage(msg) {
+    const msgDiv = this.dialog.querySelector('.playlist-manager-message');
+    if (msgDiv) {
+      msgDiv.innerHTML =
+        '<div class="playlist-message-flex">' +
+          '<span>Video has been added to playlist!</span>' +
+          '<span class="playlist-message-emoji-stack">' +
+            '<span class="playlist-message-happy-emoji">😄</span>' +
+            '<span class="playlist-message-sparkle-emoji">✨</span>' +
+            '<span class="playlist-message-thumbs-emoji">👍</span>' +
+          '</span>' +
+        '</div>';
+      msgDiv.style.color = '#2196f3';
+      msgDiv.style.fontWeight = 'bold';
+      setTimeout(() => { msgDiv.innerHTML = ''; }, 10000);
+    }
+  }
+
+  updateRecentPlaylists(playlistId) {
+    // Remove if already present
+    this.recentPlaylistIds = this.recentPlaylistIds.filter(id => id !== playlistId);
+    // Add to top
+    this.recentPlaylistIds.unshift(playlistId);
+    // Limit to 20 MRU
+    this.recentPlaylistIds = this.recentPlaylistIds.slice(0, 20);
+    localStorage.setItem('recentPlaylistIds', JSON.stringify(this.recentPlaylistIds));
+    // TODO: Call backend API to persist MRU order
+  }
+}
+
+const playlistManager = new PlaylistManager();
+
+// Add global click handler for hamburger icons
+document.addEventListener('click', (e) => {
+  if (e.target.closest('.view-playlists-SINGLE-btn, .view-playlists-MULTI-btn')) {
+    e.preventDefault();
+    if (window.playlistManager) {
+      window.playlistManager.show();
+    } else {
+      console.error('PlaylistManager not initialized');
+      showToast('Unable to open playlist manager. Please try again.');
+    }
+  }
+});
+
+function showToast(message) {
+  let toast = document.getElementById('playlist-toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'playlist-toast';
+    toast.style.position = 'fixed';
+    toast.style.bottom = '20px';
+    toast.style.left = '50%';
+    toast.style.right = 'auto';
+    toast.style.transform = 'translateX(-50%)';
+    toast.style.background = '#333';
+    toast.style.color = '#fff';
+    toast.style.padding = '16px 28px';
+    toast.style.borderRadius = '8px';
+    toast.style.fontSize = '1.1em';
+    toast.style.zIndex = 99999;
+    toast.style.boxShadow = '0 2px 8px rgba(0,0,0,0.2)';
+    toast.style.transition = 'opacity 0.3s';
+    toast.style.opacity = '0';
+    document.body.appendChild(toast);
+  }
+  toast.textContent = message;
+  toast.style.opacity = '1';
+  setTimeout(() => { toast.style.opacity = '0'; }, 2500);
+}
+
+// Custom confirm modal
+function showCustomConfirm(message) {
+  return new Promise((resolve) => {
+    let modal = document.getElementById('custom-confirm-modal');
+    if (modal) modal.remove();
+    modal = document.createElement('div');
+    modal.id = 'custom-confirm-modal';
+    modal.style.position = 'fixed';
+    modal.style.top = '0';
+    modal.style.left = '0';
+    modal.style.width = '100vw';
+    modal.style.height = '100vh';
+    modal.style.background = 'rgba(0,0,0,0.4)';
+    modal.style.display = 'flex';
+    modal.style.alignItems = 'center';
+    modal.style.justifyContent = 'center';
+    modal.style.zIndex = '10000';
+    modal.innerHTML = `
+      <div style="background:#fff;padding:32px 28px;border-radius:12px;box-shadow:0 4px 32px rgba(0,0,0,0.18);min-width:320px;max-width:90vw;display:flex;flex-direction:column;align-items:center;">
+        <div style="font-size:1.15em;font-weight:500;margin-bottom:18px;text-align:center;">${message}</div>
+        <div style="display:flex;gap:18px;justify-content:center;">
+          <button id="custom-confirm-yes" style="background:#e92828;color:#fff;padding:8px 22px;border:none;border-radius:7px;font-size:1.08em;cursor:pointer;">Delete</button>
+          <button id="custom-confirm-no" style="background:#f5f5f5;color:#222;padding:8px 22px;border:none;border-radius:7px;font-size:1.08em;cursor:pointer;">Cancel</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    document.getElementById('custom-confirm-yes').onclick = () => { modal.remove(); resolve(true); };
+    document.getElementById('custom-confirm-no').onclick = () => { modal.remove(); resolve(false); };
+    modal.onclick = (e) => { if (e.target === modal) { modal.remove(); resolve(false); } };
+  });
+} 
