@@ -5,11 +5,25 @@ const YoutubeHistory = require('../models/YoutubeHistory');
 // GET history for a session
 router.get('/:sessionId', async (req, res) => {
     try {
-        const history = await YoutubeHistory.find({ sessionId: req.params.sessionId })
+        // Query the correct collection directly (youtube_searches instead of youtubehistories)
+        const mongoose = require('mongoose');
+        const collection = mongoose.connection.collection('youtube_searches');
+        
+        // Get all queries from the youtube_searches collection
+        const history = await collection.find({})
             .sort({ timestamp: -1 })
-            .limit(20);
-        res.json(history.map(item => item.query));
+            .limit(100)  // Increased limit to get more queries
+            .toArray();
+            
+        // Extract just the query names
+        const queries = history.map(item => item.query);
+        
+        console.log(`📚 [API] Found ${queries.length} queries in youtube_searches collection`);
+        console.log('📚 [API] Sample queries:', queries.slice(0, 5));
+        
+        res.json(queries);
     } catch (error) {
+        console.error('📚 [API] Error loading queries:', error);
         res.status(500).json({ message: error.message });
     }
 });

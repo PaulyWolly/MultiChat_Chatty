@@ -14,9 +14,9 @@ export default class QuotaMonitor {
         this.dailyLimit = 10000; // This will be updated from server
         this.dailyUsed = 0; // This will be updated from server
         this.warningThresholds = {
-            yellow: 0.3,   // 30% - Show warning
-            orange: 0.6,   // 60% - Show caution
-            red: 0.85      // 85% - Show critical warning
+            yellow: 0.6,   // 60% - Show warning
+            orange: 0.8,   // 80% - Show caution
+            red: 0.9       // 90% - Show critical warning
         };
         
         this.isInitialized = false;
@@ -125,6 +125,13 @@ export default class QuotaMonitor {
         const percentage = currentCount / this.dailyLimit;
         const remaining = this.dailyLimit - currentCount;
         
+        // Handle quota exceeded case
+        if (currentCount >= this.dailyLimit) {
+            this.showQuotaExceededWarning();
+            this.enableCacheOnlyMode();
+            return;
+        }
+        
         if (percentage >= this.warningThresholds.red) {
             this.showCriticalWarning(remaining);
         } else if (percentage >= this.warningThresholds.orange) {
@@ -138,20 +145,115 @@ export default class QuotaMonitor {
      * Show different warning levels
      */
     showWarning(remaining) {
-        this.showToast(`🟡 YouTube API Warning: ${remaining} calls remaining today (30% used)`, 'warning', 8000);
+        const percentage = Math.round(((10000 - remaining) / 10000) * 100);
+        this.showToast(`🟡 YouTube API Warning: ${remaining} calls remaining today (${percentage}% used)`, 'warning', 6000);
     }
 
     showCautionWarning(remaining) {
-        this.showToast(`🟠 YouTube API Caution: Only ${remaining} calls left today (60% used)`, 'error', 10000);
+        const percentage = Math.round(((10000 - remaining) / 10000) * 100);
+        this.showToast(`🟠 HIGH USAGE ALERT: Only ${remaining} calls left today (${percentage}% used)! Consider using cached queries.`, 'error', 10000);
+        this.showQuotaAlert('caution', remaining, percentage);
     }
 
     showCriticalWarning(remaining) {
-        this.showToast(`🔴 CRITICAL: Only ${remaining} YouTube API calls remaining today! Consider cache-only mode.`, 'error', 15000);
+        const percentage = Math.round(((10000 - remaining) / 10000) * 100);
+        this.showToast(`🔴 DANGER ZONE: Only ${remaining} YouTube API calls remaining today (${percentage}% used)! You're very close to the limit!`, 'error', 15000);
+        this.showQuotaAlert('critical', remaining, percentage);
         
-        // Auto-enable cache-only mode if very close to limit
-        if (remaining <= 5) {
+        // Don't auto-enable cache-only mode until 95%
+        if (remaining <= 500) { // 95%
             this.enableCacheOnlyMode();
         }
+    }
+
+    /**
+     * Show prominent quota alert banner in UI
+     */
+    showQuotaAlert(level, remaining, percentage) {
+        // Remove existing alert if present
+        const existingAlert = document.getElementById('quota-alert-banner');
+        if (existingAlert) {
+            existingAlert.remove();
+        }
+
+        const banner = document.createElement('div');
+        banner.id = 'quota-alert-banner';
+        banner.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 10000;
+            padding: 15px 20px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 16px;
+            color: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            animation: slideDown 0.5s ease-out;
+        `;
+
+        if (level === 'caution') {
+            banner.style.background = 'linear-gradient(45deg, #ff9800, #f57c00)';
+            banner.innerHTML = `🟠 HIGH USAGE ALERT: ${remaining} YouTube API calls remaining (${percentage}% used)! Consider using cached queries.`;
+        } else if (level === 'critical') {
+            banner.style.background = 'linear-gradient(45deg, #f44336, #d32f2f)';
+            banner.innerHTML = `🔴 DANGER ZONE: Only ${remaining} YouTube API calls left (${percentage}% used)! You're very close to the limit!`;
+            banner.style.animation = 'pulse 2s infinite';
+        }
+
+        // Add close button
+        const closeBtn = document.createElement('button');
+        closeBtn.innerHTML = '✕';
+        closeBtn.style.cssText = `
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255,255,255,0.3);
+            border: none;
+            color: white;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-weight: bold;
+        `;
+        closeBtn.onclick = () => banner.remove();
+        banner.appendChild(closeBtn);
+
+        // Add CSS animations if not already present
+        if (!document.getElementById('quota-alert-styles')) {
+            const style = document.createElement('style');
+            style.id = 'quota-alert-styles';
+            style.textContent = `
+                @keyframes slideDown {
+                    from { transform: translateY(-100%); }
+                    to { transform: translateY(0); }
+                }
+                @keyframes pulse {
+                    0%, 100% { opacity: 1; }
+                    50% { opacity: 0.7; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        document.body.appendChild(banner);
+
+        // Auto-remove after 30 seconds for caution, keep critical until manually closed
+        if (level === 'caution') {
+            setTimeout(() => {
+                if (banner.parentNode) {
+                    banner.remove();
+                }
+            }, 30000);
+        }
+    }
+
+    showQuotaExceededWarning() {
+        this.showToast(`🚫 QUOTA EXCEEDED: YouTube API daily limit reached! Cache-only mode enabled automatically.`, 'error', 20000);
+        console.error('🚫 [QUOTA] Daily quota exceeded!');
     }
 
     /**
@@ -352,9 +454,16 @@ export default class QuotaMonitor {
         }
         
         const usage = this.getCurrentUsage();
-        if (usage <= 0) {
+        if (usage >= this.dailyLimit) {
             console.log('🚫 [QUOTA] API call blocked - daily quota exceeded');
             this.showToast('🚫 Daily YouTube quota exceeded. Please try again tomorrow.', 'error');
+            return true;
+        }
+        
+        // Only block at 90%+ (9000+ quota used)
+        if (usage > 9000) {
+            console.log('🚫 [QUOTA] API call blocked - usage critically high (>90%)');
+            this.showToast('🚫 API calls blocked - quota usage critically high (>90%). Please use cached results only.', 'error');
             return true;
         }
         
@@ -485,5 +594,51 @@ export default class QuotaMonitor {
         if (percentage >= 60) return 'orange';
         if (percentage >= 30) return 'yellow';
         return 'green';
+    }
+
+    /**
+     * Admin function to manually set quota usage (for fixing tracking issues)
+     */
+    async setQuotaUsage(used) {
+        try {
+            const response = await fetch('/api/youtube/quota-set', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ used })
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+                this.dailyUsed = result.quota.used;
+                this.updateQuotaDashboard();
+                this.showToast(`✅ Quota usage manually set to ${used}`, 'success');
+                console.log('📊 [QUOTA] Manual quota update successful:', result);
+                return result;
+            } else {
+                throw new Error(result.error || 'Failed to update quota');
+            }
+        } catch (error) {
+            console.error('📊 [QUOTA] Error setting quota usage:', error);
+            this.showToast(`❌ Failed to set quota usage: ${error.message}`, 'error');
+            throw error;
+        }
+    }
+
+    /**
+     * Get detailed quota information for debugging
+     */
+    async getDetailedQuotaInfo() {
+        try {
+            const response = await fetch('/api/youtube/quota-status');
+            const data = await response.json();
+            console.log('📊 [QUOTA] Detailed quota info:', data);
+            return data;
+        } catch (error) {
+            console.error('📊 [QUOTA] Error fetching detailed quota info:', error);
+            return null;
+        }
     }
 } 
