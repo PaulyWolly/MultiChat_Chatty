@@ -12,6 +12,22 @@ export default class PlaylistManager {
     this.init();
   }
 
+  /**
+   * Clean playlist name for display by removing "YouTube search" prefix
+   */
+  cleanPlaylistNameForDisplay(name) {
+    if (!name) return '';
+    
+    // Remove common prefixes that take up space in UI
+    const cleaned = name
+      .replace(/^youtube\s+search\s+/i, '')
+      .replace(/^youtube\s+/i, '')
+      .replace(/^search\s+/i, '')
+      .trim();
+      
+    return cleaned || name; // Return original if cleaning results in empty string
+  }
+
   async init() {
     console.log('PlaylistManager.init() called');
     // Create dialog element
@@ -276,7 +292,7 @@ export default class PlaylistManager {
     // Render playlists
     container.innerHTML = sorted.map(playlist => `
       <div class="playlist-item${playlist._id === this.selectedPlaylistId ? ' active' : ''}" data-id="${playlist._id}" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center; padding:6px 10px; border-radius:6px; margin-bottom:2px; background:${playlist._id === this.selectedPlaylistId ? '#e3f2fd' : 'transparent'};">
-        <span class="playlist-name">${playlist.name}</span>
+        <span class="playlist-name">${this.cleanPlaylistNameForDisplay(playlist.name)}</span>
         <span class="playlist-count" style="color:#888;font-size:0.95em;">(${playlist.videos.length})</span>
       </div>
     `).join('');
@@ -314,11 +330,11 @@ export default class PlaylistManager {
     if (playlist) {
       headerContainer.innerHTML = `
         <div style="display:inline-flex;align-items:center;gap:10px;font-weight:bold;font-size:1.2em;">
-          <span class="current-playlist-name" style="font-weight:bold;">${playlist.name}</span>
+          <span class="current-playlist-name" style="font-weight:bold;">${this.cleanPlaylistNameForDisplay(playlist.name)}</span>
           <button class="edit-playlist-btn" title="Rename Playlist" data-id="${playlist._id}" style="font-size:1.1em;vertical-align:middle;background:transparent;border:none;cursor:pointer;">&#9998;</button>
           <button class="delete-playlist-btn" title="Delete Playlist" data-id="${playlist._id}" style="font-size:1.1em;vertical-align:middle;background:transparent;border:none;cursor:pointer;color:#e92828;">&#128465;</button>
           <span class="rename-controls" style="display:none;margin-left:8px;">
-            <input type="text" class="rename-playlist-input" value="${playlist.name}" style="font-size:1em;width:120px;">
+            <input type="text" class="rename-playlist-input" value="${this.cleanPlaylistNameForDisplay(playlist.name)}" style="font-size:1em;width:120px;">
             <button class="submit-rename-btn" data-id="${playlist._id}" style="font-size:1em;">✔</button>
           </span>
         </div>
@@ -339,7 +355,7 @@ export default class PlaylistManager {
         const newName = input.value.trim();
         if (!newName) return;
         await this.renamePlaylist(submitBtn.dataset.id, newName);
-        headerContainer.querySelector('.current-playlist-name').textContent = newName;
+        headerContainer.querySelector('.current-playlist-name').textContent = this.cleanPlaylistNameForDisplay(newName);
         headerContainer.querySelector('.current-playlist-name').style.display = '';
         btn.style.display = '';
         headerContainer.querySelector('.rename-controls').style.display = 'none';
@@ -347,7 +363,7 @@ export default class PlaylistManager {
       const deleteBtn = headerContainer.querySelector('.delete-playlist-btn');
       deleteBtn.addEventListener('click', async (e) => {
         e.stopPropagation();
-        const confirmed = await showCustomConfirm(`Are you sure you want to delete the playlist "${playlist.name}"? This cannot be undone.`);
+        const confirmed = await showCustomConfirm(`Are you sure you want to delete the playlist "${this.cleanPlaylistNameForDisplay(playlist.name)}"? This cannot be undone.`);
         if (confirmed) {
           await playlistService.deletePlaylist(playlist._id);
           this.selectedPlaylistId = null;
@@ -372,7 +388,7 @@ export default class PlaylistManager {
     this.updateRecentPlaylists(playlistId);
     const playlist = this.playlists.find(p => p._id === playlistId);
     if (playlist) {
-      this.dialog.querySelector('.current-playlist-name').textContent = playlist.name;
+      this.dialog.querySelector('.current-playlist-name').textContent = this.cleanPlaylistNameForDisplay(playlist.name);
       this.renderVideos(playlist.videos);
     }
     this.renderPlaylists(this.dialog.querySelector('.playlist-search-input').value);
@@ -443,11 +459,11 @@ export default class PlaylistManager {
         console.log('Eye icon clicked');
         const videoId = btn.dataset.videoId;
         console.log('Video ID:', videoId);
-        console.log('handleYoutube exists:', !!window.handleYoutube);
-        console.log('openYoutubePopup exists:', !!(window.handleYoutube && typeof window.handleYoutube.openYoutubePopup === 'function'));
+        console.log('youtubeSearchManager exists:', !!window.youtubeSearchManager);
+        console.log('openYoutubePopup exists:', !!(window.youtubeSearchManager && typeof window.youtubeSearchManager.openYoutubePopup === 'function'));
         
-        if (videoId && window.handleYoutube && typeof window.handleYoutube.openYoutubePopup === 'function') {
-          window.handleYoutube.openYoutubePopup(videoId);
+        if (videoId && window.youtubeSearchManager && typeof window.youtubeSearchManager.openYoutubePopup === 'function') {
+          window.youtubeSearchManager.openYoutubePopup(videoId);
           this.hide();
         } else {
           showToast('Unable to play video. Please try again.');
@@ -486,11 +502,11 @@ export default class PlaylistManager {
         console.log('Image clicked');
         const videoId = img.getAttribute('data-video-id');
         console.log('Image Video ID:', videoId);
-        console.log('handleYoutube exists:', !!window.handleYoutube);
-        console.log('openYoutubePopup exists:', !!(window.handleYoutube && typeof window.handleYoutube.openYoutubePopup === 'function'));
+        console.log('youtubeSearchManager exists:', !!window.youtubeSearchManager);
+        console.log('openYoutubePopup exists:', !!(window.youtubeSearchManager && typeof window.youtubeSearchManager.openYoutubePopup === 'function'));
         
-        if (videoId && window.handleYoutube && typeof window.handleYoutube.openYoutubePopup === 'function') {
-          window.handleYoutube.openYoutubePopup(videoId);
+        if (videoId && window.youtubeSearchManager && typeof window.youtubeSearchManager.openYoutubePopup === 'function') {
+          window.youtubeSearchManager.openYoutubePopup(videoId);
           this.hide();
         } else {
           showToast('Unable to play video. Please try again.');
