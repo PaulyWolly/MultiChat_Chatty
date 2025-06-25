@@ -30,6 +30,9 @@ const NodeCache        = require('node-cache');
 
 const chalk = require('chalk');
 
+// Import MongoDB models
+const YouTubeSearchResult = require('./models/YouTubeSearchResult');
+
 
 // Debug log environment variables
 console.log('Environment variables loaded:');
@@ -115,10 +118,49 @@ app.use('/config', express.static(path.join(__dirname, '../config')));
 // Mount playlist API routes
 const playlistRoutes = require('./routes/playlists.routes');
 const youtubeHistoryRoutes = require('./routes/youtubeHistory.routes.js');
+const clickedVideosRoutes = require('./routes/clickedVideos.routes.js');
 
 // Mount the routes
 app.use('/api/playlists', playlistRoutes);
 app.use('/api/youtube/history', youtubeHistoryRoutes);
+app.use('/api/youtube/clicked-videos', clickedVideosRoutes);
+
+// API endpoint to restore cache from MongoDB
+app.get('/api/youtube/restore-cache/:query', async (req, res) => {
+    try {
+        const { query } = req.params;
+        console.log(`🔍 [RESTORE] Looking for cached results for: "${query}"`);
+        
+        // Find all pages for this query in MongoDB
+        const savedResults = await YouTubeSearchResult.find({ query }).sort({ page: 1 });
+        
+        if (savedResults.length === 0) {
+            return res.json({ success: false, message: 'No cached results found for this query' });
+        }
+        
+        // Restore to localStorage format and return
+        const restoredPages = savedResults.map(result => ({
+            page: result.page,
+            videos: result.videos,
+            resultType: result.resultType,
+            nextPageToken: result.nextPageToken,
+            timestamp: result.timestamp
+        }));
+        
+        console.log(`✅ [RESTORE] Found ${savedResults.length} cached pages for "${query}"`);
+        
+        res.json({
+            success: true,
+            query,
+            pages: restoredPages,
+            totalPages: savedResults.length
+        });
+        
+    } catch (error) {
+        console.error('❌ [RESTORE] Error restoring cache:', error);
+        res.status(500).json({ success: false, message: 'Error restoring cache from database' });
+    }
+});
 
 // Serve static frontend files
 app.use(express.static(path.join(__dirname, '../public')));
@@ -2098,13 +2140,59 @@ const youtubeCache = new NodeCache({
     maxKeys: 1000 // Limit cache size
 });
 
-// Quota tracking
+// Quota tracking with persistence
+const fs = require('fs');
+const quotaFilePath = path.join(__dirname, 'quota-tracking.json');
+
 let dailyQuotaUsed = 0;
 let quotaResetTime = new Date();
 quotaResetTime.setUTCHours(8, 0, 0, 0); // Reset at midnight Pacific Time (8 AM UTC)
 if (quotaResetTime <= new Date()) {
     quotaResetTime.setDate(quotaResetTime.getDate() + 1);
 }
+
+// Load persistent quota data on startup
+function loadQuotaData() {
+    try {
+        if (fs.existsSync(quotaFilePath)) {
+            const data = JSON.parse(fs.readFileSync(quotaFilePath, 'utf8'));
+            const savedResetTime = new Date(data.resetTime);
+            
+            // If the saved reset time hasn't passed yet, restore the usage
+            if (savedResetTime > new Date()) {
+                dailyQuotaUsed = data.used || 0;
+                quotaResetTime = savedResetTime;
+                console.log(`📊 [QUOTA] Restored from file: ${dailyQuotaUsed}/10000 used, resets at ${quotaResetTime.toISOString()}`);
+            } else {
+                console.log(`📊 [QUOTA] Quota file found but expired, starting fresh`);
+                saveQuotaData(); // Save current state
+            }
+        } else {
+            console.log(`📊 [QUOTA] No quota file found, starting fresh`);
+            saveQuotaData(); // Create initial file
+        }
+    } catch (error) {
+        console.error('📊 [QUOTA] Error loading quota data:', error);
+        saveQuotaData(); // Create fresh file on error
+    }
+}
+
+// Save quota data to file
+function saveQuotaData() {
+    try {
+        const data = {
+            used: dailyQuotaUsed,
+            resetTime: quotaResetTime.toISOString(),
+            lastUpdated: new Date().toISOString()
+        };
+        fs.writeFileSync(quotaFilePath, JSON.stringify(data, null, 2));
+    } catch (error) {
+        console.error('📊 [QUOTA] Error saving quota data:', error);
+    }
+}
+
+// Load quota data on startup
+loadQuotaData();
 
 // Request deduplication - prevent multiple identical requests
 const pendingRequests = new Map();
@@ -2113,14 +2201,17 @@ function resetQuotaIfNeeded() {
     if (new Date() >= quotaResetTime) {
         dailyQuotaUsed = 0;
         quotaResetTime.setDate(quotaResetTime.getDate() + 1);
-        console.log('Daily quota reset. Current usage:', dailyQuotaUsed);
+        console.log('📊 [QUOTA] Daily quota reset. Current usage:', dailyQuotaUsed);
+        saveQuotaData(); // Persist the reset
     }
 }
 
-function trackQuotaUsage(cost) {
+function trackQuotaUsage(cost, operation = 'unknown') {
     resetQuotaIfNeeded();
     dailyQuotaUsed += cost;
-    console.log(`Quota used: +${cost}, Total: ${dailyQuotaUsed}/10000`);
+    const percentage = Math.round((dailyQuotaUsed / 10000) * 100);
+    console.log(`💰 [QUOTA-TRACK] +${cost} for ${operation} | Total: ${dailyQuotaUsed}/10000 (${percentage}%)`);
+    saveQuotaData(); // Persist the updated quota
 }
 
 function getRemainingQuota() {
@@ -2130,6 +2221,34 @@ function getRemainingQuota() {
 
 function generateCacheKey(query, type, page, pageToken) {
     return `yt_${type}_${query.toLowerCase().replace(/\s+/g, '_')}_p${page}_${pageToken || 'none'}`;
+}
+
+// Save YouTube search results to MongoDB for future cache restoration
+async function saveSearchResultToMongoDB(query, page, videos, resultType, nextPageToken = null, quotaUsed = 101) {
+    try {
+        // Create the update data without _id field to avoid MongoDB immutable field error
+        const updateData = {
+            query,
+            page,
+            videos,
+            resultType,
+            nextPageToken,
+            totalResults: videos.length,
+            apiQuotaUsed: quotaUsed,
+            timestamp: new Date()
+        };
+
+        // Use upsert to replace existing results for same query+page
+        await YouTubeSearchResult.findOneAndUpdate(
+            { query, page },
+            { $set: updateData },
+            { upsert: true, new: true }
+        );
+
+        console.log(`💾 [MONGODB] Saved ${videos.length} videos for "${query}" page ${page} to database`);
+    } catch (error) {
+        console.error('❌ [MONGODB] Error saving search result:', error);
+    }
 }
 
 async function getCachedOrFetch(cacheKey, fetchFunction, quotaCost) {
@@ -2144,6 +2263,17 @@ async function getCachedOrFetch(cacheKey, fetchFunction, quotaCost) {
     if (getRemainingQuota() < quotaCost) {
         throw new Error(`Quota exceeded: ${dailyQuotaUsed}/10000 calls used. Resets at ${quotaResetTime.toISOString()}`);
     }
+    
+    // EMERGENCY: Block API calls only when very close to limit (>90% = 9000 quota)
+    if (dailyQuotaUsed > 9000) {
+        console.warn(`🚨 [QUOTA-EMERGENCY] Blocking API call - usage critically high: ${dailyQuotaUsed}/10000`);
+        throw new Error(`Emergency quota conservation: ${dailyQuotaUsed}/10000 calls used. Daily limit nearly reached.`);
+    }
+    
+    // WARNING: Log warnings at 80% and 90% but don't block
+    if (dailyQuotaUsed > 8000 && dailyQuotaUsed <= 9000) {
+        console.warn(`⚠️ [QUOTA-WARNING] High usage: ${dailyQuotaUsed}/10000 (${Math.round(dailyQuotaUsed/100)}%)`);
+    }
 
     // Check for pending identical request (deduplication)
     if (pendingRequests.has(cacheKey)) {
@@ -2157,7 +2287,7 @@ async function getCachedOrFetch(cacheKey, fetchFunction, quotaCost) {
 
     try {
         const result = await promise;
-        trackQuotaUsage(quotaCost);
+        trackQuotaUsage(quotaCost, `API-${cacheKey}`);
         
         // Cache successful results
         if (result && result.success) {
@@ -2227,6 +2357,9 @@ app.post('/api/youtube/search', async (req, res) => {
                     thumbnail: video.snippet.thumbnails?.high?.url || ''
                 }));
 
+                // Save to MongoDB for future cache restoration
+                await saveSearchResultToMongoDB(query, 1, videos, 'SINGLE', null, 101);
+
                 return { 
                     success: true, 
                     videos, 
@@ -2259,16 +2392,60 @@ app.post('/api/youtube/search', async (req, res) => {
         const perPage = 12;
         const pageNum = Math.max(1, Number(page) || 1);
         
+        // Declare quotaCostMultiplier outside the callback so it's accessible
+        let quotaCostMultiplier = 1; // Track actual API calls made
+        
         try {
             const result = await getCachedOrFetch(cacheKey, async () => {
                 console.log('🔍 Real API: Multi-search:', query, 'page:', pageNum);
+                
+                // QUOTA-EFFICIENT PAGINATION: Check for cached pageToken from previous page
+                let pageToken = null;
+                
+                if (pageNum > 1) {
+                    // Check if we have the pageToken from the previous page cached
+                    const prevPageCacheKey = generateCacheKey(query, type, pageNum - 1);
+                    const prevPageCache = youtubeCache.get(prevPageCacheKey);
+                    
+                    if (prevPageCache && prevPageCache.nextPageToken) {
+                        // ✅ EFFICIENT: Use cached pageToken from previous page
+                        pageToken = prevPageCache.nextPageToken;
+                        console.log(`💰 [QUOTA-EFFICIENT] Using cached pageToken from page ${pageNum - 1} for page ${pageNum}`);
+                    } else {
+                        // ⚠️ EXPENSIVE: Need to build up to this page
+                        console.log(`💸 [QUOTA-EXPENSIVE] No cached pageToken found, building up to page ${pageNum}...`);
+                        let currentPage = 1;
+                        let response = await youtube.search.list({
+                            part: ['snippet'],
+                            q: query,
+                            type: 'video',
+                            maxResults: perPage,
+                            pageToken: null
+                        });
+                        quotaCostMultiplier++;
+                        
+                        while (currentPage < pageNum && response.data.nextPageToken) {
+                            pageToken = response.data.nextPageToken;
+                            response = await youtube.search.list({
+                                part: ['snippet'],
+                                q: query,
+                                type: 'video',
+                                maxResults: perPage,
+                                pageToken
+                            });
+                            quotaCostMultiplier++;
+                            currentPage++;
+                        }
+                        console.log(`💸 [QUOTA-EXPENSIVE] Made ${quotaCostMultiplier} API calls to reach page ${pageNum}`);
+                    }
+                }
                 
                 const searchResponse = await youtube.search.list({
                     part: ['snippet'],
                     q: query,
                     maxResults: perPage,
                     type: 'video',
-                    pageToken: req.body.pageToken || undefined
+                    pageToken: pageToken
                 });
 
                 if (!searchResponse?.data?.items?.length) {
@@ -2293,6 +2470,12 @@ app.post('/api/youtube/search', async (req, res) => {
                     thumbnail: video.snippet.thumbnails?.high?.url || ''
                 }));
 
+                // Save to MongoDB for future cache restoration
+                const actualQuotaCost = (quotaCostMultiplier * 100) + 1; // Each search.list = 100, videos.list = 1
+                await saveSearchResultToMongoDB(query, pageNum, videos, 'MULTI', searchResponse.data.nextPageToken, actualQuotaCost);
+
+                console.log(`💰 [QUOTA] Page ${pageNum} cost: ${actualQuotaCost} quota (${quotaCostMultiplier} search calls + 1 video details call)`);
+
                 return { 
                     success: true, 
                     videos, 
@@ -2302,7 +2485,7 @@ app.post('/api/youtube/search', async (req, res) => {
                     nextPageToken: searchResponse.data.nextPageToken,
                     fromCache: false
                 };
-            }, 101); // search.list (100) + videos.list (1)
+            }, (quotaCostMultiplier * 100) + 1); // Actual API calls made
 
             return res.json({
                 ...result,
@@ -2419,6 +2602,35 @@ app.get('/api/youtube/quota-status', (req, res) => {
     };
     
     res.json(quotaInfo);
+});
+
+// Admin endpoint to manually set quota usage (for fixing quota tracking)
+app.post('/api/youtube/quota-set', (req, res) => {
+    const { used } = req.body;
+    
+    if (typeof used !== 'number' || used < 0 || used > 10000) {
+        return res.status(400).json({ 
+            success: false, 
+            error: 'Invalid quota usage. Must be a number between 0 and 10000.' 
+        });
+    }
+    
+    const oldUsed = dailyQuotaUsed;
+    dailyQuotaUsed = used;
+    saveQuotaData();
+    
+    console.log(`📊 [QUOTA] Manual quota adjustment: ${oldUsed} → ${dailyQuotaUsed}`);
+    
+    res.json({
+        success: true,
+        message: `Quota usage updated from ${oldUsed} to ${dailyQuotaUsed}`,
+        quota: {
+            used: dailyQuotaUsed,
+            remaining: getRemainingQuota(),
+            total: 10000,
+            percentage: Math.round((dailyQuotaUsed / 10000) * 100)
+        }
+    });
 });
 
 app.post('/api/youtube/clear-cache', (req, res) => {
