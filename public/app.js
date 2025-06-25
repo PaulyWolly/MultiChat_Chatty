@@ -41,6 +41,158 @@ window.youtubeSearchManager = youtubeSearchManagerInstance;
 await window.youtubeSearchManager.init();
 console.log('YouTubeSearchManager initialized.');
 
+// Make cache repopulation functions globally accessible
+window.repopulateYouTubeCache = (maxQueries = 10) => {
+    return window.youtubeSearchManager.repopulateSearchCache(maxQueries);
+};
+
+// Repopulate cache from clicked videos (no API calls!)
+window.repopulateCacheFromClicks = (maxQueries = 10) => {
+    return window.youtubeSearchManager.repopulateCacheFromClickedVideos(maxQueries);
+};
+
+// Restore cache from MongoDB saved search results (no API calls!)
+window.restoreCacheFromMongoDB = async (maxQueries = 10) => {
+    console.log('🔄 [RESTORE] Starting cache restoration from MongoDB...');
+    
+    try {
+        // Get all database queries
+        const response = await fetch('/api/youtube/history/list');
+        const result = await response.json();
+        const dbQueries = result.queries.slice(0, maxQueries);
+        
+        console.log(`📊 [RESTORE] Will attempt to restore ${dbQueries.length} queries from MongoDB`);
+        
+        let restoredCount = 0;
+        let notFoundCount = 0;
+        
+        for (const queryObj of dbQueries) {
+            try {
+                const restoreResponse = await fetch(`/api/youtube/restore-cache/${encodeURIComponent(queryObj.query)}`);
+                const restoreData = await restoreResponse.json();
+                
+                if (restoreData.success && restoreData.pages.length > 0) {
+                    // Restore each page to localStorage
+                    for (const page of restoreData.pages) {
+                        const cacheKey = `yt_search_${queryObj.query.toLowerCase().replace(/\s+/g, '_')}_p${page.page}_none`;
+                        const cacheData = {
+                            videos: page.videos,
+                            page: page.page,
+                            timestamp: new Date(page.timestamp).getTime(),
+                            fromMongoDB: true
+                        };
+                        localStorage.setItem(cacheKey, JSON.stringify(cacheData));
+                    }
+                    console.log(`✅ [RESTORE] Restored ${restoreData.pages.length} pages for "${queryObj.query}"`);
+                    restoredCount++;
+                } else {
+                    console.log(`⚠️ [RESTORE] No MongoDB data found for "${queryObj.query}"`);
+                    notFoundCount++;
+                }
+            } catch (error) {
+                console.error(`❌ [RESTORE] Error restoring "${queryObj.query}":`, error);
+                notFoundCount++;
+            }
+        }
+        
+        console.log(`🎯 [RESTORE] Complete: ${restoredCount} restored, ${notFoundCount} not found`);
+        
+        // Refresh dropdown
+        const updatedQueries = window.youtubeSearchManager.getAllQueriesForDropdown();
+        await window.youtubeSearchManager.renderQueryDropdown(updatedQueries, null);
+        
+        if (window.showToast) {
+            if (restoredCount > 0) {
+                window.showToast(`Restored ${restoredCount} queries from MongoDB database`, 'success');
+            } else {
+                window.showToast('No cached data found in MongoDB. Start clicking queries to build cache!', 'info');
+            }
+        }
+        
+        return { restoredCount, notFoundCount, totalProcessed: dbQueries.length };
+        
+    } catch (error) {
+        console.error('❌ [RESTORE] Error during MongoDB restoration:', error);
+        if (window.showToast) {
+            window.showToast('Error restoring cache from MongoDB', 'error');
+        }
+        return { restoredCount: 0, notFoundCount: 0, totalProcessed: 0 };
+    }
+};
+
+// Clear all YouTube cache (fresh start!)
+window.clearYouTubeCache = () => {
+    console.log('🧹 [CLEAR-CACHE] Starting YouTube cache cleanup...');
+    
+    let clearedCount = 0;
+    const keysToRemove = [];
+    
+    // Find all YouTube cache keys
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('yt_')) {
+            keysToRemove.push(key);
+        }
+    }
+    
+    console.log(`🔍 [CLEAR-CACHE] Found ${keysToRemove.length} YouTube cache keys to remove`);
+    
+    // Remove all YouTube cache keys
+    keysToRemove.forEach(key => {
+        localStorage.removeItem(key);
+        clearedCount++;
+        console.log(`🗑️ [CLEAR-CACHE] Removed: ${key}`);
+    });
+    
+    // Also clear any YouTube-related session storage
+    const sessionKeysToRemove = [];
+    for (let i = 0; i < sessionStorage.length; i++) {
+        const key = sessionStorage.key(i);
+        if (key && (key.includes('youtube') || key.includes('nextPageToken'))) {
+            sessionKeysToRemove.push(key);
+        }
+    }
+    
+    sessionKeysToRemove.forEach(key => {
+        sessionStorage.removeItem(key);
+        console.log(`🗑️ [CLEAR-SESSION] Removed: ${key}`);
+    });
+    
+    console.log(`✅ [CLEAR-CACHE] Successfully cleared ${clearedCount} localStorage keys and ${sessionKeysToRemove.length} sessionStorage keys`);
+    console.log('🎉 [CLEAR-CACHE] YouTube cache is now completely clean!');
+    console.log('💡 [CLEAR-CACHE] All future searches will use fresh API calls and the new MongoDB storage system');
+    
+    // Refresh the dropdown to show all entries as "DB"
+    if (window.youtubeSearchManager && window.youtubeSearchManager.renderQueryHistory) {
+        window.youtubeSearchManager.renderQueryHistory();
+    }
+    
+    if (window.showToast) {
+        window.showToast(`Cleared ${clearedCount} YouTube cache entries. Ready for fresh start!`, 'success');
+    }
+    
+    return {
+        localStorageCleared: clearedCount,
+        sessionStorageCleared: sessionKeysToRemove.length,
+        totalCleared: clearedCount + sessionKeysToRemove.length
+    };
+};
+
+// Global quota management functions
+window.setQuotaUsage = (used) => {
+    return window.quotaManager.setQuotaUsage(used);
+};
+
+window.getQuotaInfo = () => {
+    return window.quotaManager.getDetailedQuotaInfo();
+};
+
+window.fixQuotaTracking = () => {
+    console.log('🔧 [QUOTA-FIX] Use setQuotaUsage(number) to manually set quota usage');
+    console.log('🔧 [QUOTA-FIX] Use getQuotaInfo() to see current quota status');
+    console.log('🔧 [QUOTA-FIX] Example: setQuotaUsage(9500) to set quota to 9500/10000');
+};
+
 // Initialize QuotaManager globally
 console.log('Initializing QuotaManager...');
 const quotaManagerInstance = new quotaManager();
@@ -309,6 +461,7 @@ const elements = {
     userInput: document.getElementById('user-input'),
     sendButton: document.getElementById('send-button'),
     micButton: document.getElementById('mic-button'),
+    microphoneButton: document.getElementById('mic-button'),
     chatMessages: document.getElementById('chat-messages'),
     status: document.getElementById('status'),
     conversationModeToggle: document.getElementById('conversation-mode'),
@@ -1923,7 +2076,11 @@ async function sendMessage(message, isGreeting = false) {
 
             case 'YOUTUBE_REQUEST':
                 addMessageToChat('user', message, { isYoutubeQuery: true });
-                window.youtubeSearchManager.handleYoutubeRequest(message);
+                // Check if there's already a YouTube search view open and pass isOverwrite: true
+                const hasExistingYouTubeResults = document.querySelector('.youtube-multi-bubble') !== null;
+                const options = hasExistingYouTubeResults ? { isOverwrite: true } : {};
+                console.log('🎯 [YOUTUBE-TEXT] Text input YouTube search detected, hasExisting:', hasExistingYouTubeResults, 'options:', options);
+                window.youtubeSearchManager.handleYoutubeRequest(message, false, null, options);
                 break;
 
             case 'JOKE_LIST':
@@ -2256,7 +2413,13 @@ function addMessageToChat(role, content, options = {}) {
             content.includes("<ol class='search-results-list'>") ||
             content.includes('<ol class="search-results-list">') ||
             content.includes('youtube-multi-bubble') ||
-            content.includes('youtube-action-btn')
+            content.includes('youtube-action-btn') ||
+            content.includes('youtube-results') ||
+            content.includes('video-list') ||
+            content.includes('video-item') ||
+            content.includes('youtube-playHere-link') ||
+            options.type === 'youtube-list' ||
+            options.messageType === 'youtube'
         ) {
             contentElement.innerHTML = content;
         }
@@ -2802,7 +2965,7 @@ function initializeSpeechRecognition() {
 
         // Error handling
         state.recognition.onerror = (event) => {
-            console.error('Speech recognition error:', event.error);
+            // console.error('Speech recognition error:', event.error);
             
             if (event.error === 'no-speech') {
                 console.log('No speech detected, waiting for user...');
@@ -3057,13 +3220,6 @@ window.enterAISpeakingMode = enterAISpeakingMode;
 // =====================================================
 // DOM LOADED FUNCTIONS
 // =====================================================
-
-document.addEventListener('DOMContentLoaded', () => {
-    if (!window.myJokesManager) {
-        window.myJokesManager = new MyJokesManager();
-        window.myJokesManager.init();
-    }
-});
 
 // Direct audio state to button visibility - NO other conditions
 function updateStopAudioButton() {
@@ -5134,4 +5290,95 @@ window.addEventListener('DOMContentLoaded', function() {
     modal.onclick = (e) => { if (e.target === modal) modal.classList.remove('show'); };
 });
 
+// Expose functions to global scope for use by other modules
+window.addMessageToChat = addMessageToChat;
+
 console.log('🔧 [TEST] App.js script loaded completely - DOMContentLoaded should fire next');
+
+// Clear all YouTube cache entries (comprehensive cleanup)
+function clearAllYouTubeCache() {
+    console.log('🧹 [CACHE-CLEAR] Starting comprehensive YouTube cache cleanup...');
+    
+    let clearedCount = 0;
+    const keysToRemove = [];
+    
+    // Collect all YouTube-related keys
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('yt_')) {
+            keysToRemove.push(key);
+        }
+    }
+    
+    // Remove all YouTube cache keys
+    keysToRemove.forEach(key => {
+        localStorage.removeItem(key);
+        clearedCount++;
+        console.log('🗑️ [CACHE-CLEAR] Removed:', key);
+    });
+    
+    console.log(`✅ [CACHE-CLEAR] Cleared ${clearedCount} YouTube cache entries`);
+    
+    if (window.showToast) {
+        window.showToast(`🧹 Cleared ${clearedCount} YouTube cache entries`, 'success');
+    }
+    
+    return clearedCount;
+}
+
+// Make it globally available
+window.clearAllYouTubeCache = clearAllYouTubeCache;
+
+// Add debug function for checking cache data
+window.debugCacheData = function(query = 'fender', page = 2) {
+    console.log(`🔍 [DEBUG] Checking cache data for query: ${query}, page: ${page}`);
+    
+    const key = `yt_search_${query.toLowerCase().replace(/\s+/g, '_')}_p${page}_none`;
+    console.log(`🔍 [DEBUG] Cache key: ${key}`);
+    
+    const cachedData = localStorage.getItem(key);
+    if (!cachedData) {
+        console.log(`❌ [DEBUG] No cache data found for key: ${key}`);
+        return null;
+    }
+    
+    try {
+        const parsed = JSON.parse(cachedData);
+        console.log(`✅ [DEBUG] Cache data found:`, parsed);
+        console.log(`📊 [DEBUG] Data structure keys:`, Object.keys(parsed));
+        
+        if (parsed.videos) {
+            console.log(`📹 [DEBUG] Videos array length:`, parsed.videos.length);
+            console.log(`📹 [DEBUG] First video:`, parsed.videos[0]);
+        } else if (parsed.video) {
+            console.log(`📹 [DEBUG] Single video:`, parsed.video);
+        } else {
+            console.log(`❌ [DEBUG] No videos or video property found`);
+        }
+        
+        return parsed;
+    } catch (error) {
+        console.error(`❌ [DEBUG] Error parsing cache data:`, error);
+        return null;
+    }
+};
+
+// Add debug function for checking access history array
+window.debugAccessHistory = function() {
+    console.log('🔍 [DEBUG-ACCESS-HISTORY] Current access history array:');
+    
+    if (window.youtubeSearchManager && window.youtubeSearchManager.queryAccessHistory) {
+        const history = window.youtubeSearchManager.queryAccessHistory;
+        console.log(`📈 [DEBUG-ACCESS-HISTORY] Array length: ${history.length}`);
+        
+        history.forEach((item, index) => {
+            console.log(`📈 [DEBUG-ACCESS-HISTORY] [${index}] ${item.cleanQuery} - accessed ${item.accessTime}`);
+        });
+        
+        if (history.length === 0) {
+            console.log('📈 [DEBUG-ACCESS-HISTORY] Access history is empty - no queries accessed yet');
+        }
+    } else {
+        console.log('❌ [DEBUG-ACCESS-HISTORY] YouTubeSearchManager or queryAccessHistory not available');
+    }
+};
