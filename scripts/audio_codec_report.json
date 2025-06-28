@@ -1,0 +1,4695 @@
+{
+  "totalMovies": 449,
+  "noAudio": 6,
+  "incompatibleCodecs": 12,
+  "problematicFiles": [
+    {
+      "title": "A.Star.Is.Born.2018.Encore.Edition.1080p.BluRay.x265-RARBG.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\A.Star.Is.Born.2018.Encore.Edition.1080p.BluRay.x265-RARBG\\A.Star.Is.Born.2018.Encore.Edition.1080p.BluRay.x265-RARBG.mp4",
+      "hasAudio": false,
+      "codecs": [],
+      "error": "Command failed: ffprobe -v quiet -print_format json -show_streams \"S:\\MEDIA\\MOVIES\\A.Star.Is.Born.2018.Encore.Edition.1080p.BluRay.x265-RARBG\\A.Star.Is.Born.2018.Encore.Edition.1080p.BluRay.x265-RARBG.mp4\"\n"
+    },
+    {
+      "title": "Goosebumps 2015 1080p BluRay x264 DTS-JYK.mkv",
+      "path": "S:\\MEDIA\\MOVIES\\Goosebumps 2015 1080p BluRay x264 DTS-JYK\\Goosebumps 2015 1080p BluRay x264 DTS-JYK.mkv",
+      "hasAudio": true,
+      "codecs": [
+        "dts"
+      ],
+      "hasIncompatibleCodec": true,
+      "incompatibleCodecs": [
+        "dts"
+      ]
+    },
+    {
+      "title": "The.Grey.Man.2022.720p.WEB.h264-KOGi.mkv",
+      "path": "S:\\MEDIA\\MOVIES\\The.Grey.Man.2022.720p.WEB.h264-KOGi\\The.Grey.Man.2022.720p.WEB.h264-KOGi.mkv",
+      "hasAudio": true,
+      "codecs": [
+        "eac3"
+      ],
+      "hasIncompatibleCodec": true,
+      "incompatibleCodecs": [
+        "eac3"
+      ]
+    },
+    {
+      "title": "Tomorrowland 2015 1080p BRRip x264 DTS-JYK.mkv",
+      "path": "S:\\MEDIA\\MOVIES\\Tomorrowland 2015 1080p BRRip x264 DTS-JYK\\Tomorrowland 2015 1080p BRRip x264 DTS-JYK.mkv",
+      "hasAudio": true,
+      "codecs": [
+        "dts"
+      ],
+      "hasIncompatibleCodec": true,
+      "incompatibleCodecs": [
+        "dts"
+      ]
+    },
+    {
+      "title": "Night.at.the.Museum.2006.1080p.BrRip.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Night at the Museum (2006) [1080p]\\Night.at.the.Museum.2006.1080p.BrRip.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "ac3"
+      ],
+      "hasIncompatibleCodec": true,
+      "incompatibleCodecs": [
+        "ac3"
+      ]
+    },
+    {
+      "title": "the.puppet.masters.1994.720p.bluray.x264-psychd.mkv",
+      "path": "S:\\MEDIA\\MOVIES\\The.Puppet.Masters.1994.720p.BluRay.x264-PSYCHD [PublicHD]\\the.puppet.masters.1994.720p.bluray.x264-psychd.mkv",
+      "hasAudio": true,
+      "codecs": [
+        "dts"
+      ],
+      "hasIncompatibleCodec": true,
+      "incompatibleCodecs": [
+        "dts"
+      ]
+    },
+    {
+      "title": "The.Bourne.Ultimatum.2007.1080p.BrRip.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\The Bourne Ultimatum (2007) [1080p]\\The.Bourne.Ultimatum.2007.1080p.BrRip.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "ac3"
+      ],
+      "hasIncompatibleCodec": true,
+      "incompatibleCodecs": [
+        "ac3"
+      ]
+    },
+    {
+      "title": "The.Bourne.Supremacy.2004.1080p.BrRip.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\The Bourne Supremacy (2004) [1080p]\\The.Bourne.Supremacy.2004.1080p.BrRip.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "ac3"
+      ],
+      "hasIncompatibleCodec": true,
+      "incompatibleCodecs": [
+        "ac3"
+      ]
+    },
+    {
+      "title": "Twister.1996.1080p.BrRip.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Twister (1996) [1080p]\\Twister.1996.1080p.BrRip.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "ac3"
+      ],
+      "hasIncompatibleCodec": true,
+      "incompatibleCodecs": [
+        "ac3"
+      ]
+    },
+    {
+      "title": "The Thinking Game 2024 1080p AMZN WEB-DL DD 5 1 H 264-playWEB.mkv",
+      "path": "S:\\MEDIA\\MOVIES\\The Thinking Game 2024 1080p AMZN WEB-DL DD 5 1 H 264-playWEB\\The Thinking Game 2024 1080p AMZN WEB-DL DD 5 1 H 264-playWEB.mkv",
+      "hasAudio": true,
+      "codecs": [
+        "eac3"
+      ],
+      "hasIncompatibleCodec": true,
+      "incompatibleCodecs": [
+        "eac3"
+      ]
+    },
+    {
+      "title": "The Flintstones Meet Rockula and Frankenstone 1979 Web-dl 1080p x264.mkv",
+      "path": "S:\\MEDIA\\MOVIES\\The Flintstones Meet Rockula and Frankenstone 1979 Web-dl 1080p x264\\The Flintstones Meet Rockula and Frankenstone 1979 Web-dl 1080p x264.mkv",
+      "hasAudio": true,
+      "codecs": [
+        "eac3"
+      ],
+      "hasIncompatibleCodec": true,
+      "incompatibleCodecs": [
+        "eac3"
+      ]
+    },
+    {
+      "title": "Let It Ride - Comedy 1989 Eng Rus Multi-Subs 720p [H264-mp4].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Let It Ride - Comedy 1989 Eng Rus Multi-Subs 720p [H264-mp4]\\Let It Ride - Comedy 1989 Eng Rus Multi-Subs 720p [H264-mp4].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac",
+        "ac3",
+        "aac"
+      ],
+      "hasIncompatibleCodec": true,
+      "incompatibleCodecs": [
+        "ac3"
+      ]
+    },
+    {
+      "title": "RV[2006]DvDrip.AC3[Eng]-aXXo.avi",
+      "path": "S:\\MEDIA\\FROM-G\\MOVIES\\RV [2006]DvDrip.AC3[Eng]\\RV[2006]DvDrip.AC3[Eng]-aXXo.avi",
+      "hasAudio": true,
+      "codecs": [
+        "ac3"
+      ],
+      "hasIncompatibleCodec": true,
+      "incompatibleCodecs": [
+        "ac3"
+      ]
+    },
+    {
+      "title": "Terminal.Velocity.1994.UNCUT.1080p.BluRay.H264.AAC-RARBG.mp4",
+      "path": "S:\\MEDIA\\FROM-G\\MOVIES\\Terminal.Velocity.1994.UNCUT.1080p.BluRay.H264.AAC-RARBG\\Terminal.Velocity.1994.UNCUT.1080p.BluRay.H264.AAC-RARBG.mp4",
+      "hasAudio": false,
+      "codecs": [],
+      "error": "Command failed: ffprobe -v quiet -print_format json -show_streams \"S:\\MEDIA\\FROM-G\\MOVIES\\Terminal.Velocity.1994.UNCUT.1080p.BluRay.H264.AAC-RARBG\\Terminal.Velocity.1994.UNCUT.1080p.BluRay.H264.AAC-RARBG.mp4\"\n"
+    },
+    {
+      "title": "The Tourist[2010]R5 Line XviD-ExtraTorrentRG.avi",
+      "path": "S:\\MEDIA\\FROM-G\\MOVIES\\The Tourist[2010]R5 Line XviD-ExtraTorrentRG\\The Tourist[2010]R5 Line XviD-ExtraTorrentRG.avi",
+      "hasAudio": false,
+      "codecs": [],
+      "error": "Command failed: ffprobe -v quiet -print_format json -show_streams \"S:\\MEDIA\\FROM-G\\MOVIES\\The Tourist[2010]R5 Line XviD-ExtraTorrentRG\\The Tourist[2010]R5 Line XviD-ExtraTorrentRG.avi\"\n"
+    },
+    {
+      "title": "SaMple.avi",
+      "path": "S:\\MEDIA\\FROM-G\\MOVIES\\The Tourist[2010]R5 Line XviD-ExtraTorrentRG\\SaMple.avi",
+      "hasAudio": false,
+      "codecs": [],
+      "error": "Command failed: ffprobe -v quiet -print_format json -show_streams \"S:\\MEDIA\\FROM-G\\MOVIES\\The Tourist[2010]R5 Line XviD-ExtraTorrentRG\\SaMple.avi\"\n"
+    },
+    {
+      "title": "The.Cable.Guy[1996]Jim.Carrey.DVDRip-PsyCoSys.avi",
+      "path": "S:\\MEDIA\\FROM-G\\MOVIES\\The.Cable.Guy[1996]Jim.Carrey.DVDRip\\The.Cable.Guy[1996]Jim.Carrey.DVDRip-PsyCoSys.avi",
+      "hasAudio": false,
+      "codecs": [],
+      "error": "Command failed: ffprobe -v quiet -print_format json -show_streams \"S:\\MEDIA\\FROM-G\\MOVIES\\The.Cable.Guy[1996]Jim.Carrey.DVDRip\\The.Cable.Guy[1996]Jim.Carrey.DVDRip-PsyCoSys.avi\"\n"
+    },
+    {
+      "title": "TRON Legacy (2010) DVDRip XviD.avi",
+      "path": "S:\\MEDIA\\FROM-G\\MOVIES\\TRON Legacy (2010) DVDRip XviD\\TRON Legacy (2010) DVDRip XviD.avi",
+      "hasAudio": false,
+      "codecs": [],
+      "error": "Command failed: ffprobe -v quiet -print_format json -show_streams \"S:\\MEDIA\\FROM-G\\MOVIES\\TRON Legacy (2010) DVDRip XviD\\TRON Legacy (2010) DVDRip XviD.avi\"\n"
+    }
+  ],
+  "results": [
+    {
+      "title": "Harold.Kumar.Go.To.White.Castle.2004.UNRATED.REPACK.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Harold Kumar Go To White Castle (2004) [UNRATED] [REPACK] [1080p] [BluRay] [5.1] [YTS.MX]\\Harold.Kumar.Go.To.White.Castle.2004.UNRATED.REPACK.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Fast.&.Furious.Presents.Hobbs.&.Shaw.2019.1080p.BluRay.x264-[YTS.LT].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Fast & Furious Presents Hobbs & Shaw (2019) [BluRay] [1080p] [YTS.LT]\\Fast.&.Furious.Presents.Hobbs.&.Shaw.2019.1080p.BluRay.x264-[YTS.LT].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "A.Star.Is.Born.2018.Encore.Edition.1080p.BluRay.x265-RARBG.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\A.Star.Is.Born.2018.Encore.Edition.1080p.BluRay.x265-RARBG\\A.Star.Is.Born.2018.Encore.Edition.1080p.BluRay.x265-RARBG.mp4",
+      "hasAudio": false,
+      "codecs": [],
+      "error": "Command failed: ffprobe -v quiet -print_format json -show_streams \"S:\\MEDIA\\MOVIES\\A.Star.Is.Born.2018.Encore.Edition.1080p.BluRay.x265-RARBG\\A.Star.Is.Born.2018.Encore.Edition.1080p.BluRay.x265-RARBG.mp4\"\n"
+    },
+    {
+      "title": "Black.Adam.2022.REPACK.720p.BluRay.x264.AAC-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Black Adam (2022) [REPACK] [720p] [BluRay] [YTS.MX]\\Black.Adam.2022.REPACK.720p.BluRay.x264.AAC-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Chaos.Walking.2021.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Chaos Walking (2021) [1080p] [BluRay] [5.1] [YTS.MX]\\Chaos.Walking.2021.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "About.Time.2013.1080p.BluRay.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\About Time (2013) [1080p]\\About.Time.2013.1080p.BluRay.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Above.The.Law.1988.1080p.BluRay.x264-[YTS.AM].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Above The Law (1988) [BluRay] [1080p] [YTS.AM]\\Above.The.Law.1988.1080p.BluRay.x264-[YTS.AM].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Click.2006.1080p.BluRay.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Click (2006) [1080p]\\Click.2006.1080p.BluRay.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Double.Threat.2022.1080p.WEBRip.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Double Threat (2022) [1080p] [WEBRip] [5.1] [YTS.MX]\\Double.Threat.2022.1080p.WEBRip.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Ghostbusters.Frozen.Empire.2024.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Ghostbusters Frozen Empire (2024) [1080p] [BluRay] [5.1] [YTS.MX]\\Ghostbusters.Frozen.Empire.2024.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Goosebumps 2015 1080p BluRay x264 DTS-JYK.mkv",
+      "path": "S:\\MEDIA\\MOVIES\\Goosebumps 2015 1080p BluRay x264 DTS-JYK\\Goosebumps 2015 1080p BluRay x264 DTS-JYK.mkv",
+      "hasAudio": true,
+      "codecs": [
+        "dts"
+      ],
+      "hasIncompatibleCodec": true,
+      "incompatibleCodecs": [
+        "dts"
+      ]
+    },
+    {
+      "title": "Interceptor.2022.1080p.WEBRip.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Interceptor (2022) [1080p] [WEBRip] [5.1] [YTS.MX]\\Interceptor.2022.1080p.WEBRip.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Deja.Vu.2006.REPACK.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Deja Vu (2006) [REPACK] [1080p] [BluRay] [5.1] [YTS.MX]\\Deja.Vu.2006.REPACK.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.7th.Voyage.Of.Sinbad.1958.1080p.BluRay.x264-[YTS.AG].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\The 7th Voyage Of Sinbad (1958) [1080p] [YTS.AG]\\The.7th.Voyage.Of.Sinbad.1958.1080p.BluRay.x264-[YTS.AG].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.Fifth.Element.Remastered.1997.1080p.BrRip.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\The Fifth Element Remastered (1997) [1080p]\\The.Fifth.Element.Remastered.1997.1080p.BrRip.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.Grey.Man.2022.720p.WEB.h264-KOGi.mkv",
+      "path": "S:\\MEDIA\\MOVIES\\The.Grey.Man.2022.720p.WEB.h264-KOGi\\The.Grey.Man.2022.720p.WEB.h264-KOGi.mkv",
+      "hasAudio": true,
+      "codecs": [
+        "eac3"
+      ],
+      "hasIncompatibleCodec": true,
+      "incompatibleCodecs": [
+        "eac3"
+      ]
+    },
+    {
+      "title": "The.Red.Violin.1998.720p.BluRay.x264-YTS.AM.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\The.Red.Violin.1998.720p.BluRay.x264-YTS.AM\\The.Red.Violin.1998.720p.BluRay.x264-YTS.AM.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Tombstone.1993.1080p.BrRip.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Tombstone (1993) [1080p]\\Tombstone.1993.1080p.BrRip.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Tomorrowland 2015 1080p BRRip x264 DTS-JYK.mkv",
+      "path": "S:\\MEDIA\\MOVIES\\Tomorrowland 2015 1080p BRRip x264 DTS-JYK\\Tomorrowland 2015 1080p BRRip x264 DTS-JYK.mkv",
+      "hasAudio": true,
+      "codecs": [
+        "dts"
+      ],
+      "hasIncompatibleCodec": true,
+      "incompatibleCodecs": [
+        "dts"
+      ]
+    },
+    {
+      "title": "Uncharted.2022.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Uncharted (2022) [1080p] [BluRay] [5.1] [YTS.MX]\\Uncharted.2022.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Under.Siege.1992.1080p.BrRip.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Under Siege (1992) [1080p]\\Under.Siege.1992.1080p.BrRip.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Love.The.Coopers.2015.1080p.BluRay.x264-[YTS.AG].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Love The Coopers (2015) [1080p] [YTS.AG]\\Love.The.Coopers.2015.1080p.BluRay.x264-[YTS.AG].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Terminator.Dark.Fate.2019.1080p.BluRay.x264-[YTS.LT].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Terminator Dark Fate (2019) [BluRay] [1080p] [YTS.LT]\\Terminator.Dark.Fate.2019.1080p.BluRay.x264-[YTS.LT].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Terminator.Genisys.2015.1080p.BluRay.x264.YIFY.[YTS.AG].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Terminator Genisys (2015) [1080p]\\Terminator.Genisys.2015.1080p.BluRay.x264.YIFY.[YTS.AG].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "101.Dalmatians.1996.1080p.WEBRip.x264-[YTS.AM].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\101 Dalmatians (1996) [WEBRip] [1080p] [YTS.AM]\\101.Dalmatians.1996.1080p.WEBRip.x264-[YTS.AM].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "6.Underground.2019.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\6 Underground (2019) [1080p] [BluRay] [5.1] [YTS.MX]\\6.Underground.2019.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "20.Million.Miles.To.Earth.1957.REPACK.COLOR.VERSION.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\20 Million Miles To Earth (1957) [REPACK.COLOR.VERSION] [1080p] [BluRay] [5.1] [YTS.MX]\\20.Million.Miles.To.Earth.1957.REPACK.COLOR.VERSION.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "50.First.Dates.2004.1080p.BrRip.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\50 First Dates (2004) [1080p]\\50.First.Dates.2004.1080p.BrRip.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.Andromeda.Strain.1971.1080p.BluRay.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\The Andromeda Strain (1971) [1080p]\\The.Andromeda.Strain.1971.1080p.BluRay.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Fools.Gold.2008.1080p.BrRip.x264.BOKUTOX.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Fools Gold (2008) [1080p]\\Fools.Gold.2008.1080p.BrRip.x264.BOKUTOX.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.Ten.Commandments.1956.1080p.BrRip.x264.BOKUTOX.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\The Ten Commandments (1956) [1080p]\\The.Ten.Commandments.1956.1080p.BrRip.x264.BOKUTOX.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Ben-Hur.1959.1080p.BluRay.x264-[YTS.AG].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Ben-Hur (1959) [1080p] [YTS.AG]\\Ben-Hur.1959.1080p.BluRay.x264-[YTS.AG].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Chef.2014.1080p.BluRay.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Chef (2014) [1080p]\\Chef.2014.1080p.BluRay.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Anger.Management.2003.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Anger Management (2003) [1080p] [BluRay] [5.1] [YTS.MX]\\Anger.Management.2003.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Brainstorm.1983.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Brainstorm (1983) [1080p] [BluRay] [5.1] [YTS.MX]\\Brainstorm.1983.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Jumper.2008.1080p.BRrip.x264.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Jumper (2008) [1080p]\\Jumper.2008.1080p.BRrip.x264.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Horrible.Bosses.2011.1080p.BluRay.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Horrible Bosses (2011) [1080p]\\Horrible.Bosses.2011.1080p.BluRay.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.Devils.Advocate.1997.1080p.BluRay.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\The Devil's Advocate (1997) [1080p]\\The.Devils.Advocate.1997.1080p.BluRay.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Krull.1983.1080p.BluRay.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Krull (1983) [1080p]\\Krull.1983.1080p.BluRay.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The Social Network (2010) 1080p BrRip x264 - 1.2GB - YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\The Social Network (2010) [1080]\\The Social Network (2010) 1080p BrRip x264 - 1.2GB - YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.Healer.2017.1080p.BluRay.x264-[YTS.AG].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\The Healer (2017) [1080p] [YTS.AG]\\The.Healer.2017.1080p.BluRay.x264-[YTS.AG].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "King.Of.Kings.1961.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\King Of Kings (1961) [1080p] [BluRay] [5.1] [YTS.MX]\\King.Of.Kings.1961.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.Searchers.1956.1080p.BluRay.x264-[YTS.LT].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\The Searchers (1956) [BluRay] [1080p] [YTS.LT]\\The.Searchers.1956.1080p.BluRay.x264-[YTS.LT].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Rio.Bravo.1959.1080p.BluRay.x264.AAC-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Rio Bravo (1959) [1080p] [BluRay] [YTS.MX]\\Rio.Bravo.1959.1080p.BluRay.x264.AAC-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "I.Am.Number.Four.2011.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\I Am Number Four (2011) [1080p] [BluRay] [5.1] [YTS.MX]\\I.Am.Number.Four.2011.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Hellfighters.1968.1080p.BluRay.x264-[YTS.AG].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Hellfighters (1968) [1080p] [YTS.AG]\\Hellfighters.1968.1080p.BluRay.x264-[YTS.AG].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Green.Lantern.2011.1080p.BluRay.x264-[YTS.AM].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Green Lantern (2011) [BluRay] [1080p] [YTS.AM]\\Green.Lantern.2011.1080p.BluRay.x264-[YTS.AM].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.Adam.Project.2022.1080p.WEBRip.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\The Adam Project (2022) [1080p] [WEBRip] [5.1] [YTS.MX]\\The.Adam.Project.2022.1080p.WEBRip.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Begin.Again.2013.1080p.BluRay.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Begin Again (2013) [1080p]\\Begin.Again.2013.1080p.BluRay.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "West.Side.Story.1961.1080p.WEBRip.x264-[YTS.AM].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\West Side Story (1961) [WEBRip] [1080p] [YTS.AM]\\West.Side.Story.1961.1080p.WEBRip.x264-[YTS.AM].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "We.Bought.A.Zoo.2011.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\We Bought A Zoo (2011) [1080p] [BluRay] [5.1] [YTS.MX]\\We.Bought.A.Zoo.2011.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Dragonslayer.1981.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Dragonslayer (1981) [1080p] [BluRay] [5.1] [YTS.MX]\\Dragonslayer.1981.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Contact.1997.1080p.BluRay.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Contact (1997) [1080p]\\Contact.1997.1080p.BluRay.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Blazing.Saddles.1974.1080p.BluRay.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Blazing Saddles (1974) [1080p]\\Blazing.Saddles.1974.1080p.BluRay.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Aloha.2015.1080p.BluRay.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Aloha (2015) [1080p]\\Aloha.2015.1080p.BluRay.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Constantine.2005.1080p.BrRip.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Constantine (2005) [1080p]\\Constantine.2005.1080p.BrRip.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Bedazzled.2000.1080p.BluRay.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Bedazzled (2000) [1080p]\\Bedazzled.2000.1080p.BluRay.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Due.Date.2010.1080p.BrRip.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Due Date (2010) [1080p]\\Due.Date.2010.1080p.BrRip.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Men.in.Black.3.2012.1080p.BluRay.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Men In Black 3 (2012) [1080p]\\Men.in.Black.3.2012.1080p.BluRay.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Die.Hard.3.1995.1080p.BrRip.x264.bitloks.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Die Hard 3 (1995) [1080p]\\Die.Hard.3.1995.1080p.BrRip.x264.bitloks.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Die.Hard.2.1990.1080p.BrRip.x264.bitloks.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Die Hard 2 (1990) [1080p]\\Die.Hard.2.1990.1080p.BrRip.x264.bitloks.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Top Gun (1986) 1080p BrRip x264 1.29GB YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Top Gun (1986) [1080p]\\Top Gun (1986) 1080p BrRip x264 1.29GB YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "No.Time.To.Die.2021.1080p.WEBRip.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\No Time To Die (2021) [1080p] [WEBRip] [5.1] [YTS.MX]\\No.Time.To.Die.2021.1080p.WEBRip.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Die.Hard.1988.1080p.BrRip.x264.bitloks.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Die Hard (1988) [1080p]\\Die.Hard.1988.1080p.BrRip.x264.bitloks.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.Sorcerers.Apprentice.2010.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\The Sorcerers Apprentice (2010) [1080p] [BluRay] [5.1] [YTS.MX]\\The.Sorcerers.Apprentice.2010.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Fantastic.Four.2005.1080p.BluRay.x264-[YTS.AG].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Fantastic Four (2005) [1080p] [YTS.AG]\\Fantastic.Four.2005.1080p.BluRay.x264-[YTS.AG].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Die.Hard.4.2007.1080p.BrRip.x264.bitloks.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Die Hard 4 (2007) [1080p]\\Die.Hard.4.2007.1080p.BrRip.x264.bitloks.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Fantastic.Voyage.1966.1080p.BluRay.x264-[YTS.AM].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Fantastic Voyage (1966) [BluRay] [1080p] [YTS.AM]\\Fantastic.Voyage.1966.1080p.BluRay.x264-[YTS.AM].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Demolition.Man.1993.1080p.BluRay.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Demolition Man (1993) [1080p]\\Demolition.Man.1993.1080p.BluRay.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Assassins.1995.1080p.BluRay.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Assassins (1995) [1080p]\\Assassins.1995.1080p.BluRay.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Oblivion.2013.1080p.BluRay.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Oblivion (2013) [1080p]\\Oblivion.2013.1080p.BluRay.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.Jackal.1997.1080p.BluRay.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\The Jackal (1997) [1080p]\\The.Jackal.1997.1080p.BluRay.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "French.Kiss.1995.1080p.BluRay.x264-[YTS.AM].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\French Kiss (1995) [BluRay] [1080p] [YTS.AM]\\French.Kiss.1995.1080p.BluRay.x264-[YTS.AM].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Circle.Of.Iron.1978.1080p.BluRay.x264-[YTS.AG].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Circle Of Iron (1978) [1080p] [YTS.AG]\\Circle.Of.Iron.1978.1080p.BluRay.x264-[YTS.AG].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "John.Carter.2012.1080p.Bluray.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\John Carter (2012) [1080p]\\John.Carter.2012.1080p.Bluray.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Jungle.Cruise.2021.1080p.WEBRip.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Jungle Cruise (2021) [1080p] [WEBRip] [5.1] [YTS.MX]\\Jungle.Cruise.2021.1080p.WEBRip.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Sherlock.Holms.2009.1080p.BrRip.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Sherlock Holmes (2009) [1080p]\\Sherlock.Holms.2009.1080p.BrRip.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.Hangover.2009.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\The Hangover (2009) [1080p] [BluRay] [5.1] [YTS.MX]\\The.Hangover.2009.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.Hobbit.An.Unexpected.Journey.2012.1080p.BRrip.x264.GAZ.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\The Hobbit An Unexpected Journey (2012) [1080p]\\The.Hobbit.An.Unexpected.Journey.2012.1080p.BRrip.x264.GAZ.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Wedding.Crashers.2005.REPACK.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Wedding Crashers (2005) [REPACK] [1080p] [BluRay] [5.1] [YTS.MX]\\Wedding.Crashers.2005.REPACK.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Legally.Blonde.2001.1080p.BrRip.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Legally Blonde (2001) [1080p]\\Legally.Blonde.2001.1080p.BrRip.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Joe.Versus.The.Volcano.1990.1080p.BluRay.x264-[YTS.AM].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Joe Versus The Volcano (1990) [BluRay] [1080p] [YTS.AM]\\Joe.Versus.The.Volcano.1990.1080p.BluRay.x264-[YTS.AM].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.Lord.Of.The.Rings.The.Fellowship.Of.The.Ring.2001.EXTENDED.REMASTERED.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\The Lord Of The Rings The Fellowship Of The Ring (2001) [EXTENDED REMASTERED] [1080p] [BluRay] [5.1] [YTS.MX]\\The.Lord.Of.The.Rings.The.Fellowship.Of.The.Ring.2001.EXTENDED.REMASTERED.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Short.Circuit.1986.1080p.BrRip.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Short Circuit (1986) [1080p]\\Short.Circuit.1986.1080p.BrRip.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.Lord.Of.The.Rings.The.Two.Towers.2002.EXTENDED.REMASTERED.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\The Lord Of The Rings The Two Towers (2002) [EXTENDED REMASTERED] [1080p] [BluRay] [5.1] [YTS.MX]\\The.Lord.Of.The.Rings.The.Two.Towers.2002.EXTENDED.REMASTERED.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.Lord.Of.The.Rings.The.Return.Of.The.King.2003.EXTENDED.REMASTERED.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\The Lord Of The Rings The Return Of The King (2003) [EXTENDED REMASTERED] [1080p] [BluRay] [5.1] [YTS.MX]\\The.Lord.Of.The.Rings.The.Return.Of.The.King.2003.EXTENDED.REMASTERED.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Back.to.the.Future.Part.3.1990.1080p.Brrip.x264.Deceit.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Back to the Future Part 3 (1990) [1080p]\\Back.to.the.Future.Part.3.1990.1080p.Brrip.x264.Deceit.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Back.to.the.Future.1985.1080p.Brrip.x264.Deceit.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Back to the Future (1985) [1080p]\\Back.to.the.Future.1985.1080p.Brrip.x264.Deceit.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Saturday.Night.Fever.1977.1080p.BluRay.x264-[YTS.AM].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Saturday Night Fever (1977) [BluRay] [1080p] [YTS.AM]\\Saturday.Night.Fever.1977.1080p.BluRay.x264-[YTS.AM].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Back.to.the.Future.Part.2.1989.1080p.Brrip.x264.Deceit.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Back to the Future Part 2 (1989) [1080p]\\Back.to.the.Future.Part.2.1989.1080p.Brrip.x264.Deceit.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "X-Men.2.2003.1080p.BrRip.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\X-Men 2 (2003) [1080p]\\X-Men.2.2003.1080p.BrRip.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Fantastic.Four.Rise.Of.The.Silver.Surfer.2007.BLURAY.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Fantastic Four Rise Of The Silver Surfer (2007) [BLURAY] [1080p] [BluRay] [5.1] [YTS.MX]\\Fantastic.Four.Rise.Of.The.Silver.Surfer.2007.BLURAY.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Broken.Arrow.1996.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Broken Arrow (1996) [1080p] [BluRay] [5.1] [YTS.MX]\\Broken.Arrow.1996.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Face.Off.1997.1080p.BrRip.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Face Off (1997) [1080p]\\Face.Off.1997.1080p.BrRip.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "ConAir.1997.1080p.BrRip.x264.BOKUTOX.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Con Air (1997) [1080p]\\ConAir.1997.1080p.BrRip.x264.BOKUTOX.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "X-Men.First.Class.2011.1080p.BrRip.x264.YIFY+HI.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\X-Men First Class (2011) [1080p]\\X-Men.First.Class.2011.1080p.BrRip.x264.YIFY+HI.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "X-Men.Origins.Wolverine.2009.1080p.BrRip.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\X-Men Origins Wolverine (2009) [1080p]\\X-Men.Origins.Wolverine.2009.1080p.BrRip.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Into.The.Blue.2005.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Into The Blue (2005) [1080p] [BluRay] [5.1] [YTS.MX]\\Into.The.Blue.2005.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Clear.and.Present.Danger.1994.1080p.BluRay.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Clear and Present Danger (1994) [1080p]\\Clear.and.Present.Danger.1994.1080p.BluRay.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Mechanic.Resurrection.2016.1080p.BluRay.x264-[YTS.AG].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Mechanic Resurrection (2016) [1080p] [YTS.AG]\\Mechanic.Resurrection.2016.1080p.BluRay.x264-[YTS.AG].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Argylle.2024.1080p.WEBRip.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Argylle (2024) [1080p] [WEBRip] [5.1] [YTS.MX]\\Argylle.2024.1080p.WEBRip.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.Twilight.Saga.Breaking.Dawn.Part.2.2012.720p.BRrip.x264.GAZ.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Breaking Dawn Part 2 (2012)\\The.Twilight.Saga.Breaking.Dawn.Part.2.2012.720p.BRrip.x264.GAZ.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.Lake.House.2006.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\The Lake House (2006) [1080p] [BluRay] [5.1] [YTS.MX]\\The.Lake.House.2006.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Silverado.1985.Bluray.1080p.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Silverado (1985) [1080p]\\Silverado.1985.Bluray.1080p.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Jaws.1975.1080p.BrRip.x264.bitloks.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Jaws (1975) [1080p]\\Jaws.1975.1080p.BrRip.x264.bitloks.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Night.at.the.Museum.Secret.of.the.Tomb.2014.1080p.BluRay.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Night at the Museum Secret of the Tomb (2014) [1080p]\\Night.at.the.Museum.Secret.of.the.Tomb.2014.1080p.BluRay.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "King.Kong.2005.1080p.BluRay.x264-[YTS.AG].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\King Kong (2005) [1080p] [YTS.AG]\\King.Kong.2005.1080p.BluRay.x264-[YTS.AG].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Night.At.The.Museum.Battle.Of.The.Smithsonian.2009.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Night At The Museum Battle Of The Smithsonian (2009) [1080p] [BluRay] [5.1] [YTS.MX]\\Night.At.The.Museum.Battle.Of.The.Smithsonian.2009.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Night.at.the.Museum.2006.1080p.BrRip.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Night at the Museum (2006) [1080p]\\Night.at.the.Museum.2006.1080p.BrRip.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "ac3"
+      ],
+      "hasIncompatibleCodec": true,
+      "incompatibleCodecs": [
+        "ac3"
+      ]
+    },
+    {
+      "title": "Ex.Machina.2015.1080p.BluRay.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Ex Machina (2015) [1080p]\\Ex.Machina.2015.1080p.BluRay.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Signs.2002.1080p.BluRay.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Signs (2002) [1080p]\\Signs.2002.1080p.BluRay.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Ghostbusters.1984.1080p.BluRay.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Ghostbusters (1984) [1080p]\\Ghostbusters.1984.1080p.BluRay.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "I.Robot.2004.1080p.BrRip.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\I Robot (2004) [1080p]\\I.Robot.2004.1080p.BrRip.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Independence.Day.1996.1080p.BluRay.x264-[YTS.AG].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Independence Day (1996) [1080p] [YTS.AG]\\Independence.Day.1996.1080p.BluRay.x264-[YTS.AG].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Mars.Attacks.1996.1080p.BrRip.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Mars Attacks (1996) [1080p]\\Mars.Attacks.1996.1080p.BrRip.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Spaceballs.1987.1080p.BluRay.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Spaceballs (1987) [1080p]\\Spaceballs.1987.1080p.BluRay.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Galaxy.Quest.1999.1080p.BrRip.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Galaxy Quest (1999) [1080p]\\Galaxy.Quest.1999.1080p.BrRip.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Her.2013.1080p.BluRay.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Her (2013) [1080p]\\Her.2013.1080p.BluRay.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Gravity.2013.1080p.BluRay.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Gravity (2013) [1080p]\\Gravity.2013.1080p.BluRay.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Independence.Day.Resurgence.2016.1080p.BluRay.x264-[YTS.AG].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Independence Day Resurgence (2016) [1080p] [YTS.AG]\\Independence.Day.Resurgence.2016.1080p.BluRay.x264-[YTS.AG].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Predator.1987.1080p.BluRay.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Predator (1987) [1080p]\\Predator.1987.1080p.BluRay.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "War.of.the.Worlds.2005.1080p.BluRay.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\War of the Worlds (2005) [1080p]\\War.of.the.Worlds.2005.1080p.BluRay.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Westworld.1973.1080p.BluRay.x264-[YTS.AG].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Westworld (1973) [1080p] [YTS.AG]\\Westworld.1973.1080p.BluRay.x264-[YTS.AG].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Total.Recall.Mind.Bending.Edition.1990.1080p.BluRay.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Total Recall (1990) [1080p]\\Total.Recall.Mind.Bending.Edition.1990.1080p.BluRay.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Planet.Of.The.Apes.1968.REPACK.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Planet Of The Apes (1968) [REPACK] [1080p] [BluRay] [5.1] [YTS.MX]\\Planet.Of.The.Apes.1968.REPACK.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Minority.Report.2002.1080p.BluRay.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Minority Report (2002) [1080p]\\Minority.Report.2002.1080p.BluRay.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Beneath.the.Planet.of.the.Apes.1970.1080p.BrRip.x264.BOKUTOX.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Beneath The Planet of the Apes (1970) [1080p]\\Beneath.the.Planet.of.the.Apes.1970.1080p.BrRip.x264.BOKUTOX.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Moby.Dick.1956.1080p.BluRay.x264.AAC-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Moby Dick (1956) [1080p] [BluRay] [YTS.MX]\\Moby.Dick.1956.1080p.BluRay.x264.AAC-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "20,000.Leagues.Under.The.Sea.1954.1080p.BluRay.x264-[YTS.AG].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\20,000 Leagues Under The Sea (1954) [1080p] [YTS.AG]\\20,000.Leagues.Under.The.Sea.1954.1080p.BluRay.x264-[YTS.AG].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Invasion.Of.The.Body.Snatchers.1978.1080p.BluRay.x264-[YTS.AG].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Invasion Of The Body Snatchers (1978) [1080p] [YTS.AG]\\Invasion.Of.The.Body.Snatchers.1978.1080p.BluRay.x264-[YTS.AG].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Mysterious.Island.1961.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Mysterious Island (1961) [1080p] [BluRay] [5.1] [YTS.MX]\\Mysterious.Island.1961.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.Arrival.1996.1080p.BluRay.x264-[YTS.AM].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\The Arrival (1996) [BluRay] [1080p] [YTS.AM]\\The.Arrival.1996.1080p.BluRay.x264-[YTS.AM].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "E.T..The.Extra-Terrestrial.1982.1080p.BluRay.x264-[YTS.AG].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\E.T. The Extra-Terrestrial (1982) [1080p] [YTS.AG]\\E.T..The.Extra-Terrestrial.1982.1080p.BluRay.x264-[YTS.AG].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Mackennas.Gold.1969.1080p.BluRay.x264.AAC-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Mackennas Gold (1969) [1080p] [BluRay] [YTS.MX]\\Mackennas.Gold.1969.1080p.BluRay.x264.AAC-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Jurassic.Park.1993.1080p.BRrip.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Jurassic Park (1993) [1080p]\\Jurassic.Park.1993.1080p.BRrip.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Be.Cool.2005.1080p.BluRay.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Be Cool (2005) [1080p]\\Be.Cool.2005.1080p.BluRay.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Phenomenon.1996.1080p.BluRay.x264-[YTS.AM].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Phenomenon (1996) [BluRay] [1080p] [YTS.AM]\\Phenomenon.1996.1080p.BluRay.x264-[YTS.AM].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "From.Paris.with.Love.2010.1080p.BluRay.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\From Paris with Love (2010) [1080p]\\From.Paris.with.Love.2010.1080p.BluRay.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Hitman.2007.BluRay.1080p.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Hitmain (2007) [1080p]\\Hitman.2007.BluRay.1080p.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Hitman.Agent.47.2015.1080p.BluRay.x264.YIFY.[YTS.AG].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Hitman Agent 47 (2015) [1080p]\\Hitman.Agent.47.2015.1080p.BluRay.x264.YIFY.[YTS.AG].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Austin.Powers.Goldmember.2002.1080p.Brrip.x264.Deceit.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Austin Powers - Goldmember (2002) [1080p]\\Austin.Powers.Goldmember.2002.1080p.Brrip.x264.Deceit.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.War.Wagon.1967.1080p.BluRay.x264.AAC-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\The War Wagon (1967) [1080p] [BluRay] [YTS.MX]\\The.War.Wagon.1967.1080p.BluRay.x264.AAC-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Michael.1996.1080p.BluRay.x264-[YTS.LT].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Michael (1996) [BluRay] [1080p] [YTS.LT]\\Michael.1996.1080p.BluRay.x264-[YTS.LT].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Chain.Reaction.1996.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Chain Reaction (1996) [1080p] [BluRay] [5.1] [YTS.MX]\\Chain.Reaction.1996.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.Internship.2013.UNRATED.1080p.BluRay.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\The Internship (2013) [1080p]\\The.Internship.2013.UNRATED.1080p.BluRay.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Delivery.Man.2013.1080p.BluRay.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Delivery Man (2013) [1080p]\\Delivery.Man.2013.1080p.BluRay.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Accepted.2006.1080p.BluRay.x264-[YTS.AM].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Accepted (2006) [BluRay] [1080p] [YTS.AM]\\Accepted.2006.1080p.BluRay.x264-[YTS.AM].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Forgetting.Sarah.Marshall.2008.REPACK.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Forgetting Sarah Marshall (2008) [REPACK] [1080p] [BluRay] [5.1] [YTS.MX]\\Forgetting.Sarah.Marshall.2008.REPACK.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Long.Shot.2019.1080p.WEBRip.x264-[YTS.LT].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Long Shot (2019) [WEBRip] [1080p] [YTS.LT]\\Long.Shot.2019.1080p.WEBRip.x264-[YTS.LT].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.Mist.2007.1080p.BluRay.x264-[YTS.AG].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\The Mist (2007) [1080p] [YTS.AG]\\The.Mist.2007.1080p.BluRay.x264-[YTS.AG].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Interview.with.the.Vampire.1994.1080p.BluRay.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Interview with the Vampire (1994) [1080p]\\Interview.with.the.Vampire.1994.1080p.BluRay.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Love.Hurts.2025.1080p.WEBRip.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Love Hurts (2025) [1080p] [WEBRip] [5.1] [YTS.MX]\\Love.Hurts.2025.1080p.WEBRip.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Meet.Joe.Black.1998.1080p.BrRip.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Meet Joe Black (1998) [1080p]\\Meet.Joe.Black.1998.1080p.BrRip.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Serenity.2005.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Serenity (2005) [1080p] [BluRay] [5.1] [YTS.MX]\\Serenity.2005.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Stargate.EXTENDED.1994.1080p.BrRip.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Stargate EXTENDED (1994) [1080p]\\Stargate.EXTENDED.1994.1080p.BrRip.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.Italian.Job.2003.1080p.BrRip.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\The Italian Job (2003) [1080p]\\The.Italian.Job.2003.1080p.BrRip.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Terminator.2.1991.1080p.BluRay.x264-[YTS.AG].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Terminator 2 Judgement Day (1991) [1080p] [YTS.AG]\\Terminator.2.1991.1080p.BluRay.x264-[YTS.AG].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "the.puppet.masters.1994.720p.bluray.x264-psychd.mkv",
+      "path": "S:\\MEDIA\\MOVIES\\The.Puppet.Masters.1994.720p.BluRay.x264-PSYCHD [PublicHD]\\the.puppet.masters.1994.720p.bluray.x264-psychd.mkv",
+      "hasAudio": true,
+      "codecs": [
+        "dts"
+      ],
+      "hasIncompatibleCodec": true,
+      "incompatibleCodecs": [
+        "dts"
+      ]
+    },
+    {
+      "title": "Limitless.2011.1080p.BrRip.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Limitless (2011) 1080p\\Limitless.2011.1080p.BrRip.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "A.Beautiful.Mind.2001.1080p.BrRip.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\A Beautiful Mind (2001) [1080p]\\A.Beautiful.Mind.2001.1080p.BrRip.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Good.Will.Hunting.1997.1080p.BrRip.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Good Will Hunting (1997) [1080p]\\Good.Will.Hunting.1997.1080p.BrRip.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.Bourne.Identity.2002.1080p.BrRip.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\The Bourne Identity (2002) [1080p]\\The.Bourne.Identity.2002.1080p.BrRip.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Jason.Bourne.2016.1080p.BluRay.x264-[YTS.AG].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Jason Bourne (2016) [1080p] [YTS.AG]\\Jason.Bourne.2016.1080p.BluRay.x264-[YTS.AG].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.Bourne.Ultimatum.2007.1080p.BrRip.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\The Bourne Ultimatum (2007) [1080p]\\The.Bourne.Ultimatum.2007.1080p.BrRip.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "ac3"
+      ],
+      "hasIncompatibleCodec": true,
+      "incompatibleCodecs": [
+        "ac3"
+      ]
+    },
+    {
+      "title": "The.Bourne.Supremacy.2004.1080p.BrRip.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\The Bourne Supremacy (2004) [1080p]\\The.Bourne.Supremacy.2004.1080p.BrRip.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "ac3"
+      ],
+      "hasIncompatibleCodec": true,
+      "incompatibleCodecs": [
+        "ac3"
+      ]
+    },
+    {
+      "title": "Pink.Floyd.The.Wall.1982.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Pink Floyd The Wall (1982) [1080p] [BluRay] [5.1] [YTS.MX]\\Pink.Floyd.The.Wall.1982.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.Perfect.Weapon.1991.1080p.BluRay.x264-[YTS.LT].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\The Perfect Weapon (1991) [BluRay] [1080p] [YTS.LT]\\The.Perfect.Weapon.1991.1080p.BluRay.x264-[YTS.LT].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.Rainmaker.1997.1080p.BluRay.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\The Rainmaker (1997) [1080p]\\The.Rainmaker.1997.1080p.BluRay.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Mission.To.Mars.2000.1080p.BrRip.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Mission to Mars (2000) {1080p]\\Mission.To.Mars.2000.1080p.BrRip.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Dante's.Peak.1997.1080p.BrRip.x264.bitloks.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Dante's Peak (1997) [1080p]\\Dante's.Peak.1997.1080p.BrRip.x264.bitloks.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Deep.Impact.1998.1080p.BrRip.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Deep Impact (1998) [1080p]\\Deep.Impact.1998.1080p.BrRip.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Twister.1996.1080p.BrRip.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Twister (1996) [1080p]\\Twister.1996.1080p.BrRip.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "ac3"
+      ],
+      "hasIncompatibleCodec": true,
+      "incompatibleCodecs": [
+        "ac3"
+      ]
+    },
+    {
+      "title": "Volcano.1997.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Volcano (1997) [1080p] [BluRay] [5.1] [YTS.MX]\\Volcano.1997.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "V.1983.1080p.BluRay.x264-[YTS.LT].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\V (1983) [BluRay] [1080p] [YTS.LT]\\V.1983.1080p.BluRay.x264-[YTS.LT].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "X-Men.First.Class.35mm.Special.2011.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\X-Men First Class 35mm Special (2011) [1080p] [BluRay] [5.1] [YTS.MX]\\X-Men.First.Class.35mm.Special.2011.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "David.Blaine.Ascension.2020.1080p.WEB.x264-PTP.mkv",
+      "path": "S:\\MEDIA\\MOVIES\\David.Blaine.Ascension.2020.1080p.WEBRip.AAC2.0.x264-PTP[TGx]\\David.Blaine.Ascension.2020.1080p.WEB.x264-PTP.mkv",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "David.Blaine.Real.Or.Magic.2013.1080p.WEBRip.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\David Blaine Real Or Magic (2013) [1080p] [WEBRip] [5.1] [YTS.MX]\\David.Blaine.Real.Or.Magic.2013.1080p.WEBRip.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Back.To.School.1986.1080p.BluRay.x264.[YTS.AG].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Back To School (1986) [1080p]\\Back.To.School.1986.1080p.BluRay.x264.[YTS.AG].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Jumanji.The.Next.Level.2019.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Jumanji The Next Level (2019) [1080p] [BluRay] [5.1] [YTS.MX]\\Jumanji.The.Next.Level.2019.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Jumanji.Welcome.To.The.Jungle.2017.1080p.BluRay.x264-[YTS.AM].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Jumanji Welcome To The Jungle (2017) [BluRay] [1080p] [YTS.AM]\\Jumanji.Welcome.To.The.Jungle.2017.1080p.BluRay.x264-[YTS.AM].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Weird.Science.1985.1080p.BluRay.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Weird Science (1985) [1080p]\\Weird.Science.1985.1080p.BluRay.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Central.Intelligence.2016.1080p.BluRay.x264-[YTS.AG].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Central Intelligence (2016) [1080p] [YTS.AG]\\Central.Intelligence.2016.1080p.BluRay.x264-[YTS.AG].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.Breakfast.Club.1985.REMASTERED.REPACK.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\The Breakfast Club (1985) [REMASTERED] [REPACK] [1080p] [BluRay] [5.1] [YTS.MX]\\The.Breakfast.Club.1985.REMASTERED.REPACK.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Sixteen.Candles.1984.1080p.BluRay.x264-[YTS.AG].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Sixteen Candles (1984) [1080p] [YTS.AG]\\Sixteen.Candles.1984.1080p.BluRay.x264-[YTS.AG].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Tower Heist (2011) 1080p BluRay X264 YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Tower Heist (2011) [1080p]\\Tower Heist (2011) 1080p BluRay X264 YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Get.Smart.2008.1080p.BRrip.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Get Smart (2008) [1080p]\\Get.Smart.2008.1080p.BRrip.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Forrest.Gump.1994.1080p.BrRip.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Forrest Gump (1994) [1080p]\\Forrest.Gump.1994.1080p.BrRip.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.Green.Mile.1999.1080p.BrRip.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\The Green Mile (1999) [1080p]\\The.Green.Mile.1999.1080p.BrRip.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.Shawshank.Redemption.1994.1080p.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\The Shawshank Redemption (1994) [1080p]\\The.Shawshank.Redemption.1994.1080p.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.Electric.State.2025.1080p.WEBRip.x265.10bit.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\The Electric State (2025) [1080p] [WEBRip] [x265] [10bit] [5.1] [YTS.MX]\\The.Electric.State.2025.1080p.WEBRip.x265.10bit.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Armageddon.1998.1080p.BrRip.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Armageddon (1998) [1080p]\\Armageddon.1998.1080p.BrRip.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.Mummy.1999.1080p.BRrip.x264.GAZ.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\The Mummy (1999) [1080p]\\The.Mummy.1999.1080p.BRrip.x264.GAZ.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Pirates.of.the.Caribbean.Curse.of.the.Black.Pearl.2003.1080p.BrRip.x264.Deceit.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Pirates of the Caribbean - Curse of the Black Pearl (2003) [1080p]\\Pirates.of.the.Caribbean.Curse.of.the.Black.Pearl.2003.1080p.BrRip.x264.Deceit.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Pirates.of.the.Caribbean.Dead.Man's.Chest.2006.1080p.BrRip.x264.Deceit.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Pirates of the Caribbean - Dead Man's Chest (2006) [1080p]\\Pirates.of.the.Caribbean.Dead.Man's.Chest.2006.1080p.BrRip.x264.Deceit.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Pirates.of.the.Caribbean.On.Stranger.Tides.2011.1080p.BrRip.x264.Deceit.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Pirates of the Caribbean - On Stranger Tides (2011) [1080p]\\Pirates.of.the.Caribbean.On.Stranger.Tides.2011.1080p.BrRip.x264.Deceit.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Pirates.Of.The.Caribbean.Dead.Men.Tell.No.Tales.2017.1080p.BluRay.x264-[YTS.AG].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Pirates Of The Caribbean Dead Men Tell No Tales (2017) [1080p] [YTS.AG]\\Pirates.Of.The.Caribbean.Dead.Men.Tell.No.Tales.2017.1080p.BluRay.x264-[YTS.AG].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Star.Wars.Episode.5.The.Empire.Strikes.Back.1980.1080p.BrRip.x264.BOKUTOX.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Star Wars Episode V The Empire Strikes Back (1980) [1080p]\\Star.Wars.Episode.5.The.Empire.Strikes.Back.1980.1080p.BrRip.x264.BOKUTOX.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Star.Wars.Episode.6.Return.of.the.Jedi.1983.1080p.BrRip.x264.BOKUTOX.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Star Wars Episode VI Return of the Jedi (1983) [1080p]\\Star.Wars.Episode.6.Return.of.the.Jedi.1983.1080p.BrRip.x264.BOKUTOX.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Star.Wars.Episode.4.A.New.Hope.1977.1080p.BrRip.x264.BOKUTOX.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Star Wars Episode IV A New Hope (1977) [1080p]\\Star.Wars.Episode.4.A.New.Hope.1977.1080p.BrRip.x264.BOKUTOX.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.Old.Guard.2020.1080p.WEBRip.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\The Old Guard (2020) [1080p] [WEBRip] [5.1] [YTS.MX]\\The.Old.Guard.2020.1080p.WEBRip.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Red.2.2013.1080p.BluRay.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Red 2 (2013) [1080p]\\Red.2.2013.1080p.BluRay.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Red.Notice.2021.1080p.WEBRip.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Red Notice (2021) [1080p] [WEBRip] [5.1] [YTS.MX]\\Red.Notice.2021.1080p.WEBRip.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Six.Days.Seven.Nights.1998.1080p.BluRay.x264-[YTS.AM].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Six Days Seven Nights (1998) [BluRay] [1080p] [YTS.AM]\\Six.Days.Seven.Nights.1998.1080p.BluRay.x264-[YTS.AM].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Airplane!.1980.1080p.BluRay.x264-[YTS.LT].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Airplane! (1980) [BluRay] [1080p] [YTS.LT]\\Airplane!.1980.1080p.BluRay.x264-[YTS.LT].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Planes.Trains.and.Automobiles.1987.1080p.BluRay.x264.[YTS.AG].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Planes, Trains & Automobiles (1987) [1080p]\\Planes.Trains.and.Automobiles.1987.1080p.BluRay.x264.[YTS.AG].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.Doors.1991.1080p.BluRay.x264-[YTS.AM].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\The Doors (1991) [BluRay] [1080p] [YTS.AM]\\The.Doors.1991.1080p.BluRay.x264-[YTS.AM].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.Saint.1997.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\The Saint (1997) [1080p] [BluRay] [5.1] [YTS.MX]\\The.Saint.1997.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Top.Secret!.1984.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Top Secret! (1984) [1080p] [BluRay] [5.1] [YTS.MX]\\Top.Secret!.1984.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Fat.Man.And.Little.Boy.1989.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Fat Man And Little Boy (1989) [1080p] [BluRay] [5.1] [YTS.MX]\\Fat.Man.And.Little.Boy.1989.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Rock.Star.2001.1080p.BluRay.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Rock Star (2001) [1080p]\\Rock.Star.2001.1080p.BluRay.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Captain.America.Brave.New.World.2025.1080p.WEBRip.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Captain America Brave New World (2025) [1080p] [WEBRip] [5.1] [YTS.MX]\\Captain.America.Brave.New.World.2025.1080p.WEBRip.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Rocketman.2019.1080p.BluRay.x264-[YTS.LT].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Rocketman (2019) [BluRay] [1080p] [YTS.LT]\\Rocketman.2019.1080p.BluRay.x264-[YTS.LT].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Elvis.2022.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Elvis (2022) [1080p] [BluRay] [5.1] [YTS.MX]\\Elvis.2022.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Yesterday.2019.1080p.BluRay.x264-[YTS.LT].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Yesterday (2019) [BluRay] [1080p] [YTS.LT]\\Yesterday.2019.1080p.BluRay.x264-[YTS.LT].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Passengers.2016.1080p.BluRay.x264-[YTS.AG].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Passengers (2016) [1080p] [YTS.AG]\\Passengers.2016.1080p.BluRay.x264-[YTS.AG].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Trading.Places.1983.1080p.BluRay.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Trading Places (1983) [1080p]\\Trading.Places.1983.1080p.BluRay.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Caddyshack.1980.1080p.BRrip.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Caddyshack (1980) [1080p]\\Caddyshack.1980.1080p.BRrip.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "My.Blue.Heaven.1990.1080p.BluRay.x264-[YTS.AM].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\My Blue Heaven (1990) [BluRay] [1080p] [YTS.AM]\\My.Blue.Heaven.1990.1080p.BluRay.x264-[YTS.AM].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The Thinking Game 2024 1080p AMZN WEB-DL DD 5 1 H 264-playWEB.mkv",
+      "path": "S:\\MEDIA\\MOVIES\\The Thinking Game 2024 1080p AMZN WEB-DL DD 5 1 H 264-playWEB\\The Thinking Game 2024 1080p AMZN WEB-DL DD 5 1 H 264-playWEB.mkv",
+      "hasAudio": true,
+      "codecs": [
+        "eac3"
+      ],
+      "hasIncompatibleCodec": true,
+      "incompatibleCodecs": [
+        "eac3"
+      ]
+    },
+    {
+      "title": "WALL-E.2008.1080p.BrRip.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\WALL-E (2008) [1080p]\\WALL-E.2008.1080p.BrRip.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Leap.Of.Faith.1992.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Leap Of Faith (1992) [1080p] [BluRay] [5.1] [YTS.MX]\\Leap.Of.Faith.1992.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Rockula.1990.720p.WEBRip.x264.AAC-LAMA.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Rockula (1990) 720p WEBRip-LAMA\\Rockula.1990.720p.WEBRip.x264.AAC-LAMA.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.3.Worlds.of.Gulliver.1960.REMASTERED.OAR.BDRip.x264-VoMiT.mkv",
+      "path": "S:\\MEDIA\\MOVIES\\[ www.torrenting.me ] - The.3.Worlds.of.Gulliver.1960.REMASTERED.OAR.BDRip.x264-VoMiT\\The.3.Worlds.of.Gulliver.1960.REMASTERED.OAR.BDRip.x264-VoMiT.mkv",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Twilight.Zone.The.Movie.1983.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Twilight Zone The Movie (1983) [1080p] [BluRay] [5.1] [YTS.MX]\\Twilight.Zone.The.Movie.1983.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The Flintstones Meet Rockula and Frankenstone 1979 Web-dl 1080p x264.mkv",
+      "path": "S:\\MEDIA\\MOVIES\\The Flintstones Meet Rockula and Frankenstone 1979 Web-dl 1080p x264\\The Flintstones Meet Rockula and Frankenstone 1979 Web-dl 1080p x264.mkv",
+      "hasAudio": true,
+      "codecs": [
+        "eac3"
+      ],
+      "hasIncompatibleCodec": true,
+      "incompatibleCodecs": [
+        "eac3"
+      ]
+    },
+    {
+      "title": "Doom.2005.1080p.BrRip.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Doom (2005) [1080p]\\Doom.2005.1080p.BrRip.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Mortal.Kombat.1995.1080p.BrRip.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Mortal Kombat (1995) [1080p]\\Mortal.Kombat.1995.1080p.BrRip.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Mortal.Kombat.2021.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Mortal Kombat (2021) [1080p] [BluRay] [5.1] [YTS.MX]\\Mortal.Kombat.2021.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Mortal.Engines.2018.1080p.BluRay.x264-[YTS.AM].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Mortal Engines (2018) [BluRay] [1080p] [YTS.AM]\\Mortal.Engines.2018.1080p.BluRay.x264-[YTS.AM].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "UFO.2018.1080p.WEBRip.x264-[YTS.AM].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\UFO (2018) [WEBRip] [1080p] [YTS.AM]\\UFO.2018.1080p.WEBRip.x264-[YTS.AM].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Summer.School.1987.1080p.WEBRip.x264-[YTS.LT].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Summer School (1987) [WEBRip] [1080p] [YTS.LT]\\Summer.School.1987.1080p.WEBRip.x264-[YTS.LT].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Miracle.Beach.1992.1080p.BluRay.x264-[YTS.AM].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Miracle Beach (1992) [BluRay] [1080p] [YTS.AM]\\Miracle.Beach.1992.1080p.BluRay.x264-[YTS.AM].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Other.Peoples.Money.1991.1080p.WEBRip.x264.AAC-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Other Peoples Money (1991) [1080p] [WEBRip] [YTS.MX]\\Other.Peoples.Money.1991.1080p.WEBRip.x264.AAC-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Earth vs. The Flying Saucers (1956).mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Earth vs The Flying Saucers (colorized)\\Earth vs. The Flying Saucers (1956).mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Oz.the.Great.and.Powerful.2013.1080p.BluRay.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Oz the Great and Powerful (2013) [1080p]\\Oz.the.Great.and.Powerful.2013.1080p.BluRay.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Clash.Of.The.Titans.1981.1080p.BluRay.x264-[YTS.AM].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Clash Of The Titans (1981) [BluRay] [1080p] [YTS.AM]\\Clash.Of.The.Titans.1981.1080p.BluRay.x264-[YTS.AM].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Clash Of The Titans (2010) 1080p BrRip x264 - 1.5GB - YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Clash of the Titans (2010) [1080p]\\Clash Of The Titans (2010) 1080p BrRip x264 - 1.5GB - YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Jack.the.Giant.Slayer.2013.1080p.BluRay.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Jack the Giant Slayer (2013) [1080p]\\Jack.the.Giant.Slayer.2013.1080p.BluRay.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Gremlins.1984.1080p.BRrip.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Gremlins (1984) [1080p]\\Gremlins.1984.1080p.BRrip.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.Muse.1999.1080p.WEBRip.x264-[YTS.LT].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\The Muse (1999) [WEBRip] [1080p] [YTS.LT]\\The.Muse.1999.1080p.WEBRip.x264-[YTS.LT].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Robin.Hood.Prince.Of.Thieves.1991.REPACK.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Robin Hood Prince Of Thieves (1991) [REPACK] [1080p] [BluRay] [5.1] [YTS.MX]\\Robin.Hood.Prince.Of.Thieves.1991.REPACK.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.Three.Musketeers.1993.1080p.BluRay.x264-[YTS.AM].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\The Three Musketeers (1993) [BluRay] [1080p] [YTS.AM]\\The.Three.Musketeers.1993.1080p.BluRay.x264-[YTS.AM].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Shallow.Hal.2001.1080p.BrRip.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Shallow Hal (2001) [1080p]\\Shallow.Hal.2001.1080p.BrRip.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.Bounty.Hunter.2010.1080p.BrRip.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\The Bounty Hunter (2010) [1080p]\\The.Bounty.Hunter.2010.1080p.BrRip.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Kung.Fu.Panda.2008.REPACK.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Kung Fu Panda (2008) [REPACK] [1080p] [BluRay] [5.1] [YTS.MX]\\Kung.Fu.Panda.2008.REPACK.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.Blind.Side.2009.1080p.BluRay.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\The Blind Side (2009) [1080p]\\The.Blind.Side.2009.1080p.BluRay.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Funny.People.2009.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Funny People (2009) [1080p] [BluRay] [5.1] [YTS.MX]\\Funny.People.2009.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.Prestige.2006.1080p.BluRay.x264-[YTS.AM].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\The Prestige (2006) [BluRay] [1080p] [YTS.AM]\\The.Prestige.2006.1080p.BluRay.x264-[YTS.AM].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.Island.2005.1080p.BrRip.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\The Island (2005) [1080p]\\The.Island.2005.1080p.BrRip.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Lucky.Number.Slevin.2006.1080p.BrRip.x264.BOKUTOX.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Lucky Number Slevin (2006) [1080p]\\Lucky.Number.Slevin.2006.1080p.BrRip.x264.BOKUTOX.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.Illusionist.2006.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\The Illusionist (2006) [1080p] [BluRay] [5.1] [YTS.MX]\\The.Illusionist.2006.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Kiss.Kiss.Bang.Bang.2005.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Kiss Kiss Bang Bang (2005) [1080p] [BluRay] [5.1] [YTS.MX]\\Kiss.Kiss.Bang.Bang.2005.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Crazy.People.1990.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Crazy People (1990) [1080p] [BluRay] [5.1] [YTS.MX]\\Crazy.People.1990.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Animal.House.1978.1080p.BrRip.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Animal House (1978) [1080p]\\Animal.House.1978.1080p.BrRip.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Splash.1984.1080p.BluRay.x264-[YTS.AM].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Splash (1984) [BluRay] [1080p] [YTS.AM]\\Splash.1984.1080p.BluRay.x264-[YTS.AM].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Blade.Runner.1982.1080p.BluRay.x264-[YTS.AM].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Blade Runner (1982) [BluRay] [1080p] [YTS.AM]\\Blade.Runner.1982.1080p.BluRay.x264-[YTS.AM].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Kindergarten.Cop.1990.1080p.BluRay.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Kindergarten Cop (1990) [1080p]\\Kindergarten.Cop.1990.1080p.BluRay.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Twins.1988.1080p.BluRay.x264-[YTS.AG].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Twins (1988) [1080p] [YTS.AG]\\Twins.1988.1080p.BluRay.x264-[YTS.AG].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Big.1988.EXTENDED.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Big (1988) [EXTENDED] [1080p] [BluRay] [5.1] [YTS.MX]\\Big.1988.EXTENDED.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Cast.Away.2000.1080p.BrRip.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Cast Away (2000) [1080p]\\Cast.Away.2000.1080p.BrRip.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Eraser.1996.1080p.BluRay.x264-[YTS.AM].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Eraser (1996) [BluRay] [1080p] [YTS.AM]\\Eraser.1996.1080p.BluRay.x264-[YTS.AM].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.Terminal.2004.1080p.BluRay.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\The Terminal (2004) [1080p]\\The.Terminal.2004.1080p.BluRay.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Junior.1994.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Junior (1994) [1080p] [BluRay] [5.1] [YTS.MX]\\Junior.1994.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Last.Action.Hero.1993.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Last Action Hero (1993) [1080p] [BluRay] [5.1] [YTS.MX]\\Last.Action.Hero.1993.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "That.Thing.You.Do!.1996.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\That Thing You Do! (1996) [1080p] [BluRay] [5.1] [YTS.MX]\\That.Thing.You.Do!.1996.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Roxanne.1987.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Roxanne (1987) [1080p] [BluRay] [5.1] [YTS.MX]\\Roxanne.1987.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Kong.Skull.Island.2017.1080p.BluRay.x264-[YTS.AG].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Kong Skull Island (2017) [1080p] [YTS.AG]\\Kong.Skull.Island.2017.1080p.BluRay.x264-[YTS.AG].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Dragonheart.1996.1080p.BrRip.x264.BOKUTOX.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Dragonheart (1996) [1080p]\\Dragonheart.1996.1080p.BrRip.x264.BOKUTOX.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Heart.Of.Stone.2023.1080p.WEBRip.x265.10bit.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Heart Of Stone (2023) [1080p] [WEBRip] [x265] [10bit] [5.1] [YTS.MX]\\Heart.Of.Stone.2023.1080p.WEBRip.x265.10bit.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "It.Could.Happen.To.You.1994.1080p.BluRay.x264-[YTS.AM].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\It Could Happen To You (1994) [BluRay] [1080p] [YTS.AM]\\It.Could.Happen.To.You.1994.1080p.BluRay.x264-[YTS.AM].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Ghost.1990.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Ghost (1990) [1080p] [BluRay] [5.1] [YTS.MX]\\Ghost.1990.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Keeping.Up.With.The.Joneses.2016.1080p.BluRay.x264-[YTS.AG].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Keeping Up With The Joneses (2016) [1080p] [YTS.AG]\\Keeping.Up.With.The.Joneses.2016.1080p.BluRay.x264-[YTS.AG].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Mike.And.Dave.Need.Wedding.Dates.2016.1080p.BluRay.x264-[YTS.AG].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Mike And Dave Need Wedding Dates (2016) [1080p] [YTS.AG]\\Mike.And.Dave.Need.Wedding.Dates.2016.1080p.BluRay.x264-[YTS.AG].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Pretty.Woman.1990.1080p.BluRay.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Pretty Woman (1990) [1080p]\\Pretty.Woman.1990.1080p.BluRay.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.Bodyguard.1992.1080p.BrRip.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\The Bodyguard (1992) [1080p]\\The.Bodyguard.1992.1080p.BrRip.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Lethal.Weapon.2.1989.1080p.BrRip.x264.BOKUTOX.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Lethal Weapon 2 (1989)  [1080p]\\Lethal.Weapon.2.1989.1080p.BrRip.x264.BOKUTOX.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Tin.Cup.1996.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Tin Cup (1996) [1080p] [BluRay] [5.1] [YTS.MX]\\Tin.Cup.1996.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Under.the.Tuscan.Sun.2003.1080p.BluRay.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Under the Tuscan Sun (2003) [1080p]\\Under.the.Tuscan.Sun.2003.1080p.BluRay.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Lethal.Weapon.1987.1080p.BrRip.x264.BOKUTOX.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Lethal Weapon (1987) [1080p]\\Lethal.Weapon.1987.1080p.BrRip.x264.BOKUTOX.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Lethal.Weapon.3.1992.1080p.BrRip.x264.BOKUTOX.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Lethal Weapon 3 (1992) [1080p]\\Lethal.Weapon.3.1992.1080p.BrRip.x264.BOKUTOX.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Lethal.Weapon.4.1998.1080p.BrRip.x264.BOKUTOX.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Lethal Weapon 4 (1998) [1080p]\\Lethal.Weapon.4.1998.1080p.BrRip.x264.BOKUTOX.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Runaway.Bride.1999.1080p.BluRay.x264-[YTS.AM].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Runaway Bride (1999) [BluRay] [1080p] [YTS.AM]\\Runaway.Bride.1999.1080p.BluRay.x264-[YTS.AM].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Amadeus.1984.1080p.BluRay.x264-[YTS.AM].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Amadeus (1984) [BluRay] [1080p] [YTS.AM]\\Amadeus.1984.1080p.BluRay.x264-[YTS.AM].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Honeymoon.in.Vegas.1992.1080p.BluRay.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Honeymoon in Vegas (1992) [1080p]\\Honeymoon.in.Vegas.1992.1080p.BluRay.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Moon.Over.Parador.1988.WEB-DL.1080p.WEBRip.x264.AAC-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Moon Over Parador (1988) [WEB-DL] [1080p] [WEBRip] [YTS.MX]\\Moon.Over.Parador.1988.WEB-DL.1080p.WEBRip.x264.AAC-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "AEon.Flux.2005.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\AEon Flux (2005) [1080p] [BluRay] [5.1] [YTS.MX]\\AEon.Flux.2005.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.Time.Machine.2002.1080p.WEBRip.x264-[YTS.AM].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\The Time Machine (2002) [WEBRip] [1080p] [YTS.AM]\\The.Time.Machine.2002.1080p.WEBRip.x264-[YTS.AM].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Paycheck.2003.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Paycheck (2003) [1080p] [BluRay] [5.1] [YTS.MX]\\Paycheck.2003.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Stealth.2005.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Stealth (2005) [1080p] [BluRay] [5.1] [YTS.MX]\\Stealth.2005.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "What.About.Bob..1991.1080p.WEBRip.x264-[YTS.AM].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\What About Bob  (1991) [WEBRip] [1080p] [YTS.AM]\\What.About.Bob..1991.1080p.WEBRip.x264-[YTS.AM].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Its.Complicated.2009.1080p.BrRip.x264.BOKUTOX.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Its Complicated (2009) [1080p]\\Its.Complicated.2009.1080p.BrRip.x264.BOKUTOX.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "HouseSitter.1992.1080p.BluRay.x264.AAC-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\HouseSitter (1992) [1080p] [BluRay] [YTS.MX]\\HouseSitter.1992.1080p.BluRay.x264.AAC-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.Big.Year.2011.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\The Big Year (2011) [1080p] [BluRay] [5.1] [YTS.MX]\\The.Big.Year.2011.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Scrooge.1970.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Scrooge (1970) [1080p] [BluRay] [5.1] [YTS.MX]\\Scrooge.1970.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "21.Jump.Street.2012.1080p.BluRay.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\21 Jump Street (2012) [1080p]\\21.Jump.Street.2012.1080p.BluRay.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Spy.2015.1080p.BluRay.x264-[YTS.AM].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Spy (2015) [BluRay] [1080p] [YTS.AM]\\Spy.2015.1080p.BluRay.x264-[YTS.AM].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.Heat.2013.1080p.BluRay.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\The Heat (2013) [1080p]\\The.Heat.2013.1080p.BluRay.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Genie.2023.BLURAY.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Genie (2023) [BLURAY] [1080p] [BluRay] [5.1] [YTS.MX]\\Genie.2023.BLURAY.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Identity.Thief.2013.1080p.BluRay.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Identity Thief (2013) [1080p]\\Identity.Thief.2013.1080p.BluRay.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Now.You.See.Me.2013.1080p.BluRay.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Now You See Me (2013) [1080p]\\Now.You.See.Me.2013.1080p.BluRay.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Jexi.2019.1080p.BluRay.x264-[YTS.LT].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Jexi (2019) [BluRay] [1080p] [YTS.LT]\\Jexi.2019.1080p.BluRay.x264-[YTS.LT].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Maverick.1994.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Maverick (1994) [1080p] [BluRay] [5.1] [YTS.MX]\\Maverick.1994.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Now.You.See.Me.2.2016.1080p.BluRay.x264-[YTS.AG].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Now You See Me 2 (2016) [1080p] [YTS.AG]\\Now.You.See.Me.2.2016.1080p.BluRay.x264-[YTS.AG].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Quigley.Down.Under.1990.1080p.BluRay.x264-[YTS.AG].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Quigley Down Under (1990) [1080p] [YTS.AG]\\Quigley.Down.Under.1990.1080p.BluRay.x264-[YTS.AG].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Harry.Potter.And.The.Sorcerers.Stone.2001.EXTENDED.REPACK.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Harry Potter And The Sorcerers Stone (2001) [EXTENDED] [REPACK] [1080p] [BluRay] [5.1] [YTS.MX]\\Harry.Potter.And.The.Sorcerers.Stone.2001.EXTENDED.REPACK.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Harry.Potter.And.The.Chamber.Of.Secrets.2002.EXTENDED.REPACK.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Harry Potter And The Chamber Of Secrets (2002) [EXTENDED] [REPACK] [1080p] [BluRay] [5.1] [YTS.MX]\\Harry.Potter.And.The.Chamber.Of.Secrets.2002.EXTENDED.REPACK.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Beautiful.Creatures.2013.1080p.BluRay.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Beautiful Creatures (2013) [1080p]\\Beautiful.Creatures.2013.1080p.BluRay.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Fantastic.Beasts.And.Where.To.Find.Them.2016.1080p.BluRay.x264-[YTS.AG].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Fantastic Beasts And Where To Find Them (2016) [1080p] [YTS.AG]\\Fantastic.Beasts.And.Where.To.Find.Them.2016.1080p.BluRay.x264-[YTS.AG].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Days Of Thunder (1990) BrRip 1080p x264 YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Days Of Thunder (1990) [1080p]\\Days Of Thunder (1990) BrRip 1080p x264 YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Harry.Potter.And.The.Prisoner.Of.Azkaban.2004.REPACK.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Harry Potter And The Prisoner Of Azkaban (2004) [REPACK] [1080p] [BluRay] [5.1] [YTS.MX]\\Harry.Potter.And.The.Prisoner.Of.Azkaban.2004.REPACK.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Harry.Potter.And.The.Goblet.Of.Fire.2005.REPACK.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Harry Potter And The Goblet Of Fire (2005) [REPACK] [1080p] [BluRay] [5.1] [YTS.MX]\\Harry.Potter.And.The.Goblet.Of.Fire.2005.REPACK.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Harry.Potter.And.The.Order.Of.The.Phoenix.2007.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Harry Potter And The Order Of The Phoenix (2007) [1080p] [BluRay] [5.1] [YTS.MX]\\Harry.Potter.And.The.Order.Of.The.Phoenix.2007.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Harry.Potter.And.The.Half-Blood.Prince.2009.REPACK.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Harry Potter And The Half-Blood Prince (2009) [REPACK] [1080p] [BluRay] [5.1] [YTS.MX]\\Harry.Potter.And.The.Half-Blood.Prince.2009.REPACK.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Harry.Potter.And.The.Deathly.Hallows.Part.1.2010.REPACK.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Harry Potter And The Deathly Hallows Part 1 (2010) [REPACK] [1080p] [BluRay] [5.1] [YTS.MX]\\Harry.Potter.And.The.Deathly.Hallows.Part.1.2010.REPACK.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Harry.Potter.And.The.Deathly.Hallows.Part.2.2011.REPACK.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Harry Potter And The Deathly Hallows Part 2 (2011) [REPACK] [1080p] [BluRay] [5.1] [YTS.MX]\\Harry.Potter.And.The.Deathly.Hallows.Part.2.2011.REPACK.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Secondhand.Lions.2003.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Secondhand Lions (2003) [1080p] [BluRay] [5.1] [YTS.MX]\\Secondhand.Lions.2003.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Let It Ride - Comedy 1989 Eng Rus Multi-Subs 720p [H264-mp4].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Let It Ride - Comedy 1989 Eng Rus Multi-Subs 720p [H264-mp4]\\Let It Ride - Comedy 1989 Eng Rus Multi-Subs 720p [H264-mp4].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac",
+        "ac3",
+        "aac"
+      ],
+      "hasIncompatibleCodec": true,
+      "incompatibleCodecs": [
+        "ac3"
+      ]
+    },
+    {
+      "title": "Gods.Of.Egypt.2016.1080p.BluRay.x264-[YTS.AG].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Gods Of Egypt (2016) [1080p] [YTS.AG]\\Gods.Of.Egypt.2016.1080p.BluRay.x264-[YTS.AG].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "ARQ.2016.1080p.WEBRip.x264-[YTS.LT].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\ARQ (2016) [WEBRip] [1080p] [YTS.LT]\\ARQ.2016.1080p.WEBRip.x264-[YTS.LT].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.Accountant.2016.1080p.BluRay.x264-[YTS.AG].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\The Accountant (2016) [1080p] [YTS.AG]\\The.Accountant.2016.1080p.BluRay.x264-[YTS.AG].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Spectral.2016.1080p.WEBRip.x264-[YTS.AM].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Spectral (2016) [WEBRip] [1080p] [YTS.AM]\\Spectral.2016.1080p.WEBRip.x264-[YTS.AM].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Blade.Trinity.2004.1080p.BluRay.x264-[YTS.AM].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Blade Trinity (2004) [BluRay] [1080p] [YTS.AM]\\Blade.Trinity.2004.1080p.BluRay.x264-[YTS.AM].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Blade.1998.1080p.BluRay.x264-[YTS.AM].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Blade (1998) [BluRay] [1080p] [YTS.AM]\\Blade.1998.1080p.BluRay.x264-[YTS.AM].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Underworld.Rise.of.the.Lycans.2009.1080p.BrRip.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Underworld Rise of the Lycans (2009) [1080p]\\Underworld.Rise.of.the.Lycans.2009.1080p.BrRip.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Underworld.Blood.Wars.2016.1080p.BluRay.x264-[YTS.AG].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Underworld Blood Wars (2016) [1080p] [YTS.AG]\\Underworld.Blood.Wars.2016.1080p.BluRay.x264-[YTS.AG].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Underworld.Awakening.2012.1080p.BrRip.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Underworld Awakening (2012) [1080p]\\Underworld.Awakening.2012.1080p.BrRip.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Blade.II.2002.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Blade II (2002) [1080p] [BluRay] [5.1] [YTS.MX]\\Blade.II.2002.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.Last.Witch.Hunter.2015.1080p.BluRay.x264-[YTS.AG].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\The Last Witch Hunter (2015) [1080p] [YTS.AG]\\The.Last.Witch.Hunter.2015.1080p.BluRay.x264-[YTS.AG].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.Chronicles.Of.Riddick.2004.1080p.BluRay.x264-[YTS.AM].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\The Chronicles Of Riddick (2004) [BluRay] [1080p] [YTS.AM]\\The.Chronicles.Of.Riddick.2004.1080p.BluRay.x264-[YTS.AM].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Riddick.2013.1080p.BluRay.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Riddick (2013) [1080p]\\Riddick.2013.1080p.BluRay.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Underworld.Evolution.2006.1080p.BrRip.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Underworld Evolution (2006) [1080p]\\Underworld.Evolution.2006.1080p.BrRip.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Kill.Command.2016.1080p.BluRay.x264-[YTS.AG].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Kill Command (2016) [1080p] [YTS.AG]\\Kill.Command.2016.1080p.BluRay.x264-[YTS.AG].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Underworld.EXTENDED.2003.1080p.BrRip.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Underworld EXTENDED (2003) [1080p]\\Underworld.EXTENDED.2003.1080p.BrRip.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Ghost.Rider.2007.1080p.BluRay.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Ghost Rider (2007) [1080p]\\Ghost.Rider.2007.1080p.BluRay.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Drop.Zone.1994.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Drop Zone (1994) [1080p] [BluRay] [5.1] [YTS.MX]\\Drop.Zone.1994.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Snow.White.2025.1080p.WEBRip.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Snow White (2025) [1080p] [WEBRip] [5.1] [YTS.MX]\\Snow.White.2025.1080p.WEBRip.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "My.Super.Ex-Girlfriend.2006.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\My Super Ex-Girlfriend (2006) [1080p] [BluRay] [5.1] [YTS.MX]\\My.Super.Ex-Girlfriend.2006.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "I.Love.You.Man.2009.1080p.BrRip.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\I Love You, Man (2009) [1080p]\\I.Love.You.Man.2009.1080p.BrRip.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Hugo.2011.1080p.BluRay.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Hugo (2011) [1080p]\\Hugo.2011.1080p.BluRay.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Alice.in.Wonderland.2010.1080p.BluRay.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Alice in Wonderland (2010) [1080p]\\Alice.in.Wonderland.2010.1080p.BluRay.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Wanderlust.2012.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Wanderlust (2012) [1080p] [BluRay] [5.1] [YTS.MX]\\Wanderlust.2012.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Up.In.Smoke.1978.1080p.BluRay.x264-[YTS.AM].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Up In Smoke (1978) [BluRay] [1080p] [YTS.AM]\\Up.In.Smoke.1978.1080p.BluRay.x264-[YTS.AM].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Support.Your.Local.Sheriff!.1969.1080p.BluRay.x264.AAC-[YTS.LT].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Support Your Local Sheriff! (1969) [1080p] [BluRay] [YTS.LT]\\Support.Your.Local.Sheriff!.1969.1080p.BluRay.x264.AAC-[YTS.LT].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.Big.Mouth.1967.1080p.BluRay.x264-[YTS.LT].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\The Big Mouth (1967) [BluRay] [1080p] [YTS.LT]\\The.Big.Mouth.1967.1080p.BluRay.x264-[YTS.LT].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Who's.Minding.The.Store.1963.1080p.BluRay.x264-[YTS.AG].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Who's Minding The Store (1963) [1080p] [YTS.AG]\\Who's.Minding.The.Store.1963.1080p.BluRay.x264-[YTS.AG].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.Nutty.Professor.1963.1080p.BluRay.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\The Nutty Professor (1963) [1080p]\\The.Nutty.Professor.1963.1080p.BluRay.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Bruce.Almighty.2003.1080p.BrRip.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Bruce Almighty (2003) [1080p]\\Bruce.Almighty.2003.1080p.BrRip.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Support.Your.Local.Gunfighter.1971.1080p.BluRay.x264-[YTS.AG].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Support Your Local Gunfighter (1971) [1080p] [YTS.AG]\\Support.Your.Local.Gunfighter.1971.1080p.BluRay.x264-[YTS.AG].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Hook.Line.And.Sinker.1969.1080p.BluRay.x264.AAC-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Hook Line And Sinker (1969) [1080p] [BluRay] [YTS.MX]\\Hook.Line.And.Sinker.1969.1080p.BluRay.x264.AAC-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Doctor.Dolittle.1998.1080p.BRrip.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Doctor Dolittle (1998) [1080p]\\Doctor.Dolittle.1998.1080p.BRrip.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.Nutty.Professor.1996.1080p.BrRip.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\The Nutty Professor (1996) [1080p]\\The.Nutty.Professor.1996.1080p.BrRip.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Liar.Liar.1997.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Liar Liar (1997) [1080p] [BluRay] [5.1] [YTS.MX]\\Liar.Liar.1997.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Ace.Ventura_.Pet.Detective.1994.1080p.BluRay.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Ace Ventura_ Pet Detective (1994) [1080p]\\Ace.Ventura_.Pet.Detective.1994.1080p.BluRay.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Beverly.Hills.Cop.1984.1080p.BrRip.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Beveryly Hills Cop (1984) [1080p]\\Beverly.Hills.Cop.1984.1080p.BrRip.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Random.Hearts.1999.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Random Hearts (1999) [1080p] [BluRay] [5.1] [YTS.MX]\\Random.Hearts.1999.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.Golden.Compass.2007.1080p.BluRay.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\The Golden Compass (2007) [1080p]\\The.Golden.Compass.2007.1080p.BluRay.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Beverly.Hills.Cop.II.1987.1080p.BluRay.x264-[YTS.AM].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Beverly Hills Cop II (1987) [BluRay] [1080p] [YTS.AM]\\Beverly.Hills.Cop.II.1987.1080p.BluRay.x264-[YTS.AM].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Daddy.Day.Care.2003.1080p.WEBRip.x264-[YTS.LT].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Daddy Day Care (2003) [WEBRip] [1080p] [YTS.LT]\\Daddy.Day.Care.2003.1080p.WEBRip.x264-[YTS.LT].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Pixels.2015.1080p.BluRay.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Pixels (2015) [1080p]\\Pixels.2015.1080p.BluRay.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.Golden.Child.1986.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\The Golden Child (1986) [1080p] [BluRay] [5.1] [YTS.MX]\\The.Golden.Child.1986.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Doc.Hollywood.1991.1080p.BluRay.x264-[YTS.AG].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Doc Hollywood (1991) [1080p] [YTS.AG]\\Doc.Hollywood.1991.1080p.BluRay.x264-[YTS.AG].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.Age.of.Adaline.2015.1080p.BluRay.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\The Age of Adaline (2015) [1080p]\\The.Age.of.Adaline.2015.1080p.BluRay.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.Chronicles.of.Narnia.The.Lion.The Witch.And.The.Wardrobe.2005.1080p.Brrip.x264.Deceit.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\The Chronicles of Narnia - The Lion, The Witch, and The Wardrobe (2005) [1080p]\\The.Chronicles.of.Narnia.The.Lion.The Witch.And.The.Wardrobe.2005.1080p.Brrip.x264.Deceit.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.Big.Lebowski.1998.1080p.BrRip.x264.YIFY+HI.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\The Big Lebowski (1998) [1080p]\\The.Big.Lebowski.1998.1080p.BrRip.x264.YIFY+HI.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Coming.To.America.1988.REPACK.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Coming To America (1988) [REPACK] [1080p] [BluRay] [5.1] [YTS.MX]\\Coming.To.America.1988.REPACK.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "McHale's.Navy.1997.1080p.WEBRip.x264.AAC5.1-[YTS.LT].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\McHale's Navy (1997) [1080p] [WEBRip] [5.1] [YTS.LT]\\McHale's.Navy.1997.1080p.WEBRip.x264.AAC5.1-[YTS.LT].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Whos.Minding.The.Mint.1967.1080p.WEBRip.x264.AAC-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Whos Minding The Mint (1967) [1080p] [WEBRip] [YTS.MX]\\Whos.Minding.The.Mint.1967.1080p.WEBRip.x264.AAC-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.Secret.Of.My.Success.1987.1080p.BluRay.x264.AAC-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\The Secret Of My Success (1987) [1080p] [BluRay] [YTS.MX]\\The.Secret.Of.My.Success.1987.1080p.BluRay.x264.AAC-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Mr..Magorium's.Wonder.Emporium.2007.1080p.BluRay.x264-[YTS.AM].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Mr. Magorium's Wonder Emporium (2007) [BluRay] [1080p] [YTS.AM]\\Mr..Magorium's.Wonder.Emporium.2007.1080p.BluRay.x264-[YTS.AM].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.Fugitive.1993.1080p.BluRay.x264-[YTS.AM].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\The Fugitive (1993) [BluRay] [1080p] [YTS.AM]\\The.Fugitive.1993.1080p.BluRay.x264-[YTS.AM].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.Hunt.for.Red.October.1990.1080p.BluRay.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\The Hunt for Red October (1990) [1080p]\\The.Hunt.for.Red.October.1990.1080p.BluRay.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Your.Highness.2011.1080p.BluRay.x264-[YTS.AG].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Your Highness (2011) [1080p] [YTS.AG]\\Your.Highness.2011.1080p.BluRay.x264-[YTS.AG].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "It's.A.Mad,.Mad,.Mad,.Mad.World.1963.1080p.BluRay.x264-[YTS.AG].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\It's A Mad, Mad, Mad, Mad World (1963) [1080p] [YTS.AG]\\It's.A.Mad,.Mad,.Mad,.Mad.World.1963.1080p.BluRay.x264-[YTS.AG].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Fever.Pitch.2005.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Fever Pitch (2005) [1080p] [BluRay] [5.1] [YTS.MX]\\Fever.Pitch.2005.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Bridget.Joness.Diary.2001.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Bridget Joness Diary (2001) [1080p] [BluRay] [5.1] [YTS.MX]\\Bridget.Joness.Diary.2001.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Just.Like.Heaven.2005.1080p.WEBRip.x264-[YTS.AM].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Just Like Heaven (2005) [WEBRip] [1080p] [YTS.AM]\\Just.Like.Heaven.2005.1080p.WEBRip.x264-[YTS.AM].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Two.Weeks.Notice.2002.1080p.BluRay.x264-[YTS.AM].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Two Weeks Notice (2002) [BluRay] [1080p] [YTS.AM]\\Two.Weeks.Notice.2002.1080p.BluRay.x264-[YTS.AM].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Sweet.Home.Alabama.2002.1080p.BluRay.x264-[YTS.AM].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Sweet Home Alabama (2002) [BluRay] [1080p] [YTS.AM]\\Sweet.Home.Alabama.2002.1080p.BluRay.x264-[YTS.AM].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "13.Going.On.30.2004.1080p.BluRay.x264-[YTS.AG].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\13 Going On 30 (2004) [1080p] [YTS.AG]\\13.Going.On.30.2004.1080p.BluRay.x264-[YTS.AG].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Music.And.Lyrics.2007.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Music And Lyrics (2007) [1080p] [BluRay] [5.1] [YTS.MX]\\Music.And.Lyrics.2007.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "the-family-jewels-1965[480p].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\The Family Jewels (Jerry Lewis - 1965)\\the-family-jewels-1965[480p].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Rock-a-Bye.Baby.1958.1080p.BluRay.x264.AAC-[YTS.LT].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Rock-a-Bye Baby (1958) [1080p] [BluRay] [YTS.LT]\\Rock-a-Bye.Baby.1958.1080p.BluRay.x264.AAC-[YTS.LT].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Quick.Change.1990.1080p.BluRay.x264.AAC-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Quick Change (1990) [1080p] [BluRay] [YTS.MX]\\Quick.Change.1990.1080p.BluRay.x264.AAC-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "XXx.2002.15TH.ANNIVERSARY.EDITION.REPACK.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\XXx (2002) [15TH ANNIVERSARY EDITION] [REPACK] [1080p] [BluRay] [5.1] [YTS.MX]\\XXx.2002.15TH.ANNIVERSARY.EDITION.REPACK.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "XXx.Return.Of.Xander.Cage.2017.1080p.BluRay.x264-[YTS.AG].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\XXx Return Of Xander Cage (2017) [1080p] [YTS.AG]\\XXx.Return.Of.Xander.Cage.2017.1080p.BluRay.x264-[YTS.AG].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "xXx.State.of.The.Union.2005.1080p.BRrip.x264.GAZ.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\xXx State of The Union (2005) [1080p]\\xXx.State.of.The.Union.2005.1080p.BRrip.x264.GAZ.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Hollow.Man.2000.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Hollow Man (2000) [1080p] [BluRay] [5.1] [YTS.MX]\\Hollow.Man.2000.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Batman.The.Movie.1966.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Batman The Movie (1966) [1080p] [BluRay] [5.1] [YTS.MX]\\Batman.The.Movie.1966.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "I,.Frankenstein.2014.1080p.BluRay.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\I, Frankenstein (2014) [1080p]\\I,.Frankenstein.2014.1080p.BluRay.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Jurassic.World.Fallen.Kingdom.2018.1080p.BluRay.x264-[YTS.AM].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Jurassic World Fallen Kingdom (2018) [BluRay] [1080p] [YTS.AM]\\Jurassic.World.Fallen.Kingdom.2018.1080p.BluRay.x264-[YTS.AM].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Jurassic.Park.III.2001.1080p.BRrip.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Jurassic Park III (2001) [1080p]\\Jurassic.Park.III.2001.1080p.BRrip.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Jurassic.Park.II.The.Lost.World.1997.1080p.BRrip.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Jurassic Park The Lost World (1997) [1080p]\\Jurassic.Park.II.The.Lost.World.1997.1080p.BRrip.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.Adventures.of.Baron.Munchausen.1988.1080p.BluRay.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\The Adventures of Baron Munchausen (1988) [1080p]\\The.Adventures.of.Baron.Munchausen.1988.1080p.BluRay.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Bloodsport.1988.1080p.BrRip.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Bloodsport (1988) [1080p]\\Bloodsport.1988.1080p.BrRip.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Office.Christmas.Party.2016.1080p.BluRay.x264-[YTS.AG].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Office Christmas Party (2016) [1080p] [YTS.AG]\\Office.Christmas.Party.2016.1080p.BluRay.x264-[YTS.AG].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Talladega.Nights.The.Ballad.Of.Ricky.Bobby.2006.UNRATED.AND.UNCUT.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Talladega Nights The Ballad Of Ricky Bobby (2006) [UNRATED AND UNCUT] [1080p] [BluRay] [5.1] [YTS.MX]\\Talladega.Nights.The.Ballad.Of.Ricky.Bobby.2006.UNRATED.AND.UNCUT.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Office.Space.1999.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Office Space (1999) [1080p] [BluRay] [5.1] [YTS.MX]\\Office.Space.1999.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Blades.of.Glory.2007.1080p.BrRip.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Blades of Glory (2007) [1080p]\\Blades.of.Glory.2007.1080p.BrRip.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Woodstock.1970.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Woodstock (1970) [1080p] [BluRay] [5.1] [YTS.MX]\\Woodstock.1970.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Four.Weddings.And.A.Funeral.1994.1080p.BluRay.x264-[YTS.AM].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Four Weddings And A Funeral (1994) [BluRay] [1080p] [YTS.AM]\\Four.Weddings.And.A.Funeral.1994.1080p.BluRay.x264-[YTS.AM].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Bridget.Jones.The.Edge.Of.Reason.2004.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\MOVIES\\Bridget Jones The Edge Of Reason (2004) [1080p] [BluRay] [5.1] [YTS.MX]\\Bridget.Jones.The.Edge.Of.Reason.2004.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Legion.2010.1080p.BrRip.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\FROM-G\\MOVIES\\Legion (2010) [1080p]\\Legion.2010.1080p.BrRip.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Lost.In.Space.1998.1080p.BluRay.x264-[YTS.AG].mp4",
+      "path": "S:\\MEDIA\\FROM-G\\MOVIES\\Lost In Space (1998) [1080p] [YTS.AG]\\Lost.In.Space.1998.1080p.BluRay.x264-[YTS.AG].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Masterminds.2016.720p.BluRay.H264.AAC-RARBG.mp4",
+      "path": "S:\\MEDIA\\FROM-G\\MOVIES\\Masterminds.2016.720p.BluRay.H264.AAC-RARBG\\Masterminds.2016.720p.BluRay.H264.AAC-RARBG.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Millennium.avi",
+      "path": "S:\\MEDIA\\FROM-G\\MOVIES\\Millennium.1989.720p\\Millennium.avi",
+      "hasAudio": true,
+      "codecs": [
+        "mp3"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Now.You.See.Me.2013.1080p.BluRay.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\FROM-G\\MOVIES\\Now You See Me (2013) [1080p]\\Now.You.See.Me.2013.1080p.BluRay.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Practical.Magic.1998.1080p.BluRay.x264-[YTS.AG].mp4",
+      "path": "S:\\MEDIA\\FROM-G\\MOVIES\\Practical Magic (1998) [1080p] [YTS.AG]\\Practical.Magic.1998.1080p.BluRay.x264-[YTS.AG].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Priest.2011.1080p.BluRay.x264-[YTS.AG].mp4",
+      "path": "S:\\MEDIA\\FROM-G\\MOVIES\\Priest (2011) [1080p] [YTS.AG]\\Priest.2011.1080p.BluRay.x264-[YTS.AG].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "RED.2010.1080p.BluRay.x264-[YTS.AG].mp4",
+      "path": "S:\\MEDIA\\FROM-G\\MOVIES\\RED (2010) [1080p] [YTS.AG]\\RED.2010.1080p.BluRay.x264-[YTS.AG].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "RV[2006]DvDrip.AC3[Eng]-aXXo.avi",
+      "path": "S:\\MEDIA\\FROM-G\\MOVIES\\RV [2006]DvDrip.AC3[Eng]\\RV[2006]DvDrip.AC3[Eng]-aXXo.avi",
+      "hasAudio": true,
+      "codecs": [
+        "ac3"
+      ],
+      "hasIncompatibleCodec": true,
+      "incompatibleCodecs": [
+        "ac3"
+      ]
+    },
+    {
+      "title": "Shooter (2007).mp4",
+      "path": "S:\\MEDIA\\FROM-G\\MOVIES\\Shooter (2007) [1080p]\\Shooter (2007).mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Silver.Linings.Playbook.2012.1080p.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\FROM-G\\MOVIES\\Silver Linings Playbook (2012) [1080p]\\Silver.Linings.Playbook.2012.1080p.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Sneakers.1992.1080p.BluRay.x264-[YTS.AG].mp4",
+      "path": "S:\\MEDIA\\FROM-G\\MOVIES\\Sneakers (1992) [1080p] [YTS.AG]\\Sneakers.1992.1080p.BluRay.x264-[YTS.AG].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Somewhere In Time (1980) DVDRip (SiRiUs sHaRe).avi",
+      "path": "S:\\MEDIA\\FROM-G\\MOVIES\\Somewhere In Time (1980) DVDRip\\Somewhere In Time (1980) DVDRip (SiRiUs sHaRe).avi",
+      "hasAudio": true,
+      "codecs": [
+        "mp3"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Take.Shelter.2011.1080p.BluRay.x264-[YTS.AG].mp4",
+      "path": "S:\\MEDIA\\FROM-G\\MOVIES\\Take Shelter (2011) [1080p] [YTS.AG]\\Take.Shelter.2011.1080p.BluRay.x264-[YTS.AG].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Terminal.Velocity.1994.UNCUT.1080p.BluRay.H264.AAC-RARBG.mp4",
+      "path": "S:\\MEDIA\\FROM-G\\MOVIES\\Terminal.Velocity.1994.UNCUT.1080p.BluRay.H264.AAC-RARBG\\Terminal.Velocity.1994.UNCUT.1080p.BluRay.H264.AAC-RARBG.mp4",
+      "hasAudio": false,
+      "codecs": [],
+      "error": "Command failed: ffprobe -v quiet -print_format json -show_streams \"S:\\MEDIA\\FROM-G\\MOVIES\\Terminal.Velocity.1994.UNCUT.1080p.BluRay.H264.AAC-RARBG\\Terminal.Velocity.1994.UNCUT.1080p.BluRay.H264.AAC-RARBG.mp4\"\n"
+    },
+    {
+      "title": "The.Abyss.1989.1080p.BluRay.x264-[YTS.AG].mp4",
+      "path": "S:\\MEDIA\\FROM-G\\MOVIES\\The Abyss (1989) [1080p] [YTS.AG]\\The.Abyss.1989.1080p.BluRay.x264-[YTS.AG].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.Birds.1963.HDTV.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\FROM-G\\MOVIES\\The Birds (1963)\\The.Birds.1963.HDTV.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.Bridges.of.Madison.County.1995.1080p.BluRay.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\FROM-G\\MOVIES\\The Bridges of Madison County (1995) [1080p]\\The.Bridges.of.Madison.County.1995.1080p.BluRay.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "the final countdown.mp4",
+      "path": "S:\\MEDIA\\FROM-G\\MOVIES\\The Final Countdown\\the final countdown.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The League of Extraordinary Gentlemen (2003).mp4",
+      "path": "S:\\MEDIA\\FROM-G\\MOVIES\\The League of Extraordinary Gentlemen (2003)\\The League of Extraordinary Gentlemen (2003).mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.Matrix.1999.1080p.BrRip.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\FROM-G\\MOVIES\\The Matrix (1999) [1080p]\\The.Matrix.1999.1080p.BrRip.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.Nutty.Professor.1963.1080p.BluRay.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\FROM-G\\MOVIES\\The Nutty Professor (1963) [1080p]\\The.Nutty.Professor.1963.1080p.BluRay.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.Philadelphia.Experiment.1984.1080p.BluRay.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\FROM-G\\MOVIES\\The Philadelphia Experiment (1984) [1080p]\\The.Philadelphia.Experiment.1984.1080p.BluRay.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Trail Of The Pink Panther.avi",
+      "path": "S:\\MEDIA\\FROM-G\\MOVIES\\The Pink Panther - ALL\\Trail Of The Pink Panther.avi",
+      "hasAudio": true,
+      "codecs": [
+        "mp3"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The Return Of The Pink Panther.avi",
+      "path": "S:\\MEDIA\\FROM-G\\MOVIES\\The Pink Panther - ALL\\The Return Of The Pink Panther.avi",
+      "hasAudio": true,
+      "codecs": [
+        "mp3"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The Pink Panther.avi",
+      "path": "S:\\MEDIA\\FROM-G\\MOVIES\\The Pink Panther - ALL\\The Pink Panther.avi",
+      "hasAudio": true,
+      "codecs": [
+        "mp3"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The Pink Panther Strikes Again.avi",
+      "path": "S:\\MEDIA\\FROM-G\\MOVIES\\The Pink Panther - ALL\\The Pink Panther Strikes Again.avi",
+      "hasAudio": true,
+      "codecs": [
+        "mp3"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Revenge Of The Pink Panther.avi",
+      "path": "S:\\MEDIA\\FROM-G\\MOVIES\\The Pink Panther - ALL\\Revenge Of The Pink Panther.avi",
+      "hasAudio": true,
+      "codecs": [
+        "mp3"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "A Shot In The Dark.avi",
+      "path": "S:\\MEDIA\\FROM-G\\MOVIES\\The Pink Panther - ALL\\A Shot In The Dark.avi",
+      "hasAudio": true,
+      "codecs": [
+        "mp3"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.Rock.1996.1080p.BrRip.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\FROM-G\\MOVIES\\The Rock (1996) [1080p]\\The.Rock.1996.1080p.BrRip.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.Secret.Life.Of.Pets.2016.1080p.BluRay.x264-[YTS.AG].mp4",
+      "path": "S:\\MEDIA\\FROM-G\\MOVIES\\The Secret Life Of Pets (2016) [1080p] [YTS.AG]\\The.Secret.Life.Of.Pets.2016.1080p.BluRay.x264-[YTS.AG].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The Tourist[2010]R5 Line XviD-ExtraTorrentRG.avi",
+      "path": "S:\\MEDIA\\FROM-G\\MOVIES\\The Tourist[2010]R5 Line XviD-ExtraTorrentRG\\The Tourist[2010]R5 Line XviD-ExtraTorrentRG.avi",
+      "hasAudio": false,
+      "codecs": [],
+      "error": "Command failed: ffprobe -v quiet -print_format json -show_streams \"S:\\MEDIA\\FROM-G\\MOVIES\\The Tourist[2010]R5 Line XviD-ExtraTorrentRG\\The Tourist[2010]R5 Line XviD-ExtraTorrentRG.avi\"\n"
+    },
+    {
+      "title": "SaMple.avi",
+      "path": "S:\\MEDIA\\FROM-G\\MOVIES\\The Tourist[2010]R5 Line XviD-ExtraTorrentRG\\SaMple.avi",
+      "hasAudio": false,
+      "codecs": [],
+      "error": "Command failed: ffprobe -v quiet -print_format json -show_streams \"S:\\MEDIA\\FROM-G\\MOVIES\\The Tourist[2010]R5 Line XviD-ExtraTorrentRG\\SaMple.avi\"\n"
+    },
+    {
+      "title": "The.Wizard.of.Oz.1939.1080p.BrRip.x264.BOKUTOX.YIFY.mp4",
+      "path": "S:\\MEDIA\\FROM-G\\MOVIES\\The Wizard of Oz (2939) [1080p]\\The.Wizard.of.Oz.1939.1080p.BrRip.x264.BOKUTOX.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The X-Files Fight The Future (1998) 1080p x265 6ch Eng HE-AAC.mkv",
+      "path": "S:\\MEDIA\\FROM-G\\MOVIES\\The X-Files Fight The Future (1998) 1080p x265 6ch Eng HE-AAC\\The X-Files Fight The Future (1998) 1080p x265 6ch Eng HE-AAC.mkv",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.BFG.2016.720p.BRRip.x264.AAC-ETRG.mp4",
+      "path": "S:\\MEDIA\\FROM-G\\MOVIES\\The.BFG.2016.720p.BRRip.x264.AAC-ETRG\\The.BFG.2016.720p.BRRip.x264.AAC-ETRG.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.Cable.Guy[1996]Jim.Carrey.DVDRip-PsyCoSys.avi",
+      "path": "S:\\MEDIA\\FROM-G\\MOVIES\\The.Cable.Guy[1996]Jim.Carrey.DVDRip\\The.Cable.Guy[1996]Jim.Carrey.DVDRip-PsyCoSys.avi",
+      "hasAudio": false,
+      "codecs": [],
+      "error": "Command failed: ffprobe -v quiet -print_format json -show_streams \"S:\\MEDIA\\FROM-G\\MOVIES\\The.Cable.Guy[1996]Jim.Carrey.DVDRip\\The.Cable.Guy[1996]Jim.Carrey.DVDRip-PsyCoSys.avi\"\n"
+    },
+    {
+      "title": "Timecop.1994.1080p.BluRay.x264-[YTS.AG].mp4",
+      "path": "S:\\MEDIA\\FROM-G\\MOVIES\\Timecop (1994) [1080p] [YTS.AG]\\Timecop.1994.1080p.BluRay.x264-[YTS.AG].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "TRON Legacy (2010) DVDRip XviD.avi",
+      "path": "S:\\MEDIA\\FROM-G\\MOVIES\\TRON Legacy (2010) DVDRip XviD\\TRON Legacy (2010) DVDRip XviD.avi",
+      "hasAudio": false,
+      "codecs": [],
+      "error": "Command failed: ffprobe -v quiet -print_format json -show_streams \"S:\\MEDIA\\FROM-G\\MOVIES\\TRON Legacy (2010) DVDRip XviD\\TRON Legacy (2010) DVDRip XviD.avi\"\n"
+    },
+    {
+      "title": "Twins.1988.1080p.BluRay.x264-[YTS.AG].mp4",
+      "path": "S:\\MEDIA\\FROM-G\\MOVIES\\Twins (1988) [1080p] [YTS.AG]\\Twins.1988.1080p.BluRay.x264-[YTS.AG].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "U.S.Marshals.1998.1080p.BrRip.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\FROM-G\\MOVIES\\U.S. Marshals (1998) [1080p]\\U.S.Marshals.1998.1080p.BrRip.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "While.You.Were.Sleeping.1995.1080p.BluRay.H264.AAC-RARBG.mp4",
+      "path": "S:\\MEDIA\\FROM-G\\MOVIES\\While.You.Were.Sleeping.1995.1080p.BluRay.H264.AAC-RARBG\\While.You.Were.Sleeping.1995.1080p.BluRay.H264.AAC-RARBG.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "xXx.2002.1080p.BRrip.x264.GAZ.YIFY.mp4",
+      "path": "S:\\MEDIA\\FROM-G\\MOVIES\\xXx (2002) [1080p]\\xXx.2002.1080p.BRrip.x264.GAZ.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Mary.Shelleys.Frankenstein.1994.720p.BrRip.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\FROM-G\\MOVIES\\Frankenstein (1994)\\Mary.Shelleys.Frankenstein.1994.720p.BrRip.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Hancock[2008]DvDrip-aXXo.avi",
+      "path": "S:\\MEDIA\\FROM-G\\MOVIES\\Hancock[2008]DvDrip\\Hancock[2008]DvDrip-aXXo.avi",
+      "hasAudio": true,
+      "codecs": [
+        "mp3"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "Hitch.2005.720p.BrRip.x264.YIFY.mp4",
+      "path": "S:\\MEDIA\\FROM-G\\MOVIES\\Hitch (2005)\\Hitch.2005.720p.BrRip.x264.YIFY.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "joy.2015.720p.BRRip.x264.AAC-ETRG.mp4",
+      "path": "S:\\MEDIA\\FROM-G\\MOVIES\\joy.2015.720p.BRRip.x264.AAC-ETRG\\joy.2015.720p.BRRip.x264.AAC-ETRG.mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    },
+    {
+      "title": "The.Forbidden.Kingdom.2008.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "path": "S:\\MEDIA\\FROM-G\\MOVIES\\The Forbidden Kingdom (2008) [1080p] [BluRay] [5.1] [YTS.MX]\\The.Forbidden.Kingdom.2008.1080p.BluRay.x264.AAC5.1-[YTS.MX].mp4",
+      "hasAudio": true,
+      "codecs": [
+        "aac"
+      ],
+      "hasIncompatibleCodec": false,
+      "incompatibleCodecs": []
+    }
+  ]
+}
