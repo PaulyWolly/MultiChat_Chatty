@@ -22,7 +22,7 @@
     "chalk": "^4.1.2",
     "cheerio": "^1.0.0",
     "cors": "^2.8.5",
-    "dotenv": "^16.5.0",
+    "dotenv": "^16.6.1",
     "enquirer": "^2.4.1",
     "express": "^4.21.1",
     "googleapis": "^144.0.0",
@@ -33,6 +33,7 @@
     "mongodb": "^6.10.0",
     "mongoose": "^8.8.3",
     "node-cache": "^5.1.2",
+    "node-fetch": "^2.7.0",
     "openai": "^4.57.0"
   },
   "devDependencies": {
