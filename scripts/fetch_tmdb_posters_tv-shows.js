@@ -5,34 +5,21 @@ const fetch = require('node-fetch');
 
 const TMDB_API_KEY = process.env.TMDB_API_KEY;
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
-const MOVIE_DIR = 'S:/MEDIA/movies/';
+const TV_SHOWS_DIR = 'S:/MEDIA/TV-SHOWS/';
 const DATA_DIR = path.join(__dirname, '../public/components/MediaLibrary/data');
-const OUTPUT_JSON = path.join(DATA_DIR, 'movie_posters.json');
-const OVERRIDES_PATH = path.join(__dirname, '../public/components/MediaLibrary/data/poster_overrides.json');
+const OUTPUT_JSON = path.join(DATA_DIR, 'tv_posters.json');
+const OVERRIDES_PATH = path.join(__dirname, '../public/components/MediaLibrary/data/tv_poster_overrides.json');
 
 if (!TMDB_API_KEY) {
     console.error('❌ TMDB_API_KEY not found in .env');
     process.exit(1);
 }
 
-const VIDEO_EXTS = ['.mp4', '.mkv', '.avi', '.mov', '.wmv', '.flv', '.webm', '.m4v'];
-
-function isVideoFile(filename) {
-    return VIDEO_EXTS.includes(path.extname(filename).toLowerCase());
-}
-
-function scanDir(dir) {
-    let results = [];
-    const entries = fs.readdirSync(dir, { withFileTypes: true });
-    for (const entry of entries) {
-        const fullPath = path.join(dir, entry.name);
-        if (entry.isDirectory()) {
-            results = results.concat(scanDir(fullPath));
-        } else if (entry.isFile() && isVideoFile(entry.name)) {
-            results.push(fullPath);
-        }
-    }
-    return results;
+function scanTopLevelFolders(dir) {
+    // Only return top-level folders (TV shows)
+    return fs.readdirSync(dir, { withFileTypes: true })
+        .filter(entry => entry.isDirectory())
+        .map(entry => path.join(dir, entry.name));
 }
 
 function cleanTitle(filename) {
@@ -79,8 +66,8 @@ function loadOverrides() {
     return JSON.parse(fs.readFileSync(OVERRIDES_PATH, 'utf8'));
 }
 
-async function fetchPosterById(tmdbId) {
-    const url = `${TMDB_BASE_URL}/movie/${tmdbId}?api_key=${TMDB_API_KEY}`;
+async function fetchTVPosterById(tmdbId) {
+    const url = `${TMDB_BASE_URL}/tv/${tmdbId}?api_key=${TMDB_API_KEY}`;
     const res = await fetch(url);
     const data = await res.json();
     if (data && data.poster_path) {
@@ -89,9 +76,9 @@ async function fetchPosterById(tmdbId) {
     return null;
 }
 
-async function fetchPosterBySearch(name, year) {
-    let url = `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(name)}`;
-    if (year) url += `&year=${year}`;
+async function fetchTVPosterBySearch(name, year) {
+    let url = `${TMDB_BASE_URL}/search/tv?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(name)}`;
+    if (year) url += `&first_air_date_year=${year}`;
     const res = await fetch(url);
     const data = await res.json();
     if (data.results && data.results.length > 0) {
@@ -101,34 +88,33 @@ async function fetchPosterBySearch(name, year) {
 }
 
 async function main() {
-    // Ensure data directory exists
     if (!fs.existsSync(DATA_DIR)) {
         fs.mkdirSync(DATA_DIR, { recursive: true });
     }
-    console.log('🔍 Scanning for movie files...');
-    const files = scanDir(MOVIE_DIR);
-    console.log(`Found ${files.length} movie files.`);
+    console.log('🔍 Scanning for TV show folders...');
+    const folders = scanTopLevelFolders(TV_SHOWS_DIR);
+    console.log(`Found ${folders.length} TV show folders.`);
     const overrides = loadOverrides();
     const posters = {};
     let processed = 0;
-    for (const file of files) {
+    for (const folder of folders) {
         processed++;
-        const title = cleanTitle(file);
-        const year = extractYear(path.basename(file));
-        const clean = cleanName(path.basename(file));
+        const folderName = path.basename(folder);
+        // Try to extract year from folder name
+        const year = extractYear(folderName);
+        const clean = cleanName(folderName);
         let posterUrl = null;
-        // Check override first
-        if (overrides[file]) {
-            console.log(`🟡 [OVERRIDE] Using TMDb ID ${overrides[file]} for ${path.basename(file)}`);
-            posterUrl = await fetchPosterById(overrides[file]);
+        if (overrides[folder]) {
+            console.log(`🟡 [OVERRIDE] Using TMDb ID ${overrides[folder]} for ${folderName}`);
+            posterUrl = await fetchTVPosterById(overrides[folder]);
         } else {
-            posterUrl = await fetchPosterBySearch(clean, year);
+            posterUrl = await fetchTVPosterBySearch(clean, year);
         }
         if (posterUrl) {
-            posters[file] = posterUrl;
-            console.log(`✅ [POSTER] ${path.basename(file)} => ${posterUrl}`);
+            posters[folder] = posterUrl;
+            console.log(`✅ [POSTER] ${folderName} => ${posterUrl}`);
         } else {
-            console.log(`❌ [POSTER] No poster found for ${path.basename(file)}`);
+            console.log(`❌ [POSTER] No poster found for ${folderName}`);
         }
     }
     fs.writeFileSync(OUTPUT_JSON, JSON.stringify(posters, null, 2));
@@ -137,4 +123,3 @@ async function main() {
 }
 
 main(); 
-})(); 
