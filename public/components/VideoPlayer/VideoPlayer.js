@@ -291,26 +291,36 @@ class VideoPlayer {
                 console.log('[VIDEO-PLAYER] Video.js click event fired');
                 // Only toggle if not clicking on controls
                 if (e && (e.target.closest('.vjs-control-bar') || e.target.closest('.vjs-big-play-button') || e.target.closest('.vjs-loading-spinner'))) return;
+                console.log('[VIDEO-PLAYER] Video clicked - toggling play/pause');
+                e.preventDefault();
+                e.stopPropagation();
                 this.togglePlay();
             });
 
             // Add debug log to pause event
             this.vjsPlayer.off('pause');
             this.vjsPlayer.on('pause', () => {
-                let movie = this.currentMediaItem || this.currentFile;
-                let currentTime = this.vjsPlayer.currentTime();
-                let duration = this.vjsPlayer.duration();
-                console.log('[VIDEO-PLAYER] Pause event: movie=', movie, 'currentTime=', currentTime, 'duration=', duration);
-                if (window.mediaLibraryManager && movie && currentTime > 0) {
-                    window.mediaLibraryManager.saveResumeProgress(movie, currentTime, duration);
-                    this.showOverlayAlert('Progress Saved');
-                }
+                console.log('🎬 [VIDEO-PLAYER] Pause event triggered');
+                // No auto-save on pause. Only Save for Later button saves progress.
             });
 
             // Add error handling for the Video.js player
             this.vjsPlayer.on('error', (error) => {
                 console.warn('🎬 [VIDEO-PLAYER] Video.js error:', error);
             });
+            
+            // Add direct click handler to the video element for reliable click-to-pause
+            this.video.addEventListener('click', (e) => {
+                console.log('[VIDEO-PLAYER] Direct video element clicked');
+                // Don't trigger if clicking on Video.js controls
+                if (e.target.closest('.vjs-control-bar') || e.target.closest('.vjs-big-play-button') || e.target.closest('.vjs-loading-spinner')) {
+                    return;
+                }
+                console.log('[VIDEO-PLAYER] Video element clicked - toggling play/pause');
+                e.preventDefault();
+                e.stopPropagation();
+                this.togglePlay();
+            }, true); // Use capture phase to ensure this runs first
             
         } catch (error) {
             console.error('🎬 [VIDEO-PLAYER] Failed to initialize Video.js:', error);
@@ -491,7 +501,7 @@ class VideoPlayer {
         this.video.addEventListener('loadedmetadata', () => this.updateTimeDisplay());
         this.video.addEventListener('timeupdate', () => this.updateProgress());
         this.video.addEventListener('ended', () => this.onVideoEnd());
-        this.video.addEventListener('click', () => this.togglePlay());
+        // Note: Click handling is now done in createPlayer() for better Video.js compatibility
 
         // Container events for showing/hiding controls and click-to-pause
         this.container.addEventListener('mousemove', () => this.showControls());
@@ -557,43 +567,11 @@ class VideoPlayer {
                 console.log('🎬 [VIDEO-PLAYER] Video loaded successfully:', file.name);
                 this.showMessage(`Loaded: ${file.name}`);
                 
-
-                
                 // Add pause event handler for Watch Later
                 this.vjsPlayer.off('pause'); // Remove any previous handler to avoid duplicates
                 this.vjsPlayer.on('pause', () => {
                     console.log('🎬 [VIDEO-PLAYER] Pause event triggered');
-                    
-                    // Skip auto-saving during cleanup
-                    if (this.isCleaningUp) {
-                        console.log('🎬 [VIDEO-PLAYER] Skipping auto-save during cleanup');
-                        return;
-                    }
-                    
-                    let movie = this.currentMediaItem || this.currentFile;
-                    let currentTime = 0, duration = 0;
-                    if (this.vjsPlayer) {
-                        currentTime = this.vjsPlayer.currentTime();
-                        duration = this.vjsPlayer.duration();
-                    } else if (this.video) {
-                        currentTime = this.video.currentTime;
-                        duration = this.video.duration;
-                    }
-                    if ((!movie.path || !movie.title) && window.mediaLibraryManager && window.mediaLibraryManager.mediaLibrary) {
-                        const found = window.mediaLibraryManager.mediaLibrary.find(item =>
-                            (movie.path && item.path === movie.path) ||
-                            (movie.title && item.title === movie.title) ||
-                            (movie.name && item.name === movie.name)
-                        );
-                        if (found) movie = found;
-                    }
-                    if (!movie.title) movie.title = movie.name || movie.filename || movie.path || 'Untitled';
-                    if (!movie.path && movie.absPath) movie.path = movie.absPath;
-                    if (window.mediaLibraryManager && typeof window.mediaLibraryManager.saveResumeProgress === 'function') {
-                        console.log('🎬 [VIDEO-PLAYER] Auto-saving progress:', { movie: movie.title, currentTime, duration });
-                        window.mediaLibraryManager.saveResumeProgress(movie, currentTime, duration);
-                        this.showOverlayAlert('Progress Saved to Watch Later');
-                    }
+                    // No auto-save on pause. Only Save for Later button saves progress.
                 });
             });
             
@@ -1095,43 +1073,11 @@ class VideoPlayer {
             this.vjsPlayer.src({ src, type });
             this.show();
             
-
-            
             // Add pause event handler for Watch Later (same as in loadVideo)
             this.vjsPlayer.off('pause'); // Remove any previous handler to avoid duplicates
             this.vjsPlayer.on('pause', () => {
                 console.log('🎬 [VIDEO-PLAYER] Pause event triggered (playUrl)');
-                
-                // Skip auto-saving during cleanup
-                if (this.isCleaningUp) {
-                    console.log('🎬 [VIDEO-PLAYER] Skipping auto-save during cleanup (playUrl)');
-                    return;
-                }
-                
-                let movie = this.currentMediaItem || this.currentFile;
-                let currentTime = 0, duration = 0;
-                if (this.vjsPlayer) {
-                    currentTime = this.vjsPlayer.currentTime();
-                    duration = this.vjsPlayer.duration();
-                } else if (this.video) {
-                    currentTime = this.video.currentTime;
-                    duration = this.video.duration;
-                }
-                if ((!movie.path || !movie.title) && window.mediaLibraryManager && window.mediaLibraryManager.mediaLibrary) {
-                    const found = window.mediaLibraryManager.mediaLibrary.find(item =>
-                        (movie.path && item.path === movie.path) ||
-                        (movie.title && item.title === movie.title) ||
-                        (movie.name && item.name === movie.name)
-                    );
-                    if (found) movie = found;
-                }
-                if (!movie.title) movie.title = movie.name || movie.filename || movie.path || 'Untitled';
-                if (!movie.path && movie.absPath) movie.path = movie.absPath;
-                if (window.mediaLibraryManager && typeof window.mediaLibraryManager.saveResumeProgress === 'function') {
-                    console.log('🎬 [VIDEO-PLAYER] Auto-saving progress (playUrl):', { movie: movie.title, currentTime, duration });
-                    window.mediaLibraryManager.saveResumeProgress(movie, currentTime, duration);
-                    this.showOverlayAlert('Progress Saved to Watch Later');
-                }
+                // No auto-save on pause. Only Save for Later button saves progress.
             });
             
             // If video is already ready (cached), set time immediately
