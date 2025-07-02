@@ -965,7 +965,7 @@ class MediaLibraryManager {
             // Scroll to the anchor smoothly
             anchor.scrollIntoView({ 
                 behavior: 'smooth', 
-                block: 'start' 
+                block: 'nearest' 
             });
             
             // Highlight the card containing the anchor
@@ -1180,7 +1180,7 @@ class MediaLibraryManager {
                     const firstLetter = title.charAt(0).toUpperCase();
                     let anchor = '';
                     if (firstLetter !== lastLetter) {
-                        anchor = `<div id="anchor-${firstLetter}"></div>`;
+                        anchor = `<div id="anchor-${firstLetter}" class="media-library-anchor"></div>`;
                         lastLetter = firstLetter;
                     }
                     return `
@@ -1936,7 +1936,7 @@ class MediaLibraryManager {
                     const firstLetter = title.charAt(0).toUpperCase();
                     let anchor = '';
                     if (firstLetter !== lastLetter) {
-                        anchor = `<div id="anchor-${firstLetter}"></div>`;
+                        anchor = `<div id="anchor-${firstLetter}" class="media-library-anchor"></div>`;
                         lastLetter = firstLetter;
                     }
                     return `
