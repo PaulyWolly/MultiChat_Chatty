@@ -104,6 +104,8 @@ function scanDirectory(dir, baseDir) {
         const relativePath = path.relative(baseDir, fullPath);
         
         if (fs.statSync(fullPath).isDirectory()) {
+            // Skip node_modules directories
+            if (entry === 'node_modules') continue;
             // Recursively scan subdirectories
             files.push(...scanDirectory(fullPath, baseDir));
         } else {

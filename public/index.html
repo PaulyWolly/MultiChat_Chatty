@@ -45,10 +45,13 @@
 
         <h3 class="top-bar-title" style="order: 2;">MultiChat_Chatty [v4] 6/30/2025 @4:20PM</h3>
 
-        <div id="user-profile-menu" style="order: 3; position: relative; margin-left: auto;">
+        <div id="user-profile-menu">
           <img src="assets/img/user-default.png" alt="User" id="user-profile-icon" class="user-profile-icon" />
-          <div id="user-dropdown" class="user-dropdown" style="display: none;">
+          <div id="user-dropdown" class="user-dropdown">
             <div class="user-dropdown-item" id="admin-menu-item">Admin</div>
+            <div class="user-dropdown-item" id="users-menu-item">Users</div>
+            <div class="user-dropdown-item" id="bug-menu-item">Bug Tracking</div>
+            <div class="user-dropdown-item" id="profile-menu-item">Profile</div>
             <div class="user-dropdown-item" id="logout-menu-item">Logout</div>
           </div>
         </div>
@@ -61,11 +64,13 @@
       <div id="processing-indicator">Processing...</div>
       <div id="bottom-bar">
         <div id="status-container" style="position: relative;">
-          <div class="status-msg" id="status"></div>         
-          <div id="conversation-status"></div>
-          <div id="status-default-abs">
+          
+          <span class="status-msg" id="status"></span>
+          <span class="conversation-status" id="conversation-status"></span>
+          
+          <!-- <div id="status-default-abs">
             <div class="status-default-msg" id="status-default"></div>
-          </div>
+          </div> -->
         </div>
         <div class="playlist-manager-btn">
           <button class="view-playlists-MULTI-btn" id="open-playlist-manager-btn">My Playlists</button>
@@ -253,5 +258,7 @@
         window.QuotaMonitor.init();
       }
     </script>
+
+
   </body>
 </html>

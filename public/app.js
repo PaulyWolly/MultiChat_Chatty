@@ -2197,7 +2197,7 @@ async function sendMessage(message, isGreeting = false) {
 // Get AI response function
 async function getAIResponse(message, selectedModel, history, systemPrompt, sessionId) {
     state.isRendering = true;
-    updateStatus('Thinking...');
+    updateStatusAndConversation('Thinking...', state.isConversationMode ? MESSAGES.CONVERSATION.ENABLE : '');
     const startTime = Date.now();
     let tokenCount = 0;
     let responseText = '';
@@ -2289,7 +2289,7 @@ async function getAIResponse(message, selectedModel, history, systemPrompt, sess
                         });
                     }
 
-                    updateStatus(MESSAGES.STATUS.SPEAKING);
+                    updateStatusAndConversation(MESSAGES.STATUS.SPEAKING, state.isConversationMode ? MESSAGES.CONVERSATION.ENABLE : '');
 
                     // Check for Bing search results FIRST and handle them exclusively
                     const isBingWebResult = /# Web Results for|# News Results for/i.test(responseText);
@@ -2357,7 +2357,7 @@ async function getAIResponse(message, selectedModel, history, systemPrompt, sess
         window.requestAnimationFrame(() => {
             // Set status to AISPEAKING before starting audio
             if (typeof updateStatus === 'function' && MESSAGES && MESSAGES.STATUS && MESSAGES.STATUS.AISPEAKING) {
-                updateStatus(MESSAGES.STATUS.AISPEAKING);
+                updateStatusAndConversation(MESSAGES.STATUS.AISPEAKING, state.isConversationMode ? MESSAGES.CONVERSATION.ENABLE : '');
             }
             // Only queue audio if not already queued for this recipe
             if (state.selectedVoice && recipeBuffer.trim() && !state.lastRecipeAudio || state.lastRecipeAudio !== recipeBuffer.trim()) {
@@ -3013,7 +3013,7 @@ function safeStartListening() {
         console.error('Failed to start recognition:', error);
         state.isListening = false;
         elements.micButton.textContent = '🎤';
-        updateStatus('Error starting speech recognition');
+        updateStatusAndConversation('Error starting speech recognition', state.isConversationMode ? MESSAGES.CONVERSATION.ENABLE : '');
         state.recognition = null;
         setTimeout(() => {
             initializeSpeechRecognition();
@@ -3042,7 +3042,7 @@ async function startListening() {
         console.error('Failed to start recognition:', error);
         state.isListening = false;
         elements.micButton.textContent = '🎤';
-        updateStatus('Error starting speech recognition');
+        updateStatusAndConversation('Error starting speech recognition', state.isConversationMode ? MESSAGES.CONVERSATION.ENABLE : '');
         state.recognition = null;
         setTimeout(() => {
             initializeSpeechRecognition();
@@ -3071,14 +3071,14 @@ function initializeSpeechRecognition() {
         state.recognition.onstart = () => {
             state.isListening = true;
             elements.micButton.textContent = '🔴';
-            updateStatus(MESSAGES.STATUS.LISTENING);
+            updateStatusAndConversation(MESSAGES.STATUS.LISTENING, state.isConversationMode ? MESSAGES.CONVERSATION.ENABLE : '');
         };
 
         // Stop listening
         state.recognition.onstop = function() {
             state.isListening = false;
             elements.micButton.textContent = '🎤';
-            updateStatus(MESSAGES.STATUS.LISTENING);
+            updateStatusAndConversation(MESSAGES.STATUS.LISTENING, state.isConversationMode ? MESSAGES.CONVERSATION.ENABLE : '');
         };
 
         // End listening
@@ -3308,7 +3308,7 @@ function enterListeningMode() {
     if (state?.isConversationMode) {
         console.log('[enterListeningMode] Conversation Mode is enabled - starting listening');
         if (typeof updateStatus === 'function') {
-            updateStatus(MESSAGES.STATUS.LISTENING);
+            updateStatusAndConversation(MESSAGES.STATUS.LISTENING, state.isConversationMode ? MESSAGES.CONVERSATION.ENABLE : '');
         }
         if (typeof startListening === 'function') {
             startListening();
@@ -3317,7 +3317,7 @@ function enterListeningMode() {
     } else {
         console.log('[enterListeningMode] Conversation Mode is disabled - NOT starting listening');
         if (typeof updateStatus === 'function') {
-            updateStatus(MESSAGES.STATUS.DEFAULT);
+            updateStatusAndConversation(MESSAGES.STATUS.DEFAULT, '');
         }
         // Ensure listening is stopped if conversation mode is off
         if (typeof stopListening === 'function') {
@@ -3347,7 +3347,7 @@ function enterAISpeakingMode() {
 
     // Update status
     if (typeof updateStatus === 'function') {
-        updateStatus(MESSAGES.STATUS.SPEAKING);
+        updateStatusAndConversation(MESSAGES.STATUS.SPEAKING, state.isConversationMode ? MESSAGES.CONVERSATION.ENABLE : '');
     }
 
     // Stop listening to prevent feedback loops
@@ -4015,28 +4015,11 @@ async function initializeApp() {
     }
 }
 
+// DOMContentLoaded listener removed - initializeApp is called from startApp()
 
-// Load personal info function
-async function loadPersonalInfo() {
-    try {
-        const apiUrl = window.appConfig.getApiUrl('/api/personal-info/all');
-        const response = await fetch(`${apiUrl}?sessionId=${window.sessionId}`);
-        if (!response.ok) throw new Error('Failed to load personal info');
-
-        const data = await response.json();
-        if (data.personalInfo) {
-            // Store each piece of info in localStorage
-            Object.entries(data.personalInfo).forEach(([key, value]) => {
-                if (value) {
-                    localStorage.setItem(`user_${key}`, value);
-                    console.log(`Loaded ${key} from MongoDB to localStorage`);
-                }
-            });
-        }
-    } catch (error) {
-        console.error('Error loading personal info:', error);
-    }
-}
+// =====================================================
+// *** EVENT LISTENERS ***
+// =====================================================
 
 // Setup event listeners function
 function setupEventListeners() {
@@ -4047,7 +4030,7 @@ function setupEventListeners() {
         }
     }
 
-    // Defensive event listener setup
+    // Defensive event listener setup for chat controls
     if (elements.conversationModeToggle) {
         elements.conversationModeToggle.addEventListener('change', handleConversationModeToggle);
     }
@@ -4077,10 +4060,10 @@ function setupEventListeners() {
     }
     if (elements.imageUploadBtn) {
     elements.imageUploadBtn.addEventListener('click', () => {
-        elements.processingIndicator.style.display = 'block'; // Show immediately
+            if (elements.processingIndicator) elements.processingIndicator.style.display = 'block'; // Show immediately
         if (!state.isImagePickerOpen) {
             state.isImagePickerOpen = true;
-            elements.imageInput.click();
+                if (elements.imageInput) elements.imageInput.click();
         }
     });
     }
@@ -4100,6 +4083,44 @@ function setupEventListeners() {
     if (elements.stopAudioButton) {
         elements.stopAudioButton.addEventListener('click', stopAudioPlayback);
     }
+
+    // Custom prompt controls
+    if (typeof customPromptInput !== 'undefined' && customPromptInput) {
+        customPromptInput.addEventListener('input', () => {
+            customPrompt = customPromptInput.value;
+        });
+    }
+    if (typeof removeCustomPromptBtn !== 'undefined' && removeCustomPromptBtn) {
+        removeCustomPromptBtn.addEventListener('click', () => {
+            customPrompt = '';
+            if (customPromptInput) customPromptInput.value = '';
+        });
+    }
+
+    // Slideout panel controls
+    if (typeof slideoutBar !== 'undefined' && slideoutBar) {
+        slideoutBar.addEventListener('mouseenter', () => {
+            if (slideoutPanel) slideoutPanel.classList.add('open');
+        });
+        slideoutBar.addEventListener('click', () => {
+            if (slideoutPanel) slideoutPanel.classList.toggle('open');
+        });
+    }
+    if (typeof slideoutPanel !== 'undefined' && slideoutPanel) {
+        slideoutPanel.addEventListener('mouseleave', () => {
+            slideoutPanel.classList.remove('open');
+        });
+    }
+    if (typeof tempSlider !== 'undefined' && tempSlider && typeof tempValue !== 'undefined' && tempValue) {
+        tempSlider.addEventListener('input', () => {
+            tempValue.textContent = Number(tempSlider.value).toFixed(2);
+        });
+    }
+    if (typeof toppSlider !== 'undefined' && toppSlider && typeof topPValue !== 'undefined' && topPValue) {
+        toppSlider.addEventListener('input', () => {
+            topPValue.textContent = Number(toppSlider.value).toFixed(2);
+        });
+    }
     
     // Video player button
     const videoPlayerBtn = document.getElementById('open-video-player-btn');
@@ -4113,107 +4134,323 @@ function setupEventListeners() {
         });
     }
     
-        window.addEventListener('beforeunload', cleanup);
-}
-
-// Handle conversation mode toggle
-async function handleConversationModeToggle() {
-    console.log('[handleConversationModeToggle] called, checked:', this.checked);
-    
-    if (this.checked) {
-        // Request microphone permission before enabling conversation mode
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            // Stop the stream immediately - we just needed the permission
-            stream.getTracks().forEach(track => track.stop());
-            
-            // Permission granted, proceed with enabling conversation mode
-            state.isConversationMode = true;
-            const userName = await checkUserName();
-            const timeOfDay = getTimeOfDay();
-            let welcomeMessage = userName
-                ? `Conversation mode enabled. Good ${timeOfDay} ${userName}! Say "exit" when you'd like to end our chat.`
-                : 'Conversation mode enabled. Say "exit" to end the conversation.';
-
-            state.isProcessing = false;
-            state.isSending = false;
-            state.isAISpeaking = false;
-            state.isListening = false;
-
-            resetAudioState();
-            startInactivityTimer();
-
-            console.log('[handleConversationModeToggle] Setting status to LISTENING');
-            updateStatus(MESSAGES.STATUS.LISTENING);
-
-            // Update conversation status with the enable message
-            updateConversationMessage(`<span class="conversation-enable-message">${MESSAGES.CONVERSATION.ENABLE}</span>`);
-
-            startListening();
-        } catch (err) {
-            console.error('Microphone permission denied:', err);
-            // Reset the checkbox since permission was denied
-            this.checked = false;
-            state.isConversationMode = false;
-            updateStatus('Microphone access is required for conversation mode. Please enable it in your browser settings.');
-        }
-    } else {
-        state.isConversationMode = false;
-        clearInactivityTimer();
-        updateStatus(MESSAGES.STATUS.DEFAULT);
-        stopListening();
-        // Clear the conversation status
-        updateConversationMessage('');
-    }
-}
-
-// Setup SSE connection function
-function setupSSEConnection() {
-    if (state.eventSource) {
-        state.eventSource.close();
-    }
-
-    try {
-        console.log('Initializing SSE connection...');
-        const url = '/api/events'; // Corrected URL
-        state.eventSource = new EventSource(url);
-
-        state.eventSource.onopen = () => {
-            console.log('━━━━━━━━━━━ SSE Connection ━━━━━━━━━━━');
-            console.log('Status: Connected');
-            console.log('Timestamp:', new Date().toLocaleTimeString());
-            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-        };
-
-        state.eventSource.onmessage = function(event) {
-            console.log('[SSE] Received message:', event.data);
-            // We can add more logic here later to handle different event types
-        };
-
-        state.eventSource.onerror = (error) => {
-            console.error('SSE Connection error:', error);
-            if (state.eventSource) {
-                // The browser will automatically attempt to reconnect, so we just log the error.
-                // Closing and nullifying the eventSource here can interfere with auto-reconnect.
-                state.eventSource.close();
+    // === USER PROFILE DROPDOWN LOGIC ===
+    let adminPanel = null;
+    const profileIcon = document.getElementById('user-profile-icon');
+    const dropdown = document.getElementById('user-dropdown');
+    if (profileIcon && dropdown) {
+        profileIcon.addEventListener('click', function (e) {
+            e.stopPropagation();
+            dropdown.classList.toggle('open');
+        });
+        // Hide dropdown when clicking outside
+        document.addEventListener('click', function (e) {
+            if (!dropdown.contains(e.target) && e.target !== profileIcon) {
+                dropdown.classList.remove('open');
             }
-        };
+        });
+        // Admin Panel functionality
+        document.getElementById('admin-menu-item')?.addEventListener('click', async function () {
+            dropdown.classList.remove('open');
+            if (!adminPanel) {
+                try {
+                    if (!window.LoginManager) {
+                        const loginManagerScript = document.createElement('script');
+                        loginManagerScript.src = './components/Admin/LoginManager/LoginManager.js';
+                        document.head.appendChild(loginManagerScript);
+                        await new Promise((resolve) => {
+                            loginManagerScript.onload = resolve;
+                        });
+                    }
+                    const AdminPanelModule = await import('../components/Admin/AdminPanel/AdminPanel.js');
+                    adminPanel = new AdminPanelModule.default();
+                    await adminPanel.init();
+                } catch (error) {
+                    console.error('Failed to load AdminPanel:', error);
+                    alert('Failed to load Admin Panel. Please try again.');
+                    return;
+                }
+            }
+            adminPanel.show();
+        });
 
+        // Users menu item
+        document.getElementById('users-menu-item')?.addEventListener('click', async function () {
+            dropdown.classList.remove('open');
+            if (!adminPanel) {
+                try {
+                    if (!window.LoginManager) {
+                        const loginManagerScript = document.createElement('script');
+                        loginManagerScript.src = './components/Admin/LoginManager/LoginManager.js';
+                        document.head.appendChild(loginManagerScript);
+                        await new Promise((resolve) => {
+                            loginManagerScript.onload = resolve;
+                        });
+                    }
+                    const AdminPanelModule = await import('../components/Admin/AdminPanel/AdminPanel.js');
+                    adminPanel = new AdminPanelModule.default();
+                    await adminPanel.init();
+                } catch (error) {
+                    console.error('Failed to load AdminPanel:', error);
+                    alert('Failed to load Admin Panel. Please try again.');
+                    return;
+                }
+            }
+            adminPanel.show();
+            if (typeof adminPanel.switchTab === 'function') {
+                adminPanel.switchTab('user-management');
+                if (typeof adminPanel.loadUserList === 'function') {
+                    adminPanel.loadUserList();
+                }
+            }
+        });
+        // Placeholder actions for other dropdown items
+        document.getElementById('bug-menu-item')?.addEventListener('click', function () {
+            // alert('Bug tracking section coming soon!');
+            dropdown.classList.remove('open');
+        });
+        document.getElementById('profile-menu-item')?.addEventListener('click', function () {
+            alert('Profile section coming soon!');
+            dropdown.classList.remove('open');
+        });
+        document.getElementById('logout-menu-item')?.addEventListener('click', function () {
+            // alert('Logout functionality coming soon!'); // REMOVE THIS LINE
+            dropdown.classList.remove('open');
+            window.logout(); // Ensure logout is called here
+        });
+        console.log('[PROFILE DROPDOWN] Handler attached!');
+    } else {
+        console.log('[PROFILE DROPDOWN] Elements not found in DOM!');
+    }
+    // Admin Panel shortcut
+    document.addEventListener('keydown', function(e) {
+        if (
+            e.ctrlKey &&
+            e.shiftKey &&
+            e.altKey &&
+            e.key.toLowerCase() === 'p'
+        ) {
+            const active = document.activeElement;
+            if (
+                active.tagName !== 'INPUT' &&
+                active.tagName !== 'TEXTAREA' &&
+                !active.isContentEditable
+            ) {
+                (async () => {
+                    if (!adminPanel) {
+                        try {
+                            if (!window.LoginManager) {
+                                const loginManagerScript = document.createElement('script');
+                                loginManagerScript.src = './components/Admin/LoginManager/LoginManager.js';
+                                document.head.appendChild(loginManagerScript);
+                                await new Promise((resolve) => {
+                                    loginManagerScript.onload = resolve;
+                                });
+                            }
+                            const AdminPanelModule = await import('../components/Admin/AdminPanel/AdminPanel.js');
+                            adminPanel = new AdminPanelModule.default();
+                            await adminPanel.init();
+                        } catch (error) {
+                            console.error('Failed to load AdminPanel:', error);
+                            alert('Failed to load Admin Panel. Please try again.');
+                            return;
+                        }
+                    }
+                    adminPanel.currentUser = {
+                        email: 'superadmin@local',
+                        role: 'superadmin'
+                    };
+                    adminPanel.updateRoleBasedUI();
+                    adminPanel.show();
+                    if (typeof adminPanel.switchTab === 'function') {
+                        adminPanel.switchTab('user-management');
+                        if (typeof adminPanel.loadUserList === 'function') {
+                            adminPanel.loadUserList();
+                        }
+                    }
+                    const modal = document.getElementById('login-manager-modal');
+                    if (modal) modal.style.display = 'none';
+                })();
+                e.preventDefault();
+            }
+        }
+    });
+    // ... (other event listeners for your app)
+
+        // // Logout event listener
+        // const logoutMenuItem = document.getElementById('logout-menu-item');
+        // if (logoutMenuItem) {
+        //     logoutMenuItem.addEventListener('click', function() {
+        //         window.logout();
+        //     });
+        // }
+    
+        // // Bug Tracking event listener
+        // const bugMenuItem = document.getElementById('bug-tracking-menu-item');
+        // if (bugMenuItem) {
+        //     bugMenuItem.addEventListener('click', function () {
+        //         const profileDropdown = document.getElementById('user-dropdown');
+        //         if (profileDropdown) profileDropdown.classList.remove('open');
+        //         if (!isLoggedIn()) {
+        //             showLoginModalWithIntent('bug-tracker');
+        //         } else {
+        //             openBugTracker();
+        //         }
+        //     });
+        // }
+
+
+    // Event listener for users-menu-item
+    const usersMenuItem = document.getElementById('users-menu-item');
+    if (usersMenuItem) {
+        usersMenuItem.addEventListener('click', async function () {
+            dropdown.classList.remove('open');
+            if (!adminPanel) {
+                try {
+                    if (!window.LoginManager) {
+                        const loginManagerScript = document.createElement('script');
+                        loginManagerScript.src = './components/Admin/LoginManager/LoginManager.js';
+                        document.head.appendChild(loginManagerScript);
+                        await new Promise((resolve) => {
+                            loginManagerScript.onload = resolve;
+                        });
+                    }
+                    const AdminPanelModule = await import('../components/Admin/AdminPanel/AdminPanel.js');
+                    adminPanel = new AdminPanelModule.default();
+                    await adminPanel.init();
     } catch (error) {
-        console.error('Error setting up SSE:', error);
-        updateStatus('Connection error. Please refresh the page.');
+                    console.error('Failed to load AdminPanel:', error);
+                    alert('Failed to load Admin Panel. Please try again.');
+                    return;
+                }
+            }
+            adminPanel.show();
+            if (typeof adminPanel.switchTab === 'function') {
+                adminPanel.switchTab('user-management');
+                if (typeof adminPanel.loadUserList === 'function') {
+                    adminPanel.loadUserList();
+                }
+            }
+        });
+    }
+
+    // Admin Panel shortcut (Ctrl+Shift+Alt+P)
+    document.addEventListener('keydown', function(e) {
+        if (
+            e.ctrlKey &&
+            e.shiftKey &&
+            e.altKey &&
+            e.key.toLowerCase() === 'p'
+        ) {
+            const active = document.activeElement;
+            if (
+                active.tagName !== 'INPUT' &&
+                active.tagName !== 'TEXTAREA' &&
+                !active.isContentEditable
+            ) {
+                (async () => {
+                    if (!adminPanel) {
+                        try {
+                            if (!window.LoginManager) {
+                                const loginManagerScript = document.createElement('script');
+                                loginManagerScript.src = './components/Admin/LoginManager/LoginManager.js';
+                                document.head.appendChild(loginManagerScript);
+                                await new Promise((resolve) => {
+                                    loginManagerScript.onload = resolve;
+                                });
+                            }
+                            const AdminPanelModule = await import('../components/Admin/AdminPanel/AdminPanel.js');
+                            adminPanel = new AdminPanelModule.default();
+                            await adminPanel.init();
+                        } catch (error) {
+                            console.error('Failed to load AdminPanel:', error);
+                            alert('Failed to load Admin Panel. Please try again.');
+                            return;
+                        }
+                    }
+                    adminPanel.currentUser = {
+                        email: 'superadmin@local',
+                        role: 'superadmin'
+                    };
+                    adminPanel.updateRoleBasedUI();
+                    adminPanel.show();
+                    if (typeof adminPanel.switchTab === 'function') {
+                        adminPanel.switchTab('user-management');
+                        if (typeof adminPanel.loadUserList === 'function') {
+                            adminPanel.loadUserList();
+                        }
+                    }
+                    const modal = document.getElementById('login-manager-modal');
+                    if (modal) modal.style.display = 'none';
+                })();
+                e.preventDefault();
+            }
+        }
+    });
+
+    // Logout event listener
+    const logoutMenuItem = document.getElementById('logout-menu-item');
+    if (logoutMenuItem) {
+        logoutMenuItem.addEventListener('click', function() {
+            window.logout();
+        });
+    }
+
+    // Bug Tracking event listener
+    const bugMenuItem = document.getElementById('bug-tracking-menu-item');
+    if (bugMenuItem) {
+        bugMenuItem.addEventListener('click', function () {
+            const profileDropdown = document.getElementById('user-dropdown');
+            if (profileDropdown) profileDropdown.classList.remove('open');
+            if (!isLoggedIn()) {
+                showLoginModalWithIntent('bug-tracker');
+            } else {
+                openBugTracker();
+            }
+        });
+    }
+
+    // Admin event listener
+    const adminMenuItem = document.getElementById('admin-menu-item');
+    if (adminMenuItem) {
+        adminMenuItem.addEventListener('click', function () {
+            const profileDropdown = document.getElementById('user-dropdown');
+            if (profileDropdown) profileDropdown.classList.remove('open');
+            if (!isLoggedIn()) {
+                showLoginModalWithIntent('admin');
+            } else {
+                openAdminPanel();
+            }
+        });
     }
 }
 
+// =====================================================
+// *** LOAD PERSONAL INFO ***
+// =====================================================
 
-// Add cleanup for page unload
-window.addEventListener('beforeunload', () => {
-    if (state.eventSource) {
-        state.eventSource.close();
+// Load personal info function
+async function loadPersonalInfo() {
+    try {
+        // Adjust the API endpoint as needed for your backend
+        const apiUrl = window.appConfig.getApiUrl('/api/personal-info/all');
+        const response = await fetch(`${apiUrl}?sessionId=${window.sessionId}`);
+        if (!response.ok) throw new Error('Failed to load personal info');
+
+        const data = await response.json();
+        if (data.personalInfo) {
+            // Store each piece of info in localStorage or global state
+            Object.entries(data.personalInfo).forEach(([key, value]) => {
+                if (value) {
+                    localStorage.setItem(`user_${key}`, value);
+                    console.log(`Loaded ${key} from MongoDB to localStorage`);
+                }
+            });
+        }
+    } catch (error) {
+        console.error('Error loading personal info:', error);
     }
-  });
-
-
+}
 
 // =====================================================
 // MICROPHONE INITIALIZATION FUNCTIONS
@@ -4703,8 +4940,7 @@ async function exitConversation(isTimeout = false) {
         // Reset conversation mode and update UI
         state.isConversationMode = false;
         elements.conversationModeToggle.checked = false;
-        updateConversationMessage('');
-        updateStatus(MESSAGES.STATUS.DEFAULT);
+        updateStatusAndConversation(MESSAGES.STATUS.DEFAULT, '');
 
         // Clear any pending timers
         if (state.inactivityTimer) {
@@ -4758,7 +4994,7 @@ async function getPersonalInfo(key = null) {
         state.isAISpeaking = false;
         elements.stopAudioButton.style.display = 'none';
         if (state.isConversationMode) {
-            updateStatus(MESSAGES.STATUS.LISTENING);
+            updateStatusAndConversation(MESSAGES.STATUS.LISTENING, MESSAGES.CONVERSATION.ENABLE);
             startListening();
         }
     }
@@ -4791,7 +5027,7 @@ async function handleImageRequest(query) {
 // Image analysis function
 async function handleImageAnalysis(imageData, prompt = '') {
     try {
-        updateStatus('Analyzing image...');
+        updateStatusAndConversation('Analyzing image...', state.isConversationMode ? MESSAGES.CONVERSATION.ENABLE : '');
         const startTime = Date.now();
 
         // Create message element with correct initial metadata
@@ -4876,7 +5112,7 @@ async function handleImageAnalysis(imageData, prompt = '') {
         console.log('Ready');
     } catch (error) {
         console.error('Error analyzing image:', error);
-        updateStatus('Error analyzing image');
+        updateStatusAndConversation('Error analyzing image', state.isConversationMode ? MESSAGES.CONVERSATION.ENABLE : '');
         throw error;
     }
 }
@@ -5839,19 +6075,18 @@ function exportLocalStorageCache() {
 
 // Helper to update both status and conversation message with separator
 function updateStatusAndConversation(statusMsg, conversationMsg) {
-    const statusContainer = document.getElementById('status-container');
-    if (!statusContainer) return;
-    let html = '';
-    if (statusMsg && conversationMsg) {
-        html = `<span class="status-msg" id="status">${statusMsg}</span>` +
-               `<span class="status-separator" style="display:inline-block;width:1.5px;height:100%;min-height:24px;background:#bbb;margin:0 8px;vertical-align:middle;align-self:stretch;"></span>` +
-               `<span class="conversation-msg" id="conversation-status">${conversationMsg}</span>`;
-    } else if (statusMsg) {
-        html = `<span class="status-msg" id="status">${statusMsg}</span>`;
-    } else if (conversationMsg) {
-        html = `<span class="conversation-msg" id="conversation-status">${conversationMsg}</span>`;
+    const statusEl = document.getElementById('status');
+    const convEl = document.getElementById('conversation-status');
+    if (statusEl) statusEl.innerHTML = statusMsg || '';
+    if (convEl) {
+        if (conversationMsg && conversationMsg.trim()) {
+            // Only show separator and conversation message if there's actually a conversation message
+            convEl.innerHTML = '<span class="status-separator" style="display:inline-block;width:1.5px;height:100%;min-height:24px;background:#bbb;margin:0 8px;vertical-align:middle;align-self:stretch;"></span>' +
+                               `<span class="conversation-enable-message">${conversationMsg}</span>`;
+        } else {
+            convEl.innerHTML = '';
+        }
     }
-    statusContainer.innerHTML = html;
 }
 
 // Helper to detect subject queries
@@ -5868,3 +6103,282 @@ function extractSubjectFromMessage(message) {
 
 // At the top-level (global for this session):
 const imageHistory = {};
+
+// Global function for clearing script log
+window.clearScriptLog = function() {
+  const scriptLog = document.getElementById('script-log');
+  if (scriptLog) {
+    scriptLog.innerHTML = '';
+  }
+};
+
+// Handle conversation mode toggle
+async function handleConversationModeToggle() {
+    console.log('[handleConversationModeToggle] called, checked:', this.checked);
+    if (this.checked) {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            stream.getTracks().forEach(track => track.stop());
+            state.isConversationMode = true;
+            const userName = await checkUserName();
+            const timeOfDay = getTimeOfDay();
+            let welcomeMessage = userName
+                ? `Conversation mode enabled. Good ${timeOfDay} ${userName}! Say "exit" when you'd like to end our chat.`
+                : 'Conversation mode enabled. Say "exit" to end the conversation.';
+            state.isProcessing = false;
+            state.isSending = false;
+            state.isAISpeaking = false;
+            state.isListening = false;
+            resetAudioState();
+            startInactivityTimer();
+            console.log('[handleConversationModeToggle] Setting status to LISTENING');
+            updateStatusAndConversation(MESSAGES.STATUS.LISTENING, MESSAGES.CONVERSATION.ENABLE);
+            startListening();
+        } catch (err) {
+            console.error('Microphone permission denied:', err);
+            this.checked = false;
+            state.isConversationMode = false;
+            updateStatusAndConversation('Microphone access is required for conversation mode. Please enable it in your browser settings.', '');
+        }
+    } else {
+        state.isConversationMode = false;
+        clearInactivityTimer();
+        updateStatusAndConversation(MESSAGES.STATUS.DEFAULT, '');
+        stopListening();
+    }
+}
+
+function setupSSEConnection() {
+    if (state.eventSource) {
+        state.eventSource.close();
+    }
+
+    try {
+        console.log('Initializing SSE connection...');
+        const apiUrl = window.appConfig.getApiUrl('/api/chat');
+        state.eventSource = new EventSource(`${apiUrl}?sessionId=${window.sessionId}`);
+
+        state.eventSource.onopen = () => {
+            console.log('━━━━━━━━━━━ SSE Connection ━━━━━━━━━━━');
+            console.log('Status: Connected');
+            console.log('Session:', window.sessionId);
+            console.log('Timestamp:', new Date().toLocaleTimeString());
+            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+            state.sseRetryCount = 0;
+
+            // Show "SSE Connected" briefly
+            // updateStatus('SSE Connected');
+
+            // Then switch to appropriate status after a short delay
+            setTimeout(() => {
+                if (state.isAISpeaking) {
+                    console.log('Status: AI Speaking');
+                    updateStatusAndConversation('AI is speaking...', state.isConversationMode ? MESSAGES.CONVERSATION.ENABLE : '');
+                } else if (state.isConversationMode) {
+                    console.log('Status: Listening');
+                    updateStatusAndConversation('Listening...', MESSAGES.CONVERSATION.ENABLE);
+                } else {
+                    console.log('Status: Ready');
+                    // updateStatus('Click the microphone button to start speech recognition, enable Conversation Mode, or type a message and press Send.');
+                }
+            }, 1000);
+        };
+
+        state.eventSource.onmessage = function(event) {
+            try {
+                const data = JSON.parse(event.data);
+                // Heartbeat event handler
+                if (data.type === 'heartbeat') {
+                    if (data.timestamp) {
+                        console.log('💓 Heartbeat received:', new Date(data.timestamp).toLocaleTimeString());
+                    } else {
+                        console.log('💓 Heartbeat received (no valid timestamp)');
+                    }
+                    return;
+                }
+                // console.log('SSE message received:', data);
+                
+                if (data.type === 'status') {
+                    updateStatusAndConversation(data.message, state.isConversationMode ? MESSAGES.CONVERSATION.ENABLE : '');
+                } else if (data.type === 'error') {
+                    console.error('SSE error:', data.message);
+                    updateStatusAndConversation('Error: ' + data.message, state.isConversationMode ? MESSAGES.CONVERSATION.ENABLE : '');
+                }
+            } catch (error) {
+                console.error('Error processing SSE message:', error);
+            }
+        };
+
+        state.eventSource.onerror = (error) => {
+            console.error('SSE Connection error:', error);
+                state.eventSource.close();
+            
+            // Implement exponential backoff for reconnection
+            const reconnectDelay = Math.min(1000 * Math.pow(2, state.reconnectAttempts), 30000);
+            state.reconnectAttempts++;
+            
+            console.log(`Reconnecting in ${reconnectDelay}ms (attempt ${state.reconnectAttempts})`);
+            setTimeout(() => {
+                if (state.reconnectAttempts < 5) {
+                setupSSEConnection();
+                }
+            }, reconnectDelay);
+        };
+    } catch (error) {
+        console.error('Error setting up SSE connection:', error);
+    }
+}
+
+// Global logout function
+window.logout = function() {
+    localStorage.removeItem('jwtToken');
+    localStorage.removeItem('user');
+    localStorage.removeItem('userEmail');
+    localStorage.removeItem('userRole');
+    sessionStorage.clear();
+    if (window.ToastManager && typeof window.ToastManager.show === 'function') {
+        window.ToastManager.show('You have been logged out.', 'info');
+    }
+    const loginModal = document.getElementById('login-manager-modal');
+    if (loginModal) {
+        loginModal.style.display = 'flex';
+    } else {
+        location.reload();
+    }
+};
+
+// In setupEventListeners or profile dropdown logic, attach to logout-menu-item
+const logoutMenuItem = document.getElementById('logout-menu-item');
+if (logoutMenuItem) {
+    logoutMenuItem.addEventListener('click', function() {
+        window.logout();
+    });
+}
+
+const token = localStorage.getItem('jwtToken');
+if (!token) {
+    // Show login modal or redirect to login page
+    showLoginModal();
+}
+
+// Add Bug Tracking to profile dropdown
+const profileDropdown = document.getElementById('user-dropdown');
+if (profileDropdown && !document.getElementById('bug-tracking-menu-item')) {
+    const bugMenuItem = document.createElement('div');
+    bugMenuItem.className = 'user-dropdown-item';
+    bugMenuItem.id = 'bug-tracking-menu-item';
+    bugMenuItem.textContent = 'Bug Tracking';
+    // Insert before Logout
+    const logoutItem = document.getElementById('logout-menu-item');
+    if (logoutItem) {
+        profileDropdown.insertBefore(bugMenuItem, logoutItem);
+    } else {
+        profileDropdown.appendChild(bugMenuItem);
+    }
+    bugMenuItem.addEventListener('click', function () {
+        // Hide dropdown
+        profileDropdown.classList.remove('open');
+        // Show BugTracker
+        if (!window._bugTrackerInstance) {
+            window._bugTrackerInstance = new window.BugTracker();
+            window._bugTrackerInstance.init();
+        } else {
+            document.getElementById('bug-tracker-container').style.display = 'block';
+            window._bugTrackerInstance.loadBugs();
+        }
+        // Optionally hide other panels
+        if (window.adminPanel && typeof window.adminPanel.hide === 'function') {
+            window.adminPanel.hide();
+        }
+    });
+}
+
+function setUserInfo(user) {
+    if (user && user.email) {
+        localStorage.setItem('userEmail', user.email);
+        localStorage.setItem('userRole', user.role || 'user');
+    } else {
+        localStorage.removeItem('userEmail');
+        localStorage.removeItem('userRole');
+    }
+}
+
+// In your login logic (after successful login):
+// Clear previous auth state, then set new token and user info
+function handleLoginSuccess(data) {
+    // Clear all previous state
+    localStorage.removeItem('jwtToken');
+    localStorage.removeItem('user');
+    localStorage.removeItem('userEmail');
+    localStorage.removeItem('userRole');
+    sessionStorage.clear();
+    // Set new token and user info
+    localStorage.setItem('jwtToken', data.token);
+    setUserInfo(data.user);
+    // Hide login modal if present
+    const loginModal = document.getElementById('login-manager-modal');
+    if (loginModal) loginModal.style.display = 'none';
+    // Update AdminPanel with new user info if open
+    if (window.adminPanel) {
+        window.adminPanel.currentUser = { email: data.user.email, role: data.user.role };
+        if (typeof window.adminPanel.updateRoleBasedUI === 'function') {
+            window.adminPanel.updateRoleBasedUI();
+        }
+    }
+    // After login, open intended feature if any
+    if (window._postLoginIntent) {
+        if (window._postLoginIntent === 'admin') {
+            openAdminPanel();
+        } else if (window._postLoginIntent === 'bug-tracker') {
+            openBugTracker();
+        }
+        window._postLoginIntent = null;
+    }
+}
+
+// When showing AdminPanel, always use latest user info
+function showAdminPanel() {
+    if (!window.adminPanel) return;
+    const email = localStorage.getItem('userEmail');
+    const role = localStorage.getItem('userRole');
+    if (email && role) {
+        window.adminPanel.currentUser = { email, role };
+        if (typeof window.adminPanel.updateRoleBasedUI === 'function') {
+            window.adminPanel.updateRoleBasedUI();
+        }
+    }
+    window.adminPanel.show();
+}
+
+window._postLoginIntent = null;
+
+function isLoggedIn() {
+    return !!localStorage.getItem('jwtToken');
+}
+
+function showLoginModalWithIntent(intent) {
+    window._postLoginIntent = intent;
+    const loginModal = document.getElementById('login-manager-modal');
+    if (loginModal) loginModal.style.display = 'flex';
+}
+
+function openBugTracker() {
+    if (!window._bugTrackerInstance) {
+        window._bugTrackerInstance = new window.BugTracker();
+        window._bugTrackerInstance.init();
+    } else {
+        document.getElementById('bug-tracker-container').style.display = 'block';
+        window._bugTrackerInstance.loadBugs();
+    }
+    if (window.adminPanel && typeof window.adminPanel.hide === 'function') {
+        window.adminPanel.hide();
+    }
+}
+
+function openAdminPanel() {
+    if (window.adminPanel) {
+        showAdminPanel();
+    }
+}
+
