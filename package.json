@@ -8,7 +8,9 @@
     "start:backend": "node scripts/start-with-config.js",
     "start:all": "npm run start:backend",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "backup": "node scripts/BACKUP_APP.js"
+    "backup": "node scripts/BACKUP_APP.js",
+    "generate-superadmin-code": "node scripts/generate-superadmin-code.js",
+    "test-auth": "node scripts/test-auth.js"
   },
   "author": "",
   "license": "ISC",
