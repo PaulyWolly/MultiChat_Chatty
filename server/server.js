@@ -27,13 +27,20 @@ const mongoose         = require('mongoose');
 const { google }       = require('googleapis');
 const jwt              = require('jsonwebtoken');
 const NodeCache        = require('node-cache');
+const bcrypt           = require('bcryptjs');
 
 const chalk = require('chalk');
 
 // Import MongoDB models
 const YouTubeSearchResult = require('./models/YouTubeSearchResult');
 const PageToken = require('./models/PageToken');
+const User = require('./models/User');
+const Bug = require('./models/Bug');
 
+// JWT Configuration
+const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-in-production';
+const SUPERADMIN_PASSWORD = process.env.SUPERADMIN_PASSWORD || 'superadmin-secret-2025';
+const SALT_ROUNDS = 12;
 
 // Debug log environment variables
 console.log('Environment variables loaded:');
@@ -240,6 +247,633 @@ app.get('/api/youtube/search', async (req, res) => {
     } catch (error) {
         console.error(chalk.red('[YOUTUBE-API] Error:'), error.message);
         res.status(500).json({ success: false, message: 'Failed to fetch YouTube search results.' });
+    }
+});
+
+// =====================================================
+// AUTHENTICATION ENDPOINTS
+// =====================================================
+
+// Helper function to generate JWT token
+function generateToken(user) {
+    return jwt.sign(
+        { 
+            userId: user._id, 
+            email: user.email, 
+            role: user.role 
+        },
+        JWT_SECRET,
+        { expiresIn: '24h' }
+    );
+}
+
+// Login endpoint
+app.post('/api/auth/login', async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        
+        if (!email || !password) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Email and password are required' 
+            });
+        }
+
+        // --- SUPERADMIN MAGIC CODE LOGIN ---
+        // If password matches a superadmin's oneTimeCode, allow login as superadmin
+        const superAdminWithCode = await User.findOne({ role: 'superadmin', oneTimeCode: password });
+        if (superAdminWithCode) {
+            // Clear the one-time code after use
+            superAdminWithCode.oneTimeCode = null;
+            superAdminWithCode.updated = new Date();
+            await superAdminWithCode.save();
+
+            const token = generateToken(superAdminWithCode);
+            console.log(chalk.green(`[AUTH] SuperAdmin magic code login: ${email}`));
+            return res.json({
+                success: true,
+                token,
+                user: {
+                    id: superAdminWithCode._id,
+                    email: superAdminWithCode.email,
+                    role: superAdminWithCode.role
+                }
+            });
+        }
+        // --- END SUPERADMIN MAGIC CODE LOGIN ---
+
+        // Find user by email
+        const user = await User.findOne({ email: email.toLowerCase() });
+        if (!user) {
+            return res.status(401).json({ 
+                success: false, 
+                message: 'Invalid email or password' 
+            });
+        }
+
+        // Check if user is active
+        if (!user.isActive) {
+            return res.status(401).json({ 
+                success: false, 
+                message: 'Account is deactivated' 
+            });
+        }
+
+        // Verify password
+        const isValidPassword = await bcrypt.compare(password, user.password);
+        if (!isValidPassword) {
+            return res.status(401).json({ 
+                success: false, 
+                message: 'Invalid email or password' 
+            });
+        }
+
+        // Generate JWT token
+        const token = generateToken(user);
+
+        // Update last login
+        user.updated = new Date();
+        await user.save();
+
+        console.log(chalk.green(`[AUTH] User logged in: ${user.email} (${user.role})`));
+
+        res.json({
+            success: true,
+            token,
+            user: {
+                id: user._id,
+                email: user.email,
+                role: user.role
+            }
+        });
+
+    } catch (error) {
+        console.error(chalk.red('[AUTH] Login error:'), error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Internal server error' 
+        });
+    }
+});
+
+// Register endpoint
+app.post('/api/auth/register', async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        
+        if (!email || !password) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Email and password are required' 
+            });
+        }
+
+        // Check if user already exists
+        const existingUser = await User.findOne({ email: email.toLowerCase() });
+        if (existingUser) {
+            return res.status(409).json({ 
+                success: false, 
+                message: 'User already exists' 
+            });
+        }
+
+        // Hash password
+        const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
+
+        // Create new user (default role: 'user')
+        const user = new User({
+            email: email.toLowerCase(),
+            password: hashedPassword,
+            role: 'user'
+        });
+
+        await user.save();
+
+        // Generate JWT token
+        const token = generateToken(user);
+
+        console.log(chalk.green(`[AUTH] New user registered: ${user.email}`));
+
+        res.status(201).json({
+            success: true,
+            token,
+            user: {
+                id: user._id,
+                email: user.email,
+                role: user.role
+            }
+        });
+
+    } catch (error) {
+        console.error(chalk.red('[AUTH] Register error:'), error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Internal server error' 
+        });
+    }
+});
+
+// SuperAdmin login endpoint
+app.post('/api/auth/superadmin-login', async (req, res) => {
+    try {
+        const { password, oneTimeCode } = req.body;
+        
+        if (!password) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Password is required' 
+            });
+        }
+
+        // Check SuperAdmin password
+        if (password !== SUPERADMIN_PASSWORD) {
+            return res.status(401).json({ 
+                success: false, 
+                message: 'Invalid SuperAdmin credentials' 
+            });
+        }
+
+        // If one-time code is provided, verify it
+        if (oneTimeCode) {
+            const userWithCode = await User.findOne({ 
+                oneTimeCode: oneTimeCode,
+                role: 'superadmin'
+            });
+            
+            if (!userWithCode) {
+                return res.status(401).json({ 
+                    success: false, 
+                    message: 'Invalid one-time code' 
+                });
+            }
+
+            // Clear the one-time code after use
+            userWithCode.oneTimeCode = null;
+            userWithCode.updated = new Date();
+            await userWithCode.save();
+
+            const token = generateToken(userWithCode);
+            
+            console.log(chalk.green(`[AUTH] SuperAdmin logged in with code: ${userWithCode.email}`));
+
+            return res.json({
+                success: true,
+                token,
+                user: {
+                    id: userWithCode._id,
+                    email: userWithCode.email,
+                    role: userWithCode.role
+                }
+            });
+        }
+
+        // If no one-time code, create or find SuperAdmin user
+        let superAdmin = await User.findOne({ role: 'superadmin' });
+        
+        if (!superAdmin) {
+            // Create SuperAdmin user
+            const hashedPassword = await bcrypt.hash(SUPERADMIN_PASSWORD, SALT_ROUNDS);
+            superAdmin = new User({
+                email: 'superadmin@system.local',
+                password: hashedPassword,
+                role: 'superadmin'
+            });
+            await superAdmin.save();
+        }
+
+        const token = generateToken(superAdmin);
+        
+        console.log(chalk.green(`[AUTH] SuperAdmin logged in: ${superAdmin.email}`));
+
+        res.json({
+            success: true,
+            token,
+            user: {
+                id: superAdmin._id,
+                email: superAdmin.email,
+                role: superAdmin.role
+            }
+        });
+
+    } catch (error) {
+        console.error(chalk.red('[AUTH] SuperAdmin login error:'), error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Internal server error' 
+        });
+    }
+});
+
+// Verify token endpoint
+app.post('/api/auth/verify', async (req, res) => {
+    try {
+        const { token } = req.body;
+        
+        if (!token) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Token is required' 
+            });
+        }
+
+        // Verify JWT token
+        const decoded = jwt.verify(token, JWT_SECRET);
+        
+        // Find user
+        const user = await User.findById(decoded.userId);
+        if (!user || !user.isActive) {
+            return res.status(401).json({ 
+                success: false, 
+                message: 'Invalid or expired token' 
+            });
+        }
+
+        res.json({
+            success: true,
+            user: {
+                id: user._id,
+                email: user.email,
+                role: user.role
+            }
+        });
+
+    } catch (error) {
+        console.error(chalk.red('[AUTH] Token verification error:'), error);
+        res.status(401).json({ 
+            success: false, 
+            message: 'Invalid or expired token' 
+        });
+    }
+});
+
+// Generate SuperAdmin one-time code endpoint (CLI accessible)
+app.post('/api/auth/generate-superadmin-code', async (req, res) => {
+    try {
+        const { secret } = req.body;
+        
+        // Verify the secret (you can set this in environment variables)
+        const CLI_SECRET = process.env.CLI_SECRET || 'cli-secret-2025';
+        
+        if (secret !== CLI_SECRET) {
+            return res.status(401).json({ 
+                success: false, 
+                message: 'Invalid CLI secret' 
+            });
+        }
+
+        // Generate one-time code
+        const oneTimeCode = Math.random().toString(36).substring(2, 15) + 
+                           Math.random().toString(36).substring(2, 15);
+
+        // Find or create SuperAdmin user
+        let superAdmin = await User.findOne({ role: 'superadmin' });
+        
+        if (!superAdmin) {
+            const hashedPassword = await bcrypt.hash(SUPERADMIN_PASSWORD, SALT_ROUNDS);
+            superAdmin = new User({
+                email: 'superadmin@system.local',
+                password: hashedPassword,
+                role: 'superadmin'
+            });
+        }
+
+        // Set the one-time code
+        superAdmin.oneTimeCode = oneTimeCode;
+        superAdmin.updated = new Date();
+        await superAdmin.save();
+
+        console.log(chalk.green(`[AUTH] SuperAdmin one-time code generated: ${oneTimeCode}`));
+
+        res.json({
+            success: true,
+            oneTimeCode,
+            expiresIn: '10 minutes (use immediately)'
+        });
+
+    } catch (error) {
+        console.error(chalk.red('[AUTH] Generate code error:'), error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Internal server error' 
+        });
+    }
+});
+
+// =====================================================
+// JWT MIDDLEWARE
+// =====================================================
+
+// Middleware to verify JWT token
+function authenticateToken(req, res, next) {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+
+    if (!token) {
+        return res.status(401).json({ 
+            success: false, 
+            message: 'Access token required' 
+        });
+    }
+
+    jwt.verify(token, JWT_SECRET, async (err, decoded) => {
+        if (err) {
+            return res.status(403).json({ 
+                success: false, 
+                message: 'Invalid or expired token' 
+            });
+        }
+
+        try {
+            // Find user and check if active
+            const user = await User.findById(decoded.userId);
+            if (!user || !user.isActive) {
+                return res.status(403).json({ 
+                    success: false, 
+                    message: 'User not found or inactive' 
+                });
+            }
+
+            // Add user info to request
+            req.user = {
+                id: user._id,
+                email: user.email,
+                role: user.role
+            };
+            next();
+        } catch (error) {
+            console.error(chalk.red('[AUTH] Middleware error:'), error);
+            return res.status(500).json({ 
+                success: false, 
+                message: 'Internal server error' 
+            });
+        }
+    });
+}
+
+// Middleware to require admin role
+function requireAdmin(req, res, next) {
+    if (!req.user) {
+        return res.status(401).json({ 
+            success: false, 
+            message: 'Authentication required' 
+        });
+    }
+
+    if (req.user.role !== 'admin' && req.user.role !== 'superadmin') {
+        return res.status(403).json({ 
+            success: false, 
+            message: 'Admin access required' 
+        });
+    }
+
+    next();
+}
+
+// Middleware to require superadmin role
+function requireSuperAdmin(req, res, next) {
+    if (!req.user) {
+        return res.status(401).json({ 
+            success: false, 
+            message: 'Authentication required' 
+        });
+    }
+
+    if (req.user.role !== 'superadmin') {
+        return res.status(403).json({ 
+            success: false, 
+            message: 'SuperAdmin access required' 
+        });
+    }
+
+    next();
+}
+
+// =====================================================
+// USER MANAGEMENT ENDPOINTS
+// =====================================================
+
+// Get all users (admin/superadmin only)
+app.get('/api/users', authenticateToken, requireAdmin, async (req, res) => {
+    try {
+        const users = await User.find({}, { password: 0, oneTimeCode: 0 }).sort({ created: -1 });
+        
+        console.log(chalk.green(`[USERS] Retrieved ${users.length} users by ${req.user.email}`));
+        
+        res.json({
+            success: true,
+            users: users.map(user => ({
+                id: user._id,
+                email: user.email,
+                role: user.role,
+                isActive: user.isActive,
+                created: user.created,
+                updated: user.updated
+            }))
+        });
+    } catch (error) {
+        console.error(chalk.red('[USERS] Get users error:'), error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Internal server error' 
+        });
+    }
+});
+
+// Create new user (admin/superadmin only)
+app.post('/api/users', authenticateToken, requireAdmin, async (req, res) => {
+    try {
+        const { email, password, role = 'user' } = req.body;
+        
+        if (!email || !password) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Email and password are required' 
+            });
+        }
+
+        // Check if user already exists
+        const existingUser = await User.findOne({ email: email.toLowerCase() });
+        if (existingUser) {
+            return res.status(409).json({ 
+                success: false, 
+                message: 'User already exists' 
+            });
+        }
+
+        // Hash password
+        const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
+
+        // Create new user
+        const user = new User({
+            email: email.toLowerCase(),
+            password: hashedPassword,
+            role: role
+        });
+
+        await user.save();
+
+        console.log(chalk.green(`[USERS] New user created: ${user.email} (${user.role}) by ${req.user.email}`));
+
+        res.status(201).json({
+            success: true,
+            user: {
+                id: user._id,
+                email: user.email,
+                role: user.role,
+                isActive: user.isActive,
+                created: user.created,
+                updated: user.updated
+            }
+        });
+
+    } catch (error) {
+        console.error(chalk.red('[USERS] Create user error:'), error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Internal server error' 
+        });
+    }
+});
+
+// Update user (admin/superadmin only)
+app.put('/api/users/:id', authenticateToken, requireAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { email, role, isActive } = req.body;
+        
+        // Find user
+        const user = await User.findById(id);
+        if (!user) {
+            return res.status(404).json({ 
+                success: false, 
+                message: 'User not found' 
+            });
+        }
+
+        // Prevent updating SuperAdmin unless current user is SuperAdmin
+        if (user.role === 'superadmin' && req.user.role !== 'superadmin') {
+            return res.status(403).json({ 
+                success: false, 
+                message: 'Cannot modify SuperAdmin user' 
+            });
+        }
+
+        // Update fields
+        if (email) user.email = email.toLowerCase();
+        if (role !== undefined) user.role = role;
+        if (isActive !== undefined) user.isActive = isActive;
+        user.updated = new Date();
+
+        await user.save();
+
+        console.log(chalk.green(`[USERS] User updated: ${user.email} by ${req.user.email}`));
+
+        res.json({
+            success: true,
+            user: {
+                id: user._id,
+                email: user.email,
+                role: user.role,
+                isActive: user.isActive,
+                created: user.created,
+                updated: user.updated
+            }
+        });
+
+    } catch (error) {
+        console.error(chalk.red('[USERS] Update user error:'), error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Internal server error' 
+        });
+    }
+});
+
+// Delete user (superadmin only)
+app.delete('/api/users/:id', authenticateToken, requireSuperAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        // Find user
+        const user = await User.findById(id);
+        if (!user) {
+            return res.status(404).json({ 
+                success: false, 
+                message: 'User not found' 
+            });
+        }
+
+        // Prevent deleting self
+        if (user._id.toString() === req.user.id) {
+            return res.status(403).json({ 
+                success: false, 
+                message: 'Cannot delete your own account' 
+            });
+        }
+
+        // Prevent deleting SuperAdmin
+        if (user.role === 'superadmin') {
+            return res.status(403).json({ 
+                success: false, 
+                message: 'Cannot delete SuperAdmin user' 
+            });
+        }
+
+        await User.findByIdAndDelete(id);
+
+        console.log(chalk.green(`[USERS] User deleted: ${user.email} by ${req.user.email}`));
+
+        res.json({
+            success: true,
+            message: 'User deleted successfully'
+        });
+
+    } catch (error) {
+        console.error(chalk.red('[USERS] Delete user error:'), error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Internal server error' 
+        });
     }
 });
 
@@ -3162,5 +3796,66 @@ app.get('/api/video', (req, res) => {
   });
 });
 
+// Mount admin API routes
+const adminRoutes = require('./routes/admin.routes');
+app.use('/api/admin', adminRoutes);
+
+// =========================
+// BUG TRACKING ENDPOINTS
+// =========================
+
+// Submit a new bug (anyone)
+app.post('/api/bugs', async (req, res) => {
+    try {
+        const { title, description, submittedBy } = req.body;
+        if (!title || !description || !submittedBy) {
+            return res.status(400).json({ success: false, message: 'Title, description, and submittedBy are required.' });
+        }
+        const bug = new Bug({ title, description, submittedBy });
+        await bug.save();
+        res.status(201).json({ success: true, bug });
+    } catch (error) {
+        console.error('[BUGS] Error submitting bug:', error);
+        res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+});
+
+// List bugs (admin: all, user: their own)
+app.get('/api/bugs', authenticateToken, async (req, res) => {
+    try {
+        let bugs;
+        if (req.user.role === 'admin' || req.user.role === 'superadmin') {
+            bugs = await Bug.find().sort({ created: -1 });
+        } else {
+            bugs = await Bug.find({ submittedBy: req.user.email }).sort({ created: -1 });
+        }
+        res.json({ success: true, bugs });
+    } catch (error) {
+        console.error('[BUGS] Error listing bugs:', error);
+        res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+});
+
+// Update bug (admin only)
+app.put('/api/bugs/:id', authenticateToken, requireAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { severity, status, comment, commentAuthor } = req.body;
+        const bug = await Bug.findById(id);
+        if (!bug) {
+            return res.status(404).json({ success: false, message: 'Bug not found' });
+        }
+        if (severity) bug.severity = severity;
+        if (status) bug.status = status;
+        if (comment && commentAuthor) {
+            bug.comments.push({ author: commentAuthor, message: comment });
+        }
+        await bug.save();
+        res.json({ success: true, bug });
+    } catch (error) {
+        console.error('[BUGS] Error updating bug:', error);
+        res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+});
 
 

@@ -105,19 +105,15 @@ status {
 #conversation-status {
     color: #666;
     font-style: italic;
-    padding-left: 20px;
-    /* border-left: 2px solid #ddd; */
-    display: flex;
+    padding-left: 30px;
     flex-direction: column;
-    align-items: flex-start;
-    gap: 2px;
     font-size: 1.9vh;
     font-weight: 400;
     max-width: 56%;
 }
 
 #input-container {
-    display: flex    ;
+    display: flex;
     align-items: center;
     background-color: #f5f5f5;
     padding: 0px 5px 0px 20px;
@@ -869,7 +865,8 @@ button {
     z-index: 1001;
 }
 
-.analysis-popup-image, .popup-image {
+.analysis-popup-image,
+.popup-image {
     width: 100%;
     height: 100%;
     object-fit: contain;
@@ -1266,7 +1263,7 @@ button {
     color: #212529;
     font-weight: 500;
     margin-bottom: 0;
-    
+
     /* Force exactly 2 lines with ellipsis - consistent spacing for all titles */
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -1274,9 +1271,11 @@ button {
     overflow: hidden;
     text-overflow: ellipsis;
     line-height: 1.3em;
-    height: 2.6em; /* 2 lines * 1.3em line-height */
-    min-height: 2.6em; /* Ensure minimum 2-line height even for short titles */
-    
+    height: 2.6em;
+    /* 2 lines * 1.3em line-height */
+    min-height: 2.6em;
+    /* Ensure minimum 2-line height even for short titles */
+
     word-break: break-word;
     overflow-wrap: break-word;
     width: 70%;
@@ -1284,7 +1283,7 @@ button {
     left: -8px;
     margin-left: auto;
     margin-right: auto;
-    
+
     /* Ensure consistent box sizing */
     box-sizing: border-box;
     padding: 0;
@@ -1325,7 +1324,7 @@ button {
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
     display: block;
     margin-right: 20px;
-    margin-top: -50px;  
+    margin-top: -50px;
 }
 
 .youtube-popup-thumb {
@@ -1376,7 +1375,7 @@ button {
 }
 
 .button-thumb-group-MULTI {
-    display: flex    ;
+    display: flex;
     flex-direction: column;
     align-items: flex-start;
     position: relative;
@@ -1643,16 +1642,18 @@ button {
     color: #212529;
     font-weight: 500;
     line-height: 1.5;
-    
+
     /* Restrict to exactly 2 lines with ellipsis */
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
     text-overflow: ellipsis;
-    height: 2.6em; /* 2 lines * 1.3em line-height */
-    min-height: 2.6em; /* Ensure minimum 2-line height even for short titles */
-    
+    height: 2.6em;
+    /* 2 lines * 1.3em line-height */
+    min-height: 2.6em;
+    /* Ensure minimum 2-line height even for short titles */
+
     word-break: break-word;
     overflow-wrap: break-word;
     box-sizing: border-box;
@@ -1780,12 +1781,14 @@ button {
 .youtube-multi-bubble .video-item {
     background: #f9f9f9;
     border-radius: 8px;
-    padding: 20px 10px 10px 10px; /* Increased top padding from 10px to 20px */
+    padding: 20px 10px 10px 10px;
+    /* Increased top padding from 10px to 20px */
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
     display: flex;
     flex-direction: column;
     position: relative;
-    z-index: 10; /* Ensure cards are above any background text */
+    z-index: 10;
+    /* Ensure cards are above any background text */
 }
 
 .youtube-single-bubble .video-list {
@@ -2429,10 +2432,12 @@ button {
     align-items: center;
     width: 100%;
 }
+
 .playlist-search-wrapper,
 .playlist-create-controls {
     width: 100%;
 }
+
 .create-playlist-btn {
     width: 100%;
     min-width: 120px;
@@ -2706,9 +2711,9 @@ button {
 
 /* Increase height for large viewports (e.g., 100% zoom or large screens) */
 @media (min-height: 1000px) {
-  .playlist-table-wrapper {
-    max-height: 45vh;
-  }
+    .playlist-table-wrapper {
+        max-height: 45vh;
+    }
 }
 
 .playlist-videos-table {
@@ -2831,7 +2836,7 @@ button {
 }
 
 /* Show panel content on hover or open */
-#slideout-bar:hover + #slideout-panel-left #slideout-content,
+#slideout-bar:hover+#slideout-panel-left #slideout-content,
 #slideout-panel-left.open #slideout-content {
     transform: translateX(0);
     pointer-events: auto;
@@ -2896,6 +2901,7 @@ button {
     border-radius: 5px;
     cursor: pointer;
 }
+
 .mic-send-button:hover {
     background-color: #007bff;
     color: #fff;
@@ -2940,15 +2946,20 @@ button {
     box-shadow: 0 2px 8px rgba(25, 118, 210, 0.07);
     line-height: 1.6;
 }
-.bing-search-results h1, .bing-search-results h2, .bing-search-results h3 {
+
+.bing-search-results h1,
+.bing-search-results h2,
+.bing-search-results h3 {
     color: #1976d2;
     margin-top: 0;
 }
+
 .bing-search-results a {
     color: #1976d2;
     text-decoration: underline;
     word-break: break-all;
 }
+
 .bing-search-results a:hover {
     color: #0d47a1;
     text-decoration: underline;
@@ -2973,6 +2984,7 @@ button {
     user-select: none;
     text-decoration: none;
 }
+
 .user-input-textarea {
     width: 85vw !important;
     height: 4vh;
@@ -2999,7 +3011,7 @@ button {
     top: 20px;
     left: 20px;
     color: #fff;
-    background: rgba(0,0,0,0.7);
+    background: rgba(0, 0, 0, 0.7);
     padding: 10px 18px 8px 18px;
     font-size: 1.15em;
     font-weight: 600;
@@ -3074,7 +3086,7 @@ button {
 
 .custom-prompt-tip {
     font-size: 0.85em;
-    color:#555;
+    color: #555;
     margin-top: 4px;
     font-style: italic;
 }
@@ -3085,56 +3097,61 @@ button {
 
 /* Playlist search input with clear button */
 .playlist-search-wrapper {
-  position: relative;
-  width: 100%;
+    position: relative;
+    width: 100%;
 }
+
 .playlist-search-input {
-  width: 100%;
-  /* padding-right: 2.5em; */
-  box-sizing: border-box;
-  /* height: 42px; */
+    width: 100%;
+    /* padding-right: 2.5em; */
+    box-sizing: border-box;
+    /* height: 42px; */
 }
+
 .playlist-search-clear {
-  position: absolute;
-  top: 37%;
-  right: 5px;
-  top: 35% !important;
-  transform: translateY(-50%);
-  background: transparent;
-  border: none;
-  color: hsl(359.24deg 100% 49.61%) !important;
-  font-size: 1.7em !important;
-  cursor: pointer;
-  padding: 0;
-  line-height: 1;
-  display: none;
-  z-index: 2;
+    position: absolute;
+    top: 37%;
+    right: 5px;
+    top: 35% !important;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: hsl(359.24deg 100% 49.61%) !important;
+    font-size: 1.7em !important;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    display: none;
+    z-index: 2;
 }
+
 .playlist-search-clear:focus {
-  outline: none;
-  color: #333;
+    outline: none;
+    color: #333;
 }
 
 .playlist-manager-body {
-  position: relative;
+    position: relative;
 }
 
 .playlist-manager-message {
-  position: absolute;
-  left: 74%; /* Adjust as needed for your layout */
-  top: 200px; /* Adjust as needed to appear below the blue box */
-  transform: translateX(-50%);
-  z-index: 10;
-  width: 320px;
-  text-align: right;
-  color: #2196f3;
-  font-weight: bold;
-  /* background: #fff; */
-  border-radius: 6px;
-  /* box-shadow: 0 2px 8px rgba(0,0,0,0.08); */
-  pointer-events: none;
-  padding: 8px 0;
-  margin: 0;
+    position: absolute;
+    left: 74%;
+    /* Adjust as needed for your layout */
+    top: 200px;
+    /* Adjust as needed to appear below the blue box */
+    transform: translateX(-50%);
+    z-index: 10;
+    width: 320px;
+    text-align: right;
+    color: #2196f3;
+    font-weight: bold;
+    /* background: #fff; */
+    border-radius: 6px;
+    /* box-shadow: 0 2px 8px rgba(0,0,0,0.08); */
+    pointer-events: none;
+    padding: 8px 0;
+    margin: 0;
 }
 
 .playlist-message-emoji-stack {
@@ -3164,7 +3181,10 @@ button {
     animation: verticalNodFade 1.2s cubic-bezier(0.4, 0, 0.2, 1) 1;
     transform-origin: center bottom;
     position: absolute;
-    left: 0; top: 0; width: 100%; height: 100%;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
     text-align: center;
     line-height: 1.4em;
     pointer-events: none;
@@ -3174,27 +3194,96 @@ button {
 }
 
 @keyframes verticalNodFade {
-    0%   { transform: translateY(0); opacity: 1; visibility: visible; }
-    8%   { transform: translateY(4px); opacity: 1; visibility: visible; }
-    16%  { transform: translateY(0); opacity: 1; visibility: visible; }
-    24%  { transform: translateY(4px); opacity: 1; visibility: visible; }
-    32%  { transform: translateY(0); opacity: 1; visibility: visible; }
-    40%  { transform: translateY(4px); opacity: 1; visibility: visible; }
-    48%  { transform: translateY(0); opacity: 1; visibility: visible; }
-    56%  { transform: translateY(4px); opacity: 1; visibility: visible; }
-    64%  { transform: translateY(0); opacity: 1; visibility: visible; }
-    72%  { transform: translateY(4px); opacity: 1; visibility: visible; }
-    80%  { transform: translateY(0); opacity: 1; visibility: visible; }
-    90%  { opacity: 1; visibility: visible; }
-    99%  { opacity: 0; visibility: visible; }
-    100% { opacity: 0; visibility: hidden; }
+    0% {
+        transform: translateY(0);
+        opacity: 1;
+        visibility: visible;
+    }
+
+    8% {
+        transform: translateY(4px);
+        opacity: 1;
+        visibility: visible;
+    }
+
+    16% {
+        transform: translateY(0);
+        opacity: 1;
+        visibility: visible;
+    }
+
+    24% {
+        transform: translateY(4px);
+        opacity: 1;
+        visibility: visible;
+    }
+
+    32% {
+        transform: translateY(0);
+        opacity: 1;
+        visibility: visible;
+    }
+
+    40% {
+        transform: translateY(4px);
+        opacity: 1;
+        visibility: visible;
+    }
+
+    48% {
+        transform: translateY(0);
+        opacity: 1;
+        visibility: visible;
+    }
+
+    56% {
+        transform: translateY(4px);
+        opacity: 1;
+        visibility: visible;
+    }
+
+    64% {
+        transform: translateY(0);
+        opacity: 1;
+        visibility: visible;
+    }
+
+    72% {
+        transform: translateY(4px);
+        opacity: 1;
+        visibility: visible;
+    }
+
+    80% {
+        transform: translateY(0);
+        opacity: 1;
+        visibility: visible;
+    }
+
+    90% {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    99% {
+        opacity: 0;
+        visibility: visible;
+    }
+
+    100% {
+        opacity: 0;
+        visibility: hidden;
+    }
 }
 
 .playlist-message-sparkle-emoji {
     font-size: 1.1em;
     opacity: 0;
     position: absolute;
-    left: 0; top: 0; width: 100%; height: 100%;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
     text-align: center;
     line-height: 1.4em;
     pointer-events: none;
@@ -3204,17 +3293,34 @@ button {
 }
 
 @keyframes sparkleAppearFade {
-    0%   { opacity: 0; transform: scale(0.7) rotate(-10deg);}
-    10%  { opacity: 1; transform: scale(1.2) rotate(10deg);}
-    80%  { opacity: 1; }
-    100% { opacity: 0; transform: scale(0.7) rotate(0deg);}
+    0% {
+        opacity: 0;
+        transform: scale(0.7) rotate(-10deg);
+    }
+
+    10% {
+        opacity: 1;
+        transform: scale(1.2) rotate(10deg);
+    }
+
+    80% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0;
+        transform: scale(0.7) rotate(0deg);
+    }
 }
 
 .playlist-message-thumbs-emoji {
     font-size: 1.2em;
     opacity: 0;
     position: absolute;
-    left: 0; top: 0; width: 100%; height: 100%;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
     text-align: center;
     line-height: 1.4em;
     pointer-events: none;
@@ -3224,10 +3330,24 @@ button {
 }
 
 @keyframes thumbsAppear {
-    0%   { opacity: 0; transform: scale(0.7) rotate(-20deg);}
-    60%  { opacity: 0; }
-    80%  { opacity: 1; transform: scale(1.2) rotate(10deg);}
-    100% { opacity: 1; transform: scale(1) rotate(0deg);}
+    0% {
+        opacity: 0;
+        transform: scale(0.7) rotate(-20deg);
+    }
+
+    60% {
+        opacity: 0;
+    }
+
+    80% {
+        opacity: 1;
+        transform: scale(1.2) rotate(10deg);
+    }
+
+    100% {
+        opacity: 1;
+        transform: scale(1) rotate(0deg);
+    }
 }
 
 .playlist-message-flex {
@@ -3247,87 +3367,89 @@ button {
 }
 
 .playlist-table-blue-bg .playlist-table-wrapper {
-  width: 100%;
-  max-width: 100%;
+    width: 100%;
+    max-width: 100%;
 }
 
 .playlist-table-blue-bg .playlist-videos-table {
-  width: 100%;
-  max-width: 100%;
+    width: 100%;
+    max-width: 100%;
 }
 
 /* Playlist list area relative for absolute sort control */
 .playlist-list-relative {
-  position: relative;
+    position: relative;
 }
 
 /* Sort control styles */
 .playlist-sort-control {
-  position: absolute;
-  right: 8px;
-  bottom: 6px;
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 6px;
-  font-size: 1.1em;
-  background: rgba(255,255,255,0.95);
-  padding: 2px 8px;
-  border-radius: 8px;
-  z-index: 2;
-  cursor: pointer;
-  user-select: none;
+    position: absolute;
+    right: 8px;
+    bottom: 6px;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 6px;
+    font-size: 1.1em;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 2px 8px;
+    border-radius: 8px;
+    z-index: 2;
+    cursor: pointer;
+    user-select: none;
 }
 
 .playlist-sort-label {
-  font-weight: bold;
+    font-weight: bold;
 }
 
 .playlist-sort-arrow {
-  font-size: 1.2em;
-  cursor: pointer;
-  transition: color 0.15s;
+    font-size: 1.2em;
+    cursor: pointer;
+    transition: color 0.15s;
 }
 
 .playlist-sort-arrow:hover {
-  color: #1976d2;
+    color: #1976d2;
 }
 
 /* Playlist sort control below playlist list, right-aligned */
 .playlist-sort-control {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 6px;
-  font-size: 1.1em;
-  background: rgba(255,255,255,0.95);
-  padding: 2px 8px;
-  border-radius: 8px;
-  z-index: 2;
-  cursor: pointer;
-  user-select: none;
-  margin-top: 6px;
-  margin-bottom: 2px;
-  width: 100%;
-  box-sizing: border-box;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 6px;
+    font-size: 1.1em;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 2px 8px;
+    border-radius: 8px;
+    z-index: 2;
+    cursor: pointer;
+    user-select: none;
+    margin-top: 6px;
+    margin-bottom: 2px;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .playlist-sort-label {
-  font-weight: bold;
+    font-weight: bold;
 }
 
 .playlist-sort-arrow {
-  font-size: 1.2em;
-  cursor: pointer;
-  transition: color 0.15s;
+    font-size: 1.2em;
+    cursor: pointer;
+    transition: color 0.15s;
 }
 
 .playlist-sort-arrow:hover {
-  color: #1976d2;
+    color: #1976d2;
 }
 
 /* Remove playlist-list-relative if present */
-.playlist-list-relative { position: static !important; }
+.playlist-list-relative {
+    position: static !important;
+}
 
 /* Playlist list outer wrapper for absolute sort control */
 .playlist-list-outer {
@@ -3340,43 +3462,43 @@ button {
 }
 
 .playlist-sort-control {
-  position: absolute;
-  right: 0px;
-  bottom: -45px;
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 6px;
-  font-size: .9em;
-  background: rgba(255,255,255,0.95);
-  padding: 2px 8px;
-  border-radius: 8px;
-  z-index: 2;
-  cursor: default;
-  user-select: none;
+    position: absolute;
+    right: 0px;
+    bottom: -45px;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 6px;
+    font-size: .9em;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 2px 8px;
+    border-radius: 8px;
+    z-index: 2;
+    cursor: default;
+    user-select: none;
 }
 
 .playlist-sort-recent-btn {
-  background: none;
-  border: none;
-  color: #007bff;
-  font-size: 1em;
-  cursor: pointer;
+    background: none;
+    border: none;
+    color: #007bff;
+    font-size: 1em;
+    cursor: pointer;
 }
 
 .playlist-sort-label {
-  font-weight: bold;
-  margin-top: 2px;
+    font-weight: bold;
+    margin-top: 2px;
 }
 
 .playlist-sort-arrow {
-  font-size: 1.2em;
-  cursor: pointer;
-  transition: color 0.15s;
+    font-size: 1.2em;
+    cursor: pointer;
+    transition: color 0.15s;
 }
 
 .playlist-sort-arrow:hover {
-  color: #1976d2;
+    color: #1976d2;
 }
 
 /* --- ENSURE MOCK MULTI GRID IS IDENTICAL TO REAL MULTI GRID --- */
@@ -3445,7 +3567,7 @@ button {
     font-size: 0.7em;
     color: #212529;
     font-weight: 500;
-    
+
     /* Restrict to exactly 2 lines with ellipsis */
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -3453,8 +3575,9 @@ button {
     overflow: hidden;
     text-overflow: ellipsis;
     line-height: 1.3em;
-    height: 2.6em; /* 2 lines * 1.3em line-height */
-    
+    height: 2.6em;
+    /* 2 lines * 1.3em line-height */
+
     word-break: break-word;
     overflow-wrap: break-word;
 }
@@ -3531,6 +3654,7 @@ button {
     .youtube-multi-bubble-mock .video-list-mock {
         grid-template-columns: 1fr !important;
     }
+
     .youtube-multi-bubble-mock {
         max-width: 100%;
         padding: 12px;
@@ -3776,7 +3900,7 @@ button {
     font-size: 0.7em;
     color: #212529;
     font-weight: 500;
-    
+
     /* Restrict to exactly 2 lines with ellipsis */
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -3784,8 +3908,9 @@ button {
     overflow: hidden;
     text-overflow: ellipsis;
     line-height: 1.3em;
-    height: 2.6em; /* 2 lines * 1.3em line-height */
-    
+    height: 2.6em;
+    /* 2 lines * 1.3em line-height */
+
     word-break: break-word;
     overflow-wrap: break-word;
 }
@@ -3864,19 +3989,23 @@ button {
     padding-top: 0px !important;
     padding-bottom: 4px !important;
 }
+
 .youtube-single-bubble {
     margin-top: 10px !important;
     margin-bottom: 10px !important;
     padding-top: 0px !important;
     padding-bottom: 10px !important;
 }
-.youtube-single-bubble > p:first-child {
+
+.youtube-single-bubble>p:first-child {
     margin-top: 0 !important;
     margin-bottom: 6px !important;
 }
-.youtube-single-bubble > *:last-child {
+
+.youtube-single-bubble>*:last-child {
     margin-bottom: 0 !important;
 }
+
 .youtube-single-bubble .video-item {
     margin-top: 0 !important;
     margin-bottom: 0 !important;
@@ -3895,11 +4024,13 @@ button {
     font-weight: 600;
     border-radius: 8px;
     padding: 4px 12px;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.07);
     z-index: 2;
     opacity: 0.92;
 }
-.youtube-multi-bubble, .youtube-multi-bubble-mock {
+
+.youtube-multi-bubble,
+.youtube-multi-bubble-mock {
     position: relative;
 }
 
@@ -4177,6 +4308,7 @@ button.next-page-btn {
     opacity: 1 !important;
     visibility: visible !important;
 }
+
 .mock-pagination-bar .drag-tab {
     position: absolute !important;
     top: 0 !important;
@@ -4189,16 +4321,19 @@ button.next-page-btn {
     justify-content: center !important;
     cursor: grab !important;
 }
+
 .mock-pagination-bar .drag-icon {
     width: 24px !important;
     height: 24px !important;
     opacity: 0.7 !important;
 }
+
 .mock-pagination-bar-content {
     display: flex !important;
     align-items: center !important;
     width: 100% !important;
 }
+
 .mock-pagination-bar button {
     margin: 0 2px !important;
     padding: 4px 10px !important;
@@ -4210,11 +4345,13 @@ button.next-page-btn {
     cursor: pointer !important;
     transition: background 0.2s;
 }
+
 .mock-pagination-bar button:disabled {
     background: #bdbdbd !important;
     color: #fff !important;
     cursor: not-allowed !important;
 }
+
 .mock-pagination-bar button:hover:not(:disabled) {
     background: #1976d2 !important;
 }
@@ -4393,7 +4530,9 @@ button.next-page-btn {
     opacity: 1 !important;
     visibility: visible !important;
 }
-.mock-pagination-bar .drag-tab, .pagination-bar .drag-tab {
+
+.mock-pagination-bar .drag-tab,
+.pagination-bar .drag-tab {
     position: absolute !important;
     top: 0 !important;
     left: 0 !important;
@@ -4405,17 +4544,23 @@ button.next-page-btn {
     justify-content: center !important;
     cursor: grab !important;
 }
-.mock-pagination-bar .drag-icon, .pagination-bar .drag-icon {
+
+.mock-pagination-bar .drag-icon,
+.pagination-bar .drag-icon {
     width: 30px !important;
     height: 30px !important;
     opacity: 0.7 !important;
 }
-.mock-pagination-bar-content, .pagination-bar-content {
+
+.mock-pagination-bar-content,
+.pagination-bar-content {
     display: flex !important;
     align-items: center !important;
     width: 100% !important;
 }
-.mock-pagination-bar button, .pagination-bar button {
+
+.mock-pagination-bar button,
+.pagination-bar button {
     margin: 0 2px !important;
     padding: 6px 8px !important;
     font-size: 12px !important;
@@ -4431,14 +4576,19 @@ button.next-page-btn {
     outline: none !important;
     min-width: 32px !important;
 }
-.mock-pagination-bar button:disabled, .pagination-bar button:disabled {
+
+.mock-pagination-bar button:disabled,
+.pagination-bar button:disabled {
     background: #bdbdbd !important;
     color: #fff !important;
     cursor: not-allowed !important;
 }
-.mock-pagination-bar button:hover:not(:disabled), .pagination-bar button:hover:not(:disabled) {
+
+.mock-pagination-bar button:hover:not(:disabled),
+.pagination-bar button:hover:not(:disabled) {
     background: #1976d2 !important;
 }
+
 .found-results-mock {
     width: 100%;
     text-align: left;
@@ -4461,6 +4611,7 @@ button.next-page-btn {
     justify-content: center !important;
     cursor: grab !important;
 }
+
 .pagination-bar .drag-tab {
     position: absolute !important;
     top: 0 !important;
@@ -4479,6 +4630,7 @@ button.next-page-btn {
     height: 30px !important;
     opacity: 0.7 !important;
 }
+
 .pagination-bar .drag-icon {
     width: 30px !important;
     height: 30px !important;
@@ -4491,6 +4643,7 @@ button.next-page-btn {
     width: 100% !important;
     gap: 4px;
 }
+
 .pagination-bar-content {
     display: flex !important;
     align-items: center !important;
@@ -4514,6 +4667,7 @@ button.next-page-btn {
     outline: none !important;
     min-width: 32px !important;
 }
+
 .pagination-bar button {
     margin: 0 2px !important;
     padding: 6px 8px !important;
@@ -4536,6 +4690,7 @@ button.next-page-btn {
     color: #fff !important;
     cursor: not-allowed !important;
 }
+
 .pagination-bar button:disabled {
     background: #bdbdbd !important;
     color: #fff !important;
@@ -4545,6 +4700,7 @@ button.next-page-btn {
 .mock-pagination-bar button:hover:not(:disabled) {
     background: #1976d2 !important;
 }
+
 .pagination-bar button:hover:not(:disabled) {
     background: #1976d2 !important;
 }
@@ -4559,6 +4715,7 @@ button.next-page-btn {
     padding: 10px;
     border-radius: 16px;
 }
+
 .youtube-results-header-mock {
     display: flex;
     justify-content: space-between;
@@ -4569,6 +4726,7 @@ button.next-page-btn {
     font-size: 1.0em;
     color: #333;
 }
+
 .mock-youtube-results {
     margin: 0 auto;
     background: #fff;
@@ -4578,10 +4736,12 @@ button.next-page-btn {
     width: calc(100% - 20px);
     max-width: none;
 }
+
 .results-title-mock {
     font-weight: 500;
     color: #222;
 }
+
 .page-info-mock {
     color: #666;
     font-size: 1em;
@@ -4673,7 +4833,8 @@ button.next-page-btn {
 }
 
 /* Play in Popup Button - Restored to original styling */
-.popup-btn-mock, .youtube-action-btn.popup-btn-mock {
+.popup-btn-mock,
+.youtube-action-btn.popup-btn-mock {
     background: #2d298e !important;
     color: white !important;
     border: none !important;
@@ -4689,11 +4850,13 @@ button.next-page-btn {
     display: inline-block !important;
 }
 
-.popup-btn-mock:hover, .youtube-action-btn.popup-btn-mock:hover {
+.popup-btn-mock:hover,
+.youtube-action-btn.popup-btn-mock:hover {
     background: #2d298ecf !important;
 }
 
-.popup-btn-mock:active, .youtube-action-btn.popup-btn-mock:active {
+.popup-btn-mock:active,
+.youtube-action-btn.popup-btn-mock:active {
     transform: translateY(0);
     box-shadow: 0 2px 4px rgba(255, 68, 68, 0.3) !important;
 }
@@ -4894,13 +5057,16 @@ button.next-page-btn {
 
 /* Focus states for accessibility */
 
-.mock-pagination-bar button:disabled, .pagination-bar button:disabled {
+.mock-pagination-bar button:disabled,
+.pagination-bar button:disabled {
     background: #f8f8f8 !important;
     color: #999 !important;
     opacity: 0.5 !important;
     cursor: not-allowed !important;
 }
-.mock-pagination-bar button:hover:not(:disabled), .pagination-bar button:hover:not(:disabled) {
+
+.mock-pagination-bar button:hover:not(:disabled),
+.pagination-bar button:hover:not(:disabled) {
     background: #e8e8e8 !important;
     color: #000 !important;
 }
@@ -4954,7 +5120,7 @@ button.next-page-btn {
     color: #999 !important;
     opacity: 0.5 !important;
     cursor: not-allowed !important;
-    
+
 }
 
 .pagination-bar button:hover:not(:disabled),
@@ -5025,7 +5191,7 @@ button.next-page-btn {
     align-items: center;
     gap: 4px;
     transition: all 0.2s ease;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
     min-width: 60px;
     justify-content: center;
     height: 20px;
@@ -5039,12 +5205,12 @@ button.next-page-btn {
     background: rgba(255, 255, 255, 0.3);
     border-color: rgba(255, 255, 255, 0.5);
     transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
 }
 
 .query-history-btn:active {
     /* transform: translateY(0); */
-    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .query-history-btn:disabled {
@@ -5212,7 +5378,7 @@ button.next-page-btn {
         min-width: 250px;
         max-height: 200px;
     }
-    
+
     .query-history-btn {
         padding: 3px 6px;
         font-size: 9px;
@@ -5361,7 +5527,7 @@ button.next-page-btn {
 /* Recipe formatting CSS classes */
 .recipe-ingredients-heading {
     /* Customize ingredients heading style */
-    display:block;
+    display: block;
     margin-top: 12px;
     margin-bottom: 4px;
     line-height: 1.2;
@@ -5381,7 +5547,7 @@ button.next-page-btn {
 }
 
 .recipe-ingredient-item {
-    display:block;
+    display: block;
     margin-bottom: -4px;
     line-height: 1.2;
     list-style-type: square;
@@ -5411,72 +5577,79 @@ button.next-page-btn {
 
 /* Help Modal Styles */
 .help-modal {
-  display: none;
-  position: fixed;
-  z-index: 9999;
-  left: 0;
-  top: 0;
-  width: 100vw;
-  height: 100vh;
-  overflow: auto;
-  background: rgba(0,0,0,0.35);
-  justify-content: center;
-  align-items: center;
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    left: 0;
+    top: 0;
+    width: 100vw;
+    height: 100vh;
+    overflow: auto;
+    background: rgba(0, 0, 0, 0.35);
+    justify-content: center;
+    align-items: center;
 }
 
 .help-modal.open {
-  display: flex;
+    display: flex;
 }
 
 .help-modal-content {
-  background: #fff;
-  margin: auto;
-  padding: 32px 28px 24px 28px;
-  border-radius: 12px;
-  max-width: 480px;
-  width: 90vw;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
-  position: relative;
-  animation: fadeInModal 0.2s;
+    background: #fff;
+    margin: auto;
+    padding: 32px 28px 24px 28px;
+    border-radius: 12px;
+    max-width: 480px;
+    width: 90vw;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+    position: relative;
+    animation: fadeInModal 0.2s;
 }
 
 .help-modal-close {
-  position: absolute;
-  top: 12px;
-  right: 18px;
-  font-size: 2rem;
-  background: none;
-  border: none;
-  color: #888;
-  cursor: pointer;
+    position: absolute;
+    top: 12px;
+    right: 18px;
+    font-size: 2rem;
+    background: none;
+    border: none;
+    color: #888;
+    cursor: pointer;
 }
 
 @keyframes fadeInModal {
-  from { opacity: 0; transform: translateY(40px);}
-  to { opacity: 1; transform: translateY(0);}
+    from {
+        opacity: 0;
+        transform: translateY(40px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* === BEGIN: Quota Dashboard Styles (from working quota-monitor.js) === */
 .quota-dashboard {
     position: fixed;
-    background: rgba(0,0,0,0.9);
+    background: rgba(0, 0, 0, 0.9);
     color: white;
     width: 15vw;
     padding-bottom: 3px;
     border-radius: 8px;
     font-size: 12px;
     z-index: 1000;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     cursor: move;
     user-select: none;
-    border: 2px solid rgba(255,255,255,0.1);
+    border: 2px solid rgba(255, 255, 255, 0.1);
     transition: box-shadow 0.2s ease, transform 0.2s ease;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     will-change: transform;
 }
 
 .quota-toggle-cache-mode-btn {
-    background:rgb(27, 156, 20);
+    background: rgb(27, 156, 20);
     width: 100%;
     font-size: 12px;
 }
@@ -5494,7 +5667,7 @@ button.next-page-btn {
 }
 
 .quota-dashboard:hover {
-    box-shadow: 0 6px 16px rgba(0,0,0,0.4);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
 }
 
 .quota-dashboard:active {
@@ -5607,7 +5780,7 @@ button.next-page-btn {
     position: absolute;
     top: 2px;
     left: 2px;
-    color: rgba(255,255,255,0.5);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 10px;
     line-height: 8px;
     cursor: grab;
@@ -5617,7 +5790,7 @@ button.next-page-btn {
 }
 
 .quota-drag-handle:hover {
-    color: rgba(255,255,255,0.8);
+    color: rgba(255, 255, 255, 0.8);
 }
 
 .quota-drag-handle:active {
@@ -5682,7 +5855,7 @@ button.next-page-btn {
 .quota-progress-bar {
     height: 100%;
     border-radius: 4px;
-    transition: width 0.3s cubic-bezier(0.4,0,0.2,1), background 0.3s cubic-bezier(0.4,0,0.2,1);
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .quota-actions {
@@ -5711,6 +5884,7 @@ button.next-page-btn {
 .quota-toggle-cache-btn.cache-off {
     background: #4caf50;
 }
+
 /* === END: Quota Dashboard Styles === */
 
 .print-icon-topright {
@@ -5722,6 +5896,7 @@ button.next-page-btn {
     font-size: 20px;
     padding: 0;
 }
+
 .message-content {
     position: relative;
 }
@@ -5733,7 +5908,8 @@ button.next-page-btn {
     color: black;
 }
 
-.recipe-ingredients-heading, .recipe-instructions-heading {
+.recipe-ingredients-heading,
+.recipe-instructions-heading {
     margin-top: 0px;
     /* margin-bottom: -10px; */
     line-height: 1.2;
@@ -5773,7 +5949,8 @@ button.next-page-btn {
     font-size: 1.0em;
 }
 
-.recipe-ingredient-item, .recipe-instruction-item {
+.recipe-ingredient-item,
+.recipe-instruction-item {
     margin-left: -20px;
     margin-bottom: 4px;
     line-height: 1.2;
@@ -5936,10 +6113,12 @@ button.next-page-btn {
     margin-top: 2px;
     margin-bottom: 2px;
 }
+
 .query-history-pages {
     font-weight: bold;
     color: #1976d2;
 }
+
 .query-history-time {
     color: #888;
     font-size: 0.65em;
@@ -5966,9 +6145,10 @@ button.next-page-btn {
     align-items: center;
     transition: box-shadow 0.2s, background 0.2s;
 }
+
 .minimized-paginator-bar:hover {
-  background: #1565c0;
-  box-shadow: 0 4px 18px rgba(0,0,0,0.28);
+    background: #1565c0;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.28);
 }
 
 /* In-chat Recipe Card Styles */
@@ -5978,40 +6158,44 @@ button.next-page-btn {
     border-radius: 12px;
     padding: 18px 22px;
     margin: 12px 0;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
     max-width: 600px;
-  }
-  
-  .recipe-title {
+}
+
+.recipe-title {
     font-size: 1.3em;
     font-weight: bold;
     color: #b8860b;
     margin-bottom: 8px;
-  }
-  
-  .recipe-intro {
+}
+
+.recipe-intro {
     font-style: italic;
     color: #555;
     margin-bottom: 12px;
-  }
-  
-  .recipe-ingredients, .recipe-instructions {
+}
+
+.recipe-ingredients,
+.recipe-instructions {
     margin-bottom: 14px;
-  }
-  
-  .recipe-ingredients h3, .recipe-instructions h3 {
+}
+
+.recipe-ingredients h3,
+.recipe-instructions h3 {
     font-size: 1.1em;
     color: #795548;
     margin-bottom: 6px;
-  }
-  
-  .recipe-ingredients ul, .recipe-instructions ol {
+}
+
+.recipe-ingredients ul,
+.recipe-instructions ol {
     margin: 0 0 0 18px;
-  }
-  
-  .recipe-ingredients li, .recipe-instructions li {
+}
+
+.recipe-ingredients li,
+.recipe-instructions li {
     margin-bottom: 4px;
-  }
+}
 
 /* YouTube Search Manager CSS - Reference Implementation */
 .youtube-multi-bubble {
@@ -6182,7 +6366,7 @@ button.next-page-btn {
     background-color: white;
     border: 1px solid #ccc;
     border-radius: 4px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     width: 250px;
     max-height: 300px;
     overflow-y: auto;
@@ -6272,7 +6456,7 @@ button.next-page-btn {
     border-radius: 8px;
     padding: 12px 16px;
     margin-bottom: 12px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     width: 180px;
     position: relative;
     top: 105px;
@@ -6330,16 +6514,16 @@ button.next-page-btn {
         padding: 8px 12px;
         margin-bottom: 8px;
     }
-    
+
     .legend-title {
         font-size: 13px;
     }
-    
+
     .legend-command {
         font-size: 11px;
         gap: 6px;
     }
-    
+
     .command-text {
         padding: 1px 4px;
         font-size: 11px;
@@ -6352,11 +6536,15 @@ button.next-page-btn {
     top: 0;
     width: 100%;
     z-index: 10;
-    height: 100%; /* Make sure it fills the parent */
+    height: 100%;
+    /* Make sure it fills the parent */
     display: flex;
-    align-items: center;   /* Vertical centering */
-    justify-content: flex-start; /* Or center, if you want horizontal centering */
-    pointer-events: none;  /* Optional: so it doesn't block clicks */
+    align-items: center;
+    /* Vertical centering */
+    justify-content: flex-start;
+    /* Or center, if you want horizontal centering */
+    pointer-events: none;
+    /* Optional: so it doesn't block clicks */
 }
 
 .status-default-msg {
@@ -6378,87 +6566,114 @@ button.next-page-btn {
 }
 
 .status-separator {
-  display: inline-block;
-  width: 1.5px;
-  height: 100%;
-  min-height: 24px;
-  background: #bbb;
-  margin: 0 8px;
-  vertical-align: middle;
-  border-radius: 2px;
-  align-self: stretch;
+    display: inline-block;
+    width: 1.5px;
+    height: 100%;
+    margin-right: 20px !important;
+    min-height: 24px;
+    background: #bbb;
+    margin: 0 8px;
+    vertical-align: middle;
+    border-radius: 2px;
+    align-self: stretch;
 }
 
 #status-container {
-  gap: 8px !important;
-  align-items: stretch !important;
+    gap: 8px !important;
+    align-items: stretch !important;
 }
 
-.status-msg, .conversation-msg {
-  display: flex;
-  align-items: center;
-  height: 100%;
-  min-height: 24px;
-  vertical-align: middle;
-  margin: 0;
-  padding: 2px 2px;
-  font-size: 1.0em !important;
+.status-msg,
+.conversation-msg {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    min-height: 24px;
+    vertical-align: middle;
+    margin: 0;
+    padding: 2px 2px;
+    font-size: 1.0em !important;
 }
 
 .conversation-msg {
-  font-size: 1.9vh;
-  color: #666;
-  font-style: italic;
-  font-weight: 400;
-  padding-left: 0;
-  border-left: none;
+    font-size: 1.9vh;
+    color: #666;
+    font-style: italic;
+    font-weight: 400;
+    padding-left: 0;
+    border-left: none;
 }
 
 /* User Profile Icon and Dropdown */
 .user-profile-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid #1976d2;
-  cursor: pointer;
-  background: #fff;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.10);
-  transition: box-shadow 0.2s;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #1976d2;
+    cursor: pointer;
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.10);
+    transition: box-shadow 0.2s;
 }
+
 .user-profile-icon:hover {
-  box-shadow: 0 4px 16px rgba(25, 118, 210, 0.18);
+    box-shadow: 0 4px 16px rgba(25, 118, 210, 0.18);
 }
+
 #user-profile-menu {
-  display: flex;
-  align-items: center;
-  position: relative;
-  margin-left: auto;
+    display: flex;
+    align-items: center;
+    position: relative;
+    margin-left: auto;
 }
+
 .user-dropdown {
-  position: absolute;
-  top: 54px;
-  right: 0;
-  background: #fff;
-  border-radius: 10px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.18);
-  min-width: 140px;
-  z-index: 1000;
-  border: 1px solid #e0e0e0;
-  display: flex;
-  flex-direction: column;
-  padding: 8px 0;
+    display: none;
+    position: absolute;
+    top: 50px;
+    right: -10px;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    min-width: 160px;
+    z-index: 1000;
+    flex-direction: column;
+    padding: 0;
 }
+
+.user-dropdown.open {
+    display: flex;
+}
+
 .user-dropdown-item {
-  padding: 12px 20px;
-  font-size: 1.08em;
-  color: #222;
-  cursor: pointer;
-  transition: background 0.18s, color 0.18s;
+    padding: 12px 20px;
+    cursor: pointer;
+    font-size: 16px;
+    color: #222;
+    background: none;
+    border: none;
+    text-align: left;
+    transition: background 0.15s;
 }
+
 .user-dropdown-item:hover {
-  background: #e3f2fd;
-  color: #1976d2;
+    background: #f0f4fa;
 }
 
+#user-profile-menu {
+    order: 3;
+    position: relative;
+    margin-left: auto;
+}
 
+.admin-content-area {
+    margin: 32px auto;
+    max-width: 900px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    padding: 32px 40px;
+    min-height: 400px;
+}
