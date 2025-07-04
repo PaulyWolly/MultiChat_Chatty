@@ -9,6 +9,7 @@ ref_repo-MultiChat_v2/
 perfect_styles_99764aa/
 ref_repo-MultiChat_Chatty_GOLDEN-img-analysis/
 __REF_REPO-TEST-SAVE-LATER__/
+__REF_REPO-MCC_TEST__/
 
 # Archive folder
 archive/
@@ -22,4 +23,4 @@ backups/.env*
 # Any files containing API keys or tokens
 *api*key*
 *token*
-*secret*
+*secret*__REF_REPO-MCC_TEST__/
