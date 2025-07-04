@@ -14,7 +14,6 @@
  * @version 1.0.0
  * @author MultiChat_Chatty
  */
-
 class AdminPanel {
     constructor() {
         // Component state
@@ -31,9 +30,6 @@ class AdminPanel {
         this.contentElements = null;
         this.backButton = null;
         
-        // Script Manager reference
-        this.scriptManager = null;
-        
         // Bind methods to preserve 'this' context
         this.init = this.init.bind(this);
         this.show = this.show.bind(this);
@@ -43,7 +39,6 @@ class AdminPanel {
         this.handleBackClick = this.handleBackClick.bind(this);
         this.checkAuth = this.checkAuth.bind(this);
         this.logout = this.logout.bind(this);
-        this.openScriptManager = this.openScriptManager.bind(this);
     }
 
     /**
@@ -59,10 +54,8 @@ class AdminPanel {
             await Promise.all([
                 this.loadCSS(),
                 this.loadLoginManagerCSS(),
-                this.loadScriptManagerCSS(),
                 this.loadHTML(),
-                this.loadLoginManagerHTML(),
-                this.loadScriptManagerHTML()
+                this.loadLoginManagerHTML()
             ]);
             
             // Create component from HTML template
@@ -76,9 +69,6 @@ class AdminPanel {
             
             // Component-specific initialization
             this.initializeComponent();
-            
-            // Initialize ScriptManager
-            await this.initializeScriptManager();
             
             // Setup login callback
             if (window.LoginManager) {
@@ -105,25 +95,25 @@ class AdminPanel {
         return new Promise((resolve, reject) => {
             try {
                 // Check if CSS is already loaded
-            const existingLink = document.querySelector('link[href*="AdminPanel.css"]');
-            if (existingLink) {
+                const existingLink = document.querySelector('link[href*="AdminPanel.css"]');
+                if (existingLink) {
                     console.log('🔧 [AdminPanel] CSS already loaded');
-                resolve();
-                return;
-            }
+                    resolve();
+                    return;
+                }
 
-            const link = document.createElement('link');
-            link.rel = 'stylesheet';
-            link.type = 'text/css';
-            link.href = './components/Admin/AdminPanel/AdminPanel.css';
-            link.onload = () => {
-                console.log('🔧 [AdminPanel] CSS loaded successfully');
-                resolve();
-            };
-            link.onerror = () => {
-                console.error('🔧 [AdminPanel] Failed to load CSS');
-                reject(new Error('Failed to load AdminPanel CSS'));
-            };
+                const link = document.createElement('link');
+                link.rel = 'stylesheet';
+                link.type = 'text/css';
+                link.href = './components/Admin/AdminPanel/AdminPanel.css';
+                link.onload = () => {
+                    console.log('🔧 [AdminPanel] CSS loaded successfully');
+                    resolve();
+                };
+                link.onerror = () => {
+                    console.error('🔧 [AdminPanel] Failed to load CSS');
+                    reject(new Error('Failed to load AdminPanel CSS'));
+                };
                 document.head.appendChild(link);
             } catch (error) {
                 console.error('🔧 [AdminPanel] CSS loading error:', error);
@@ -158,43 +148,9 @@ class AdminPanel {
                     console.error('🔧 [AdminPanel] Failed to load LoginManager CSS');
                     reject(new Error('Failed to load LoginManager CSS'));
                 };
-            document.head.appendChild(link);
-            } catch (error) {
-                console.error('🔧 [AdminPanel] LoginManager CSS loading error:', error);
-                reject(error);
-            }
-        });
-    }
-
-    /**
-     * Load ScriptManager CSS
-     */
-    async loadScriptManagerCSS() {
-        return new Promise((resolve, reject) => {
-            try {
-                // Check if ScriptManager CSS is already loaded
-                const existingLink = document.querySelector('link[href*="ScriptManager.css"]');
-                if (existingLink) {
-                    console.log('🔧 [AdminPanel] ScriptManager CSS already loaded');
-                    resolve();
-                    return;
-                }
-
-                const link = document.createElement('link');
-                link.rel = 'stylesheet';
-                link.type = 'text/css';
-                link.href = './components/Admin/ScriptManager/ScriptManager.css';
-                link.onload = () => {
-                    console.log('🔧 [AdminPanel] ScriptManager CSS loaded successfully');
-                    resolve();
-                };
-                link.onerror = () => {
-                    console.error('🔧 [AdminPanel] Failed to load ScriptManager CSS');
-                    reject(new Error('Failed to load ScriptManager CSS'));
-                };
                 document.head.appendChild(link);
             } catch (error) {
-                console.error('🔧 [AdminPanel] ScriptManager CSS loading error:', error);
+                console.error('🔧 [AdminPanel] LoginManager CSS loading error:', error);
                 reject(error);
             }
         });
@@ -247,36 +203,6 @@ class AdminPanel {
                 resolve();
             } catch (error) {
                 console.error('🔧 [AdminPanel] Failed to load LoginManager HTML template:', error);
-                reject(error);
-            }
-        });
-    }
-
-    /**
-     * Load ScriptManager HTML
-     */
-    async loadScriptManagerHTML() {
-        return new Promise(async (resolve, reject) => {
-            try {
-                // Check if ScriptManager HTML is already loaded
-                if (document.getElementById('script-manager-modal')) {
-                    console.log('🔧 [AdminPanel] ScriptManager HTML already loaded');
-                    resolve();
-                    return;
-                }
-
-                const response = await fetch('./components/Admin/ScriptManager/ScriptManager.html');
-                if (!response.ok) {
-                    throw new Error(`Failed to fetch ScriptManager HTML template: ${response.status}`);
-                }
-                
-                const htmlContent = await response.text();
-                // Add ScriptManager HTML to body
-                document.body.insertAdjacentHTML('beforeend', htmlContent);
-                console.log('🔧 [AdminPanel] ScriptManager HTML loaded successfully');
-                resolve();
-            } catch (error) {
-                console.error('🔧 [AdminPanel] Failed to load ScriptManager HTML template:', error);
                 reject(error);
             }
         });
@@ -438,11 +364,21 @@ class AdminPanel {
     /**
      * Open ScriptManager modal
      */
-    openScriptManager() {
+    async openScriptManager() {
         if (this.scriptManager) {
             this.scriptManager.show();
-        } else {
-            console.error('🔧 [AdminPanel] ScriptManager not initialized');
+            return;
+        }
+        try {
+            const module = await import('../ScriptManager/ScriptManager.js');
+            this.scriptManager = new module.default();
+            await this.scriptManager.init();
+            this.scriptManager.show();
+        } catch (error) {
+            console.error('🔧 [AdminPanel] Failed to load ScriptManager:', error);
+            if (window.ConfirmModal) {
+                window.ConfirmModal.open({ message: 'Failed to load Script Manager. Please try again.' });
+            }
         }
     }
 
@@ -1156,17 +1092,8 @@ class AdminPanel {
             alert(`Error creating user: ${error.message}`);
         }
     }
-
-    async initializeScriptManager() {
-        try {
-            this.scriptManager = new window.ScriptManager();
-            await this.scriptManager.init();
-            console.log('🔧 [AdminPanel] ScriptManager initialized successfully');
-        } catch (error) {
-            console.error('🔧 [AdminPanel] Failed to initialize ScriptManager:', error);
-        }
-    }
 }
+
 
 // ---- Browser Console Log Capture ----
 (function setupBrowserConsoleLogCapture() {
