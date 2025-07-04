@@ -244,6 +244,51 @@ router.get('/script-log', async (req, res) => {
   }
 });
 
+// TMDB Poster Endpoints
+router.get('/api/tmdb/posters/tv', async (req, res) => {
+    const query = req.query.query;
+    if (!query) return res.status(400).json({ error: 'Missing query parameter' });
+    try {
+        const posters = await TMDBPosterService.searchTVShowOptions(query);
+        res.json({ posters });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+router.get('/api/tmdb/posters/movie', async (req, res) => {
+    const query = req.query.query;
+    if (!query) return res.status(400).json({ error: 'Missing query parameter' });
+    try {
+        const { title, year } = TMDBPosterService.cleanMovieTitle(query);
+        const posters = await TMDBPosterService.searchMovieOptions(title, year);
+        res.json({ posters });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+router.post('/api/tmdb/posters/selection', (req, res) => {
+    const { type, id, poster } = req.body;
+    if (!type || !id || !poster) return res.status(400).json({ error: 'Missing required fields' });
+    let filepath;
+    if (type === 'tv') {
+        filepath = path.join(__dirname, '../../public/components/MediaLibrary/data/tv_poster_overrides.json');
+    } else if (type === 'movie') {
+        filepath = path.join(__dirname, '../../public/components/MediaLibrary/data/poster_overrides.json');
+    } else {
+        return res.status(400).json({ error: 'Invalid type' });
+    }
+    let overrides = TMDBPosterService.loadOverrides(filepath);
+    overrides[id] = poster;
+    const success = TMDBPosterService.saveOverrides(filepath, overrides);
+    if (success) {
+        res.json({ success: true });
+    } else {
+        res.status(500).json({ error: 'Failed to save override' });
+    }
+});
+
 // Helper functions
 function formatBytes(bytes) {
   if (bytes === 0) return '0 Bytes';
