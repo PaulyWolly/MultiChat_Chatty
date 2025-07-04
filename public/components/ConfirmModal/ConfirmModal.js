@@ -6,12 +6,6 @@ class ConfirmModal {
         this.containerElement = null;
         this.confirmCallback = null;
         this.cancelCallback = null;
-        this.init = this.init.bind(this);
-        this.show = this.show.bind(this);
-        this.hide = this.hide.bind(this);
-        this.handleEvent = this.handleEvent.bind(this);
-        this.setMessage = this.setMessage.bind(this);
-        this.open = this.open.bind(this);
     }
 
     async init() {
@@ -82,11 +76,23 @@ class ConfirmModal {
         if (this.messageElement) this.messageElement.textContent = msg;
     }
 
-    open({ message, onConfirm, onCancel }) {
+    static async open({ message, onConfirm, onCancel }) {
+        console.log('[DEBUG - ConfirmModal] static open() called with:', { message, onConfirm, onCancel });
+        if (!this._instance) {
+            this._instance = new ConfirmModal();
+            console.log('[DEBUG - ConfirmModal] Created new ConfirmModal instance');
+        }
+        await this._instance.init();
+        this._instance._show(message, onConfirm, onCancel);
+    }
+
+    _show(message, onConfirm, onCancel) {
+        console.log('[DEBUG - ConfirmModal] _show() called with:', { message, onConfirm, onCancel });
         this.setMessage(message);
         this.confirmCallback = onConfirm;
         this.cancelCallback = onCancel;
         this.show();
+        console.log('[DEBUG - ConfirmModal] show() called, modal should be visible');
     }
 
     show() {
@@ -98,4 +104,5 @@ class ConfirmModal {
     }
 }
 
-window.ConfirmModal = new ConfirmModal(); 
+window.ConfirmModal = ConfirmModal;
+export default ConfirmModal; 

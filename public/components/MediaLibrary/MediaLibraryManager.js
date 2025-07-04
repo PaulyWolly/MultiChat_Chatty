@@ -1364,19 +1364,23 @@ class MediaLibraryManager {
     // --- COLLECTIONS TAB RENDERING ---
     renderCollectionsTab() {
         try {
-        const grid = document.getElementById('mediaGrid');
-            if (!grid) {
-                const modalContent = document.querySelector('.media-library-modal-content');
-                if (modalContent) {
-                    modalContent.innerHTML += '<div style="color:red;font-size:2em;">[COLLECTIONS ERROR] mediaGrid not found</div>';
-                }
-                console.error('[COLLECTIONS ERROR] mediaGrid not found');
+        let grid = document.getElementById('mediaGrid');
+        if (!grid) {
+            // Only create #mediaGrid if modal content exists
+            const modalContent = document.querySelector('.media-library-modal-content');
+            if (modalContent) {
+                grid = document.createElement('div');
+                grid.id = 'mediaGrid';
+                modalContent.appendChild(grid);
+            } else {
+                console.warn('[COLLECTIONS WARNING] mediaGrid and modal content not found. Modal must be created before rendering collections.');
                 return '';
             }
+        }
         grid.innerHTML = '';
-            grid.style.display = 'block'; // Ensure block layout, not flex row
-            const collections = this.getCollections();
-            const names = Object.keys(collections);
+        grid.style.display = 'block'; // Ensure block layout, not flex row
+        const collections = this.getCollections();
+        const names = Object.keys(collections);
         // If viewing a specific collection, show its movies
         if (this.currentCollectionView) {
             const moviePaths = collections[this.currentCollectionView] || [];
@@ -1436,14 +1440,17 @@ class MediaLibraryManager {
                     <div class="media-info"><h3>${this.cleanMovieTitle(item.title)}</h3></div>
                 `;
                 card.querySelector('.remove-from-collection-btn').onclick = async (e) => {
+                    console.log('[DEBUG -REMOVE FROM COLLECTION] Remove button clicked for:', item);
                     e.stopPropagation();
-                    await window.ConfirmModal.init();
-                    window.ConfirmModal.open({
+                    if (window.ConfirmModal && typeof window.ConfirmModal.open === 'function') {
+                        console.log('[DEBUG - call CONFIRM MODAL] Calling ConfirmModal.open');
+                    }
+                    await window.ConfirmModal.open({
                         message: 'Are you sure you want to remove this item from the collection?',
                         onConfirm: () => {
                             collections[this.currentCollectionView] = collections[this.currentCollectionView].filter(p => p !== item.path);
                             this.saveCollections(collections);
-                            this.showToast('Removed from collection!');
+                            this.showToast('Removed from collection');
                             this.renderCollectionsTab();
                         }
                     });
