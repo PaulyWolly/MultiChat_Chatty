@@ -17,8 +17,6 @@
  * @author MultiChat_Chatty
  */
 
-import PosterSelector from '../PosterSelector/PosterSelector.js';
-
 class ScriptManager {
     constructor() {
         this.isVisible = false;
@@ -141,6 +139,7 @@ class ScriptManager {
     }
 
     async init() {
+        await this.loadCSS();
         await this.loadScripts();
         this.setupEventListeners();
         console.log('🔧 [ScriptManager] Initialized successfully');
@@ -225,11 +224,11 @@ class ScriptManager {
     }
 
     render() {
-        const modal = document.getElementById('script-manager-modal');
+        let modal = document.getElementById('script-manager-modal');
         if (!modal) {
             this.createModal();
+            modal = document.getElementById('script-manager-modal'); // re-select after creation
         }
-        
         modal.style.display = 'flex';
         this.renderContent();
     }
@@ -305,10 +304,12 @@ class ScriptManager {
                 </div>
             `;
             // Attach event handler for the PosterSelector launch button
-            setTimeout(() => {
+            setTimeout(async () => {
                 const btn = document.getElementById('poster-selector-launch-btn');
                 if (btn) {
-                    btn.onclick = () => {
+                    btn.onclick = async () => {
+                        const module = await import('../PosterSelector/PosterSelector.js');
+                        const PosterSelector = module.default;
                         const ps = new PosterSelector(mode);
                         ps.init();
                     };
@@ -585,6 +586,20 @@ class ScriptManager {
         
         // Re-render content
         this.renderContent();
+    }
+
+    async loadCSS() {
+        return new Promise((resolve, reject) => {
+            const existingLink = document.querySelector('link[href*="ScriptManager.css"]');
+            if (existingLink) return resolve();
+            const link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.type = 'text/css';
+            link.href = './components/Admin/ScriptManager/ScriptManager.css';
+            link.onload = resolve;
+            link.onerror = reject;
+            document.head.appendChild(link);
+        });
     }
 }
 
