@@ -1,0 +1,33 @@
+<!--
+  POSTERSELECTOR.HTML
+  Version: 5
+  AppName: MultiChat_Chatty [v5]
+  Updated: 7/5/2025 @8:45PM
+  Created by Paul Welby
+-->
+
+<!-- PosterSelector.html -->
+<div id="poster-selector-container" class="poster-selector-modal" style="display:none;">
+    <div class="poster-selector-content">
+        <div class="poster-selector-header">
+            <h2 style="margin-right:18px;">Select Poster</h2>
+            <div style="margin-bottom: 16px;">
+                <label for="poster-selector-source" style="font-weight:600;margin-right:8px;">Image Source:</label>
+                <select id="poster-selector-source" style="padding:4px 10px;font-size:1em;">
+                    <option value="tmdb" selected>TMDB</option>
+                    <option value="imdb">IMDB (stub)</option>
+                    <option value="other">Other (stub)</option>
+                </select>
+            </div>
+            <input id="poster-selector-query" type="text" placeholder="Search by name..." style="width:260px;max-width:50vw;padding:8px;margin:0 12px;" />
+            <button id="poster-selector-search" class="poster-selector-search-btn">Search</button>
+            <button id="poster-selector-close" class="poster-selector-close">&times;</button>
+        </div>
+        <div class="poster-selector-body">
+            <div id="poster-selector-spinner" class="poster-selector-spinner" style="display:none;"></div>
+            <div id="poster-selector-feedback" style="margin:10px 0;color:#c00;"></div>
+            <div id="poster-selector-grid" class="poster-selector-grid"></div>
+            <button id="poster-selector-use-btn" class="poster-selector-use-btn" style="display:none;margin-top:18px;">Use Image</button>
+        </div>
+    </div>
+</div> 

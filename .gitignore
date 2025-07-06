@@ -24,4 +24,4 @@ backups/.env*
 # Any files containing API keys or tokens
 *api*key*
 *token*
-*secret*
+*secret*__REF_REPO-MCC_TEST__/
