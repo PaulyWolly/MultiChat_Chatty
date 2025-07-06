@@ -548,6 +548,7 @@ class MediaLibraryManager {
             card.innerHTML = `
                 ${anchorHTML}
                 <div class="media-card-actions" style="display:flex;justify-content:flex-end;align-items:center;gap:10px;padding:6px 10px 0 10px;">
+                    <button class="poster-selector-btn" title="Change Poster" style="background:none;border:none;cursor:pointer;font-size:1.4em;line-height:1;">🖼️</button>
                     <button class="favorite-btn" title="Toggle Favorite" style="background:none;border:none;cursor:pointer;font-size:1.5em;line-height:1;">${this.isFavorite(item.path) ? '❤️' : '🤍'}</button>
                     <button class="collection-btn" title="Add to Collection" style="background:none;border:none;cursor:pointer;font-size:1.4em;line-height:1;">➕</button>
                 </div>
@@ -1994,12 +1995,13 @@ class MediaLibraryManager {
                 <div class="media-library-movie-card" style="position: relative;">
                     ${anchorHTML}
                     <div class="media-card-actions" style="display:flex;justify-content:flex-end;align-items:center;gap:10px;padding:6px 10px 0 10px;">
+                        <button class="poster-selector-btn" title="Change Poster" style="background:none;border:none;cursor:pointer;font-size:1.4em;line-height:1;">🖼️</button>
                         <button class="favorite-btn" title="Toggle Favorite" style="background:none;border:none;cursor:pointer;font-size:1.5em;line-height:1;">${this.isFavorite(item.path) ? '❤️' : '🤍'}</button>
                         <button class="collection-btn" title="Add to Collection" style="background:none;border:none;cursor:pointer;font-size:1.4em;line-height:1;">➕</button>
                     </div>
                     <img src="${this.getPosterPath(item)}" alt="${item.title}" style="margin-top:6px;">
                     <div class="media-info">
-                        <h3>${cleanTitle}</h3>
+                        <h3>${item.title}</h3>
                     </div>
                 </div>
             `;
@@ -2028,6 +2030,7 @@ class MediaLibraryManager {
                 <div class="media-library-movie-card" style="position: relative;">
                     ${anchorHTML}
                     <div class="media-card-actions" style="display:flex;justify-content:flex-end;align-items:center;gap:10px;padding:6px 10px 0 10px;">
+                        <button class="poster-selector-btn" title="Change Poster" style="background:none;border:none;cursor:pointer;font-size:1.4em;line-height:1;">🖼️</button>
                         <button class="favorite-btn" title="Toggle Favorite" style="background:none;border:none;cursor:pointer;font-size:1.5em;line-height:1;">❤️</button>
                         <button class="collection-btn" title="Add to Collection" style="background:none;border:none;cursor:pointer;font-size:1.4em;line-height:1;">➕</button>
                     </div>
