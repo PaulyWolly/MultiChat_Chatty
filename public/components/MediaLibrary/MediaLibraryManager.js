@@ -645,6 +645,7 @@ class MediaLibraryManager {
                 console.log('>>> 3. >>>[MOVIE-LIBRARY] Movie card clicked:', item);
                 this.showMovieDetailsModal(item);
             });
+            card.setAttribute('data-path', item.path);
             grid.appendChild(card);
         });
         // After rendering the grid, attach poster selector handlers
@@ -2298,9 +2299,12 @@ class MediaLibraryManager {
                     e.preventDefault();
                     e.stopPropagation();
                     const card = btn.closest('.media-library-movie-card');
-                    const title = card && card.querySelector('.media-info h3') ? card.querySelector('.media-info h3').textContent : '';
+                    const path = card ? card.getAttribute('data-path') : '';
                     const items = this.getFilteredAndSortedItems();
-                    const item = items.find(i => this.cleanMovieTitle(i.title) === title);
+                    const item = items.find(i => i.path === path);
+                    console.log('[PosterSelector DEBUG] Looking for title:', path);
+                    console.log('[PosterSelector DEBUG] Available items:', items.map(i => ({ title: i.title, cleanTitle: this.cleanMovieTitle(i.title) })));
+                    console.log('[PosterSelector DEBUG] Found item:', item);
                     if (window.PosterSelector && item) {
                         const selector = new window.PosterSelector('movie');
                         selector.getMediaContext = () => ({
