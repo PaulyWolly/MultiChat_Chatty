@@ -1,5 +1,5 @@
 /*
-  MEDIALIBRARYMANAGER.JS
+  MEDIALIBRARYMANAGER-BROKEN-TOO.JS
   Version: 5
   AppName: MultiChat_Chatty [v5]
   Updated: 7/5/2025 @8:45PM
@@ -54,7 +54,6 @@ class MediaLibraryManager {
         ];
         
         this.init();
-        this.cacheBusters = {}; // Add cacheBusters map for poster cache-busting
     }
 
     async init() {
@@ -85,7 +84,6 @@ class MediaLibraryManager {
         await this.loadEmbyPosters();
         await this.loadMoviePosters();
         await this.loadTVPosters();
-        await this.loadSeasonEpisodeImages();
         this.setupEventListeners();
         this.setupVoiceCommandIntegration();
         this.setupTextCommandIntegration();
@@ -190,59 +188,6 @@ class MediaLibraryManager {
         }
     }
 
-    async loadSeasonEpisodeImages() {
-        try {
-            console.log('🎬 [MEDIA-LIBRARY] Loading season and episode images...');
-            
-            // Load season images
-            const seasonResponse = await fetch('/components/MediaLibrary/data/tmdb_tv-show_season_images.json');
-            let seasonData = {};
-            if (seasonResponse.ok) {
-                seasonData = await seasonResponse.json();
-                console.log(`✅ [MEDIA-LIBRARY] Loaded season images for ${Object.keys(seasonData).length} shows`);
-            } else {
-                console.warn('⚠️ [MEDIA-LIBRARY] Could not load season images');
-            }
-            
-            // Load episode images
-            const episodeResponse = await fetch('/components/MediaLibrary/data/tmdb_tv-show_episode_images.json');
-            let episodeData = {};
-            if (episodeResponse.ok) {
-                episodeData = await episodeResponse.json();
-                console.log(`✅ [MEDIA-LIBRARY] Loaded episode images for ${Object.keys(episodeData).length} shows`);
-            } else {
-                console.warn('⚠️ [MEDIA-LIBRARY] Could not load episode images');
-            }
-            
-            // Merge the data into a single structure for compatibility
-            this.seasonEpisodeImages = {};
-            for (const showName in seasonData) {
-                this.seasonEpisodeImages[showName] = { seasons: {} };
-                if (seasonData[showName].seasons) {
-                    for (const seasonNum in seasonData[showName].seasons) {
-                        this.seasonEpisodeImages[showName].seasons[seasonNum] = {
-                            poster: seasonData[showName].seasons[seasonNum].poster || null,
-                            episodes: {}
-                        };
-                        
-                        // Add episode data if available
-                        if (episodeData[showName] && 
-                            episodeData[showName].seasons && 
-                            episodeData[showName].seasons[seasonNum] &&
-                            episodeData[showName].seasons[seasonNum].episodes) {
-                            this.seasonEpisodeImages[showName].seasons[seasonNum].episodes = episodeData[showName].seasons[seasonNum].episodes;
-                        }
-                    }
-                }
-            }
-            
-            console.log(`✅ [MEDIA-LIBRARY] Merged season/episode images for ${Object.keys(this.seasonEpisodeImages).length} shows`);
-        } catch (error) {
-            console.warn('⚠️ [MEDIA-LIBRARY] Error loading season episode images:', error);
-            this.seasonEpisodeImages = {};
-        }
-    }
-
     renderSpinner() {
         let modal = document.getElementById('mediaLibraryModal');
         if (!modal) return;
@@ -277,7 +222,7 @@ class MediaLibraryManager {
         // Add event listeners for media library button
         const mediaLibraryBtn = document.getElementById('mediaLibraryBtn');
         if (mediaLibraryBtn) {
-            mediaLibraryBtn.addEventListener('click', () => this.openMediaBrowser()); // ensure arrow function
+            mediaLibraryBtn.addEventListener('click', () => this.openMediaBrowser());
         }
     }
 
@@ -325,10 +270,9 @@ class MediaLibraryManager {
         this.removeModal();
 
         // --- Ensure correct tab is highlighted based on navigation state ---
-        // Only override currentTab if navigating within TV shows or collections
-        if (this.currentTab === 'tvshows' && this.currentTVShow) {
+        if (this.currentTVShow) {
             this.currentTab = 'tvshows';
-        } else if (this.currentTab === 'collections' && this.currentCollectionView) {
+        } else if (this.currentCollectionView) {
             this.currentTab = 'collections';
         }
         
@@ -428,141 +372,47 @@ class MediaLibraryManager {
         setTimeout(() => {
             const cards = document.querySelectorAll('.media-library-movie-card');
             cards.forEach(card => {
-                // Remove any previous click handler
+                // Avoid duplicate listeners
                 card.onclick = null;
-                card.addEventListener('click', (e) => { // ensure arrow function
-                    // Ignore clicks on action buttons
-                    if (
-                        e.target.closest('.favorite-btn') ||
-                        e.target.closest('.collection-btn') ||
-                        e.target.closest('.poster-selector-btn') ||
-                        e.target.closest('.refresh-poster-btn')
-                    ) return;
-                    const title = card.querySelector('.media-info h3')?.textContent;
-                    const items = this.getFilteredAndSortedItems();
-                    const item = items.find(i => this.cleanMovieTitle(i.title) === title);
-                    if (item) this.showMovieDetailsModal(item);
-                });
-            });
-        }, 0);
-
-        // --- Attach click handlers to movie cards if present ---
-        setTimeout(() => {
-            const cards = document.querySelectorAll('.media-library-movie-card');
-            cards.forEach(card => {
-                // Main card click opens details, but ignore action buttons
-                card.onclick = (e) => { // ensure arrow function
-                    if (
-                        e.target.closest('.favorite-btn') ||
-                        e.target.closest('.collection-btn') ||
-                        e.target.closest('.poster-selector-btn')
-                    ) return;
-                    const title = card.querySelector('.media-info h3')?.textContent;
-                    const items = this.getFilteredAndSortedItems();
-                    const item = items.find(i => this.cleanMovieTitle(i.title) === title);
-                    if (item) this.showMovieDetailsModal(item);
-                };
-                // Favorite button
-                const favBtn = card.querySelector('.favorite-btn');
-                if (favBtn) {
-                    favBtn.onclick = (e) => { // ensure arrow function
-                        e.stopPropagation();
+                if (this.currentTab === 'movies') {
+                    card.addEventListener('click', (e) => {
+                        if (e.target.closest('.favorite-btn') || e.target.closest('.collection-btn')) return;
                         const title = card.querySelector('.media-info h3')?.textContent;
                         const items = this.getFilteredAndSortedItems();
                         const item = items.find(i => this.cleanMovieTitle(i.title) === title);
-                        if (item) this.toggleFavorite(item.path);
-                    };
-                }
-                // Collection button
-                const colBtn = card.querySelector('.collection-btn');
-                if (colBtn) {
-                    colBtn.onclick = (e) => { // ensure arrow function
-                        e.stopPropagation();
-                        const title = card.querySelector('.media-info h3')?.textContent;
-                        const items = this.getFilteredAndSortedItems();
-                        const item = items.find(i => this.cleanMovieTitle(i.title) === title);
-                        if (item) this.showAddToCollectionModal(item);
-                    };
-                }
-            });
-        }, 0);
-
-        // --- Attach click handlers to poster-selector-btn after rendering ---
-        setTimeout(() => {
-            document.querySelectorAll('.poster-selector-btn').forEach(btn => {
-                btn.onclick = (e) => { // ensure arrow function
-                    e.preventDefault();
-                    e.stopPropagation();
-                    console.log('[PosterSelector DEBUG] currentTab:', this.currentTab);
-                    const card = btn.closest('.media-library-movie-card');
-                    console.log('[PosterSelector DEBUG] card:', card);
-                    if (card) {
-                        console.log('[PosterSelector DEBUG] card classList:', card.classList);
-                        console.log('[PosterSelector DEBUG] card attributes:');
-                        for (let attr of card.attributes) {
-                            console.log('  ', attr.name, '=', attr.value);
-                        }
-                    } else {
-                        console.warn('[PosterSelector DEBUG] No .media-library-movie-card found for button:', btn);
-                    }
-                    const itemPath = card ? card.getAttribute('data-path') : '';
-                    console.log('[PosterSelector DEBUG] itemPath:', itemPath);
-                    let item = null;
-                    if (this.currentTab === 'tvshows') {
-                        const tvShows = this.getTVShows();
-                        console.log('[PosterSelector DEBUG] Available TV shows:', tvShows.map(s => s.path));
-                        item = tvShows.find(show =>
-                            (show.path || '').replace(/\\/g, '/').toLowerCase().trim() === (itemPath || '').replace(/\\/g, '/').toLowerCase().trim()
-                        );
-                        console.log('[PosterSelector DEBUG] Found TV show:', item);
-                    } else {
-                        const items = this.getFilteredAndSortedItems();
-                        console.log('[PosterSelector DEBUG] Available movies:', items.map(i => i.path));
-                        item = items.find(i =>
-                            (i.path || '').replace(/\\/g, '/').toLowerCase().trim() === (itemPath || '').replace(/\\/g, '/').toLowerCase().trim()
-                        );
-                        console.log('[PosterSelector DEBUG] Found movie:', item);
-                    }
-                    if (window.PosterSelector && item) {
-                        const mode = this.currentTab === 'tvshows' ? 'tv' : 'movie';
-                        const selector = new window.PosterSelector(mode);
-                        selector.getMediaContext = () => ({
-                            mediaId: item.path,
-                            name: item.name || item.title,
-                            path: item.path,
-                            type: mode
-                        });
-                        selector.onPosterSelected = ({filePath, posterType, poster}) => {
-                            if (mode === 'movie' && this.moviePosters) {
-                                this.moviePosters[item.path] = filePath;
-                                this.cacheBusters[item.path] = Date.now();
-            this.renderMediaGrid();
-                                this.showToast('Poster updated!');
-                            } else if (mode === 'tv' && this.tvPosters) {
-                                this.tvPosters[item.name || item.title] = filePath;
-                                this.renderMediaGrid();
-                                this.showToast('Poster updated!');
-                            }
+                        // if (item) this.showMovieDetailsModal(item);
+                    });
+                    // Favorite button
+                    const favBtn = card.querySelector('.favorite-btn');
+                    if (favBtn) {
+                        favBtn.onclick = (e) => {
+                            e.stopPropagation();
+                            const title = card.querySelector('.media-info h3')?.textContent;
+                            const items = this.getFilteredAndSortedItems();
+                            const item = items.find(i => this.cleanMovieTitle(i.title) === title);
+                            if (item) this.toggleFavorite(item.path);
                         };
-                        selector.init();
-                    } else {
-                        console.error('[PosterSelector] PosterSelector is not available or item not found. window.PosterSelector:', window.PosterSelector, 'item:', item, 'itemPath:', itemPath, 'currentTab:', this.currentTab);
-                        this.showToast('PosterSelector is not available.');
                     }
-                    return false;
-                };
-            });
-        }, 0);
-
-        // After rendering the modal, attach click handlers to TV show posters
-        setTimeout(() => {
-            document.querySelectorAll('.tvshow-poster-img').forEach(img => {
-                img.onclick = (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    const card = img.closest('.media-library-movie-card');
-                    if (card) window.mediaLibraryManager.openTVShowFromData(card);
-                };
+                    // Collection button
+                    const colBtn = card.querySelector('.collection-btn');
+                    if (colBtn) {
+                        colBtn.onclick = (e) => {
+                            e.stopPropagation();
+                            const title = card.querySelector('.media-info h3')?.textContent;
+                            const items = this.getFilteredAndSortedItems();
+                            const item = items.find(i => this.cleanMovieTitle(i.title) === title);
+                            if (item) this.showAddToCollectionModal(item);
+                        };
+                    }
+                } else if (this.currentTab === 'tvshows' && !this.currentTVShow && !this.currentTVSeason) {
+                    // TV Shows grid: clicking a card opens the seasons view in the grid area
+                    card.addEventListener('click', (e) => {
+                        const showPath = card.getAttribute('data-show-path');
+                        if (showPath) {
+                            this.openTVShow(showPath);
+                        }
+                    });
+                }
             });
         }, 0);
     }
@@ -605,7 +455,7 @@ class MediaLibraryManager {
             if (this.currentTVShow && this.currentTVSeason) {
                 grid.innerHTML = this.renderEpisodesView();
             } else if (this.currentTVShow) {
-                grid.innerHTML = this.renderSeasonsView(this.currentTVShow);
+                grid.innerHTML = this.renderSeasonsView();
             } else {
                 grid.innerHTML = this.renderTVShowsTab();
             }
@@ -651,7 +501,7 @@ class MediaLibraryManager {
             card.innerHTML = `
                 ${anchorHTML}
                 <div class="media-card-actions" style="display:flex;justify-content:flex-end;align-items:center;gap:10px;padding:6px 10px 0 10px;">
-                    <button class="poster-selector-btn" title="Change Poster" style="background:none;border:none;cursor:pointer;font-size:1.4em;line-height:1;">🖼️</button>
+                    <button class="poster-selector-btn" title="Change Poster" data-movie-path="${encodeURIComponent(item.path)}" style="background:none;border:none;cursor:pointer;font-size:1.4em;line-height:1;">🖼️</button>
                     <button class="favorite-btn" title="Toggle Favorite" style="background:none;border:none;cursor:pointer;font-size:1.5em;line-height:1;">${this.isFavorite(item.path) ? '❤️' : '🤍'}</button>
                     <button class="collection-btn" title="Add to Collection" style="background:none;border:none;cursor:pointer;font-size:1.4em;line-height:1;">➕</button>
                 </div>
@@ -672,14 +522,30 @@ class MediaLibraryManager {
             // Main card click opens details
             console.log('>>> 2. >>>[MOVIE-LIBRARY] Attaching click handler to:', item.title);
             card.addEventListener('click', (e) => {
-                console.log('>>> 3. >>>[MOVIE-LIBRARY] Movie card clicked:', item);
-                this.showMovieDetailsModal(item);
+                console.log('[DEBUG] Card click handler fired for:', item.title, 'event target:', e.target, 'classList:', e.target.classList);
+                if (e.target.closest('.poster-selector-btn')) {
+                    // Click originated from the poster icon, do nothing!
+                    return;
+                }
+                console.log('[DEBUG] Card click handler: opening details for', item.title);
+                // this.showMovieDetailsModal(item);
             });
-            card.setAttribute('data-path', item.path);
             grid.appendChild(card);
+
+            // Add poster selector button
+            const posterBtn = card.querySelector('.poster-selector-btn');
+            if (posterBtn) {
+                posterBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const path = decodeURIComponent(posterBtn.getAttribute('data-movie-path'));
+                    const items = this.getFilteredAndSortedItems();
+                    const item = items.find(i => i.path === path);
+                    if (item) this.openPosterSelector(item);
+                    return false;
+                });
+            }
         });
-        // After rendering the grid, attach poster selector handlers
-        this.attachPosterSelectorHandlers();
     }
 
     getItemsForCurrentTab() {
@@ -736,21 +602,12 @@ class MediaLibraryManager {
             if (this.moviePosters) {
                 for (const variant of pathVariants) {
                     if (this.moviePosters[variant]) {
-                        let url = this.moviePosters[variant];
-                        // Add cache-busting if available
-                        if (this.cacheBusters[variant]) {
-                            url += (url.includes('?') ? '&' : '?') + 't=' + this.cacheBusters[variant];
-                        }
-                        return url;
+                        return this.moviePosters[variant];
                     }
                     const lowerVariant = variant.toLowerCase();
                     for (const [key, value] of Object.entries(this.moviePosters)) {
                         if (key.toLowerCase() === lowerVariant) {
-                            let url = value;
-                            if (this.cacheBusters[key]) {
-                                url += (url.includes('?') ? '&' : '?') + 't=' + this.cacheBusters[key];
-                            }
-                            return url;
+                            return value;
                         }
                     }
                 }
@@ -769,13 +626,7 @@ class MediaLibraryManager {
             }
             return;
         }
-        // Check if path is already URL encoded to avoid double encoding
-        let pathParam = mediaItem.path;
-        if (!pathParam.includes('%')) {
-            // Only encode if not already encoded
-            pathParam = encodeURIComponent(pathParam);
-        }
-        const videoUrl = `/api/video?path=${pathParam}`;
+        const videoUrl = `/api/video?path=${encodeURIComponent(mediaItem.path)}`;
         this.videoPlayer.playUrl(videoUrl, 'video/mp4', startTime, mediaItem);
         this.currentVideo = mediaItem;
         this.findNextVideo(mediaItem);
@@ -1119,7 +970,7 @@ class MediaLibraryManager {
         });
         
         // Use event delegation - single listener on the sidebar
-        azSidebar.onclick = (e) => { // ensure arrow function
+        azSidebar.onclick = (e) => {
             const letterElement = e.target.closest('.media-library-az-letter');
             if (letterElement) {
                 const letter = letterElement.getAttribute('data-letter');
@@ -1142,7 +993,7 @@ class MediaLibraryManager {
             // Scroll to the anchor smoothly
             anchor.scrollIntoView({ 
                 behavior: 'smooth', 
-                block: 'nearest' 
+                block: 'start' 
             });
             
             // Highlight the card containing the anchor
@@ -1347,8 +1198,6 @@ class MediaLibraryManager {
         console.log('[TV DEBUG] renderTVShowsTab: tvShows.length =', tvShows.length);
         const filteredShows = this.filterItems(tvShows, this.searchTerm);
         const sortedShows = this.sortItems(filteredShows, this.sortBy, 'name');
-        // Debug: print all show.path values
-        console.log('[TV DEBUG] show.path values:', sortedShows.map(s => s.path));
         let lastLetter = '';
         const html = `
             <div class="media-library-movie-grid">
@@ -1359,19 +1208,14 @@ class MediaLibraryManager {
                     const firstLetter = title.charAt(0).toUpperCase();
                     let anchor = '';
                     if (firstLetter !== lastLetter) {
-                        anchor = `<div id="anchor-${firstLetter}" class="media-library-anchor"></div>`;
+                        anchor = `<div id="anchor-${firstLetter}"></div>`;
                         lastLetter = firstLetter;
                     }
                     return `
                     ${anchor}
-                    <div class="media-library-movie-card" data-path="${show.path}" data-show-name="${show.name || show.title || ''}">
-                      <div class="media-card-actions" style="display:flex;justify-content:flex-end;align-items:center;gap:10px;padding:6px 10px 0 10px;">
-                        <button class="poster-selector-btn" title="Change Poster" style="background:none;border:none;cursor:pointer;font-size:1.4em;line-height:1;">🖼️</button>
-                        <button class="favorite-btn" title="Toggle Favorite" style="background:none;border:none;cursor:pointer;font-size:1.5em;line-height:1;">${this.isFavorite(show.path) ? '❤️' : '🤍'}</button>
-                        <button class="collection-btn" title="Add to Collection" style="background:none;border:none;cursor:pointer;font-size:1.4em;line-height:1;">➕</button>
-                      </div>
-                      <div class="media-library-card-poster" style="position:relative;">
-                        <img class="tvshow-poster-img" src="${this.getPosterPath(show)}" alt="${show.name}" onerror="this.src='/assets/img/placeholder-poster.jpg'" style="cursor:pointer;">
+                    <div class="media-library-movie-card" data-show-path="${show.path}" onclick="mediaLibraryManager.openTVShowFromData(this)">
+                        <div class="media-library-card-poster">
+                           <img src="${this.getPosterPath(show)}" alt="${show.name}" onerror="this.src='/assets/img/placeholder-poster.jpg'">
                         </div>
                         <div class="media-library-card-info">
                             <h3>${show.name}</h3>
@@ -1497,7 +1341,6 @@ class MediaLibraryManager {
                 return '';
             }
         grid.innerHTML = '';
-            grid.style.display = 'block'; // Ensure block layout, not flex row
             const collections = this.getCollections();
             const names = Object.keys(collections);
         // If viewing a specific collection, show its movies
@@ -1507,43 +1350,27 @@ class MediaLibraryManager {
                 const normalizedMoviePaths = moviePaths.map(normalize);
                 const movies = this.mediaLibrary.filter(item => normalizedMoviePaths.includes(normalize(item.path)));
                 
-            // Header with back and delete (refactored layout)
+            // Header with back and delete
             const header = document.createElement('div');
-            header.style.cssText = `
-              display: flex;
-              justify-content: space-between;
-              align-items: center;
-              margin-bottom: 24px;
-              padding: 12px 18px 12px 0;
-              border-bottom: 1px solid #eee;
-              background: #fafbfc;
-              border-radius: 10px 10px 0 0;
-            `;
+            header.style.cssText = 'display:flex;align-items:center;gap:18px;margin-bottom:18px;';
             header.innerHTML = `
-              <div style="display: flex; align-items: center; gap: 14px;">
                 <button id="backToCollectionsBtn" style="padding:6px 16px;border-radius:6px;background:#eee;color:#333;border:none;cursor:pointer;font-size:1em;">← Back</button>
                 <h3 style="margin:0;font-size:1.2em;">${this.currentCollectionView}</h3>
-              </div>
-              <button id="deleteCollectionBtn" style="padding:6px 16px;border-radius:6px;background:#e53935;color:#fff;border:none;cursor:pointer;font-size:1em;">Delete Collection</button>
+                <button id="deleteCollectionBtn" style="margin-left:auto;padding:6px 16px;border-radius:6px;background:#e53935;color:#fff;border:none;cursor:pointer;font-size:1em;">Delete Collection</button>
             `;
-            
             grid.appendChild(header);
             header.querySelector('#backToCollectionsBtn').onclick = () => {
                 this.currentCollectionView = null;
                 this.renderCollectionsTab();
             };
-            header.querySelector('#deleteCollectionBtn').onclick = async () => {
-                await window.ConfirmModal.init();
-                window.ConfirmModal.open({
-                    message: `Are you sure you want to delete the collection "${this.currentCollectionView}"? This cannot be undone.`,
-                    onConfirm: () => {
-                        delete collections[this.currentCollectionView];
-                        this.saveCollections(collections);
-                        this.currentCollectionView = null;
-                        this.showToast('Collection deleted!');
-                        this.renderCollectionsTab();
-                    }
-                });
+            header.querySelector('#deleteCollectionBtn').onclick = () => {
+                if (confirm(`Delete collection "${this.currentCollectionView}"?`)) {
+                    delete collections[this.currentCollectionView];
+                    this.saveCollections(collections);
+                    this.currentCollectionView = null;
+                    this.showToast('Collection deleted!');
+                    this.renderCollectionsTab();
+                }
             };
 
             // Movie grid
@@ -1558,18 +1385,12 @@ class MediaLibraryManager {
                     <button class="remove-from-collection-btn" title="Remove from Collection" style="position:absolute;top:10px;right:10px;background:#e53935;color:#fff;border:none;border-radius:50%;width:32px;height:32px;font-size:1.2em;cursor:pointer;z-index:2;">&times;</button>
                     <div class="media-info"><h3>${this.cleanMovieTitle(item.title)}</h3></div>
                 `;
-                card.querySelector('.remove-from-collection-btn').onclick = async (e) => {
+                card.querySelector('.remove-from-collection-btn').onclick = (e) => {
                     e.stopPropagation();
-                    await window.ConfirmModal.init();
-                    window.ConfirmModal.open({
-                        message: 'Are you sure you want to remove this item from the collection?',
-                        onConfirm: () => {
-                            collections[this.currentCollectionView] = collections[this.currentCollectionView].filter(p => p !== item.path);
-                            this.saveCollections(collections);
-                            this.showToast('Removed from collection!');
-                            this.renderCollectionsTab();
-                        }
-                    });
+                    collections[this.currentCollectionView] = collections[this.currentCollectionView].filter(p => p !== item.path);
+                    this.saveCollections(collections);
+                    this.showToast('Removed from collection!');
+                    this.renderCollectionsTab();
                 };
                 card.onclick = () => this.playMedia(item);
                 movieGrid.appendChild(card);
@@ -1676,7 +1497,7 @@ class MediaLibraryManager {
         document.getElementById('detailsFavoriteBtn').onclick = (e) => {
             e.stopPropagation();
             this.toggleFavorite(movie.path);
-            this.showMovieDetailsModal(movie); // Re-render to update icon
+            // this.showMovieDetailsModal(movie); // Re-render to update icon
         };
         // Collection button
         document.getElementById('detailsCollectionBtn').onclick = (e) => {
@@ -1694,7 +1515,6 @@ class MediaLibraryManager {
         // Returns array of main TV show objects from the nested structure
         const tvShows = [];
         let folders = [];
-        let parentPath = 'TV-SHOWS';
         if (this.mediaLibraryRaw) {
             // Try to find the TV-SHOWS folder or treat all folders as shows if not present
             if (Array.isArray(this.mediaLibraryRaw.folders)) {
@@ -1702,7 +1522,6 @@ class MediaLibraryManager {
             const tvShowsFolder = this.mediaLibraryRaw.folders.find(f => /tv[-_ ]shows/i.test(f.path));
                 if (tvShowsFolder && Array.isArray(tvShowsFolder.folders) && tvShowsFolder.folders.length > 0) {
                     folders = tvShowsFolder.folders;
-                    parentPath = tvShowsFolder.path || 'TV-SHOWS';
                 } else {
                     // If no TV-SHOWS folder, treat all as shows
                     folders = this.mediaLibraryRaw.folders;
@@ -1713,14 +1532,9 @@ class MediaLibraryManager {
         }
         folders.forEach(folder => {
                     const showName = this.extractShowName(folder.path);
-            // If folder.path already includes the parent, don't double it
-            let fullPath = folder.path;
-            if (parentPath && fullPath && !fullPath.startsWith(parentPath)) {
-                fullPath = parentPath.replace(/\/+$/,'') + '/' + fullPath.replace(/^\+/,'');
-            }
                     tvShows.push({
                         name: showName,
-                path: fullPath,
+                        path: folder.path,
                         data: folder
                     });
                 });
@@ -1754,32 +1568,18 @@ class MediaLibraryManager {
             show = this.findShowByPath(showOrPath);
         }
 
-        function findSeasons(folders, parentPath, showPath) {
+        function findSeasons(folders) {
             let seasons = [];
             if (!Array.isArray(folders)) return seasons;
             for (const folder of folders) {
                 const name = (folder.name || folder.path.split(/[\\/]/).pop() || '').toLowerCase();
-                // Debug: print every folder name being checked
-                console.log('[SEASON DETECTION DEBUG] Checking folder name:', name);
-                // Match any folder containing 'season' or 'series' or 's' followed by a number (with optional separators)
-                if (/^(season[ _-]?\d+|s\d+|series[ _-]?\d+)$/i.test(name) ||
-                    /season[ _-]?\d+/i.test(name) ||
-                    /^s\d+/i.test(name) ||
-                    /series[ _-]?\d+/i.test(name) ||
-                    /^season\d+$/i.test(name) ||
-                    /^s\d+$/i.test(name)) {
-                    // Force full path
-                    let fullPath = folder.path;
-                    if (showPath && fullPath && !fullPath.startsWith(showPath)) {
-                        fullPath = showPath.replace(/\/+$/, '') + '/' + fullPath.replace(/^\/+/, '');
-                    }
-                    fullPath = fullPath.replace(/\\/g, '/'); // Normalize to forward slashes
-                    console.log('[SEASON DETECTION DEBUG] Computed fullPath for season:', fullPath);
-                    seasons.push({ ...folder, path: fullPath });
+                // Match any folder containing 'season' followed by a number
+                if (/season\s*\d+/i.test(name) || /^s\d+/i.test(name) || /series\s*\d+/i.test(name)) {
+                    seasons.push(folder);
                 }
                 // Recurse into subfolders
                 if (Array.isArray(folder.folders) && folder.folders.length > 0) {
-                    seasons = seasons.concat(findSeasons(folder.folders, folder.path, showPath));
+                    seasons = seasons.concat(findSeasons(folder.folders));
                 }
             }
             return seasons;
@@ -1790,8 +1590,7 @@ class MediaLibraryManager {
             const seen = new Set();
             return seasons.filter(folder => {
                 const name = (folder.name || folder.path.split(/[\\/]/).pop() || '').toLowerCase();
-                // Match season number in various patterns
-                const match = name.match(/season[ _-]?(\d+)/i) || name.match(/^s(\d+)/i) || name.match(/series[ _-]?(\d+)/i);
+                const match = name.match(/season\s*(\d+)/i) || name.match(/^s(\d+)/i) || name.match(/series\s*(\d+)/i);
                 if (match) {
                     const seasonNum = match[1].padStart(2, '0');
                     if (seen.has(seasonNum)) return false;
@@ -1803,8 +1602,7 @@ class MediaLibraryManager {
         }
 
         if (show && Array.isArray(show.folders)) {
-            const allSeasons = findSeasons(show.folders, show.path, show.path);
-            console.log('[SEASON DETECTION DEBUG] All detected season folders:', allSeasons.map(f => f.name || f.path));
+            const allSeasons = findSeasons(show.folders);
             return dedupeSeasons(allSeasons);
         }
         return [];
@@ -1814,7 +1612,6 @@ class MediaLibraryManager {
         if (!showPath || !seasonPath) return [];
         // Returns array of episodes for a given season
         let show = null;
-        console.log('[EPISODE DEBUG] getEpisodesForSeason called with showPath:', showPath, 'seasonPath:', seasonPath);
         if (typeof showPath === 'object' && showPath && showPath.data && Array.isArray(showPath.data.folders)) {
             show = showPath.data;
         } else if (typeof showPath === 'object' && showPath && Array.isArray(showPath.folders)) {
@@ -1822,95 +1619,59 @@ class MediaLibraryManager {
         } else {
             show = this.findShowByPath(showPath);
         }
-        console.log('[EPISODE DEBUG] show object:', show);
-        // Patch: use show.data if present
-        if (show && show.data && Array.isArray(show.data.folders)) {
-            show = show.data;
-            console.log('[EPISODE DEBUG] Using show.data for folder search:', show);
-        }
-        if (!show) {
-            console.log('[EPISODE DEBUG] show is null or undefined');
-            return [];
-        }
-        if (!Array.isArray(show.folders)) {
-            console.log('[EPISODE DEBUG] show.folders is not an array:', show.folders);
-            return [];
-        }
-        if (show.folders.length === 0) {
-            console.log('[EPISODE DEBUG] show.folders is empty');
-            return [];
-        }
-        console.log('[EPISODE DEBUG] show.folders length:', show.folders.length, 'sample:', show.folders.slice(0,2));
-
-        // Normalize seasonPath for matching
-        const normalizedSeasonPath = (seasonPath || '').replace(/\\/g, '/').toLowerCase().trim();
-        console.log('[EPISODE DEBUG] Normalized seasonPath:', normalizedSeasonPath);
-
+        if (show && Array.isArray(show.folders)) {
+            // Normalize for comparison
+            const normalizedSeasonPath = seasonPath.replace(/[\\/]/g, '/').replace(/\/+/, '/').replace(/\/+/, '/');
             // Recursively search for the season folder
-        function findSeasonFolder(folders, parentPath = '') {
+            function findSeasonFolder(folders) {
                 for (const folder of folders) {
-                let folderPath = (folder.path || '').replace(/\\/g, '/').toLowerCase().trim();
-                console.log('[EPISODE DEBUG] Checking folderPath:', folderPath);
-                if (folderPath === normalizedSeasonPath) {
-                    console.log('[EPISODE DEBUG] Found matching season folder:', folderPath);
-                    console.log('[EPISODE DEBUG] season.files:', folder.files);
+                    const folderPath = (folder.path || '').replace(/[\\/]/g, '/').toLowerCase();
+                    if (folderPath === normalizedSeasonPath.toLowerCase()) {
                         return folder;
                     }
-                if (folder.folders && folder.folders.length) {
-                    const found = findSeasonFolder(folder.folders, folderPath);
+                    if (Array.isArray(folder.folders) && folder.folders.length > 0) {
+                        const found = findSeasonFolder(folder.folders);
                         if (found) return found;
                     }
                 }
                 return null;
             }
-
-        const seasonFolder = findSeasonFolder(show.folders);
-        if (!seasonFolder) {
-            console.log('[EPISODE DEBUG] No matching season folder found for:', normalizedSeasonPath);
-            return [];
+            const season = findSeasonFolder(show.folders);
+            if (season && season.files) {
+                // Only include video files
+                return season.files
+                    .filter(file => /\.(mkv|mp4|avi|mov|wmv)$/i.test(file.name))
+                    .map(file => {
+                        // Always join with a single slash
+                        const seasonPathClean = season.path.replace(/[\\/]/g, '/').replace(/\/+/, '/').replace(/\/+/, '/').replace(/\/$/, '');
+                        const fileNameClean = file.name.replace(/^\/+/, '');
+                        return {
+                    name: this.cleanEpisodeName(file.name),
+                            path: `${seasonPathClean}/${fileNameClean}`,
+                    data: file
+                        };
+                    });
+            }
         }
-        if (!Array.isArray(seasonFolder.files)) {
-            console.log('[EPISODE DEBUG] seasonFolder.files is not an array:', seasonFolder.files);
         return [];
-        }
-        // Filter for video files (basic check)
-        const episodes = seasonFolder.files.filter(f => /\.(mp4|mkv|avi|mov|wmv|flv|webm)$/i.test(f.name));
-        console.log('[EPISODE DEBUG] Detected episodes:', episodes);
-        return episodes;
     }
 
     findShowByPath(showPath) {
-        if (!showPath) return null;
-        const target = (showPath || '').replace(/\\/g, '/').toLowerCase();
-        console.log('[FIND SHOW DEBUG] Searching for showPath:', showPath, 'normalized:', target);
-        // 1. Search top-level TV show objects
-        const tvShows = this.getTVShows();
-        for (const show of tvShows) {
-            const showObjPath = (show.path || '').replace(/\\/g, '/').toLowerCase();
-            if (showObjPath === target) {
-                console.log('[FIND SHOW DEBUG] Found top-level show:', show);
-                return show;
+        if (this.mediaLibraryRaw && this.mediaLibraryRaw.folders) {
+            // Try to find by path
+            let found = this.mediaLibraryRaw.folders.find(folder =>
+                (folder.path && folder.path.toLowerCase() === showPath.toLowerCase()) ||
+                (folder.name && folder.name.toLowerCase() === showPath.toLowerCase())
+            );
+            if (found) return found;
+            // Try to find by name in the TV shows array
+            if (Array.isArray(this.getTVShows())) {
+                found = this.getTVShows().find(show =>
+                    show.name && show.name.toLowerCase() === showPath.toLowerCase()
+                );
+                if (found) return found.data || found;
             }
         }
-        // 2. Optionally, search recursively in folders (legacy/edge cases)
-        function recursiveSearch(folders) {
-            if (!Array.isArray(folders)) return null;
-            for (const folder of folders) {
-                const folderPath = (folder.path || '').replace(/\\/g, '/').toLowerCase();
-                if (folderPath === target) {
-                    console.log('[FIND SHOW DEBUG] Found nested folder:', folder);
-                    return folder;
-                }
-                const found = recursiveSearch(folder.folders);
-            if (found) return found;
-            }
-            return null;
-        }
-        for (const show of tvShows) {
-            const found = recursiveSearch(show.folders);
-            if (found) return found;
-        }
-        console.log('[FIND SHOW DEBUG] No show found for path:', showPath);
         return null;
     }
 
@@ -1931,81 +1692,22 @@ class MediaLibraryManager {
         return name;
     }
 
-    getSeasonImage(showName, seasonPath) {
-        try {
-            // Use the loaded season episode images data
-            if (!this.seasonEpisodeImages) {
-                return '/assets/img/season-default.jpg';
-            }
-            // Extract season number from path
-            const seasonMatch = seasonPath.match(/season[ _-]?(\d+)/i);
-            if (!seasonMatch) return '/assets/img/season-default.jpg';
-            // Normalize season number (remove leading zeros)
-            const seasonNumber = String(parseInt(seasonMatch[1], 10));
-            const showData = this.seasonEpisodeImages[showName];
-            if (showData && showData.seasons && showData.seasons[seasonNumber] && showData.seasons[seasonNumber].poster) {
-                return showData.seasons[seasonNumber].poster;
-            }
-            return '/assets/img/season-default.jpg';
-        } catch (error) {
-            console.error('Error getting season image:', error);
-            return '/assets/img/season-default.jpg';
-        }
-    }
-
-    getEpisodeImage(showName, seasonName, episode) {
-        try {
-            // Use the loaded season episode images data
-            if (!this.seasonEpisodeImages) {
-                return '/assets/img/episode-default.jpg';
-            }
-            // Extract season number from season name
-            const seasonMatch = seasonName.match(/season[ _-]?(\d+)/i);
-            if (!seasonMatch) return '/assets/img/episode-default.jpg';
-            const seasonNumber = String(parseInt(seasonMatch[1], 10));
-            // Extract episode number from episode filename
-            const episodeMatch = episode.name.match(/E(\d{1,2})/i) || episode.path.match(/E(\d{1,2})/i);
-            if (!episodeMatch) return '/assets/img/episode-default.jpg';
-            const episodeNumber = String(parseInt(episodeMatch[1], 10));
-            const showData = this.seasonEpisodeImages[showName];
-            if (showData && showData.seasons && showData.seasons[seasonNumber] && 
-                showData.seasons[seasonNumber].episodes && showData.seasons[seasonNumber].episodes[episodeNumber] &&
-                showData.seasons[seasonNumber].episodes[episodeNumber].still) {
-                return showData.seasons[seasonNumber].episodes[episodeNumber].still;
-            }
-            return '/assets/img/episode-default.jpg';
-        } catch (error) {
-            console.error('Error getting episode image:', error);
-            return '/assets/img/episode-default.jpg';
-        }
-    }
-
     // --- TV SHOW UI METHODS ---
-    renderSeasonsView(showPath) {
+    renderSeasonsView() {
+        const showPath = this.currentTVShow;
         const show = this.findShowByPath(showPath);
         console.log('[DEBUG - RenderSeasonsView] renderSeasonsView for showPath:', showPath);
         console.log('[DEBUG - RenderSeasonsView] renderSeasonsView show:', show);
-        console.log('[DEBUG - RenderSeasonsView] typeof show:', typeof show);
-        if (show) {
-            console.log('[DEBUG - RenderSeasonsView] Object.keys(show):', Object.keys(show));
-            if (show.data) {
-                console.log('[DEBUG - RenderSeasonsView] show.data:', show.data);
-                if (show.data.name) {
-                    console.log('[DEBUG - RenderSeasonsView] show.data.name:', show.data.name);
-                }
-            }
-        }
-        const seasons = this.getSeasonsForShow(show && show.data ? show.data : show);
+        // More flexible regex for season folders
+        const seasons = (show && show.folders)
+          ? show.folders.filter(folder => {
+              const name = (folder.name || folder.path.split(/[\\/]/).pop() || '').toLowerCase().replace(/[_\-]/g, ' ').trim();
+              console.log('[SEASON FILTER DEBUG]', name);
+              return /(season|s|series)[\s_\-]*0*\d+/i.test(name);
+            })
+          : [];
         console.log('[DEBUG - RenderSeasonsView] renderSeasonsView seasons:', seasons);
-        // Robust show name extraction
-        let showName = 'Unknown Show';
-        if (show && show.name) {
-            showName = show.name;
-        } else if (show && show.data && show.data.name) {
-            showName = show.data.name;
-        } else if (showPath) {
-            showName = this.extractShowName(showPath);
-        }
+        const showName = this.extractShowName(showPath);
 
         return `
             <div class="media-library-breadcrumbs">
@@ -2019,11 +1721,11 @@ class MediaLibraryManager {
             </div>
             <div class="media-library-grid">
                 ${seasons.map(season => {
-                    const seasonImage = this.getSeasonImage(showName, season.path);
+                    console.log('[DEBUG] season.path:', season.path);
                     return `
                         <div class="media-library-card" onclick="mediaLibraryManager.openTVSeason('${season.path.replace(/\\/g, '/')}')">
                         <div class="media-library-card-poster">
-                                <img src="${seasonImage}" alt="${season.path.split(/[\\/]/).pop()}" onerror="this.src='/assets/img/placeholder-poster.jpg'">
+                                <img src="/assets/img/season-default.jpg" alt="${season.path.split(/[\\/]/).pop()}" onerror="this.src='/assets/img/placeholder-poster.jpg'">
                         </div>
                         <div class="media-library-card-info">
                                 <h3>${season.path.split(/[\\/]/).pop()}</h3>
@@ -2037,7 +1739,7 @@ class MediaLibraryManager {
     }
 
     openTVShowFromData(element) {
-        const showPath = element.getAttribute('data-path');
+        const showPath = element.getAttribute('data-show-path');
         console.log('[DEBUG - OpenTVShowFromData] openTVShowFromData called with path from data attribute:', showPath);
         this.openTVShow(showPath);
     }
@@ -2075,30 +1777,17 @@ class MediaLibraryManager {
             </div>
             <div class="media-library-episodes-scroll">
             <div class="media-library-grid">
-                ${episodes.map(episode => {
-                    const episodeImage = this.getEpisodeImage(showName, seasonName, episode);
-                    // Robust relPath for playback
-                    const relPath = ((episode.relPath) ? episode.relPath : (this.currentTVSeason.replace(/\\/g, '/') + '/' + episode.name.replace(/\\/g, '/'))).replace(/\\/g, '/');
-                    return `
-                    <div class="media-library-card" onclick="mediaLibraryManager.playEpisode('${relPath}')">
+                ${episodes.map(episode => `
+                    <div class="media-library-card" onclick="mediaLibraryManager.playEpisode('${episode.path}')">
                         <div class="media-library-card-poster">
-                            <img src="${episodeImage}" alt="${episode.name}" onerror="this.src='/assets/img/placeholder-poster.jpg'">
+                            <img src="/assets/img/episode-default.jpg" alt="${episode.name}" onerror="this.src='/assets/img/placeholder-poster.jpg'">
                             <div class="media-library-play-overlay">▶</div>
                         </div>
                         <div class="media-library-card-info">
-                                <h3 style="font-size:1em;line-height:1.2;margin-bottom:2px;">
-                                    ${showName} - ${seasonName} - ${(() => {
-                                        const match = (episode.name || episode.path).match(/E(\d{1,2})/i);
-                                        return match ? `E${match[1].padStart(2, '0')}` : '';
-                                    })()}
-                                </h3>
-                                <div style="font-size:0.98em;line-height:1.2;white-space:normal;">
-                                    ${this.extractEpisodeTitle(episode.name || episode.path.split(/[\\/]/).pop())}
+                                <h3>${this.cleanEpisodeName(episode.name || episode.path.split(/[\\/]/).pop())}</h3>
                         </div>
                     </div>
-                    </div>
-                `;
-                }).join('')}
+                `).join('')}
                 </div>
             </div>
         `;
@@ -2117,8 +1806,8 @@ class MediaLibraryManager {
 
     playEpisode(episodePath) {
         this.closeModal();
-        // Always normalize to forward slashes for URL
-        const normalizedPath = (episodePath || '').replace(/\\/g, '/');
+        // Normalize path separators for URL and encode each segment
+        const normalizedPath = episodePath.replace(/\\/g, '/').replace(/\\/g, '/');
         const encodedPath = normalizedPath.split('/').map(encodeURIComponent).join('/');
         const url = `/media/${encodedPath}`;
         if (window.videoPlayer) {
@@ -2143,7 +1832,7 @@ class MediaLibraryManager {
                         return this.renderEpisodesView();
                     } else {
                         console.log('[DEBUG - RenderTabContent] Rendering seasons view');
-                        return this.renderSeasonsView(this.currentTVShow);
+                        return this.renderSeasonsView();
                     }
                 } else {
                     console.log('[DEBUG - RenderTabContent] Rendering TV shows tab');
@@ -2165,21 +1854,27 @@ class MediaLibraryManager {
     // --- TAB CONTENT RENDERING METHODS ---
     renderMoviesContent() {
         const items = this.getFilteredAndSortedItems();
+        
         // Track which letters we've already added anchors for
         const addedAnchors = new Set();
+        
         return items.map(item => {
+            // Get the first letter of the movie title for anchor
             const cleanTitle = this.cleanMovieTitle(item.title);
             const firstLetter = cleanTitle.charAt(0).toUpperCase();
+            
+            // Add anchor if this is the first movie starting with this letter
             let anchorHTML = '';
             if (!addedAnchors.has(firstLetter)) {
                 anchorHTML = `<a name="${firstLetter}" id="anchor-${firstLetter}"></a>`;
                 addedAnchors.add(firstLetter);
             }
+            
             return `
                 <div class="media-library-movie-card" style="position: relative;">
                     ${anchorHTML}
                     <div class="media-card-actions" style="display:flex;justify-content:flex-end;align-items:center;gap:10px;padding:6px 10px 0 10px;">
-                        <button class="poster-selector-btn" title="Change Poster" style="background:none;border:none;cursor:pointer;font-size:1.4em;line-height:1;">🖼️</button>
+                        <button class="poster-selector-btn" title="Change Poster" data-movie-path="${encodeURIComponent(item.path)}" style="background:none;border:none;cursor:pointer;font-size:1.4em;line-height:1;">🖼️</button>
                         <button class="favorite-btn" title="Toggle Favorite" style="background:none;border:none;cursor:pointer;font-size:1.5em;line-height:1;">${this.isFavorite(item.path) ? '❤️' : '🤍'}</button>
                         <button class="collection-btn" title="Add to Collection" style="background:none;border:none;cursor:pointer;font-size:1.4em;line-height:1;">➕</button>
                     </div>
@@ -2194,21 +1889,26 @@ class MediaLibraryManager {
 
     renderFavoritesContent() {
         const favorites = this.getFavoritesList();
+        
         // Track which letters we've already added anchors for
         const addedAnchors = new Set();
+        
         return favorites.map(item => {
+            // Get the first letter of the movie title for anchor
             const cleanTitle = this.cleanMovieTitle(item.title);
             const firstLetter = cleanTitle.charAt(0).toUpperCase();
+            
+            // Add anchor if this is the first movie starting with this letter
             let anchorHTML = '';
             if (!addedAnchors.has(firstLetter)) {
                 anchorHTML = `<a name="${firstLetter}" id="anchor-${firstLetter}"></a>`;
                 addedAnchors.add(firstLetter);
             }
+            
             return `
                 <div class="media-library-movie-card" style="position: relative;">
                     ${anchorHTML}
                     <div class="media-card-actions" style="display:flex;justify-content:flex-end;align-items:center;gap:10px;padding:6px 10px 0 10px;">
-                        <button class="poster-selector-btn" title="Change Poster" style="background:none;border:none;cursor:pointer;font-size:1.4em;line-height:1;">🖼️</button>
                         <button class="favorite-btn" title="Toggle Favorite" style="background:none;border:none;cursor:pointer;font-size:1.5em;line-height:1;">❤️</button>
                         <button class="collection-btn" title="Add to Collection" style="background:none;border:none;cursor:pointer;font-size:1.4em;line-height:1;">➕</button>
                     </div>
@@ -2255,8 +1955,6 @@ class MediaLibraryManager {
         console.log('[TV DEBUG] renderTVShowsTab: tvShows.length =', tvShows.length);
         const filteredShows = this.filterItems(tvShows, this.searchTerm);
         const sortedShows = this.sortItems(filteredShows, this.sortBy, 'name');
-        // Debug: print all show.path values
-        console.log('[TV DEBUG] show.path values:', sortedShows.map(s => s.path));
         let lastLetter = '';
         const html = `
             <div class="media-library-movie-grid">
@@ -2267,19 +1965,14 @@ class MediaLibraryManager {
                     const firstLetter = title.charAt(0).toUpperCase();
                     let anchor = '';
                     if (firstLetter !== lastLetter) {
-                        anchor = `<div id="anchor-${firstLetter}" class="media-library-anchor"></div>`;
+                        anchor = `<div id="anchor-${firstLetter}"></div>`;
                         lastLetter = firstLetter;
                     }
                     return `
                     ${anchor}
-                    <div class="media-library-movie-card" data-path="${show.path}" data-show-name="${show.name || show.title || ''}">
-                      <div class="media-card-actions" style="display:flex;justify-content:flex-end;align-items:center;gap:10px;padding:6px 10px 0 10px;">
-                        <button class="poster-selector-btn" title="Change Poster" style="background:none;border:none;cursor:pointer;font-size:1.4em;line-height:1;">🖼️</button>
-                        <button class="favorite-btn" title="Toggle Favorite" style="background:none;border:none;cursor:pointer;font-size:1.5em;line-height:1;">${this.isFavorite(show.path) ? '❤️' : '🤍'}</button>
-                        <button class="collection-btn" title="Add to Collection" style="background:none;border:none;cursor:pointer;font-size:1.4em;line-height:1;">➕</button>
-                      </div>
-                      <div class="media-library-card-poster" style="position:relative;">
-                        <img class="tvshow-poster-img" src="${this.getPosterPath(show)}" alt="${show.name}" onerror="this.src='/assets/img/placeholder-poster.jpg'" style="cursor:pointer;">
+                    <div class="media-library-movie-card" data-show-path="${show.path}" onclick="mediaLibraryManager.openTVShowFromData(this)">
+                        <div class="media-library-card-poster">
+                           <img src="${this.getPosterPath(show)}" alt="${show.name}" onerror="this.src='/assets/img/placeholder-poster.jpg'">
                         </div>
                         <div class="media-library-card-info">
                             <h3>${show.name}</h3>
@@ -2370,121 +2063,14 @@ class MediaLibraryManager {
         // This method is kept for compatibility and future enhancements
     }
 
-    extractEpisodeTitle(filename) {
-        // Remove show name, season/episode codes, and return only the episode title
-        let name = filename;
-        // Remove extension
-        name = name.replace(/\.[^/.]+$/, '');
-        // Remove show name (if present)
-        const showNamePattern = new RegExp('^' + this.escapeRegExp(this.extractShowName(this.currentTVShow)) + '[ ._-]*', 'i');
-        name = name.replace(showNamePattern, '');
-        // Remove season/episode codes
-        name = name.replace(/S\d{1,2}E\d{1,2}/i, '');
-        name = name.replace(/Season[ _-]?\d{1,2}/i, '');
-        name = name.replace(/Episode[ _-]?\d{1,2}/i, '');
-        name = name.replace(/^[ ._-]+/, '');
-        name = name.replace(/[ ._-]+$/, '');
-        return name.trim();
-    }
-
-    escapeRegExp(string) {
-        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    }
-
-    async reloadMoviePostersAndRefreshGrid() {
-        try {
-            const response = await fetch('/components/MediaLibrary/data/movie_posters.json?_=' + Date.now());
-            if (response.ok) {
-                this.moviePosters = await response.json();
-            }
-        } catch (e) {
-            console.warn('[MediaLibrary] Failed to reload movie_posters.json:', e);
+    openPosterSelector(context) {
+        if (window.PosterSelector && typeof window.PosterSelector.open === 'function') {
+            window.PosterSelector.open(context);
+        } else {
+            this.showToast('PosterSelector is not available.');
         }
-        this.renderMediaGrid();
-        this.attachPosterSelectorHandlers();
-    }
-
-    attachPosterSelectorHandlers() {
-        setTimeout(() => {
-            document.querySelectorAll('.poster-selector-btn').forEach(btn => {
-                // Use arrow function to preserve 'this' context
-                btn.onclick = (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    console.log('[PosterSelector DEBUG] currentTab:', this.currentTab);
-                    const card = btn.closest('.media-library-movie-card');
-                    console.log('[PosterSelector DEBUG] card:', card);
-                    if (card) {
-                        console.log('[PosterSelector DEBUG] card classList:', card.classList);
-                        console.log('[PosterSelector DEBUG] card attributes:');
-                        for (let attr of card.attributes) {
-                            console.log('  ', attr.name, '=', attr.value);
-                        }
-                    } else {
-                        console.warn('[PosterSelector DEBUG] No .media-library-movie-card found for button:', btn);
-                    }
-                    const itemPath = card ? card.getAttribute('data-path') : '';
-                    console.log('[PosterSelector DEBUG] itemPath:', itemPath);
-                    let item = null;
-                    if (this.currentTab === 'tvshows') {
-                        const tvShows = this.getTVShows();
-                        console.log('[PosterSelector DEBUG] Available TV shows:', tvShows.map(s => s.path));
-                        item = tvShows.find(show =>
-                            (show.path || '').replace(/\\/g, '/').toLowerCase().trim() === (itemPath || '').replace(/\\/g, '/').toLowerCase().trim()
-                        );
-                        console.log('[PosterSelector DEBUG] Found TV show:', item);
-                    } else {
-                        const items = this.getFilteredAndSortedItems();
-                        console.log('[PosterSelector DEBUG] Available movies:', items.map(i => i.path));
-                        item = items.find(i =>
-                            (i.path || '').replace(/\\/g, '/').toLowerCase().trim() === (itemPath || '').replace(/\\/g, '/').toLowerCase().trim()
-                        );
-                        console.log('[PosterSelector DEBUG] Found movie:', item);
-                    }
-                    if (window.PosterSelector && item) {
-                        const mode = this.currentTab === 'tvshows' ? 'tv' : 'movie';
-                        const selector = new window.PosterSelector(mode);
-                        selector.getMediaContext = () => ({
-                            mediaId: item.path,
-                            name: item.name || item.title,
-                            path: item.path,
-                            type: mode
-                        });
-                        selector.onPosterSelected = ({filePath, posterType, poster}) => {
-                            if (mode === 'movie' && this.moviePosters) {
-                                this.moviePosters[item.path] = filePath;
-                                this.cacheBusters[item.path] = Date.now();
-                                this.renderMediaGrid();
-                                this.showToast('Poster updated!');
-                            } else if (mode === 'tv' && this.tvPosters) {
-                                this.tvPosters[item.name || item.title] = filePath;
-                                this.renderMediaGrid();
-                                this.showToast('Poster updated!');
-                            }
-                        };
-                        selector.init();
-                    } else {
-                        console.error('[PosterSelector] PosterSelector is not available or item not found. window.PosterSelector:', window.PosterSelector, 'item:', item, 'itemPath:', itemPath, 'currentTab:', this.currentTab);
-                        this.showToast('PosterSelector is not available.');
-                    }
-                    return false;
-                };
-            });
-        }, 0);
     }
 }
 
 // Initialize the media library manager
 window.mediaLibraryManager = new MediaLibraryManager(); 
-
-// After rendering the TV shows grid in renderTVShowsTab or after renderModal, attach click handlers to .tvshow-poster-img
-setTimeout(() => {
-  document.querySelectorAll('.tvshow-poster-img').forEach(img => {
-    img.onclick = (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      const card = img.closest('.media-library-movie-card');
-      if (card) window.mediaLibraryManager.openTVShowFromData(card);
-    };
-  });
-}, 0);
