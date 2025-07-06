@@ -340,11 +340,25 @@ router.post('/posters/download', async (req, res) => {
       await fs.mkdir(basePath, { recursive: true });
     }
 
-    // Determine filename
+    // Determine filename for movies: poster.jpg, poster2.jpg, poster3.jpg, etc.
     let filename = 'poster.jpg';
     let posterType = 'main';
-    if (isAlternative) {
-      // Find next available alt slot
+    if (mediaType === 'movie') {
+      // Scan for existing poster files
+      const files = await fs.readdir(basePath);
+      const posterFiles = files.filter(f => /^poster(\d*)\.jpg$/i.test(f));
+      let maxNum = 1;
+      posterFiles.forEach(f => {
+        const match = f.match(/^poster(\d*)\.jpg$/i);
+        if (match) {
+          const num = match[1] ? parseInt(match[1], 10) : 1;
+          if (num >= maxNum) maxNum = num;
+        }
+      });
+      // Next poster number
+      filename = maxNum === 1 && !posterFiles.includes('poster.jpg') ? 'poster.jpg' : `poster${maxNum + 1}.jpg`;
+    } else if (isAlternative) {
+      // Find next available alt slot for TV, etc.
       let altNum = 1;
       let altPath;
       do {

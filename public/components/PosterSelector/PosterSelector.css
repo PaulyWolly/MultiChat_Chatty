@@ -41,7 +41,7 @@
 }
 .poster-selector-header h2 {
     margin: 0 18px 0 0;
-    font-size: 1.4rem;
+    font-size: 2.0rem;
     flex-shrink: 0;
 }
 #poster-selector-query {
@@ -65,9 +65,11 @@
     margin-left: auto;
     background: none;
     border: none;
-    color: #fff;
-    font-size: 2rem;
+    color: #ed0909;
+    font-size: 3rem;
     cursor: pointer;
+    right: 20px;
+    position: absolute;
 }
 .poster-selector-body {
     display: flex;
@@ -164,3 +166,29 @@
     position: relative;
     z-index: 1;
 } 
+
+.poster-selector-source-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    position: absolute;
+    right: 100px;
+    top: 40px;
+}
+
+.poster-selector-source-label {
+    font-weight: 600;
+}   
+.poster-selector-source-select {
+    padding: 4px 10px;
+    font-size: 1em;
+}
+
+.poster-selector-title {
+    margin-right: 18px;
+    color: blue;
+    font-size: 2em;
+}
+
+
+
