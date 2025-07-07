@@ -26,3 +26,7 @@ backups/.env*
 *api*key*
 *token*
 *secret*__REF_REPO-MCC_TEST__/
+
+# Ignore all reference repo directories
+__REF_REPO-BEFORE-RESTORE__/
+__REF_REPO*/
