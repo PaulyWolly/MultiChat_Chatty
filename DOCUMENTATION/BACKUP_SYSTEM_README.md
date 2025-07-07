@@ -259,4 +259,43 @@ The backup system provides detailed logging:
 - [ ] Cross-platform compatibility improvements
 - [ ] Web-based backup management interface
 - [ ] Backup comparison tools
-- [ ] Automated backup testing 
+- [ ] Automated backup testing
+
+## Restore from Backup (RESTORE_BACKUP.js)
+
+**Updated: 7/6/2025**
+
+### Usage
+
+You can now restore from any backup folder by providing a full or relative path to the backup directory. The script no longer assumes the backup is in `/backups`—you can restore from subfolders (like `AI_BKUP`) or any location.
+
+**Command:**
+```
+node scripts/RESTORE_BACKUP.js <backup_folder_path>
+```
+
+**Examples:**
+- Restore from main backups folder:
+  ```
+  node scripts/RESTORE_BACKUP.js backup_2025-07-06T0949
+  ```
+- Restore from a subfolder (e.g., AI_BKUP):
+  ```
+  node scripts/RESTORE_BACKUP.js backups/AI_BKUP/backup_2025-07-06T0946
+  ```
+- Restore from an absolute path:
+  ```
+  node scripts/RESTORE_BACKUP.js /full/path/to/backup_2025-07-06T0949
+  ```
+
+### What Gets Restored
+- Only the `public`, `server`, and `config` directories are restored by default.
+- The `scripts` directory is **not** restored to avoid overwriting the restore script itself.
+
+### Notes
+- The script will validate the provided path and abort if the directory does not exist.
+- Always restart your server and hard refresh your browser after restoring.
+
+---
+
+(For restoring from MongoDB, see `RESTORE_APP_FROM_MONGODB.js`.) 
