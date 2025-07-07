@@ -227,6 +227,45 @@ card.innerHTML = `
 - The movie title font size and style remain consistent, and the DOM structure is correct before and after re-renders.
 - PosterSelector modal UI is now fully in sync with the reference implementation.
 
+### [2025-07-07 14:30] PosterSelector Fallback Warning Fix - Missing data-path Attributes
+
+**Issue:**
+- PosterSelector modal was showing "Warning: Movie/Show not found by path. Fallback context used." when clicking the 🖼️ icon on movie cards.
+- Debug output showed `itemPath: null` because movie cards were missing the `data-path` attribute.
+- This caused the PosterSelector to use fallback context instead of full movie information.
+
+**Root Cause:**
+- Movie cards in `renderMoviesContent()` and `renderFavoritesContent()` functions were generated without `data-path` attributes.
+- The PosterSelector click handler relies on `data-path` to find the correct movie in the data.
+- TV show cards already had `data-path` attributes, but movie cards did not.
+
+**Fix:**
+Added `data-path="${item.path}"` to movie card divs in both functions:
+
+```javascript
+// Before (renderMoviesContent and renderFavoritesContent):
+<div class="media-library-movie-card" style="position: relative;">
+
+// After:
+<div class="media-library-movie-card" data-path="${item.path}" style="position: relative;">
+```
+
+**Files Modified:**
+- `public/components/MediaLibrary/MediaLibraryManager.js` (lines ~2282 and ~2311)
+
+**Result:**
+- PosterSelector modal now has full movie context for all movies.
+- No more fallback warnings when clicking the 🖼️ icon.
+- Consistent behavior between Movies, Favorites, and TV Shows tabs.
+- Debug console logging was also added per project rule for all alerts.
+
+**Testing:**
+- Restart server and hard-refresh browser.
+- Click 🖼️ icon on any movie card.
+- PosterSelector should open with full movie information and no warnings.
+
+
+
 ---
 
 **Keep this file updated with every major UI or event-handling fix!**
