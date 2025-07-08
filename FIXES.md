@@ -264,6 +264,92 @@ Added `data-path="${item.path}"` to movie card divs in both functions:
 - Click 🖼️ icon on any movie card.
 - PosterSelector should open with full movie information and no warnings.
 
+## 2025-07-07 17:10 - MediaLibrary Overlay Robustness Fix
+
+**Issue:**
+MediaLibrary modal needed a robust, non-intrusive overlay that appears when the modal opens and disappears when it closes. Previous attempts caused overlays to remain or interfere with other UI elements.
+
+**Solution:**
+- Added a `.media-library-overlay` div to the DOM when the MediaLibrary opens (in `renderModal`).
+- Overlay is only removed when the MediaLibrary is fully closed (via `closeMediaLibrary()`), not on every re-render.
+- All close actions (red X, ESC key, programmatic close) now call `closeMediaLibrary()` to ensure overlay is always removed.
+- No inline styles; all overlay styling is handled in CSS.
+
+**Key Code Block:**
+```js
+// In renderModal()
+if (!document.querySelector('.media-library-overlay')) {
+    const overlay = document.createElement('div');
+    overlay.className = 'media-library-overlay';
+    document.body.appendChild(overlay);
+}
+// ...
+
+// In removeModal()
+const existingModal = document.getElementById('mediaLibraryModal');
+if (existingModal) existingModal.remove();
+// (Do NOT remove overlay here)
+
+// Robust close method
+closeMediaLibrary() {
+    this.removeModal();
+    const overlay = document.querySelector('.media-library-overlay');
+    if (overlay) overlay.remove();
+}
+
+// Red X and ESC key now call closeMediaLibrary()
+document.getElementById('mediaLibraryCloseBtn').onclick = () => this.closeMediaLibrary();
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        const modal = document.getElementById('mediaLibraryModal');
+        if (modal) this.closeMediaLibrary();
+    }
+});
+```
+
+**CSS:**
+```css
+.media-library-overlay {
+  position: fixed;
+  top: 0; left: 0; width: 100vw; height: 100vh;
+  background: rgba(0,0,0,0.55);
+  z-index: 9998;
+  backdrop-filter: blur(2px);
+  transition: opacity 0.2s;
+  opacity: 1;
+}
+.media-library-overlay.hide {
+  opacity: 0;
+  pointer-events: none;
+}
+```
+
+**Status:**
+Tested and working. Overlay appears only when MediaLibrary is open and is always removed when closed. No UI lockout or interference with other modals.
+
+## [2024-07-07] TV Show Main Poster Click Opens Seasons Page
+
+**Issue:**
+Clicking the main poster image for a TV show in the Media Library grid did not open the Seasons page as expected.
+
+**Fix:**
+Attached the click handler for `.tvshow-poster-img` immediately after rendering the TV shows grid, ensuring it always works after re-render. Added debug logging to verify the handler and data flow.
+
+**Relevant Code Block:**
+```js
+// In renderMediaGrid(), after rendering TV shows grid:
+grid.querySelectorAll('.tvshow-poster-img').forEach(img => {
+    img.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const card = img.closest('.media-library-tv-card');
+        if (card) window.mediaLibraryManager.openTVShowFromData(card);
+    };
+});
+```
+
+**Result:**
+Clicking the main TV show poster now reliably opens the Seasons page for that show.
 
 
 ---
