@@ -419,6 +419,14 @@ class MediaLibraryManager {
         document.body.appendChild(modal);
         document.getElementById('mediaLibraryCloseBtn').onclick = () => this.closeMediaLibrary();
         if (this.isLoading) this.renderSpinner();
+        // After rendering the modal and before calling renderAZSidebar, add:
+        if (this.currentTab === 'tvshows' && this.currentTVShow && !this.currentTVSeason) {
+          const azSidebar = document.getElementById('mediaLibraryAZSidebar');
+          if (azSidebar) azSidebar.style.display = 'none';
+        } else {
+          const azSidebar = document.getElementById('mediaLibraryAZSidebar');
+          if (azSidebar) azSidebar.style.display = '';
+        }
         this.renderAZSidebar();
         this.updateCount();
         this.restoreSearchSortUI();
@@ -563,10 +571,10 @@ class MediaLibraryManager {
                         selector.getMediaContext = () => {
                             if (item) {
                                 return {
-                                    mediaId: item.path,
-                                    name: item.name || item.title,
-                                    path: item.path,
-                                    type: mode
+                            mediaId: item.path,
+                            name: item.name || item.title,
+                            path: item.path,
+                            type: mode
                                 };
                             } else {
                                 // Minimal fallback context
@@ -610,7 +618,7 @@ class MediaLibraryManager {
                             if (this.currentTab === 'tvshows') {
                                 const tvShows = this.getTVShows();
                                 console.warn('[PosterSelector DEBUG] Available TV show paths:', tvShows.map(s => s.path));
-                            } else {
+                    } else {
                                 const items = this.getFilteredAndSortedItems();
                                 console.warn('[PosterSelector DEBUG] Available movie paths:', items.map(i => i.path));
                             }
@@ -866,18 +874,18 @@ class MediaLibraryManager {
         // TV Shows: Prefer mapping, then constructed root poster path, then placeholder
         if (this.currentTab === 'tvshows' && mediaItem && mediaItem.path) {
             if (this.tvPosters && mediaItem.name) {
-                // Try exact match
-                if (this.tvPosters[mediaItem.name]) {
-                    return this.tvPosters[mediaItem.name];
-                }
-                // Try case-insensitive match
-                const lowerName = mediaItem.name.toLowerCase();
-                for (const [key, value] of Object.entries(this.tvPosters)) {
-                    if (key.toLowerCase() === lowerName) {
-                        return value;
+            // Try exact match
+            if (this.tvPosters[mediaItem.name]) {
+                return this.tvPosters[mediaItem.name];
+            }
+            // Try case-insensitive match
+            const lowerName = mediaItem.name.toLowerCase();
+                    for (const [key, value] of Object.entries(this.tvPosters)) {
+                if (key.toLowerCase() === lowerName) {
+                            return value;
+                        }
                     }
                 }
-            }
             // Fallback: Construct root poster path
             let showRoot = mediaItem.path.replace(/\\/g, '/');
             if (!showRoot.endsWith('/')) showRoot += '/';
@@ -1493,7 +1501,7 @@ class MediaLibraryManager {
                     <div class="watch-later-grid">
                         ${movies.map(item => `
                             <div class="media-library-movie-card-movies watch-later-card" data-path="${item.path}">
-                                <img class="watch-later-img" src="${this.getPosterPath(item)}" alt="${item.title}">
+                                <img class="watch-later-img-movie watch-later-img" src="${this.getPosterPath(item)}" alt="${item.title}">
                                 <div class="media-info"><h3 class="watch-later-title">${this.cleanMovieTitle(item.title || item.name || 'Movie')}</h3></div>
                                 <div class="watch-later-btn-row">
                                     <button class="watch-later-resume-btn">Watch</button>
@@ -1512,7 +1520,7 @@ class MediaLibraryManager {
                     <div class="watch-later-grid">
                         ${tvshows.map(item => `
                             <div class="media-library-movie-card-tvshows watch-later-card" data-path="${item.path}">
-                                <img class="watch-later-img" src="${getTvShowScreenshot(item, this)}" alt="${getTvShowLabel(item)}">
+                                <img class="watch-later-img-tv watch-later-img" src="${getTvShowScreenshot(item, this)}" alt="${getTvShowLabel(item)}">
                                 <div class="media-info"><h3 class="watch-later-title">${getTvShowLabel(item)}</h3></div>
                                 <div class="watch-later-btn-row">
                                     <button class="watch-later-resume-btn">Watch</button>
@@ -1533,8 +1541,8 @@ class MediaLibraryManager {
             // Attach resume and delete handlers for both columns
             setTimeout(() => {
                 document.querySelectorAll('.watch-later-resume-btn').forEach(btn => {
-                    btn.onclick = (e) => {
-                        e.stopPropagation();
+                btn.onclick = (e) => {
+                    e.stopPropagation();
                         // Use .watch-later-card to match both movie and tvshow cards
                         const card = btn.closest('.watch-later-card');
                         const path = card ? card.getAttribute('data-path') : null;
@@ -1565,7 +1573,7 @@ class MediaLibraryManager {
                                 if (foundEpisode && foundEpisode.relPath) {
                                     console.log('[WATCH LATER DEBUG] Found episode relPath:', foundEpisode.relPath);
                                     this.playEpisode(foundEpisode.relPath, item.currentTime || 0);
-                                } else {
+                    } else {
                                     console.warn('[WATCH LATER DEBUG] Could not find episode in main TV data, falling back to item.path:', item.path);
                                     this.playEpisode(item.path, item.currentTime || 0);
                                 }
@@ -1576,8 +1584,8 @@ class MediaLibraryManager {
                             }
                         } else {
                             console.warn('[WATCH LATER DEBUG] No matching item found for path:', path);
-                        }
-                    };
+                    }
+                };
                 });
                 document.querySelectorAll('.watch-later-delete-btn').forEach(btn => {
                     btn.onclick = (e) => {
@@ -1588,7 +1596,7 @@ class MediaLibraryManager {
                         this.removeResumeProgress(path);
                         this.renderWatchLaterContent();
                         this.showToast('Removed from Watch Later');
-                    };
+                };
                 });
             }, 0);
         }
@@ -2132,7 +2140,14 @@ class MediaLibraryManager {
         if (show && Array.isArray(show.folders)) {
             const allSeasons = findSeasons(show.folders, show.path, show.path);
             console.log('[SEASON DETECTION DEBUG] All detected season folders:', allSeasons.map(f => f.name || f.path));
-            return dedupeSeasons(allSeasons);
+            // Sort numerically by season number
+            return dedupeSeasons(allSeasons).sort((a, b) => {
+                const getNum = s => {
+                    const m = (s.name || s.path).match(/season[ _-]?(\d+)/i) || (s.name || s.path).match(/^s(\d+)/i);
+                    return m ? parseInt(m[1], 10) : 0;
+                };
+                return getNum(a) - getNum(b);
+            });
         }
         return [];
     }
@@ -2201,7 +2216,15 @@ class MediaLibraryManager {
         return [];
         }
         // Filter for video files (basic check)
-        const episodes = seasonFolder.files.filter(f => /\.(mp4|mkv|avi|mov|wmv|flv|webm)$/i.test(f.name));
+        let episodes = seasonFolder.files.filter(f => /\.(mp4|mkv|avi|mov|wmv|flv|webm)$/i.test(f.name));
+        // Sort numerically by episode number
+        episodes = episodes.sort((a, b) => {
+            const getNum = ep => {
+                const m = (ep.name || '').match(/E(\d{1,2})/i);
+                return m ? parseInt(m[1], 10) : 0;
+            };
+            return getNum(a) - getNum(b);
+        });
         console.log('[EPISODE DEBUG] Detected episodes:', episodes);
         return episodes;
     }
@@ -2291,9 +2314,22 @@ class MediaLibraryManager {
             if (!seasonMatch) return '/assets/img/episode-default.jpg';
             const seasonNumber = String(parseInt(seasonMatch[1], 10));
             // Extract episode number from episode filename
-            const episodeMatch = episode.name.match(/E(\d{1,2})/i) || episode.path.match(/E(\d{1,2})/i);
-            if (!episodeMatch) return '/assets/img/episode-default.jpg';
-            const episodeNumber = String(parseInt(episodeMatch[1], 10));
+
+            let episodeNumber = null;
+            let match = episode.name.match(/S\d{2}E(\d{2})/i) || episode.path.match(/S\d{2}E(\d{2})/i);
+            if (match) {
+                episodeNumber = String(parseInt(match[1], 10));
+            } else {
+                match = episode.name.match(/E(\d{1,2})/i) || episode.path.match(/E(\d{1,2})/i);
+                if (match) {
+                    episodeNumber = String(parseInt(match[1], 10));
+                } else if (episode.episodeNumber) {
+                    episodeNumber = String(episode.episodeNumber);
+                }
+            }
+            if (!episodeNumber) return '/assets/img/episode-default.jpg';
+
+
             const showData = this.seasonEpisodeImages[showName];
             if (showData && showData.seasons && showData.seasons[seasonNumber] && 
                 showData.seasons[seasonNumber].episodes && showData.seasons[seasonNumber].episodes[episodeNumber] &&
@@ -2807,10 +2843,10 @@ class MediaLibraryManager {
                         selector.getMediaContext = () => {
                             if (item) {
                                 return {
-                                    mediaId: item.path,
-                                    name: item.name || item.title,
-                                    path: item.path,
-                                    type: mode
+                            mediaId: item.path,
+                            name: item.name || item.title,
+                            path: item.path,
+                            type: mode
                                 };
                             } else {
                                 // Minimal fallback context
@@ -2854,7 +2890,7 @@ class MediaLibraryManager {
                             if (this.currentTab === 'tvshows') {
                                 const tvShows = this.getTVShows();
                                 console.warn('[PosterSelector DEBUG] Available TV show paths:', tvShows.map(s => s.path));
-                            } else {
+                    } else {
                                 const items = this.getFilteredAndSortedItems();
                                 console.warn('[PosterSelector DEBUG] Available movie paths:', items.map(i => i.path));
                             }

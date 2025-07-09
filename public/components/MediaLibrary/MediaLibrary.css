@@ -956,6 +956,11 @@
     display: none !important;
 }
 
+/* Hide A-Z sidebar in Season view */
+.media-library-show-info ~ .media-library-az-sidebar {
+  display: none !important;
+}
+
 .media-library-suggestions-placeholder {
     text-align: center;
     font-size: 1.2em;
@@ -1329,8 +1334,19 @@
   }
   
   .media-library-movie-card-movies {
-    /* height: 28vh; */
+    width: 175px;
+    padding: 10px;
   }
   .media-library-movie-card-tvshows {
     /* height: 35vh; */
   }
+
+.watch-later-img-movie {
+  height: 300px;
+  object-fit: cover;
+}
+.watch-later-img-tv {
+  height: 180px;
+  object-fit: contain;
+  background: #222;
+}

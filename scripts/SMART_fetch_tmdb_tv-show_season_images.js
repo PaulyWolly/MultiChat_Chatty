@@ -61,11 +61,28 @@ async function fetchSeasonPoster(tvId, seasonNumber) {
 }
 
 async function main() {
-    const shows = fs.readdirSync(TV_SHOWS_DIR, { withFileTypes: true })
+    const showArg = process.argv[2];
+    let shows;
+    if (showArg) {
+      shows = [showArg];
+      console.log(`SMART MODE: Only fetching season images for: ${showArg}`);
+    } else {
+      shows = fs.readdirSync(TV_SHOWS_DIR, { withFileTypes: true })
         .filter(entry => entry.isDirectory())
         .map(entry => entry.name);
+    }
     const overrides = loadOverrides();
-    const result = {};
+    // --- Merge logic: load existing JSON ---
+    let existing = {};
+    if (fs.existsSync(OUTPUT_JSON)) {
+        try {
+            existing = JSON.parse(fs.readFileSync(OUTPUT_JSON, 'utf8'));
+        } catch (e) {
+            console.warn('⚠️ Could not parse existing season images JSON, starting fresh.');
+            existing = {};
+        }
+    }
+    const result = { ...existing };
     
     let showsFound = 0;
     let totalSeasons = 0;
@@ -75,40 +92,40 @@ async function main() {
     
     for (const showName of shows) {
         const cleanedName = cleanShowName(showName);
-        const overrideId = overrides[showName] || overrides[cleanedName];
-        console.log(`🔍 Searching TMDB for: ${showName} (cleaned: ${cleanedName})${overrideId ? ' [override]' : ''}`);
-        
-        const tvId = await searchTMDBShow(cleanedName, overrideId);
+        let override = overrides[showName] || overrides[cleanedName];
+        let tvId, seasonOverride = null;
+        if (override && typeof override === 'object') {
+            tvId = override.tmdbId;
+            seasonOverride = override.season;
+        } else {
+            tvId = await searchTMDBShow(cleanedName, override);
+        }
+        console.log(`🔍 Searching TMDB for: ${showName} (cleaned: ${cleanedName})${tvId ? ' [override]' : ''}`);
         if (!tvId) {
             console.log(`❌ No TMDB match for: ${showName}`);
             continue;
         }
-        
         console.log(`✅ Found TMDB match for: ${showName} (ID: ${tvId})`);
         showsFound++;
-        
         result[showName] = { seasons: {} };
         const showPath = path.join(TV_SHOWS_DIR, showName);
         const seasonFolders = fs.readdirSync(showPath, { withFileTypes: true })
             .filter(entry => entry.isDirectory())
             .map(entry => entry.name);
-        
         let showSeasons = 0;
         let showSeasonsWithPosters = 0;
-        
         for (const seasonFolder of seasonFolders) {
             const match = seasonFolder.match(/season[ _-]?(\d+)/i);
             if (!match) continue;
             const seasonNumber = parseInt(match[1], 10);
             if (!seasonNumber) continue;
-            
+            // If override specifies a season, skip others
+            if (seasonOverride && seasonNumber !== seasonOverride) continue;
             showSeasons++;
             totalSeasons++;
-            
             console.log(`   📺 Fetching Season ${seasonNumber} poster...`);
             const posterUrl = await fetchSeasonPoster(tvId, seasonNumber);
             result[showName].seasons[seasonNumber] = { poster: posterUrl };
-            
             if (posterUrl) {
                 console.log(`   ✅ Season ${seasonNumber} poster found: ${posterUrl.split('/').pop()}`);
                 showSeasonsWithPosters++;
@@ -117,7 +134,6 @@ async function main() {
                 console.log(`   ❌ Season ${seasonNumber} poster not available`);
             }
         }
-        
         if (showSeasons > 0) {
             console.log(`   📊 ${showName}: ${showSeasonsWithPosters}/${showSeasons} seasons have posters\n`);
         } else {

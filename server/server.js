@@ -134,8 +134,8 @@ app.use('/api/playlists', playlistRoutes);
 app.use('/api/youtube/history', youtubeHistoryRoutes);
 app.use('/api/youtube/clicked-videos', clickedVideosRoutes);
 
-// 1. Serve S:/MEDIA/MOVIES as /media/movies (STATIC)
-app.use('/media/movies', express.static('S:/MEDIA/MOVIES'));
+// 1. Serve S:/MEDIA as /media (STATIC)
+app.use('/media', express.static('S:/MEDIA'));
 
 // 2. Mount dynamic /media/* route (for video playback, etc)
 app.use('/', require('./routes/mediaLibrary.routes'));

@@ -21,8 +21,8 @@
   "Heroes": "https://image.tmdb.org/t/p/w500/lf0TcOkheYUZKpeh7c8lqJHNk5O.jpg",
   "LOST": "https://image.tmdb.org/t/p/w500/og6S0aTZU6YUJAbqxeKjCa3kY1E.jpg",
   "Cosmos": "https://image.tmdb.org/t/p/w500/nOGArjE0WMkzY2GW1taJm8l9gxD.jpg",
-  "Cosmos - A Spacetime Odyssey": "/assets/img/cosmos-a-spacetime-odyssey.png",
-  "Cosmos - Possible Worlds": "/assets/img/cosmos-possible-worlds1.png",
+  "Cosmos A Spacetime Odyssey": "/assets/img/cosmos-a-spacetime-odyssey.png",
+  "Cosmos Possible Worlds": "/assets/img/cosmos-possible-worlds1.png",
   "The Orville": "https://image.tmdb.org/t/p/w500/78xnHh9H5wYcUeZoB0bt1UgInAW.jpg",
   "Lucifer": "https://image.tmdb.org/t/p/w500/ekZobS8isE6mA53RAiGDG93hBxL.jpg",
   "Daisy Jones and the Six": "https://image.tmdb.org/t/p/w500/ltfscPUljehY7IwGG85vij2TEbQ.jpg",
@@ -33,7 +33,7 @@
   "Bored to Death": "https://image.tmdb.org/t/p/w500/eCHirPRvImk6wTLJMKI8vVNVcOT.jpg",
   "Lost in Space": "https://image.tmdb.org/t/p/w500/y8NJnTXzb4rio9uvVYFVrXEMofU.jpg",
   "Royal Pains": "https://image.tmdb.org/t/p/w500/4WW26JPHeG5mgrFkgjvv3Qmgcwg.jpg",
-  "Glitch": "https://image.tmdb.org/t/p/w500/po8xF3i0A3YbkXRDM64JdgFI8vd.jpg",
+  "Glitch (2015)": "https://image.tmdb.org/t/p/w500/po8xF3i0A3YbkXRDM64JdgFI8vd.jpg",
   "Another Life": "https://image.tmdb.org/t/p/w500/htazQ0cPoloL5SJ2bqOCKh9UTcc.jpg",
   "Comedians in Cars Getting Coffee": "https://image.tmdb.org/t/p/w500/hpK5MsFa7k7RQdClvRglBo0wAoT.jpg",
   "The Righteous Gemstones": "https://image.tmdb.org/t/p/w500/bKb54fgtMrS54VMMl8KdDIFlG3g.jpg",
@@ -59,5 +59,9 @@
   "UFO": "https://image.tmdb.org/t/p/w1280/cDCkDOVNb6OAoSrtoOvgvP6KgwH.jpg",
   "Westworld": "https://image.tmdb.org/t/p/w1280/8MfgyFHf7XEboZJPZXCIDqqiz6e.jpg",
   "Night Gallery": "https://image.tmdb.org/t/p/w1280/d1mQiF3jKcKIZGi8LcrJ4FUNj2E.jpg",
-  "Planet Earth": "https://image.tmdb.org/t/p/w1280/mfXulHiALTloIqivuC4Q3lI3RGw.jpg"
+  "Planet Earth": "https://image.tmdb.org/t/p/w1280/mfXulHiALTloIqivuC4Q3lI3RGw.jpg",
+  "Galapagos": "https://image.tmdb.org/t/p/w1280/8CTkXqpdKmQ34dPPKfUH45AYzFt.jpg",
+  "Jonny Quest": "https://image.tmdb.org/t/p/w1280/r2KUXlkfGdUz8wKir0gznnXymsh.jpg",
+  "The Twilight Zone": "https://image.tmdb.org/t/p/w1280/7uY4pCOxbEdv4M8jTE4uMPVoSIW.jpg",
+  "The Twilight Zone (2019)": "https://image.tmdb.org/t/p/w1280/aEuzZqJTEH9E4JwQyv8JtuCu22B.jpg"
   }
