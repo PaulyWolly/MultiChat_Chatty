@@ -1,3 +1,7 @@
 {
-    "Another Life": 79130
+    "Another Life": 79130,
+    "The Twilight Zone (2019)": 86848,
+    "Lost in Space": 75758,
+    "Cosmos A Spacetime Odyssey": { "tmdbId": 58474, "season": 1 },
+    "Cosmos Possible Worlds": { "tmdbId": 58474, "season": 3 }
 }

@@ -59,11 +59,28 @@ async function fetchEpisodeStill(tvId, seasonNumber, episodeNumber) {
 }
 
 async function main() {
-    const shows = fs.readdirSync(TV_SHOWS_DIR, { withFileTypes: true })
-        .filter(entry => entry.isDirectory())
-        .map(entry => entry.name);
+    const showArg = process.argv[2];
+    let shows;
+    if (showArg) {
+        shows = [showArg];
+        console.log(`SMART MODE: Only fetching episode images for: ${showArg}`);
+    } else {
+        shows = fs.readdirSync(TV_SHOWS_DIR, { withFileTypes: true })
+            .filter(entry => entry.isDirectory())
+            .map(entry => entry.name);
+    }
     const overrides = loadOverrides();
-    const result = {};
+    // --- Merge logic: load existing JSON ---
+    let existing = {};
+    if (fs.existsSync(OUTPUT_JSON)) {
+        try {
+            existing = JSON.parse(fs.readFileSync(OUTPUT_JSON, 'utf8'));
+        } catch (e) {
+            console.warn('⚠️ Could not parse existing episode images JSON, starting fresh.');
+            existing = {};
+        }
+    }
+    const result = { ...existing };
     
     let showsFound = 0;
     let totalEpisodes = 0;
@@ -73,55 +90,68 @@ async function main() {
     
     for (const showName of shows) {
         const cleanedName = cleanShowName(showName);
-        const overrideId = overrides[showName] || overrides[cleanedName];
-        console.log(`🔍 Searching TMDB for: ${showName} (cleaned: ${cleanedName})${overrideId ? ' [override]' : ''}`);
-        
-        const tvId = await searchTMDBShow(cleanedName, overrideId);
+        let override = overrides[showName] || overrides[cleanedName];
+        let tvId, seasonOverride = null;
+        if (override && typeof override === 'object') {
+            tvId = override.tmdbId;
+            seasonOverride = override.season;
+        } else {
+            tvId = await searchTMDBShow(cleanedName, override);
+        }
+        console.log(`🔍 Searching TMDB for: ${showName} (cleaned: ${cleanedName})${tvId ? ' [override]' : ''}`);
         if (!tvId) {
             console.log(`❌ No TMDB match for: ${showName}`);
             continue;
         }
-        
         console.log(`✅ Found TMDB match for: ${showName} (ID: ${tvId})`);
         showsFound++;
-        
         result[showName] = { seasons: {} };
         const showPath = path.join(TV_SHOWS_DIR, showName);
         const seasonFolders = fs.readdirSync(showPath, { withFileTypes: true })
             .filter(entry => entry.isDirectory())
             .map(entry => entry.name);
-        
         let showEpisodes = 0;
         let showEpisodesWithStills = 0;
+        let foundAnyStills = false;
         
         for (const seasonFolder of seasonFolders) {
             const match = seasonFolder.match(/season[ _-]?(\d+)/i);
             if (!match) continue;
             const seasonNumber = parseInt(match[1], 10);
             if (!seasonNumber) continue;
-            
+            // If override specifies a season, skip others
+            if (seasonOverride && seasonNumber !== seasonOverride) continue;
             result[showName].seasons[seasonNumber] = { episodes: {} };
             const seasonPath = path.join(showPath, seasonFolder);
             const files = fs.readdirSync(seasonPath).filter(f => /\.(mp4|mkv|avi|mov|m4v)$/i.test(f));
-            
             let seasonEpisodes = 0;
             let seasonEpisodesWithStills = 0;
-            
             for (const file of files) {
-                const epMatch = file.match(/E(\d{2})/i);
-                if (!epMatch) continue;
-                const episodeNumber = parseInt(epMatch[1], 10);
+                let episodeNumber = null;
+                // Support S01E01, 1x01, and E01 patterns
+                let epMatch = file.match(/S\d{2}E(\d{2})/i);
+                if (epMatch) {
+                    episodeNumber = parseInt(epMatch[1], 10);
+                } else {
+                    epMatch = file.match(/(\d+)x(\d{2})/i);
+                    if (epMatch) {
+                        episodeNumber = parseInt(epMatch[2], 10);
+                    } else {
+                        epMatch = file.match(/E(\d{2})/i);
+                        if (epMatch) {
+                            episodeNumber = parseInt(epMatch[1], 10);
+                        }
+                    }
+                }
                 if (!episodeNumber) continue;
-                
                 showEpisodes++;
                 totalEpisodes++;
                 seasonEpisodes++;
-                
                 console.log(`   📺 Fetching S${seasonNumber}E${episodeNumber.toString().padStart(2, '0')} still...`);
                 const stillUrl = await fetchEpisodeStill(tvId, seasonNumber, episodeNumber);
                 result[showName].seasons[seasonNumber].episodes[episodeNumber] = { still: stillUrl };
-                
                 if (stillUrl) {
+                    foundAnyStills = true;
                     console.log(`   ✅ S${seasonNumber}E${episodeNumber.toString().padStart(2, '0')} still found: ${stillUrl.split('/').pop()}`);
                     showEpisodesWithStills++;
                     episodesWithStills++;
@@ -130,16 +160,20 @@ async function main() {
                     console.log(`   ❌ S${seasonNumber}E${episodeNumber.toString().padStart(2, '0')} still not available`);
                 }
             }
-            
             if (seasonEpisodes > 0) {
                 console.log(`   📊 Season ${seasonNumber}: ${seasonEpisodesWithStills}/${seasonEpisodes} episodes have stills`);
             }
         }
-        
         if (showEpisodes > 0) {
             console.log(`   📊 ${showName}: ${showEpisodesWithStills}/${showEpisodes} episodes have stills\n`);
         } else {
             console.log(`   ⚠️  ${showName}: No episode files found\n`);
+        }
+        // Only update the result if we found at least one still, or if the show is not already present
+        if (!foundAnyStills && existing[showName]) {
+            // Do not overwrite existing entry
+            console.log(`⚠️  No new stills found for ${showName}, preserving existing data.`);
+            continue;
         }
     }
     

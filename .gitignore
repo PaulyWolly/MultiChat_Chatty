@@ -30,3 +30,11 @@ backups/.env*
 # Ignore all reference repo directories
 __REF_REPO-BEFORE-RESTORE__/
 __REF_REPO*/
+/scripts/SANDBOX/
+/scripts/SANDBOX/audio/
+/scripts/SANDBOX/audio/tv-show/
+/scripts/SANDBOX/audio/tv-show/report/
+/scripts/SANDBOX/audio/tv-show/output/
+/scripts/SANDBOX/audio/tv-show/output/backups/
+
+/backups/
