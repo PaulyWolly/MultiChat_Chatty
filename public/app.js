@@ -1,8 +1,8 @@
 /*
   APP.JS
-  Version: 5
-  AppName: MultiChat_Chatty [v5]
-  Updated: 7/5/2025 @8:45PM
+  Version: 6
+  AppName: MultiChat_Chatty [v6]
+  Updated: 7/9/2025 @7:15AM
   Created by Paul Welby
 */
 
@@ -2064,10 +2064,18 @@ async function sendMessage(message, isGreeting = false) {
                 const greeting = await generateGreeting();
                 addMessageToChat('assistant', greeting, { type: 'greeting' });
                 await queueAudioChunk(greeting);
+                // Show minimized paginator bar ONLY if a YouTube search has been done
+                if (window.youtubeSearchManager?.pagination?.hasSearched) {
+                    window.youtubeSearchManager.triggerPagSwitch('non-youtube');
+                }
                 break;
 
             case 'EXIT':
                 await exitConversation();
+                // Show minimized paginator bar ONLY if a YouTube search has been done
+                if (window.youtubeSearchManager?.pagination?.hasSearched) {
+                    window.youtubeSearchManager.triggerPagSwitch('non-youtube');
+                }
                 break;
 
             case 'TIME_REQUEST':
@@ -2075,6 +2083,10 @@ async function sendMessage(message, isGreeting = false) {
             case 'DATETIME_REQUEST':
                 addMessageToChat('user', message);
                 handleTimeQuery(message); // Assumes handleTimeQuery is refactored to handle this
+                // Show minimized paginator bar ONLY if a YouTube search has been done
+                if (window.youtubeSearchManager?.pagination?.hasSearched) {
+                    window.youtubeSearchManager.triggerPagSwitch('non-youtube');
+                }
                 break;
 
             case 'WEB_SEARCH':
@@ -2099,6 +2111,10 @@ async function sendMessage(message, isGreeting = false) {
                     model: 'bing-search',
                     metrics: { /* ... metadata ... */ }
                 });
+                // Show minimized paginator bar ONLY if a YouTube search has been done
+                if (window.youtubeSearchManager?.pagination?.hasSearched) {
+                    window.youtubeSearchManager.triggerPagSwitch('non-youtube');
+                }
                 break;
 
             case 'YOUTUBE_REQUEST':
@@ -3583,6 +3599,8 @@ async function handleCommand(text) {
     // Check for Bing search requests
     if (text.toLowerCase().includes('search for') ||
         text.toLowerCase().includes('look up')) {
+        // Non-YouTube search: show minimized paginator bar
+        window.youtubeSearchManager?.triggerPagSwitch('non-youtube');
         return await handleBingSearch.handleSearchRequest(text);
     }
 }

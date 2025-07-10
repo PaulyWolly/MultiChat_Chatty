@@ -1,8 +1,8 @@
 /*
   YOUTUBESEARCH.JS
-  Version: 5
-  AppName: MultiChat_Chatty [v5]
-  Updated: 7/5/2025 @8:45PM
+  Version: 6
+  AppName: MultiChat_Chatty [v6]
+  Updated: 7/9/2025 @7:15AM
   Created by Paul Welby
 */
 
@@ -14,8 +14,8 @@ const youtubeSearchSchema = new mongoose.Schema({
     userId: { type: String, required: true },
     displayName: String, // Cleaned display name (without "youtube search" prefix)
     totalPages: { type: mongoose.Schema.Types.Mixed, default: 1 }, // Allow both Number and String (e.g., "many")
-    lastSearched: { type: Date, default: Date.now },
-    dateCreated: { type: Date, default: Date.now },
+    lastSearched: { type: Date, default: Date.now, required: true }, // Last time this query was searched/saved
+    dateCreated: { type: Date, default: Date.now, required: true }, // When this search was first saved
     cacheKeys: [String], // Array of localStorage cache keys for this query
     videoCount: Number, // Number of videos found
     searchMetadata: {

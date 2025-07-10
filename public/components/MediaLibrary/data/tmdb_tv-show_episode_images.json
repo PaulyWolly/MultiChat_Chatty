@@ -4932,43 +4932,43 @@
       "1": {
         "episodes": {
           "1": {
-            "still": "https://image.tmdb.org/t/p/w500/4F9kbEp4PFe6CfHDMdQynOCiFmL.jpg"
-          },
+            "still": "https://media.themoviedb.org/t/p/w454_and_h254_bestv2/sAp5RwWRVF3gJ5VKhU4oxJ55hlj.jpg"
+		  },
           "2": {
-            "still": "https://image.tmdb.org/t/p/w500/oN6FHlQfQiZQy1TKuLHG1Nn415U.jpg"
+            "still": "https://media.themoviedb.org/t/p/w454_and_h254_bestv2/7qpyXJahEPUAMr7n4Hu6ch6sdIb.jpg"
           },
           "3": {
-            "still": "https://image.tmdb.org/t/p/w500/qGi5Tu6dTA7TZU8j9ZCa6jo0kZ4.jpg"
+            "still": "https://media.themoviedb.org/t/p/w454_and_h254_bestv2/vUHfiicahadxcC8NiYsrLvxO8Y9.jpg"
           },
           "4": {
-            "still": "https://image.tmdb.org/t/p/w500/q8ubQz9NDIMukbev1wG30g60OgI.jpg"
+            "still": "https://media.themoviedb.org/t/p/w454_and_h254_bestv2/6jPkkl2iZrTcF3XsnXeLHqxwzbP.jpg"
           },
           "5": {
-            "still": "https://image.tmdb.org/t/p/w500/q9XFUwD7uwubjZFTgG49tX3diB.jpg"
+            "still": "https://media.themoviedb.org/t/p/w454_and_h254_bestv2/92SjEitSQc2ObsxqMLhw7AJSzp6.jpg"
           },
           "6": {
-            "still": "https://image.tmdb.org/t/p/w500/uUaOZFE8BXAZ6607U1sedYats4W.jpg"
+            "still": "https://media.themoviedb.org/t/p/w454_and_h254_bestv2/zCcIaVIVE1I6gUnpZrzt15XVuga.jpg"
           },
           "7": {
-            "still": "https://image.tmdb.org/t/p/w500/ljJlqURrlY4h0Jy0Cx9iTFNIgup.jpg"
+            "still": "https://media.themoviedb.org/t/p/w454_and_h254_bestv2/tzFDMolLbm71MtWO2emGDZbjLS2.jpg"
           },
           "8": {
-            "still": "https://image.tmdb.org/t/p/w500/xwQY1ZU2XP118teBrvSwkXQESQp.jpg"
+            "still": "https://media.themoviedb.org/t/p/w454_and_h254_bestv2/tvFw1uNC2TWzTExYCeDPL32uXUS.jpg"
           },
           "9": {
-            "still": "https://image.tmdb.org/t/p/w500/2czDEyu1oGIRXpI6EMNcx0sCvMK.jpg"
+            "still": "https://media.themoviedb.org/t/p/w454_and_h254_bestv2/uR3kSwxWH2x8cXiiIw0PXUOsLjq.jpg"
           },
           "10": {
-            "still": "https://image.tmdb.org/t/p/w500/uKa08V2NhiaCJ8vDgwV2OGwexqt.jpg"
+            "still": "https://media.themoviedb.org/t/p/w454_and_h254_bestv2/tekbBRggCaXxKTmyolm2rnHivMO.jpg"
           },
           "11": {
-            "still": "https://image.tmdb.org/t/p/w500/bfwwGeiSzrkfPfM0wZZJqDSGWsz.jpg"
+            "still": "https://media.themoviedb.org/t/p/w454_and_h254_bestv2/uX4q6Sfba1KB8rg1vnUNpGc3RA5.jpg"
           },
           "12": {
-            "still": "https://image.tmdb.org/t/p/w500/tcSnZ0zDWFwC6BAC5APY6PPPV96.jpg"
+            "still": "https://media.themoviedb.org/t/p/w454_and_h254_bestv2/olQ9el0lsNqNABXx8oYWYz3fCvB.jpg"
           },
           "13": {
-            "still": "https://image.tmdb.org/t/p/w500/1AABie1pF3tbfusWi5yqRefKi5E.jpg"
+            "still": "https://media.themoviedb.org/t/p/w454_and_h254_bestv2/7TQRZaAFs0gQRBPEr59UalG0z7X.jpg"
           }
         }
       }
@@ -5380,7 +5380,7 @@
       }
     }
   },
-  "Daisy Jones and The Six": {
+  "Daisy Jones & The Six": {
     "seasons": {
       "1": {
         "episodes": {
@@ -10329,6 +10329,23 @@
           },
           "36": {
             "still": "https://image.tmdb.org/t/p/w500/14dGGthtsrdrh6w9104eDJiun95.jpg"
+          }
+        }
+      }
+    }
+  },
+  "Tiger Spy in the Jungle": {
+    "seasons": {
+      "1": {
+        "episodes": {
+          "1": {
+            "still": "https://media.themoviedb.org/t/p/w454_and_h254_bestv2/qM3GpVpZjOVZ4pfOKUfMgx0GG8y.jpg"
+          },
+          "2": {
+            "still": "https://media.themoviedb.org/t/p/w454_and_h254_bestv2/mBRAqyMC0Hz3O2acBi1TtLtRw4u.jpg"
+          },
+          "3": {
+            "still": "https://media.themoviedb.org/t/p/w454_and_h254_bestv2/clNRz0alIivS4xOw2AG3mBE3fST.jpg"
           }
         }
       }

@@ -1,4 +1,12 @@
 /*
+  SMART_CONVERT_AUDIO_TO_AAC_TV-SHOWS.JS
+  Version: 6
+  AppName: MultiChat_Chatty [v6]
+  Updated: 7/9/2025 @7:15AM
+  Created by Paul Welby
+*/
+
+/*
 SMART_convert_audio_to_aac_tv-shows.js
 
 DESCRIPTION:
