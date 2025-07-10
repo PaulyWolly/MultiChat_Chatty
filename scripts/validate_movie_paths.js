@@ -1,3 +1,11 @@
+/*
+  VALIDATE_MOVIE_PATHS.JS
+  Version: 6
+  AppName: MultiChat_Chatty [v6]
+  Updated: 7/9/2025 @7:15AM
+  Created by Paul Welby
+*/
+
 const fs = require('fs');
 const path = require('path');
 

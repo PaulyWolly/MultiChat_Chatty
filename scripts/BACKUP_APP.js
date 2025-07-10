@@ -1,8 +1,8 @@
 /*
   BACKUP_APP.JS
-  Version: 5
-  AppName: MultiChat_Chatty [v5]
-  Updated: 7/5/2025 @8:45PM
+  Version: 6
+  AppName: MultiChat_Chatty [v6]
+  Updated: 7/9/2025 @7:15AM
   Created by Paul Welby
 */
 
@@ -110,8 +110,8 @@ function scanDirectory(dir, baseDir) {
         const relativePath = path.relative(baseDir, fullPath);
         
         if (fs.statSync(fullPath).isDirectory()) {
-            // Skip node_modules directories
-            if (entry === 'node_modules') continue;
+            // Skip node_modules and SANDBOX directories
+            if (entry === 'node_modules' || entry === 'SANDBOX') continue;
             // Recursively scan subdirectories
             files.push(...scanDirectory(fullPath, baseDir));
         } else {
