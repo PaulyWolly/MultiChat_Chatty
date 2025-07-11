@@ -1,3 +1,11 @@
+/*
+  FETCH_MOVIE_DESCRIPTIONS_FROM_TMDB.JS
+  Version: 6
+  AppName: MultiChat_Chatty [v6]
+  Updated: 7/9/2025 @7:15AM
+  Created by Paul Welby
+*/
+
 // fetch_movie_descriptions_from_tmdb.js
 // Script to fetch movie descriptions from TMDB for all movies in the library
 // Usage: node scripts/fetch_movie_descriptions_from_tmdb.js

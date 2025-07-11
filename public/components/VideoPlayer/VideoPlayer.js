@@ -1,8 +1,8 @@
 /*
   VIDEOPLAYER.JS
-  Version: 5
-  AppName: MultiChat_Chatty [v5]
-  Updated: 7/5/2025 @8:45PM
+  Version: 6
+  AppName: MultiChat_Chatty [v6]
+  Updated: 7/9/2025 @7:15AM
   Created by Paul Welby
 */
 
@@ -566,7 +566,7 @@ class VideoPlayer {
             if (!movie.path && movie.absPath) movie.path = movie.absPath;
             
             // Save to Watch Later using MediaLibraryManager
-            if (window.mediaLibraryManager && typeof window.mediaLibraryManager.saveResumeProgress === 'function' && movie && currentTime > 0) {
+            if (window.mediaLibraryManager && typeof window.mediaLibraryManager.saveResumeProgress === 'function' && movie) {
                 window.mediaLibraryManager.saveResumeProgress(movie, currentTime, duration, true); // true = manual save
                 this.showOverlayAlert('Saved to Watch Later!');
             } else {

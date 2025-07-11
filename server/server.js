@@ -1,8 +1,8 @@
 /*
   SERVER.JS
-  Version: 5
-  AppName: MultiChat_Chatty [v5]
-  Updated: 7/5/2025 @8:45PM
+  Version: 6
+  AppName: MultiChat_Chatty [v6]
+  Updated: 7/9/2025 @7:15AM
   Created by Paul Welby
 */
 
@@ -2624,7 +2624,9 @@ app.post('/api/youtube/save-search', async (req, res) => {
                 totalPages: totalPages || 1,
                 videoCount: videoCount || 0,
                 cacheKeys: cacheKeys || [],
-                searchMetadata: searchMetadata || {}
+                searchMetadata: searchMetadata || {},
+                dateCreated: new Date(), // Ensure always set
+                lastSearched: new Date() // Ensure always set
             });
 
             await newSearch.save();
@@ -3890,6 +3892,27 @@ app.put('/api/bugs/:id', authenticateToken, requireAdmin, async (req, res) => {
     } catch (error) {
         console.error('[BUGS] Error updating bug:', error);
         res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+});
+
+// === ADMIN: BACKFILL YOUTUBESEARCH TIMESTAMPS ===
+app.post('/api/admin/backfill-youtube-timestamps', async (req, res) => {
+    try {
+        const now = new Date();
+        const result = await YouTubeSearch.updateMany(
+            { $or: [ { dateCreated: { $exists: false } }, { lastSearched: { $exists: false } } ] },
+            [
+                {
+                    $set: {
+                        dateCreated: { $ifNull: ["$dateCreated", now] },
+                        lastSearched: { $ifNull: ["$lastSearched", now] }
+                    }
+                }
+            ]
+        );
+        res.json({ success: true, matched: result.matchedCount || result.n, modified: result.modifiedCount || result.nModified });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
     }
 });
 

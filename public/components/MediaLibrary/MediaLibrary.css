@@ -1,8 +1,8 @@
 /*
   MEDIALIBRARY.CSS
-  Version: 5
-  AppName: MultiChat_Chatty [v5]
-  Updated: 7/5/2025 @8:45PM
+  Version: 6
+  AppName: MultiChat_Chatty [v6]
+  Updated: 7/9/2025 @7:15AM
   Created by Paul Welby
 */
 
@@ -354,8 +354,10 @@
     height: 65vh;
     overflow-y: scroll;
     width: 100%;
-    scrollbar-color: #888 #eee; /* For Firefox */
-    scrollbar-width: thin;      /* For Firefox */
+    scrollbar-color: #888 #eee;
+    /* For Firefox */
+    scrollbar-width: thin;
+    /* For Firefox */
 }
 
 /* Always show vertical scrollbar for Movies and TV Shows pages */
@@ -367,6 +369,7 @@
     width: 97%;
     scrollbar-gutter: stable;
 }
+
 .media-library-modal-content.movies .media-library-media-grid-wrapper::after,
 .media-library-modal-content.tvshows .media-library-media-grid-wrapper::after {
     content: '';
@@ -389,8 +392,10 @@
 }
 
 .media-library-media-grid-wrapper {
-    scrollbar-width: thin;         /* Firefox */
-    scrollbar-color: #888 #eee;    /* Firefox */
+    scrollbar-width: thin;
+    /* Firefox */
+    scrollbar-color: #888 #eee;
+    /* Firefox */
 }
 
 .media-library-modal-header {
@@ -407,8 +412,11 @@
 
 .media-library-header-overlay {
     position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(255,255,255,0.18);
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.18);
     z-index: 0;
     border-radius: 12px 12px 0 0;
 }
@@ -419,7 +427,7 @@
     font-weight: bold;
     margin: 0 auto;
     color: #222;
-    text-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
 }
 
 .media-library-media-title {
@@ -858,7 +866,8 @@
     border-radius: 10px 10px 0 0;
 }
 
-.media-library-season-grid, .media-library-episode-grid {
+.media-library-season-grid,
+.media-library-episode-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
     gap: 24px 18px;
@@ -893,7 +902,7 @@
 }
 
 .media-library-card:hover {
-    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
     background: #f5f7fa;
 }
 
@@ -961,6 +970,11 @@
   display: none !important;
 }
 
+/* Hide A-Z sidebar in Season view */
+.media-library-show-info~.media-library-az-sidebar {
+    display: none !important;
+}
+
 .media-library-suggestions-placeholder {
     text-align: center;
     font-size: 1.2em;
@@ -978,7 +992,8 @@
     align-items: center;
     padding: 8px 0;
     border-right: 1px solid #ddd;
-    overflow-y: unset !important; /* Remove scroll from sidebar */
+    overflow-y: unset !important;
+    /* Remove scroll from sidebar */
 }
 
 .media-library-az-letter {
@@ -995,8 +1010,9 @@
     color: #fff;
 }
 
-.media-library-modal-content > div[style*="display:flex"] {
-    height: 60vh; /* or whatever fits your modal */
+.media-library-modal-content>div[style*="display:flex"] {
+    height: 60vh;
+    /* or whatever fits your modal */
     min-height: 0;
     overflow: hidden;
 }
@@ -1113,10 +1129,12 @@
     border: 2px solid #3a7bd5;
     padding: 0 0 4px 0 !important;
 }
+
 .favorite-btn {
     border: 2px solid #3a7bd5;
     padding: 0 0 2px 0 !important;
 }
+
 .collection-btn {
     border: 2px solid #3a7bd5;
     padding: 0 0 2px 0 !important;
@@ -1198,9 +1216,11 @@
     cursor: pointer;
     transition: color 0.2s;
 }
+
 .direct-play-btn:hover .ellipsis-icon {
     color: #0056b3;
 }
+
 .ellipsis-icon {
     font-size: 1.0em;
     line-height: 1;
@@ -1334,7 +1354,7 @@
   }
   
   .media-library-movie-card-movies {
-    width: 175px;
+    width: 200px;
     padding: 10px;
   }
   .media-library-movie-card-tvshows {
@@ -1342,11 +1362,32 @@
   }
 
 .watch-later-img-movie {
-  height: 300px;
-  object-fit: cover;
+  width: 100%;
+  display: block;
+  margin: 0 auto;
 }
+
+.watch-later-img-clickable {
+  cursor: pointer;
+}
+
+.watch-later-timestamp {
+    font-size: 0.65em;
+  color: #888;
+  margin: 4px 0 2px 0;
+  text-align: center;
+}
+
 .watch-later-img-tv {
   height: 180px;
   object-fit: contain;
   background: #222;
+}
+
+.media-library-anchor {
+  display: contents;
+  height: 0;
+  width: 0;
+  margin: 0;
+  padding: 0;
 }

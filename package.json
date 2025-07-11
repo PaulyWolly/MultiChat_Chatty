@@ -29,6 +29,7 @@
     "express": "^4.21.1",
     "googleapis": "^144.0.0",
     "inquire": "^0.4.8",
+    "inquirer": "^12.7.0",
     "jsonwebtoken": "^9.0.2",
     "marked": "^14.1.0",
     "microsoft-cognitiveservices-speech-sdk": "^1.41.0",
@@ -36,7 +37,9 @@
     "mongoose": "^8.8.3",
     "node-cache": "^5.1.2",
     "node-fetch": "^2.7.0",
-    "openai": "^4.57.0"
+    "open": "^10.1.2",
+    "openai": "^4.57.0",
+    "puppeteer": "^24.12.1"
   },
   "devDependencies": {
     "http-server": "^14.1.1"
