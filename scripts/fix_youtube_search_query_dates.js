@@ -1,3 +1,11 @@
+/*
+  FIX_YOUTUBE_SEARCH_QUERY_DATES.JS
+  Version: 7
+  AppName: MultiChat_Chatty [v7]
+  Updated: 7/11/2025 @3:40PM
+  Created by Paul Welby
+*/
+
 // scripts/fix_youtube_search_query_dates.js
 require('dotenv').config({ path: require('path').join(__dirname, '../server/.env') });
 const { MongoClient } = require('mongodb');

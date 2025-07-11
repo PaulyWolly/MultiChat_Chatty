@@ -1,11 +1,9 @@
 /*
   CONVERT_AUDIO_TO_AAC_TV-SHOWS_ALL.JS
-  Version: 1
-  AppName: MultiChat_Chatty [v5]
-  Created by Assistant for Paul Welby
-  
-  Usage:
-    node scripts/convert_audio_to_aac_tv-shows_ALL.js
+  Version: 7
+  AppName: MultiChat_Chatty [v7]
+  Updated: 7/11/2025 @3:40PM
+  Created by Paul Welby
 */
 
 const tvShowsRoot = 'S:/MEDIA/TV-SHOWS/';
