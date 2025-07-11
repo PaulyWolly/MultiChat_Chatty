@@ -1,8 +1,8 @@
 /*
   YOUTUBESEARCHMANAGER.JS
-  Version: 5
-  AppName: MultiChat_Chatty [v5]
-  Updated: 7/5/2025 @8:45PM
+  Version: 6
+  AppName: MultiChat_Chatty [v6]
+  Updated: 7/9/2025 @7:15AM
   Created by Paul Welby
 */
 
@@ -160,6 +160,47 @@ export default class YouTubeSearchManager {
             }
         };
         this.hasSwitchedFromYouTube = false; // Track if user switched from YouTube to non-YouTube search
+        this.initPaginatorBars();
+    }
+
+    initPaginatorBars() {
+        // Ensure both paginator bars exist in the DOM, hidden by default
+        if (!document.querySelector('.restored-paginator-bar')) {
+            const restoredBar = document.createElement('div');
+            restoredBar.className = 'restored-paginator-bar';
+            restoredBar.style.display = 'none';
+            document.body.appendChild(restoredBar);
+        }
+        if (!document.getElementById('minimized-paginator-bar')) {
+            const minimizedBar = document.createElement('div');
+            minimizedBar.id = 'minimized-paginator-bar';
+            minimizedBar.className = 'minimized-paginator-bar';
+            minimizedBar.style.display = 'none';
+            minimizedBar.innerHTML = '<span class="minimized-paginator-bar-text">Restore Paginator bar</span>';
+            minimizedBar.title = 'Click to switch back to YouTube paginator';
+            minimizedBar.onclick = () => {
+                this.setPaginatorBar('restored');
+                setTimeout(() => {
+                    // Use the same scroll logic as the dropdown click
+                    const youtubeResults = document.querySelector('.youtube-multi-bubble, .youtube-single-bubble, .youtube-results');
+                    if (youtubeResults) {
+                        youtubeResults.scrollIntoView({ 
+                            behavior: 'smooth', 
+                            block: 'start',
+                            inline: 'nearest'
+                        });
+                        // Backup: Also force scroll to top after a short delay
+                        setTimeout(() => {
+                            this.forceScrollToTop();
+                        }, 300);
+                    } else {
+                        this.forceScrollToTop();
+                    }
+                }, 200);
+                if (window.handleScroll) window.handleScroll();
+            };
+            document.body.appendChild(minimizedBar);
+        }
     }
 
     /**
@@ -312,10 +353,11 @@ export default class YouTubeSearchManager {
                 query,
                 userId: window.sessionId,
                 displayName: query.replace(/^youtube\s+search\s+/i, '').trim(),
-                totalPages: 'many', // Use "many" since YouTube doesn't provide accurate total counts
-                videoCount: this.pagination?.currentVideos?.length || 0,
+                totalPages: (window.youtubePagination && window.youtubePagination.totalPages) ? window.youtubePagination.totalPages : 1,
+                videoCount: (window.youtubePagination && window.youtubePagination.currentVideos) ? window.youtubePagination.currentVideos.length : 0,
                 cacheKeys,
-                searchMetadata
+                searchMetadata,
+                timestamp: Date.now() // Always set a valid timestamp
             };
             
             // Send save request - use direct URL for development mode
@@ -355,6 +397,8 @@ export default class YouTubeSearchManager {
                 console.log('💾 [YOUTUBE-DB] Successfully saved query:', data.search);
                 // Update the savedQueries Map so isQuerySaved() returns true
                 this.savedQueries.set(query, data.search);
+                // Always reload saved queries from backend to ensure UI is in sync
+                await this.loadSavedQueries();
             } else {
                 throw new Error(data.error || 'Failed to save search');
             }
@@ -369,7 +413,12 @@ export default class YouTubeSearchManager {
      * Check if a query is saved in the database
      */
     isQuerySaved(query) {
-        return this.savedQueries.has(query);
+        if (!query) return false;
+        const normalized = (typeof query === 'string') ? query.trim().toLowerCase() : '';
+        for (const key of this.savedQueries.keys()) {
+            if (key.trim().toLowerCase() === normalized) return true;
+        }
+        return false;
     }
 
     /**
@@ -1478,6 +1527,12 @@ export default class YouTubeSearchManager {
                 if (cachedData) {
                     cachedData.timestamp = timestamp;
                     cachedData.lastAccessed = timestamp;
+                    // Fix: Always set lastSearched to a valid ISO string
+                    cachedData.lastSearched = new Date(timestamp).toISOString();
+                    // Optionally, ensure dateCreated is set
+                    if (!cachedData.dateCreated || isNaN(new Date(cachedData.dateCreated))) {
+                        cachedData.dateCreated = new Date(timestamp).toISOString();
+                    }
                     localStorage.setItem(cacheKey, JSON.stringify(cachedData));
                 }
             } catch (error) {
@@ -1514,7 +1569,8 @@ export default class YouTubeSearchManager {
             cleanQuery: cleanQuery,
             type: type, // Store the search type
             accessTimestamp: currentTime,
-            accessTime: new Date(currentTime).toLocaleString()
+            accessTime: new Date(currentTime).toLocaleString(),
+            timestamp: currentTime // Ensure timestamp is always present for rendering
         });
         
         // Keep only last 20 accessed queries to prevent unlimited growth
@@ -1553,6 +1609,11 @@ export default class YouTubeSearchManager {
     mergeAndDedupeQueries(localQueries, dbQueries) {
         const merged = new Map();
         
+        // Build a set of normalized DB queries for fast lookup
+        const dbNormalizedSet = new Set(
+            dbQueries.map(q => this.cleanQueryForDisplay(q.query || q.displayName || q).toLowerCase().trim())
+        );
+
         // Add local queries first (they have cached data and are prioritized)
         localQueries.forEach(query => {
             // Normalize query by removing prefixes and converting to lowercase
@@ -1561,7 +1622,8 @@ export default class YouTubeSearchManager {
                 ...query,
                 hasLocalCache: true,
                 priority: 'cache', // Highest priority
-                normalizedQuery
+                normalizedQuery,
+                hasDBRecord: dbNormalizedSet.has(normalizedQuery) // Set green LED if also in DB
             });
         });
         
@@ -1580,6 +1642,7 @@ export default class YouTubeSearchManager {
                     hasLocalCache: false,
                     priority: 'database', // Lower priority
                     normalizedQuery,
+                    hasDBRecord: true, // Ensure green LED always shows for DB queries
                     ...query
                 });
             } else {
@@ -1587,7 +1650,7 @@ export default class YouTubeSearchManager {
                 const existing = merged.get(normalizedQuery);
                 merged.set(normalizedQuery, {
                     ...existing,
-                    hasDBRecord: true,
+                    hasDBRecord: true, // Ensure green LED always shows for merged queries
                     dbData: query,
                     priority: 'cache' // Keep cache priority
                 });
@@ -1948,10 +2011,10 @@ export default class YouTubeSearchManager {
             queries = await this.refreshCacheFromMongoDB();
         }
         
-        // Sort queries with current query at top
-        if (currentQuery) {
-            queries = this.sortQueriesWithCurrentFirst(queries, currentQuery);
-        }
+        // Always use access history order: most recent first
+        const sortedQueries = this.queryAccessHistory.length > 0
+            ? this.queryAccessHistory
+            : (queries || []);
         
         // Find the dropdown list container (not the whole dropdown)
         let listContainer = document.querySelector('.restored-paginator-bar .query-history-list');
@@ -1983,13 +2046,13 @@ export default class YouTubeSearchManager {
         // CLEANUP: Remove any old .query-led elements that might still exist in the DOM
         this.cleanupOldLEDElements();
         
-        if (queries.length === 0) {
+        if (sortedQueries.length === 0) {
             listContainer.innerHTML = '<div class="query-history-empty">No search history found</div>';
             return;
         }
         
         // Create dropdown items
-        queries.slice(0, 20).forEach((query, index) => {
+        sortedQueries.forEach((query, index) => {
             const item = document.createElement('div');
             item.className = 'query-history-item';
             
@@ -2181,6 +2244,10 @@ export default class YouTubeSearchManager {
                         
                         console.log('💾 [SAVE-CLICK] UI updated to show saved state');
                         
+                        const updatedQueries = this.getAllQueriesForDropdown();
+                        console.log('[SAVE-PERSIST] Re-rendering dropdown with updated queries:', updatedQueries.map(q => q.query));
+                        this.renderQueryDropdown(updatedQueries, this.currentQuery);
+                        
                     } catch (error) {
                         console.error('💾 [SAVE-CLICK] Save failed:', error);
                         
@@ -2208,16 +2275,28 @@ export default class YouTubeSearchManager {
             deleteIcon.onclick = async (e) => {
                 e.stopPropagation();
                 
-                // Confirm deletion
-                const queryDisplayName = this.cleanQueryForDisplay(query.query);
-                const confirmDelete = confirm(`Delete "${queryDisplayName}" from history?\n\nThis will remove:\n• All cached pages\n• From access history\n• From database (if saved)`);
-                
+                // Define queryDisplayName before using it
+                const queryDisplayName = this.cleanQueryForDisplay(query.query || query.displayName || query);
+                // Replace confirm for delete with custom modal and add debug logs
+                const confirmDelete = await new Promise((resolve) => {
+                    if (window.ConfirmModal && typeof window.ConfirmModal.open === 'function') {
+                        window.ConfirmModal.open({
+                            message: `Delete "${queryDisplayName}" from history?\n\nThis will remove:\n• All cached pages\n• From access history\n• From database (if saved)` ,
+                            onConfirm: () => { console.log('[ConfirmModal] User confirmed delete'); resolve(true); },
+                            onCancel: () => { console.log('[ConfirmModal] User cancelled delete'); resolve(false); }
+                        });
+                    } else {
+                        console.error('[ConfirmModal] ConfirmModal is not available on window.ConfirmModal');
+                        resolve(false);
+                    }
+                });
                 if (!confirmDelete) {
+                    console.log('[YouTubeSearchManager] Delete cancelled or modal not available.');
                     return;
                 }
                 
                 try {
-                    console.log('🗑️ [DELETE] Deleting query:', query.query);
+                    console.log('��️ [DELETE] Deleting query:', query.query);
                     
                     // 1. Remove ALL cache pages for this query
                     const cacheKeysToDelete = [];
@@ -2292,11 +2371,11 @@ export default class YouTubeSearchManager {
             listContainer.appendChild(item);
         });
         
-        console.log('📝 [DROPDOWN] Rendered', queries.length, 'query items');
-        console.log('📝 [DROPDOWN] Queries being rendered:', queries.map(q => q.query).slice(0, 10));
+        console.log('📝 [DROPDOWN] Rendered', sortedQueries.length, 'query items');
+        console.log('📝 [DROPDOWN] Queries being rendered:', sortedQueries.map(q => q.query).slice(0, 10));
         
         // DEBUG: Find the problematic "channel mrbeast" entry
-        const channelMrbeastEntry = queries.find(q => q.query && q.query.toLowerCase().includes('channel mrbeast'));
+        const channelMrbeastEntry = sortedQueries.find(q => q.query && q.query.toLowerCase().includes('channel mrbeast'));
         if (channelMrbeastEntry) {
             console.log('🐛 [DEBUG] Found "channel mrbeast" entry:', {
                 query: channelMrbeastEntry.query,
@@ -2309,7 +2388,7 @@ export default class YouTubeSearchManager {
         }
         
         // Special debug for Santana query in dropdown
-        const santanaInDropdown = queries.filter(q => q.query.toLowerCase().includes('santana'));
+        const santanaInDropdown = sortedQueries.filter(q => q.query.toLowerCase().includes('santana'));
         if (santanaInDropdown.length > 0) {
             console.log('🎸 [DROPDOWN-SANTANA] Santana queries in dropdown:', santanaInDropdown);
         } else {
@@ -2321,6 +2400,9 @@ export default class YouTubeSearchManager {
      * Format timestamp for display
      */
     formatTimestamp(timestamp) {
+        if (!timestamp || isNaN(new Date(timestamp))) {
+            return '';
+        }
         try {
             const date = new Date(timestamp);
             const now = new Date();
@@ -2328,14 +2410,14 @@ export default class YouTubeSearchManager {
             const diffMins = Math.floor(diffMs / 60000);
             const diffHours = Math.floor(diffMs / 3600000);
             const diffDays = Math.floor(diffMs / 86400000);
-            
+
             if (diffMins < 1) return 'Just now';
             if (diffMins < 60) return `${diffMins}m ago`;
             if (diffHours < 24) return `${diffHours}h ago`;
             if (diffDays < 7) return `${diffDays}d ago`;
             return date.toLocaleDateString();
         } catch (error) {
-            return 'Unknown';
+            return '';
         }
     }
     
@@ -2415,13 +2497,11 @@ export default class YouTubeSearchManager {
                 return;
             }
             
-            // Check if quota usage is above 90% (9000) - emergency brake
+            // Check if quota usage is above 95% (9500) - emergency brake
             const currentUsage = quotaMonitor ? quotaMonitor.getCurrentUsage() : 0;
-            if (currentUsage > 9000) {
-                console.log('🚫 [QUOTA-EMERGENCY] API call blocked - usage above 90%:', currentUsage);
-                if (window.showToast) {
-                    window.showToast(`🚫 Cannot load "${this.cleanQueryForDisplay(query)}" - quota critically high (${currentUsage}/10000). Server blocks API calls above 90%.`, 'error', 8000);
-                }
+            if (currentUsage > 9500) {
+                console.log('🚫 [QUOTA-EMERGENCY] API call blocked - usage above 95%:', currentUsage);
+                window.showToast(`🚫 Cannot load "${this.cleanQueryForDisplay(query)}" - quota critically high (${currentUsage}/10000). Server blocks API calls above 95%.`, 'error', 8000);
                 return;
             }
             
@@ -2514,11 +2594,9 @@ export default class YouTubeSearchManager {
                 const quotaMonitor = window.quotaMonitor;
                 const currentUsage = quotaMonitor ? quotaMonitor.getCurrentUsage() : 0;
                 
-                if (currentUsage > 9000) {
-                    console.log('🚫 [QUOTA-EMERGENCY] Cannot fetch page 1 - usage above 90%:', currentUsage);
-                    if (window.showToast) {
-                        window.showToast(`🚫 Cannot load page 1 of "${this.cleanQueryForDisplay(actualQuery)}" - quota critically high (${currentUsage}/10000). Only cached pages available.`, 'error', 8000);
-                    }
+                if (currentUsage > 9500) {
+                    console.log('🚫 [QUOTA-EMERGENCY] Cannot fetch page 1 - usage above 95%:', currentUsage);
+                    window.showToast(`🚫 Cannot load page 1 of "${this.cleanQueryForDisplay(actualQuery)}" - quota critically high (${currentUsage}/10000). Only cached pages available.`, 'error', 8000);
                     return;
                 }
                 
@@ -2555,8 +2633,8 @@ export default class YouTubeSearchManager {
             const quotaMonitor = window.quotaMonitor;
             const currentUsage = quotaMonitor ? quotaMonitor.getCurrentUsage() : 0;
             
-            if (currentUsage > 9000) {
-                console.log('🚫 [QUOTA-EMERGENCY] Cannot search for DB query - usage above 90%:', currentUsage);
+            if (currentUsage > 9500) {
+                console.log('🚫 [QUOTA-EMERGENCY] Cannot search for DB query - usage above 95%:', currentUsage);
             if (window.showToast) {
                     window.showToast(`🚫 Cannot search for "${this.cleanQueryForDisplay(query)}" - quota critically high (${currentUsage}/10000). This query has no cached results.`, 'error', 8000);
                 }
@@ -2738,15 +2816,24 @@ export default class YouTubeSearchManager {
     }
 
     setPaginatorBar(state) {
-        console.log('🔄 [PAG-SWITCH] Setting paginator bar state:', state);
-        
+        console.log('[PAG-SWITCH] setPaginatorBar called with state:', state);
+        const minimizedBar = document.getElementById('minimized-paginator-bar');
+        const restoredBar = document.querySelector('.restored-paginator-bar');
         if (state === 'restored') {
-            // YouTube action: Show RESTORED, hide MINIMIZED
-            this.showRestoredPaginatorBar();
-            this.hideMinimizedPaginatorBar();
+            if (minimizedBar) {
+                minimizedBar.style.display = 'none';
+                console.log('[PAG-SWITCH] Hiding MINIMIZED bar (setPaginatorBar)');
+            }
+            if (restoredBar) {
+                restoredBar.style.display = 'block';
+                console.log('[PAG-SWITCH] Showing RESTORED bar (setPaginatorBar)');
+            }
         } else if (state === 'minimized') {
-            // Non-YouTube action: Show MINIMIZED, hide RESTORED
-            this.hideRestoredPaginatorBar();
+            if (restoredBar) {
+                restoredBar.style.display = 'none';
+                console.log('[PAG-SWITCH] Hiding RESTORED bar (setPaginatorBar)');
+            }
+            // Always call showMinimizedPaginatorBar to ensure bar is created and set up
             this.showMinimizedPaginatorBar();
         }
     }
@@ -2756,81 +2843,31 @@ export default class YouTubeSearchManager {
         const restoredBar = document.querySelector('.restored-paginator-bar');
         if (restoredBar) {
             restoredBar.style.display = 'block';
+            console.log('[PAG-SWITCH] RESTORED bar display:', restoredBar.style.display);
         }
-    }
-
-    hideRestoredPaginatorBar() {
-        console.log('🔄 [PAG-SWITCH] Hiding RESTORED paginator bar');
-        const restoredBar = document.querySelector('.restored-paginator-bar');
-        if (restoredBar) {
-            restoredBar.style.display = 'none';
+        const minimizedBar = document.getElementById('minimized-paginator-bar');
+        if (minimizedBar) {
+            minimizedBar.style.display = 'none';
+            console.log('[PAG-SWITCH] MINIMIZED bar display:', minimizedBar.style.display);
         }
     }
 
     showMinimizedPaginatorBar() {
-        console.log('🔄 [PAG-SWITCH] Showing MINIMIZED paginator bar');
-        let minimizedBar = document.getElementById('minimized-paginator-bar');
-        
-        if (!minimizedBar) {
-            // Create minimized bar if it doesn't exist
-            minimizedBar = document.createElement('div');
-            minimizedBar.id = 'minimized-paginator-bar';
-            minimizedBar.className = 'minimized-paginator-bar';
-            minimizedBar.innerHTML = '<span>🔄 Restore YouTube Search</span>';
-            minimizedBar.title = 'Click to switch back to YouTube paginator';
-            minimizedBar.onclick = () => {
-                console.log('🔄 [PAG-SWITCH] Minimized paginator clicked - SCROLLING TO YOUTUBE RESULTS');
-                
-                // STEP 1: First restore the paginator bar
-                this.setPaginatorBar('restored');
-                
-                // STEP 2: Find and scroll to the YouTube results specifically
-                setTimeout(() => {
-                    console.log('🔄 [PAG-SWITCH] Looking for YouTube results to scroll to...');
-                    
-                    // Look for YouTube results in the chat
-                    const youtubeResults = document.querySelector('.youtube-multi-bubble, .youtube-single-bubble, .youtube-results');
-                    
-                    if (youtubeResults) {
-                        console.log('🔄 [PAG-SWITCH] Found YouTube results, scrolling to them');
-                        youtubeResults.scrollIntoView({ 
-                            behavior: 'smooth', 
-                            block: 'start',
-                            inline: 'nearest'
-                        });
-                        
-                        // Backup: Also scroll to top after a short delay
-                        setTimeout(() => {
-                            this.forceScrollToTop();
-                        }, 500);
-                    } else {
-                        console.log('🔄 [PAG-SWITCH] No YouTube results found, scrolling to top');
-                        this.forceScrollToTop();
-                    }
-                    
-                    // STEP 3: Also try handleScroll as additional backup
-                    if (typeof window.handleScroll === 'function') {
-                        setTimeout(() => {
-                            window.handleScroll({ 
-                                content: 'YouTube Results', 
-                                options: { isYoutube: true },
-                                role: 'assistant' 
-                            });
-                        }, 100);
-                    }
-                }, 100);
-            };
-            document.body.appendChild(minimizedBar);
-        }
-        
-        minimizedBar.style.display = 'block';
-    }
-
-    hideMinimizedPaginatorBar() {
-        console.log('🔄 [PAG-SWITCH] Hiding MINIMIZED paginator bar');
         const minimizedBar = document.getElementById('minimized-paginator-bar');
         if (minimizedBar) {
-            minimizedBar.style.display = 'none';
+            minimizedBar.style.display = 'block';
+            minimizedBar.innerHTML = '<span class="minimized-paginator-bar-text">Restore Paginator bar</span>';
+            minimizedBar.title = 'Click to switch back to YouTube paginator';
+            minimizedBar.onclick = () => {
+                this.setPaginatorBar('restored');
+                const ytContainer = document.querySelector('.youtube-results-container, .youtube-list-container');
+                if (ytContainer) {
+                    ytContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                } else {
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+                if (window.handleScroll) window.handleScroll();
+            };
         }
     }
 
@@ -3498,31 +3535,6 @@ export default class YouTubeSearchManager {
         else if (this.pagination.hasSearched && this.hasSwitchedFromYouTube) {
             if (minimizedBar) minimizedBar.style.display = 'block';
         }
-    }
-
-    renderMinimizedPaginatorBar() {
-        console.log('🎯 [PAGINATION] Rendering minimized paginator bar');
-        // Only create the bar if it doesn't exist
-        let minimizedBar = document.getElementById('minimized-paginator-bar');
-        if (!minimizedBar) {
-            minimizedBar = document.createElement('div');
-            minimizedBar.id = 'minimized-paginator-bar';
-            minimizedBar.className = 'minimized-paginator-bar';
-            minimizedBar.innerHTML = '<span>🔄 Restore YouTube Search</span>';
-            minimizedBar.title = 'Click to restore YouTube paginator and last search';
-            minimizedBar.onclick = () => {
-                this.pagination.isMinimized = false;
-                minimizedBar.style.display = 'none';
-                if (this.pagination.restoreLastSearch) {
-                    this.pagination.restoreLastSearch();
-                }
-            };
-            document.body.appendChild(minimizedBar);
-        }
-        // Use paginatorSwitch to control visibility
-        this.paginatorSwitch();
-        this.hideAllPaginationBars();
-        console.log('✅ [PAGINATION] Minimized paginator bar created and functional');
     }
 
     hideAllPaginationBars() {

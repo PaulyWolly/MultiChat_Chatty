@@ -1934,13 +1934,13 @@
       ]
     },
     {
-      "path": "Ace Ventura_ Pet Detective (1994) [1080p]",
+      "path": "Ace Ventura Pet Detective (1994) [1080p]",
       "folders": [],
       "files": [
         {
-          "name": "Ace.Ventura_.Pet.Detective.(1994).[1080p].mp4",
-          "absPath": "S:\\MEDIA\\MOVIES\\Ace Ventura_ Pet Detective (1994) [1080p]\\Ace.Ventura_.Pet.Detective.(1994).[1080p].mp4",
-          "relPath": "Ace Ventura_ Pet Detective (1994) [1080p]\\Ace.Ventura_.Pet.Detective.(1994).[1080p].mp4"
+          "name": "Ace.Ventura.Pet.Detective.(1994).[1080p].mp4",
+          "absPath": "S:\\MEDIA\\MOVIES\\Ace Ventura Pet Detective (1994) [1080p]\\Ace.Ventura.Pet.Detective.(1994).[1080p].mp4",
+          "relPath": "Ace Ventura Pet Detective (1994) [1080p]\\Ace.Ventura.Pet.Detective.(1994).[1080p].mp4"
         }
       ]
     },
@@ -4865,9 +4865,26 @@
       ]
     },
     {
-      "path": "A.Star.Is.Born.(2018).[1080p]",
+      "path": "Yes Man (2008) [1080p]",
       "folders": [],
-      "files": []
+      "files": [
+        {
+          "name": "Yes.Man.(2008).[1080p].mp4",
+          "absPath": "S:\\MEDIA\\MOVIES\\Yes Man (2008) [1080p]\\Yes.Man.(2008).[1080p].mp4",
+          "relPath": "Yes Man (2008) [1080p]\\Yes.Man.(2008).[1080p].mp4"
+        }
+      ]
+    },
+    {
+      "path": "RED (2010) [1080p]",
+      "folders": [],
+      "files": [
+        {
+          "name": "RED.(2010).[1080p].mp4",
+          "absPath": "S:\\MEDIA\\MOVIES\\RED (2010) [1080p]\\RED.(2010).[1080p].mp4",
+          "relPath": "RED (2010) [1080p]\\RED.(2010).[1080p].mp4"
+        }
+      ]
     }
   ],
   "files": []

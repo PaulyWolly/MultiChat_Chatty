@@ -1,8 +1,8 @@
 /*
   APP.JS
-  Version: 5
-  AppName: MultiChat_Chatty [v5]
-  Updated: 7/5/2025 @8:45PM
+  Version: 6
+  AppName: MultiChat_Chatty [v6]
+  Updated: 7/9/2025 @7:15AM
   Created by Paul Welby
 */
 
@@ -1067,6 +1067,14 @@ function insertAndStyleImages(images, messageElement, headingText, originalQuery
         return;
     }
     
+    // Additional check to ensure the element is still in the DOM
+    if (!messageElement.isConnected) {
+        console.warn('insertAndStyleImages: messageElement is not connected to DOM, cannot insert images');
+        return;
+    }
+    
+    console.log('insertAndStyleImages: Inserting', images.length, 'images into message element');
+    
     const headingHtml = headingText ? `<h3 style="margin: 15px 0 10px 0; color: #333; font-size: 16px;">${headingText}</h3>` : "";
     
     // Check if images section already exists
@@ -2064,10 +2072,18 @@ async function sendMessage(message, isGreeting = false) {
                 const greeting = await generateGreeting();
                 addMessageToChat('assistant', greeting, { type: 'greeting' });
                 await queueAudioChunk(greeting);
+                // Show minimized paginator bar ONLY if a YouTube search has been done
+                if (window.youtubeSearchManager?.pagination?.hasSearched) {
+                    window.youtubeSearchManager.triggerPagSwitch('non-youtube');
+                }
                 break;
 
             case 'EXIT':
                 await exitConversation();
+                // Show minimized paginator bar ONLY if a YouTube search has been done
+                if (window.youtubeSearchManager?.pagination?.hasSearched) {
+                    window.youtubeSearchManager.triggerPagSwitch('non-youtube');
+                }
                 break;
 
             case 'TIME_REQUEST':
@@ -2075,6 +2091,10 @@ async function sendMessage(message, isGreeting = false) {
             case 'DATETIME_REQUEST':
                 addMessageToChat('user', message);
                 handleTimeQuery(message); // Assumes handleTimeQuery is refactored to handle this
+                // Show minimized paginator bar ONLY if a YouTube search has been done
+                if (window.youtubeSearchManager?.pagination?.hasSearched) {
+                    window.youtubeSearchManager.triggerPagSwitch('non-youtube');
+                }
                 break;
 
             case 'WEB_SEARCH':
@@ -2099,6 +2119,10 @@ async function sendMessage(message, isGreeting = false) {
                     model: 'bing-search',
                     metrics: { /* ... metadata ... */ }
                 });
+                // Show minimized paginator bar ONLY if a YouTube search has been done
+                if (window.youtubeSearchManager?.pagination?.hasSearched) {
+                    window.youtubeSearchManager.triggerPagSwitch('non-youtube');
+                }
                 break;
 
             case 'YOUTUBE_REQUEST':
@@ -2487,24 +2511,36 @@ function addMessageToChat(role, content, options = {}) {
     // --- RECIPE CARD EARLY RETURN ---
     if (role === 'assistant' && options.isRecipeQuery && window.recipeManager) {
         console.log('RENDERING RECIPE CARD:', content);
+        
+        // First, render the recipe
         window.recipeManager.renderRecipe(messageElement, content);
         elements.chatMessages.appendChild(messageElement);
+        
         // Insert images if the recipe text contains the image trigger phrase
         const imageTrigger = content.toLowerCase().match(/here are some relevant images for (.*?)[.!?\n]/i);
         if (imageTrigger && imageTrigger[1]) {
             const searchQuery = imageTrigger[1].trim();
             console.log('Detected image request for:', searchQuery);
-            fetch(`/api/google-image-search?q=${encodeURIComponent(searchQuery)}`)
-                .then(res => res.json())
-                .then(imageData => {
-                    if (imageData.images && imageData.images.length > 0) {
-                        console.log('Inserting images into chat (post-recipe)');
-                        insertAndStyleImages(imageData.images, messageElement, searchQuery, searchQuery);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching images:', error);
-                });
+            
+            // Use a small delay to ensure the message element is fully rendered
+            setTimeout(() => {
+                fetch(`/api/google-image-search?q=${encodeURIComponent(searchQuery)}`)
+                    .then(res => res.json())
+                    .then(imageData => {
+                        if (imageData.images && imageData.images.length > 0) {
+                            console.log('Inserting images into chat (post-recipe)');
+                            // Ensure messageElement still exists before inserting images
+                            if (messageElement && messageElement.isConnected) {
+                                insertAndStyleImages(imageData.images, messageElement, searchQuery, searchQuery);
+                            } else {
+                                console.warn('Message element no longer exists, cannot insert images');
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching images:', error);
+                    });
+            }, 100); // Small delay to ensure DOM is ready
         }
         handleScroll({ content, options, role });
         return messageElement;
@@ -2644,53 +2680,81 @@ async function warmUpTTS() {
 
 // Handle scroll function
 function handleScroll({ content = '', options = {}, role = '' }) {
-    const isYouTube = options.isYoutube || content.includes('YouTube Results') || content.includes('youtube-multi-bubble');
-    const isRecipe = options.isRecipe || (content.toLowerCase().includes('ingredients:') && (content.toLowerCase().includes('instructions:') || content.toLowerCase().includes('steps:')));
-    const isBing = options.isBing || content.toLowerCase().includes('bing search results') || content.toLowerCase().includes('bing.com');
-    const isImageQuery = options.isImageQuery || content.includes('image-results') || content.includes('image-gallery') || content.includes('img-responsive') || content.includes('image-section');
-    
-    // Better story detection: check for assistant role and reasonable length, excluding other content types
-    const isStory = role === 'assistant' && !isYouTube && !isRecipe && !isBing && !isImageQuery && content.length > 100;
-
-    if (isYouTube) {
-        window.youtubeSearchManager.scrollToYouTubeResults();
-    } else if (isStory) {
-        console.log('📖 [STORY-SCROLL] Story detected in handleScroll, ensuring continuous scroll as content loads');
-        
-        // For stories, ensure we stay scrolled to bottom as content unfolds
-        const scrollToBottom = () => {
-            const chatContainer = document.getElementById('chat-messages');
-            if (chatContainer) {
-                // Scroll to the very bottom - don't subtract footer height
-                chatContainer.scrollTop = chatContainer.scrollHeight;
-                console.log('📖 [STORY-SCROLL] Scrolled to bottom, scrollTop:', chatContainer.scrollTop, 'scrollHeight:', chatContainer.scrollHeight);
-            }
-        };
-
-        // The user message should have already scrolled us to the right position
-        // Now ensure we stay there and continue scrolling as story content appears
-        
-        // IMMEDIATE and frequent scrolls to track content as it streams in
-        scrollToBottom(); // Immediate
-        setTimeout(scrollToBottom, 0);   // Next tick
-        setTimeout(scrollToBottom, 10);  // Very fast
-        setTimeout(scrollToBottom, 25);  // Still very fast
-        setTimeout(scrollToBottom, 50);  
-        setTimeout(scrollToBottom, 100);
-        setTimeout(scrollToBottom, 150);
-        setTimeout(scrollToBottom, 200);
-        setTimeout(scrollToBottom, 300);
-        setTimeout(scrollToBottom, 500);
-        setTimeout(scrollToBottom, 800);
-        setTimeout(scrollToBottom, 1200);
-        setTimeout(scrollToBottom, 1500);
-        setTimeout(scrollToBottom, 2000);
-        setTimeout(scrollToBottom, 3000);
-        setTimeout(scrollToBottom, 5000);
-        setTimeout(scrollToBottom, 7500);
-        setTimeout(scrollToBottom, 10000);
+    // Detect scroll type
+    let scrollType = 'bottom';
+    if (options.isYoutube || content.includes('YouTube Results') || content.includes('youtube-multi-bubble')) {
+        scrollType = 'youtube';
+    } else if (options.isRecipe || (content.toLowerCase().includes('ingredients:') && (content.toLowerCase().includes('instructions:') || content.toLowerCase().includes('steps:')))) {
+        scrollType = 'recipe';
+    } else if (options.isImageQuery || content.includes('image-results') || content.includes('image-gallery') || content.includes('img-responsive') || content.includes('image-section')) {
+        scrollType = 'image';
     }
-    // For Bing, Recipe, or Image queries: do NOT scroll
+
+    switch (scrollType) {
+        case 'youtube':
+            robustScrollToYouTubeResults();
+            break;
+        case 'recipe':
+            if (window.recipeManager && typeof window.recipeManager.scrollToRecipeResults === 'function') {
+                window.recipeManager.scrollToRecipeResults();
+            }
+            break;
+        case 'image':
+            robustScrollToImageResults();
+            break;
+        default:
+            robustScrollToBottom();
+            break;
+    }
+}
+
+// Robust, repeated scroll for YouTube results
+function robustScrollToYouTubeResults() {
+    const doScroll = () => {
+        if (window.youtubeSearchManager && typeof window.youtubeSearchManager.scrollToYouTubeResults === 'function') {
+            window.youtubeSearchManager.scrollToYouTubeResults();
+        } else {
+            const chatContainer = document.getElementById('chat-messages');
+            if (chatContainer) chatContainer.scrollTop = 0;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    };
+    requestAnimationFrame(() => {
+        doScroll();
+        setTimeout(doScroll, 300);
+        setTimeout(doScroll, 800);
+    });
+}
+
+// Robust, repeated scroll for image results
+function robustScrollToImageResults() {
+    const imageSection = document.querySelector('.image-section');
+    if (imageSection) {
+        const doScroll = () => imageSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        requestAnimationFrame(() => {
+            doScroll();
+            setTimeout(doScroll, 300);
+            setTimeout(doScroll, 800);
+        });
+    } else {
+        robustScrollToBottom();
+    }
+}
+
+// Robust, repeated scroll to bottom for general content
+function robustScrollToBottom() {
+    const scrollToBottom = () => {
+        const chatContainer = document.getElementById('chat-messages');
+        if (chatContainer) {
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+    };
+    scrollToBottom();
+    setTimeout(scrollToBottom, 0);
+    setTimeout(scrollToBottom, 10);
+    setTimeout(scrollToBottom, 25);
+    setTimeout(scrollToBottom, 50);
+    setTimeout(scrollToBottom, 100);
 }
 
 // Helper function to convert text to title case
@@ -3583,6 +3647,8 @@ async function handleCommand(text) {
     // Check for Bing search requests
     if (text.toLowerCase().includes('search for') ||
         text.toLowerCase().includes('look up')) {
+        // Non-YouTube search: show minimized paginator bar
+        window.youtubeSearchManager?.triggerPagSwitch('non-youtube');
         return await handleBingSearch.handleSearchRequest(text);
     }
 }
@@ -6193,7 +6259,7 @@ function setupSSEConnection() {
                     if (data.timestamp) {
                         console.log('💓 Heartbeat received:', new Date(data.timestamp).toLocaleTimeString());
                     } else {
-                        console.log('💓 Heartbeat received (no valid timestamp)');
+                        // console.log('💓 Heartbeat received (no valid timestamp)');
                     }
         return;
       }

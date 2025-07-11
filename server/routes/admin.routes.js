@@ -1,8 +1,8 @@
 /*
   ADMIN.ROUTES.JS
-  Version: 5
-  AppName: MultiChat_Chatty [v5]
-  Updated: 7/5/2025 @8:45PM
+  Version: 6
+  AppName: MultiChat_Chatty [v6]
+  Updated: 7/9/2025 @7:15AM
   Created by Paul Welby
 */
 
@@ -323,14 +323,17 @@ router.post('/posters/download', async (req, res) => {
       basePath = path.dirname(mediaId);
     } else if (mediaType === 'tv') {
       // For TV, use normalized name
+      console.log('[POSTER DEBUG] Incoming TV show name:', name);
       const normalizedName = NormalizationService.createFolderName(name);
-      basePath = path.join('S:/MEDIA/TV_SHOWS', normalizedName);
+      console.log('[POSTER DEBUG] Normalized TV show folder:', normalizedName);
+      basePath = path.join('S:/MEDIA/TV-SHOWS', normalizedName);
+      console.log('[POSTER DEBUG] Computed basePath:', basePath);
     } else if (mediaType === 'season') {
       const normalizedName = NormalizationService.createFolderName(name);
-      basePath = path.join('S:/MEDIA/TV_SHOWS', normalizedName, `Season ${season}`);
+      basePath = path.join('S:/MEDIA/TV-SHOWS', normalizedName, `Season ${season}`);
     } else if (mediaType === 'episode') {
       const normalizedName = NormalizationService.createFolderName(name);
-      basePath = path.join('S:/MEDIA/TV_SHOWS', normalizedName, `Season ${season}`, `Episode ${episode}`);
+      basePath = path.join('S:/MEDIA/TV-SHOWS', normalizedName, `Season ${season}`, `Episode ${episode}`);
     } else {
       return res.status(400).json({ error: 'Invalid mediaType' });
     }
@@ -340,11 +343,25 @@ router.post('/posters/download', async (req, res) => {
       await fs.mkdir(basePath, { recursive: true });
     }
 
-    // Determine filename
+    // Determine filename for movies: poster.jpg, poster2.jpg, poster3.jpg, etc.
     let filename = 'poster.jpg';
     let posterType = 'main';
-    if (isAlternative) {
-      // Find next available alt slot
+    if (mediaType === 'movie') {
+      // Scan for existing poster files
+      const files = await fs.readdir(basePath);
+      const posterFiles = files.filter(f => /^poster(\d*)\.jpg$/i.test(f));
+      let maxNum = 1;
+      posterFiles.forEach(f => {
+        const match = f.match(/^poster(\d*)\.jpg$/i);
+        if (match) {
+          const num = match[1] ? parseInt(match[1], 10) : 1;
+          if (num >= maxNum) maxNum = num;
+        }
+      });
+      // Next poster number
+      filename = maxNum === 1 && !posterFiles.includes('poster.jpg') ? 'poster.jpg' : `poster${maxNum + 1}.jpg`;
+    } else if (isAlternative) {
+      // Find next available alt slot for TV, etc.
       let altNum = 1;
       let altPath;
       do {
@@ -355,18 +372,21 @@ router.post('/posters/download', async (req, res) => {
       posterType = 'alternative';
     }
     const filePath = path.join(basePath, filename);
+    console.log('[POSTER DEBUG] Final filePath for poster:', filePath);
 
     // Download image directly to the correct folder
     await new Promise((resolve, reject) => {
       const file = require('fs').createWriteStream(filePath);
       https.get(tmdbPoster.poster_url, (response) => {
         if (response.statusCode !== 200) {
+          console.error('[POSTER DEBUG] Failed to download image, status:', response.statusCode);
           return reject(new Error('Failed to download image'));
         }
         response.pipe(file);
         file.on('finish', () => file.close(resolve));
       }).on('error', (err) => {
         fs.unlink(filePath);
+        console.error('[POSTER DEBUG] Error during image download:', err);
         reject(err);
       });
     });
@@ -409,6 +429,24 @@ router.post('/posters/download', async (req, res) => {
       const webPosterUrl = `/media/movies/${relPath}`;
       // Update movie_posters.json to point to the web URL
       const postersJsonPath = path.join(__dirname, '../../public/components/MediaLibrary/data/movie_posters.json');
+      let postersJson = {};
+      try {
+        if (require('fs').existsSync(postersJsonPath)) {
+          postersJson = JSON.parse(require('fs').readFileSync(postersJsonPath, 'utf8'));
+        }
+      } catch (e) { postersJson = {}; }
+      // Always use forward slashes in the key
+      const normalizedMediaId = mediaId.replace(/\\/g, '/');
+      postersJson[normalizedMediaId] = webPosterUrl;
+      require('fs').writeFileSync(postersJsonPath, JSON.stringify(postersJson, null, 2));
+    }
+    // After downloading the image, update the mapping for TV shows
+    if (mediaType === 'tv') {
+      // Compute the web-accessible URL for the poster
+      const relPath = path.relative('S:/MEDIA/TV-SHOWS', filePath).replace(/\\/g, '/');
+      const webPosterUrl = `/media/tv-shows/${relPath}`;
+      // Update tv_posters.json to point to the web URL
+      const postersJsonPath = path.join(__dirname, '../../public/components/MediaLibrary/data/tv_posters.json');
       let postersJson = {};
       try {
         if (require('fs').existsSync(postersJsonPath)) {

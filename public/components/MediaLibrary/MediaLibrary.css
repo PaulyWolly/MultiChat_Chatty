@@ -1,8 +1,8 @@
 /*
   MEDIALIBRARY.CSS
-  Version: 5
-  AppName: MultiChat_Chatty [v5]
-  Updated: 7/5/2025 @8:45PM
+  Version: 6
+  AppName: MultiChat_Chatty [v6]
+  Updated: 7/9/2025 @7:15AM
   Created by Paul Welby
 */
 
@@ -74,6 +74,7 @@
     flex-direction: column;
     align-items: center;
     width: 135px;
+    height: 29.5vh;
     min-width: 120px;
     max-width: 150px;
     padding: 10px 6px 12px 6px;
@@ -88,6 +89,42 @@
     height: 170px;
     object-fit: cover;
     border-radius: 8px;
+}
+
+.media-library-tv-card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 135px;
+    height: 35vh;
+    min-width: 120px;
+    max-width: 150px;
+    padding: 10px 6px 12px 6px;
+    transition: box-shadow 0.2s;
+    cursor: pointer;
+    font-size: 0.97em;
+}
+
+.media-library-tv-card img {
+    width: 100%;
+    max-width: 120px;
+    height: 170px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.media-library-card-info p {
+    margin: 0 0 0 0;
+    position: relative;
+    top: 6px;
+}
+
+.media-library-card-info h3 {
+    margin: 0;
 }
 
 .media-info {
@@ -318,8 +355,10 @@
     height: 65vh;
     overflow-y: scroll;
     width: 100%;
-    scrollbar-color: #888 #eee; /* For Firefox */
-    scrollbar-width: thin;      /* For Firefox */
+    scrollbar-color: #888 #eee;
+    /* For Firefox */
+    scrollbar-width: thin;
+    /* For Firefox */
 }
 
 /* Always show vertical scrollbar for Movies and TV Shows pages */
@@ -331,6 +370,7 @@
     width: 97%;
     scrollbar-gutter: stable;
 }
+
 .media-library-modal-content.movies .media-library-media-grid-wrapper::after,
 .media-library-modal-content.tvshows .media-library-media-grid-wrapper::after {
     content: '';
@@ -353,8 +393,10 @@
 }
 
 .media-library-media-grid-wrapper {
-    scrollbar-width: thin;         /* Firefox */
-    scrollbar-color: #888 #eee;    /* Firefox */
+    scrollbar-width: thin;
+    /* Firefox */
+    scrollbar-color: #888 #eee;
+    /* Firefox */
 }
 
 .media-library-modal-header {
@@ -371,8 +413,11 @@
 
 .media-library-header-overlay {
     position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(255,255,255,0.18);
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.18);
     z-index: 0;
     border-radius: 12px 12px 0 0;
 }
@@ -383,7 +428,7 @@
     font-weight: bold;
     margin: 0 auto;
     color: #222;
-    text-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
 }
 
 .media-library-media-title {
@@ -822,7 +867,8 @@
     border-radius: 10px 10px 0 0;
 }
 
-.media-library-season-grid, .media-library-episode-grid {
+.media-library-season-grid,
+.media-library-episode-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
     gap: 24px 18px;
@@ -857,12 +903,12 @@
 }
 
 .media-library-card:hover {
-    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
     background: #f5f7fa;
 }
 
 .media-library-card-info h3 {
-    font-size: .9em;
+    font-size: .82em;
     margin: 8px 0 0 0;
     text-align: center;
     word-break: break-word;
@@ -920,6 +966,11 @@
     display: none !important;
 }
 
+/* Hide A-Z sidebar in Season view */
+.media-library-show-info~.media-library-az-sidebar {
+    display: none !important;
+}
+
 .media-library-suggestions-placeholder {
     text-align: center;
     font-size: 1.2em;
@@ -937,7 +988,8 @@
     align-items: center;
     padding: 8px 0;
     border-right: 1px solid #ddd;
-    overflow-y: unset !important; /* Remove scroll from sidebar */
+    overflow-y: unset !important;
+    /* Remove scroll from sidebar */
 }
 
 .media-library-az-letter {
@@ -954,8 +1006,9 @@
     color: #fff;
 }
 
-.media-library-modal-content > div[style*="display:flex"] {
-    height: 60vh; /* or whatever fits your modal */
+.media-library-modal-content>div[style*="display:flex"] {
+    height: 60vh;
+    /* or whatever fits your modal */
     min-height: 0;
     overflow: hidden;
 }
@@ -1072,13 +1125,38 @@
     border: 2px solid #3a7bd5;
     padding: 0 0 4px 0 !important;
 }
+
 .favorite-btn {
     border: 2px solid #3a7bd5;
     padding: 0 0 2px 0 !important;
 }
+
 .collection-btn {
     border: 2px solid #3a7bd5;
     padding: 0 0 2px 0 !important;
+}
+
+.poster-selector-btn {
+    border: 1px solid #3a7bd5 !important;
+    padding: 10px 0px 8px 0;
+    margin-bottom: 4px;
+    font-size: 1.4em !important;
+    cursor: pointer !important;
+    line-height: .5 !important;
+    /* height: 28px; */
+    /* width: 28px; */
+}
+
+.poster-selector-btn-movies {
+    border: 1px solid #3a7bd5 !important;
+    padding: 6px 0 3px 0 !important;
+    margin-bottom: 4px;
+}
+
+.poster-selector-btn-tvshows {
+    border: 1px solid #3a7bd5 !important;
+    padding: 6px 0 3px 0 !important;
+    margin-bottom: 4px;
 }
 
 .change-poster-btn,
@@ -1134,13 +1212,363 @@
     cursor: pointer;
     transition: color 0.2s;
 }
+
 .direct-play-btn:hover .ellipsis-icon {
     color: #0056b3;
 }
+
 .ellipsis-icon {
     font-size: 1.0em;
     line-height: 1;
     position: absolute;
     right: 60px;
     bottom: -5px;
+}
+
+.movie-description {
+    font-size: 1.08em;
+    color: #6c757d;
+    margin-bottom: 16px;
+    line-height: 1.5;
+    width: 50vw;
+    text-align: justify;
+}
+
+.movie-description .no-description {
+    color: #bbb;
+    font-style: italic;
+}
+
+.media-library-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.55);
+    z-index: 9998;
+    /* below the modal, above the rest */
+    backdrop-filter: blur(2px);
+    transition: opacity 0.2s;
+    opacity: 1;
+}
+
+.media-library-overlay.hide {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Watch Later Layout */
+.watch-later-flex-container {
+    display: flex;
+    gap: 24px;
+    justify-content: space-between;
+    width: 100%;
+    height: 525px;
+}
+
+.watch-later-column {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.watch-later-section-title {
+    font-size: 1.3em;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.watch-later-section-divider {
+    margin: 0 0 12px 0;
+}
+
+.watch-later-scroll {
+    flex: 1;
+    overflow-y: auto;
+    max-height: 480px;
+}
+
+.watch-later-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+}
+
+.watch-later-card {
+    position: relative;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+    padding: 8px 8px 12px 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.watch-later-img {
+    width: 100%;
+    height: 300px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-bottom: 0px;
+    position: relative;
+    top: 0px;
+}
+
+.watch-later-title {
+    font-size: 1em;
+    margin: 0 0 4px 0;
+    text-align: center;
+}
+
+.watch-later-btn-row {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-top: 6px;
+}
+
+.watch-later-resume-btn,
+.watch-later-delete-btn {
+    padding: 6px 14px;
+    border-radius: 6px;
+    border: none;
+    font-size: 1em;
+    cursor: pointer;
+    background: #1976d2;
+    color: #fff;
+    transition: background 0.2s;
+}
+
+.watch-later-delete-btn {
+    background: #e53935;
+}
+
+.watch-later-resume-btn:hover {
+    background: #1251a3;
+}
+
+.watch-later-delete-btn:hover {
+    background: #b71c1c;
+}
+
+.watch-later-empty {
+    color: #888;
+    grid-column: 1/-1;
+    text-align: center;
+    margin: 12px 0;
+}
+
+@media (max-width: 900px) {
+    .watch-later-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .watch-later-flex-container {
+        flex-direction: column;
+        height: auto;
+    }
+}
+
+.media-library-movie-card-movies {
+    width: 200px;
+    padding: 10px;
+}
+
+.media-library-movie-card-tvshows {
+    /* height: 35vh; */
+}
+
+.watch-later-img-movie {
+    width: 100%;
+    display: block;
+    margin: 0 auto;
+}
+
+.watch-later-img-clickable {
+    cursor: pointer;
+}
+
+.watch-later-timestamp {
+    font-size: 0.65em;
+    color: #888;
+    margin: 4px 0 2px 0;
+    text-align: center;
+}
+
+.watch-later-img-tv {
+    height: 180px;
+    object-fit: contain;
+    background: #222;
+}
+
+.media-library-anchor {
+    display: contents;
+    height: 0;
+    width: 0;
+    margin: 0;
+    padding: 0;
+}
+
+.media-library-cast-image {
+    width: 88px !important;
+    height: 88px !important;
+    border-radius: 50% !important;
+    overflow: hidden !important;
+    background: #eee !important;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.13) !important;
+    margin-bottom: 10px !important;
+}
+
+.media-library-cast-name {
+    font-size: .80em !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    width: 100% !important;
+}
+
+/* Actor images row for movie details modal */
+.media-library-cast-row {
+    display: flex;
+    gap: 24px;
+    align-items: flex-end;
+    margin: 28px 0 0 0;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+}
+
+.media-library-cast-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100px;
+}
+
+.media-library-cast-image {
+    width: 88px;
+    height: 88px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: #eee;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.13);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.media-library-cast-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.media-library-cast-image-placeholder {
+    width: 100%;
+    height: 100%;
+    background: #ccc;
+    border-radius: 50%;
+}
+
+.media-library-cast-name {
+    font-size: 1.05em;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    width: 100%;
+}
+
+/* DETAILS MODAL LAYOUT */
+.media-library-details-modal {
+    background: #fff;
+    padding: 32px 32px 24px 32px;
+    border-radius: 14px;
+    box-shadow: rgba(57, 57, 57, 0.35) 0px 5px 15px;
+    min-width: 340px;
+    max-width: 1200px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    display: flex;
+    gap: 40px;
+    align-items: flex-start;
+}
+
+.media-library-details-poster {
+    /* poster image container */
+}
+
+.media-library-details-content {
+    flex: 1;
+    min-width: 220px;
+}
+
+.media-library-details-back {
+    margin-bottom: 18px;
+    padding: 7px 18px;
+    border-radius: 6px;
+    background: #eee;
+    color: #333;
+    border: none;
+    cursor: pointer;
+    font-size: 1em;
+}
+
+.media-library-details-title {
+    margin-top: 0;
+    margin-bottom: 10px;
+}
+
+.media-library-details-meta {
+    color: #888;
+    font-size: 1.05em;
+    margin-bottom: 8px;
+}
+
+.media-library-details-description {
+    margin-bottom: 0;
+}
+
+.media-library-details-buttons {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    margin-bottom: 24px;
+    margin-top: 18px;
+}
+
+.media-library-details-play {
+    padding: 10px 28px;
+    border-radius: 7px;
+    background: #1976d2;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    font-size: 1.1em;
+    font-weight: bold;
+}
+
+.media-library-details-favorite {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.5em;
+    line-height: 1;
+}
+
+.media-library-details-collection {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.3em;
+    line-height: 1;
+}
+
+.media-library-details-cast-list {
+    margin-bottom: 16px;
 }
