@@ -1,8 +1,8 @@
 /*
   SCAN_MEDIA_LIBRARY_TV-SHOWS.JS
-  Version: 5
-  AppName: MultiChat_Chatty [v5]
-  Updated: 7/5/2025 @8:45PM
+  Version: 6
+  AppName: MultiChat_Chatty [v6]
+  Updated: 7/9/2025 @7:15AM
   Created by Paul Welby
 */
 
@@ -13,6 +13,7 @@ const MEDIA_ROOT = 'S:/MEDIA/TV-SHOWS';
 const OUTPUT_FILE = path.join(__dirname, '../server/data/media-library-tv-shows.json');
 const SEASON_IMAGES_JSON = path.join(__dirname, '../public/components/MediaLibrary/data/tmdb_tv-show_season_images.json');
 const EPISODE_IMAGES_JSON = path.join(__dirname, '../public/components/MediaLibrary/data/tmdb_tv-show_episode_images.json');
+const TV_POSTERS_JSON = path.join(__dirname, '../public/components/MediaLibrary/data/tv_posters.json');
 
 function isVideoFile(filename) {
     const exts = ['.mp4', '.mkv', '.avi', '.mov', '.wmv', '.flv', '.webm'];
@@ -33,7 +34,7 @@ function scanDirectory(dir) {
     return { folders, files };
 }
 
-function walkMedia(dir, relPath = '', images = {}) {
+function walkMedia(dir, relPath = '', images = {}, tvPosters = {}) {
     const absPath = path.join(dir, relPath);
     const { folders, files } = scanDirectory(absPath);
     const result = {
@@ -46,11 +47,17 @@ function walkMedia(dir, relPath = '', images = {}) {
         }))
     };
     for (const folder of folders) {
-        result.folders.push(walkMedia(dir, path.join(relPath, folder), images));
+        result.folders.push(walkMedia(dir, path.join(relPath, folder), images, tvPosters));
+    }
+    // If this is a show root, attach main poster if available
+    const relParts = relPath.split(path.sep).filter(Boolean);
+    if (relParts.length === 1) {
+        const showName = relParts[0];
+        if (tvPosters[showName]) {
+            result.poster = tvPosters[showName];
+        }
     }
     // If this is a season folder, try to attach poster and episode stills
-    // Assume structure: /Show Name/Season XX/
-    const relParts = relPath.split(path.sep).filter(Boolean);
     if (relParts.length === 2) {
         const [showName, seasonFolder] = relParts;
         const seasonMatch = seasonFolder.match(/season[ _-]?(\d+)/i);
@@ -76,9 +83,19 @@ function walkMedia(dir, relPath = '', images = {}) {
 }
 
 function main() {
-    console.log(`Scanning TV-SHOWS library at: ${MEDIA_ROOT}`);
+    const showArg = process.argv[2]; // Optional TV show name
+    let scanRoot = MEDIA_ROOT;
+    let outputFile = OUTPUT_FILE;
+    let scanSingleShow = false;
+    if (showArg) {
+        scanRoot = path.join(MEDIA_ROOT, showArg);
+        scanSingleShow = true;
+        outputFile = path.join(__dirname, `../server/data/media-library-tv-shows-${showArg.replace(/[^a-zA-Z0-9_-]/g, '_')}.json`);
+    }
+    console.log(`Scanning TV-SHOWS library at: ${scanRoot}`);
     let seasonImages = {};
     let episodeImages = {};
+    let tvPosters = {};
     
     // Load season images
     try {
@@ -94,6 +111,14 @@ function main() {
         console.log('✅ Loaded episode images data');
     } catch (e) {
         console.warn('Could not load episode images JSON:', e.message);
+    }
+
+    // Load TV posters
+    try {
+        tvPosters = JSON.parse(fs.readFileSync(TV_POSTERS_JSON, 'utf8'));
+        console.log('✅ Loaded TV posters data');
+    } catch (e) {
+        console.warn('Could not load TV posters JSON:', e.message);
     }
     
     // Merge the image data
@@ -118,11 +143,23 @@ function main() {
         }
     }
     
-    const mediaTree = walkMedia(MEDIA_ROOT, '', images);
-    fs.writeFileSync(OUTPUT_FILE, JSON.stringify(mediaTree, null, 2));
-    console.log(`TV-SHOWS scan complete. Output written to: ${OUTPUT_FILE}`);
+    let mediaTree;
+    if (scanSingleShow) {
+        if (!fs.existsSync(scanRoot)) {
+            console.error(`Show folder not found: ${scanRoot}`);
+            process.exit(1);
+        }
+        mediaTree = walkMedia(scanRoot, '', images, tvPosters);
+        // Output as a single-show array for consistency
+        fs.writeFileSync(outputFile, JSON.stringify([mediaTree], null, 2));
+        console.log(`TV-SHOW scan complete. Output written to: ${outputFile}`);
+    } else {
+        mediaTree = walkMedia(scanRoot, '', images, tvPosters);
+        fs.writeFileSync(outputFile, JSON.stringify(mediaTree, null, 2));
+        console.log(`TV-SHOWS scan complete. Output written to: ${outputFile}`);
+    }
 }
 
 if (require.main === module) {
     main();
-} 
+}

@@ -1,12 +1,10 @@
 /*
   GENERATE-SUPERADMIN-CODE.JS
-  Version: 5
-  AppName: MultiChat_Chatty [v5]
-  Updated: 7/5/2025 @8:45PM
+  Version: 6
+  AppName: MultiChat_Chatty [v6]
+  Updated: 7/9/2025 @7:15AM
   Created by Paul Welby
 */
-
-#!/usr/bin/env node
 
 /*
   Generate SuperAdmin One-Time Code

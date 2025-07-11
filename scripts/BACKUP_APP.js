@@ -1,8 +1,8 @@
 /*
   BACKUP_APP.JS
-  Version: 5
-  AppName: MultiChat_Chatty [v5]
-  Updated: 7/5/2025 @8:45PM
+  Version: 6
+  AppName: MultiChat_Chatty [v6]
+  Updated: 7/9/2025 @7:15AM
   Created by Paul Welby
 */
 
@@ -204,6 +204,25 @@ async function createBackup() {
             filesToBackup.push(...scanDirectory(dirPath, baseDir));
         } else {
             console.log(`⚠️ Directory not found: ${dir}`);
+        }
+    }
+
+    // Always include root and server package.json and lock files
+    const explicitFiles = [
+        'package.json',
+        'package-lock.json',
+        'yarn.lock',
+        path.join('server', 'package.json'),
+        path.join('server', 'package-lock.json'),
+        path.join('server', 'yarn.lock')
+    ];
+    for (const relFile of explicitFiles) {
+        const absFile = path.join(baseDir, relFile);
+        if (fs.existsSync(absFile)) {
+            // Only add if not already in filesToBackup
+            if (!filesToBackup.some(f => f.source === relFile)) {
+                filesToBackup.push({ source: relFile, destination: relFile });
+            }
         }
     }
 

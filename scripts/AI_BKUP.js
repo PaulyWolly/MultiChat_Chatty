@@ -1,12 +1,10 @@
 /*
   AI_BKUP.JS
-  Version: 5
-  AppName: MultiChat_Chatty [v5]
-  Updated: 7/5/2025 @8:45PM
+  Version: 6
+  AppName: MultiChat_Chatty [v6]
+  Updated: 7/9/2025 @7:15AM
   Created by Paul Welby
 */
-
-#!/usr/bin/env node
 
 /**
  * AI_BKUP.js - AI-Assisted Backup Script for MultiChat_Chatty
@@ -101,12 +99,13 @@ function cleanupOldBackups(directory, prefix, maxKeep = MAX_BACKUPS_PER_FILE) {
     }
 }
 
-// Function to scan directory recursively
+// Function to scan directory recursively, EXCLUDING node_modules
 function scanDirectory(dir, baseDir) {
     const files = [];
     const entries = fs.readdirSync(dir);
     
     for (const entry of entries) {
+        if (entry === 'node_modules' || entry === 'SANDBOX') continue;
         const fullPath = path.join(dir, entry);
         const relativePath = path.relative(baseDir, fullPath);
         
@@ -201,6 +200,25 @@ async function createBackup() {
             filesToBackup.push(...scanDirectory(dirPath, baseDir));
         } else {
             console.log(`⚠️ Directory not found: ${dir}`);
+        }
+    }
+
+    // Always include root and server package.json and lock files
+    const explicitFiles = [
+        'package.json',
+        'package-lock.json',
+        'yarn.lock',
+        path.join('server', 'package.json'),
+        path.join('server', 'package-lock.json'),
+        path.join('server', 'yarn.lock')
+    ];
+    for (const relFile of explicitFiles) {
+        const absFile = path.join(baseDir, relFile);
+        if (fs.existsSync(absFile)) {
+            // Only add if not already in filesToBackup
+            if (!filesToBackup.some(f => f.source === relFile)) {
+                filesToBackup.push({ source: relFile, destination: relFile });
+            }
         }
     }
 
