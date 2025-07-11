@@ -1,8 +1,8 @@
 /*
   STYLES.CSS
-  Version: 6
-  AppName: MultiChat_Chatty [v6]
-  Updated: 7/9/2025 @7:15AM
+  Version: 7
+  AppName: MultiChat_Chatty [v7]
+  Updated: 7/11/2025 @3:40PM
   Created by Paul Welby
 */
 
@@ -528,8 +528,8 @@ button {
 }
 
 .image-container img {
-    width: 150px;
-    height: 150px;
+    /* width: 150px;
+    height: 150px; */
     object-fit: cover;
     border-radius: 5px;
 }
@@ -2815,7 +2815,7 @@ button {
     left: 0;
     height: 90vh;
     width: 500px;
-    z-index: 9999;
+    z-index: 99991;
     pointer-events: none;
 }
 

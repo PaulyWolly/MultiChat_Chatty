@@ -1,8 +1,8 @@
 /*
-  CONVERT_AUDIO_TO_AAC_TV-SHOWS.JS
-  Version: 5
-  AppName: MultiChat_Chatty [v5]
-  Updated: 7/5/2025 @8:45PM
+  CONVERT_AUDIO_TO_AAC_TV-SHOWS_SINGLE.JS
+  Version: 7
+  AppName: MultiChat_Chatty [v7]
+  Updated: 7/11/2025 @3:40PM
   Created by Paul Welby
 */
 

@@ -1,4 +1,12 @@
 /*
+  IMPORT_LOCALSTORAGE_JSON.JS
+  Version: 7
+  AppName: MultiChat_Chatty [v7]
+  Updated: 7/11/2025 @3:40PM
+  Created by Paul Welby
+*/
+
+/*
  * import_localstorage_json.js
  *
  * Usage:

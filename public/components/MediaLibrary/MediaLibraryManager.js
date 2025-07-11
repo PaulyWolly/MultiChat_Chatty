@@ -1,8 +1,8 @@
 /*
   MEDIALIBRARYMANAGER.JS
-  Version: 6
-  AppName: MultiChat_Chatty [v6]
-  Updated: 7/9/2025 @7:15AM
+  Version: 7
+  AppName: MultiChat_Chatty [v7]
+  Updated: 7/11/2025 @3:40PM
   Created by Paul Welby
 */
 
@@ -2535,16 +2535,16 @@ class MediaLibraryManager {
                             <div class="media-library-play-overlay">▶</div>
                         </div>
                         <div class="media-library-card-info">
-                                <h3 style="font-size:1em;line-height:1.2;margin-bottom:2px;">
-                                    ${showName} - ${seasonName} - ${(() => {
-                                        const match = (episode.name || episode.path).match(/E(\d{1,2})/i);
-                                        return match ? `E${match[1].padStart(2, '0')}` : '';
-                                    })()}
-                                </h3>
-                                <div style="font-size:0.98em;line-height:1.2;white-space:normal;">
-                                    ${this.extractEpisodeTitle(episode.name || episode.path.split(/[\\/]/).pop())}
+                            <h3 class="tv-show-season-episode-name" style="font-size:1em;line-height:1.2;margin-bottom:2px;">
+                                ${showName} - ${seasonName} - ${(() => {
+                                    const match = (episode.name || episode.path).match(/E(\d{1,2})/i);
+                                    return match ? `E${match[1].padStart(2, '0')}` : '';
+                                })()}
+                            </h3>
+                            <div class="tv-show-episode-name" style="font-size:0.98em;line-height:1.2;white-space:normal;">
+                                ${this.extractEpisodeTitle(episode.name || episode.path.split(/[\\/]/).pop())}
+                            </div>
                         </div>
-                    </div>
                     </div>
                 `;
                 }).join('')}

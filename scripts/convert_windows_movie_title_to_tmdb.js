@@ -1,11 +1,9 @@
 /*
   CONVERT_WINDOWS_MOVIE_TITLE_TO_TMDB.JS
-  Version: 1
-  AppName: MultiChat_Chatty [v6]
-  Created by Assistant for Paul Welby
-  
-  Usage:
-    node scripts/convert_windows_movie_title_to_tmdb.js "Ace Ventura Pet Detective"
+  Version: 7
+  AppName: MultiChat_Chatty [v7]
+  Updated: 7/11/2025 @3:40PM
+  Created by Paul Welby
 */
 
 require('dotenv').config({ path: require('path').join(__dirname, '../server/.env') });
