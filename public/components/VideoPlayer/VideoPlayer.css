@@ -1,8 +1,8 @@
 /*
   VIDEOPLAYER.CSS
-  Version: 5
-  AppName: MultiChat_Chatty [v5]
-  Updated: 7/5/2025 @8:45PM
+  Version: 6
+  AppName: MultiChat_Chatty [v6]
+  Updated: 7/9/2025 @7:15AM
   Created by Paul Welby
 */
 
@@ -131,8 +131,8 @@
     position: absolute;
     top: 8px !important;
     right: 20px;
-    width: 28px !important;
-    height: 28px !important;
+    width: 32px !important;
+    height: 32px !important;
     line-height: .8;
     font-weight: bold !important;
     background: rgba(255, 0, 0, 0.8);
@@ -143,6 +143,11 @@
     font-size: 18px;
     z-index: 10001;
     transition: background 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0; /* Remove padding for perfect centering */
+    line-height: 1; /* Normal line height */
 }
 
 .video-player-close-btn:hover {

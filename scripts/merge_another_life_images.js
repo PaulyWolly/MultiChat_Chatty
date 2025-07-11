@@ -1,3 +1,11 @@
+/*
+  MERGE_ANOTHER_LIFE_IMAGES.JS
+  Version: 6
+  AppName: MultiChat_Chatty [v6]
+  Updated: 7/9/2025 @7:15AM
+  Created by Paul Welby
+*/
+
 // Merges episode stills from /public/data/another_life_episode_images.json into server/data/media-library-tv-shows.json
 // Usage: node scripts/merge_another_life_images.js
 

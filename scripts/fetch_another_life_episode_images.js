@@ -1,3 +1,11 @@
+/*
+  FETCH_ANOTHER_LIFE_EPISODE_IMAGES.JS
+  Version: 6
+  AppName: MultiChat_Chatty [v6]
+  Updated: 7/9/2025 @7:15AM
+  Created by Paul Welby
+*/
+
 // Fetches all episode stills for 'Another Life' (TMDB ID: 79130) from TMDB and outputs a JSON block for season_episode_images.json
 // Usage: node scripts/fetch_another_life_episode_images.js
 

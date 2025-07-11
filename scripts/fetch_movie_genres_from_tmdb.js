@@ -1,3 +1,11 @@
+/*
+  FETCH_MOVIE_GENRES_FROM_TMDB.JS
+  Version: 6
+  AppName: MultiChat_Chatty [v6]
+  Updated: 7/9/2025 @7:15AM
+  Created by Paul Welby
+*/
+
 // fetch_movie_genres_from_tmdb.js
 // Scans S:/MEDIA/MOVIES, queries TMDb for genres, outputs movie_genres.json
 // Usage: node fetch_movie_genres_from_tmdb.js

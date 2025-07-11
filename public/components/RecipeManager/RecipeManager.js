@@ -1,8 +1,8 @@
 /*
   RECIPEMANAGER.JS
-  Version: 5
-  AppName: MultiChat_Chatty [v5]
-  Updated: 7/5/2025 @8:45PM
+  Version: 6
+  AppName: MultiChat_Chatty [v6]
+  Updated: 7/9/2025 @7:15AM
   Created by Paul Welby
 */
 
@@ -118,6 +118,29 @@ export default class RecipeManager {
         titleEl.textContent = title;
         recipeContainer.appendChild(titleEl);
 
+        // Print button (append after title, not far right)
+        if (recipeContainer && !recipeContainer.querySelector('.recipe-print-btn')) {
+            const printBtn = document.createElement('button');
+            printBtn.className = 'recipe-print-btn print-dialog-icon'; // Add unique class
+            printBtn.title = 'Print Recipe';
+            printBtn.textContent = '🖨️';
+            printBtn.style.background = 'transparent';
+            printBtn.style.border = 'none';
+            printBtn.style.cursor = 'pointer';
+            printBtn.style.fontSize = '20px';
+            printBtn.style.padding = '0';
+            printBtn.style.margin = '0 0 0 10px';
+            printBtn.addEventListener('click', async () => {
+                try {
+                    await this.handlePrint(recipeText, messageElement);
+                } catch (error) {
+                    console.error('[RECIPE] Error in handlePrint:', error);
+                    alert('Error printing recipe. Please try again.');
+                }
+            });
+            titleEl.appendChild(printBtn);
+        }
+
         // Parse Ingredients and Instructions
         let introLines = [];
         let ingredientLines = [];
@@ -188,8 +211,9 @@ export default class RecipeManager {
         messageContent.appendChild(recipeContainer);
         console.log('[RECIPE] Recipe container appended. messageContent.innerHTML length:', messageContent.innerHTML.length);
 
-        // Insert images below the recipe if any
+        // Insert images below the recipe if any - FIXED: Use messageContent instead of messageElement
         if (imageUrls && imageUrls.length > 0) {
+            console.log('[RECIPE] Inserting', imageUrls.length, 'images into recipe');
             const imagesDiv = document.createElement('div');
             imagesDiv.className = 'recipe-images';
             imageUrls.forEach(url => {
@@ -199,40 +223,21 @@ export default class RecipeManager {
                 img.className = 'recipe-image';
                 imagesDiv.appendChild(img);
             });
-            messageElement.appendChild(imagesDiv);
-        }
-    
-        // Add print button
-        const metadataElement = messageElement.closest('.message').querySelector('.metadata');
-        if (metadataElement && !metadataElement.querySelector('.recipe-print-btn')) {
-            const printBtn = document.createElement('button');
-            printBtn.className = 'recipe-print-btn';
-            printBtn.title = 'Print Recipe';
-            printBtn.textContent = '🖨️';
-            printBtn.style.background = 'transparent';
-            printBtn.style.border = 'none';
-            printBtn.style.cursor = 'pointer';
-            printBtn.style.fontSize = '20px';
-            printBtn.style.padding = '0';
-            printBtn.style.margin = '0';
-            printBtn.addEventListener('click', () => this.handlePrint(recipeText, messageElement));
-            metadataElement.appendChild(printBtn);
-        }
-    
-        // --- AUDIO SOURCE REVERT ---
-        // Reverted back to using the original recipeText for TTS.
-        // Reading from the DOM caused inconsistent and incomplete audio playback.
-        // This ensures the full, original text is always read.
-        if (window.audioManager) {
-            window.audioManager.queueAudioChunk(recipeText);
-        } else {
-            console.error('AudioManager not found. Cannot play recipe audio.');
+            messageContent.appendChild(imagesDiv);
+            console.log('[RECIPE] Images inserted successfully');
         }
         
         console.log('[RECIPE] renderRecipe completed successfully');
     }
     
-    handlePrint(recipeText, messageElement) {
+    async handlePrint(recipeText, messageElement) {
+        console.log('[RECIPE] handlePrint called with messageElement:', messageElement);
+        
+        // Wait for images to load before printing
+        console.log('[RECIPE] Waiting for images to load before printing...');
+        await this.waitForImagesToLoad(messageElement);
+        console.log('[RECIPE] Images loaded, proceeding with print');
+        
         // Print the recipe and images
         const printWindow = window.open('', '_blank');
         if (!printWindow) {
@@ -243,13 +248,22 @@ export default class RecipeManager {
         // Use the structured content from the message element for printing
         const recipeContainer = messageElement.querySelector('.recipe-container');
         let printContent = recipeContainer ? recipeContainer.outerHTML : `<pre>${recipeText}</pre>`;
+
+        // Check for images in the DOM before printing
+        const images = messageElement.querySelectorAll('.recipe-image, .image-section img');
+        console.log('[RECIPE] Found', images.length, 'images for printing');
         
-        // Add images if present
-        const images = messageElement.querySelectorAll('.recipe-image');
         if (images.length > 0) {
-            printContent += '<div style="margin-top:20px; page-break-before: always;">';
+            // Get the recipe title for the heading
+            let recipeName = '';
+            if (recipeContainer) {
+                const titleEl = recipeContainer.querySelector('.recipe-title');
+                if (titleEl) recipeName = titleEl.textContent.trim(); // Use textContent, not innerHTML
+            }
+            printContent += `<div style="page-break-before: always; text-align:center;">
+                <h2 style='margin-top:40px;'>Here are some relevant images of ${recipeName}</h2>`;
             images.forEach(img => {
-                printContent += `<img src="${img.src}" alt="Recipe Image" style="max-width:300px;max-height:200px;margin:8px;">`;
+                printContent += `<img src="${img.src}" alt="Recipe Image" style="max-width:300px;max-height:200px;margin:8px;display:inline-block;border-radius:8px;">`;
             });
             printContent += '</div>';
         }
@@ -267,18 +281,57 @@ export default class RecipeManager {
                         .recipe-ingredients h3, .recipe-instructions h3 { font-size: 1.2em; font-weight: bold; border-bottom: 2px solid #ddd; padding-bottom: 5px; margin-top: 20px; margin-bottom: 10px; }
                         .recipe-ingredients ul, .recipe-instructions ol { padding-left: 20px; }
                         .recipe-ingredients ul li, .recipe-instructions ol li { margin-bottom: 8px; }
-                        img { display: block; margin: 0 auto 12px auto; border-radius: 8px; }
+                        img { display: inline-block; margin: 0 8px 12px 8px; border-radius: 8px; }
+                        @media print {
+                            div[style*='page-break-before: always'] { page-break-before: always !important; }
+                            .print-dialog-icon { display: none !important; }
+                        }
                     </style>
                 </head>
                 <body>
                     ${printContent}
+                    <script>
+                        // Wait for all images to load before printing
+                        function log(msg) {
+                            var dbg = document.getElementById('print-debug-log');
+                            if (dbg) dbg.innerHTML += msg + '<br>';
+                        }
+                        function allImagesLoaded() {
+                            const imgs = document.images;
+                            if (!imgs.length) return true;
+                            for (let i = 0; i < imgs.length; i++) {
+                                if (!imgs[i].complete) return false;
+                            }
+                            return true;
+                        }
+                        function waitForImagesAndPrint() {
+                            const imgs = document.images;
+                            let loaded = 0, errored = 0;
+                            if (!imgs.length) { 
+                                window.print(); 
+                                return; 
+                            }
+                            for (let i = 0; i < imgs.length; i++) {
+                                imgs[i].addEventListener('load', () => {
+                                    loaded++;
+                                    if (loaded + errored === imgs.length) {
+                                        window.print();
+                                    }
+                                });
+                                imgs[i].addEventListener('error', () => {
+                                    errored++;
+                                    if (loaded + errored === imgs.length) {
+                                        window.print();
+                                    }
+                                });
+                            }
+                        }
+                        waitForImagesAndPrint();
+                    <\/script>
                 </body>
             </html>
         `);
         printWindow.document.close();
-        setTimeout(() => {
-            printWindow.print();
-        }, 500);
     }
 
     // TTS helpers (from working repo)
@@ -314,18 +367,71 @@ export default class RecipeManager {
 
     scrollToRecipeResults() {
         console.log('Scrolling to latest recipe...');
-        const latestRecipe = document.querySelector('.message[data-content-type="recipe"]:last-of-type');
-        if (latestRecipe) {
-            const doScroll = () => latestRecipe.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    
-            // Use rAF and timeouts to repeatedly scroll. This is a robust way to handle
-            // content (like images) that shifts the layout as it loads.
+        // Find the latest .recipe-container in the chat
+        const allRecipeCards = document.querySelectorAll('.recipe-container');
+        const latestRecipeCard = allRecipeCards[allRecipeCards.length - 1];
+        if (latestRecipeCard) {
+            const doScroll = () => latestRecipeCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
             requestAnimationFrame(() => {
                 doScroll();
                 setTimeout(doScroll, 300);
                 setTimeout(doScroll, 800);
             });
         }
+    }
+
+    /**
+     * Check if a message element has images and wait for them to load
+     * @param {HTMLElement} messageElement - The message element to check
+     * @returns {Promise<boolean>} - True if images are present and loaded
+     */
+    async waitForImagesToLoad(messageElement) {
+        if (!messageElement) return false;
+        
+        const images = messageElement.querySelectorAll('.recipe-image, .image-section img');
+        console.log('[RECIPE] Found', images.length, 'images to wait for');
+        
+        if (images.length === 0) {
+            console.log('[RECIPE] No images found, proceeding with print');
+            return true;
+        }
+        
+        return new Promise((resolve) => {
+            let loaded = 0;
+            let errored = 0;
+            
+            const checkComplete = () => {
+                if (loaded + errored === images.length) {
+                    console.log('[RECIPE] All images processed:', loaded, 'loaded,', errored, 'errors');
+                    resolve(true);
+                }
+            };
+            
+            images.forEach((img, index) => {
+                if (img.complete) {
+                    loaded++;
+                    console.log('[RECIPE] Image', index + 1, 'already loaded:', img.src);
+                    checkComplete();
+                } else {
+                    img.addEventListener('load', () => {
+                        loaded++;
+                        console.log('[RECIPE] Image', index + 1, 'loaded:', img.src);
+                        checkComplete();
+                    });
+                    img.addEventListener('error', () => {
+                        errored++;
+                        console.log('[RECIPE] Image', index + 1, 'failed to load:', img.src);
+                        checkComplete();
+                    });
+                }
+            });
+            
+            // Timeout after 5 seconds
+            setTimeout(() => {
+                console.log('[RECIPE] Image loading timeout reached');
+                resolve(true);
+            }, 5000);
+        });
     }
 
     queueAudioChunk(text) {
