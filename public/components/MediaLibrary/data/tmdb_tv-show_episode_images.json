@@ -960,16 +960,16 @@
             "still": "https://image.tmdb.org/t/p/w500/b5W5bY3c8L5HWkShLXO8rGmCid0.jpg"
           },
           "2": {
-            "still": null
+            "still": "/media/TV-SHOWS/Banacek/Season 01/banacek_S01E02.png"
           },
           "3": {
-            "still": null
+            "still": "/media/TV-SHOWS/Banacek/Season 01/banacek_S01E03.png"
           },
           "4": {
-            "still": null
+            "still": "/media/TV-SHOWS/Banacek/Season 01/banacek_S01E04.png"
           },
           "5": {
-            "still": null
+            "still": "/media/TV-SHOWS/Banacek/Season 01/banacek_S01E05.png"
           }
         }
       }
@@ -4933,7 +4933,7 @@
         "episodes": {
           "1": {
             "still": "https://media.themoviedb.org/t/p/w454_and_h254_bestv2/sAp5RwWRVF3gJ5VKhU4oxJ55hlj.jpg"
-		  },
+          },
           "2": {
             "still": "https://media.themoviedb.org/t/p/w454_and_h254_bestv2/7qpyXJahEPUAMr7n4Hu6ch6sdIb.jpg"
           },

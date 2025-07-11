@@ -1,11 +1,9 @@
 /*
   DEBUG_RECIPE_IMAGES.JS
-  Version: 1
-  AppName: MultiChat_Chatty [v6]
-  Updated: 1/6/2025 @4:15PM
+  Version: 7
+  AppName: MultiChat_Chatty [v7]
+  Updated: 7/11/2025 @3:40PM
   Created by Paul Welby
-  
-  Debug script to test recipe image loading and printing functionality
 */
 
 console.log('🔍 [RECIPE-DEBUG] Debug script loaded');

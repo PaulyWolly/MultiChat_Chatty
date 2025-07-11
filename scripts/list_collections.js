@@ -1,3 +1,11 @@
+/*
+  LIST_COLLECTIONS.JS
+  Version: 7
+  AppName: MultiChat_Chatty [v7]
+  Updated: 7/11/2025 @3:40PM
+  Created by Paul Welby
+*/
+
 require('dotenv').config({ path: require('path').join(__dirname, '../server/.env') });
 const { MongoClient } = require('mongodb');
 const uri = process.env.MONGODB_URI;

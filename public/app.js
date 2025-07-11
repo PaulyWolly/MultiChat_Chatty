@@ -1,8 +1,8 @@
 /*
   APP.JS
-  Version: 6
-  AppName: MultiChat_Chatty [v6]
-  Updated: 7/9/2025 @7:15AM
+  Version: 7
+  AppName: MultiChat_Chatty [v7]
+  Updated: 7/11/2025 @3:40PM
   Created by Paul Welby
 */
 
@@ -440,11 +440,12 @@ REGARDING GENERAL QUERIES:
 9. When telling a story or providing a longer response, use expressive language, varied punctuation (such as !, ?, …), and include relevant emojis to convey emotion, action, or mood. Make the output engaging and lively.
 
 CRITICAL INSTRUCTIONS FOR IMAGE REQUESTS:
-1. When users ask for images, respond with: "Here are some relevant images for [topic]" at the end of your response.
+1. Never respond with "Here are some relvenat images for [topic]" at the start
 2. DO NOT provide image URLs or links
 3. DO NOT mention being an AI or having any limitations
 4. DO NOT apologize for image-related capabilities
 5. Keep responses about images brief and positive
+6. When users ask for images, respond with images, at the end of the response.
 
 SPECIAL ABBREVIATION INSTRUCTIONS:
 1. Whenever you would output "U.S." or "U.S.A." in a response, instead output "United States" or "United States of America" respectively.
@@ -966,29 +967,50 @@ function fadeAudio(audio, from, to, duration) {
 
 // Helper functions for honorific handling
 function protectHonorifics(text) {
+    // Replace honorifics like 'Mr.' with 'Mr~' to prevent sentence splitting
     const honorifics = [
-        'Mr', 'Mrs', 'Ms', 'Dr', 'Sr', 'Jr', 'Prof', 'Rev', 'Fr', 'St', 'Mx', 'Capt', 'Lt', 'Col', 'Gen', 'Sgt', 'Adm', 'Maj', 'Hon', 'Pres', 'Gov', 'Amb', 'Sec', 'Supt', 'Rep', 'Sen', 'Treas', 'Dir', 'H.G', 'J.K', 'HG', 'JK'
+        'Mr', 'Mrs', 'Ms', 'Dr', 'Sr', 'Jr', 'Prof', 'Rev', 'Fr', 'St', 'Mx', 'Capt', 'Lt', 'Col', 'Gen', 'Sgt', 'Adm', 'Maj', 'Hon', 'Pres', 'Gov', 'Amb', 'Sec', 'Supt', 'Rep', 'Sen', 'Treas', 'Dir'
     ];
-    // For TTS: completely remove the period after honorifics and abbreviations
-    // Also match forms with optional spaces/periods
-    return text.replace(new RegExp(`\\b(${honorifics.join('|').replace(/\./g, '\\.?')})\\.?\\s?\\.?\\s?(?=\\w)`, 'gi'), (m) => m.replace(/\./g, ''));
+    honorifics.forEach(honorific => {
+        // Replace 'Mr.' with 'Mr~' (case-insensitive)
+        text = text.replace(new RegExp(`\\b${honorific}\\.`, 'gi'), `${honorific}~`);
+    });
+    // Handle initials like H.G. Wells
+    text = text.replace(/([A-Z])\\.([A-Z])\\./g, '$1~$2~');
+    return text;
 }
 
 function restoreHonorifics(text) {
+    // Restore 'Mr~' to 'Mr.'
     const honorifics = [
-        'Mr', 'Mrs', 'Ms', 'Dr', 'Sr', 'Jr', 'Prof', 'Rev', 'Fr', 'St', 'Mx', 'Capt', 'Lt', 'Col', 'Gen', 'Sgt', 'Adm', 'Maj', 'Hon', 'Pres', 'Gov', 'Amb', 'Sec', 'Supt', 'Rep', 'Sen', 'Treas', 'Dir', 'H.G', 'J.K', 'HG', 'JK'
+        'Mr', 'Mrs', 'Ms', 'Dr', 'Sr', 'Jr', 'Prof', 'Rev', 'Fr', 'St', 'Mx', 'Capt', 'Lt', 'Col', 'Gen', 'Sgt', 'Adm', 'Maj', 'Hon', 'Pres', 'Gov', 'Amb', 'Sec', 'Supt', 'Rep', 'Sen', 'Treas', 'Dir'
     ];
-    // For display: ensure periods are present (for classic honorifics only)
-    return text.replace(/\b(HG|JK)\b/g, (m) => m[0] + '.' + m[1] + '.');
+    honorifics.forEach(honorific => {
+        text = text.replace(new RegExp(`${honorific}~`, 'g'), `${honorific}.`);
+    });
+    // Restore initials
+    text = text.replace(/([A-Z])~([A-Z])~/g, '$1.$2.');
+    return text;
 }
 
 // =====================================================
 // TTS PRE-PROCESSING FUNCTIONS
 // =====================================================
 
+// Expand common honorifics for TTS
+function expandHonorificsForTTS(text) {
+    return text
+        .replace(/\bDr[\.~]?\s+/gi, 'Doctor ')
+        .replace(/\bMr[\.~]?\s+/gi, 'Mister ')
+        .replace(/\bMrs[\.~]?\s+/gi, 'Misses ');
+}
+
 // Add TTS pre-processing for U.S. and U.S.A.
 function preprocessForTTS(text) {
     let processed = text
+        // Expand honorifics for TTS
+        ;
+    processed = expandHonorificsForTTS(processed)
         // Replace specific phrases first
         .replace(/U\.S\. Citizen/gi, 'United States citizen')
         .replace(/U\.S\. government/gi, 'United States government')
@@ -1024,7 +1046,7 @@ function isAIGreetingResponse(text) {
 // =====================================================
 
 // FIXED: Search and display images
-async function searchAndDisplayImages(query) {
+async function searchAndDisplayImages(query, messageElement) {
     try {
         console.log('IMAGE DEBUG: Fetching images for:', query);
         const response = await fetch(window.appConfig.getApiUrl('/api/google-image-search') + '?q=' + encodeURIComponent(query));
@@ -1052,7 +1074,7 @@ async function searchAndDisplayImages(query) {
             console.log('IMAGE DEBUG: After deduplication:', uniqueImages.length, 'unique images');
             
             if (uniqueImages.length > 0) {
-                displayImageResults(uniqueImages);
+                insertAndStyleImages(uniqueImages, messageElement, '', query);
         }
         }
     } catch (error) {
@@ -1067,14 +1089,6 @@ function insertAndStyleImages(images, messageElement, headingText, originalQuery
         return;
     }
     
-    // Additional check to ensure the element is still in the DOM
-    if (!messageElement.isConnected) {
-        console.warn('insertAndStyleImages: messageElement is not connected to DOM, cannot insert images');
-        return;
-    }
-    
-    console.log('insertAndStyleImages: Inserting', images.length, 'images into message element');
-    
     const headingHtml = headingText ? `<h3 style="margin: 15px 0 10px 0; color: #333; font-size: 16px;">${headingText}</h3>` : "";
     
     // Check if images section already exists
@@ -1082,6 +1096,12 @@ function insertAndStyleImages(images, messageElement, headingText, originalQuery
     if (existingImageSection) {
         // If section exists, just add new images to the top
         addMoreImages(images, existingImageSection);
+        // If this message is a recipe, use robustScrollToRecipeResults
+        if (messageElement.classList.contains('recipe-card') || messageElement.classList.contains('recipe')) {
+            robustScrollToRecipeResults();
+        } else {
+            robustScrollToParentMessage(messageElement);
+        }
         return;
     }
 
@@ -1105,7 +1125,6 @@ function insertAndStyleImages(images, messageElement, headingText, originalQuery
             " onmouseover="this.style.background='#0056b3'" onmouseout="this.style.background='#007bff'">
                 More Images
             </button>
-            
             <!-- Scrollable Container -->
             <div class="image-container-scroll" style="
                 max-height: 505px; 
@@ -1117,27 +1136,34 @@ function insertAndStyleImages(images, messageElement, headingText, originalQuery
                 margin-top: 35px;
             ">
                 <div class="image-container" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; max-width: 100%;">
-                    ${images.map(image => `
-                        <a href="${image.contextLink || image.link}" target="_blank" rel="noopener noreferrer" class="image-link"
-                            style="cursor: pointer; text-decoration: none; display: block; border: 1px solid #ddd; border-radius: 5px; overflow: hidden; transition: transform 0.2s ease-in-out; aspect-ratio: 1;">
-                            <img src="${image.link}" alt="${image.title}" title="${image.title}"
-                                    style="width: 100%; height: 100%; object-fit: cover; display: block;">
-                        </a>
-                    `).join('')}
                 </div>
             </div>
-        </div>
-    `;
-
+        </div>`;
+    
+    // Insert the image section at the end of the message element
     messageElement.insertAdjacentHTML('beforeend', imageSection);
-
+    
+    // Add images to the new container
+    const container = messageElement.querySelector('.image-container');
+    if (container) {
+        images.forEach(imgObj => {
+            const link = document.createElement('a');
+            link.href = imgObj.contextLink || imgObj.link;
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer';
+            link.className = 'image-link';
+            // No inline styles
+            const img = document.createElement('img');
+            img.src = imgObj.link;
+            img.alt = 'image';
+            img.className = 'image-link-img';
+            link.appendChild(img);
+            container.appendChild(link);
+        });
+    }
     // Store the current query for the "More Images" button
     const imagesSectionElement = messageElement.querySelector('.image-section');
     
-    // const query = headingText ? headingText.replace('Here are some relevant images for ', '').replace('.', '') : 'images';
-    // imagesSectionElement.setAttribute('data-query', query);
-    // moreImagesBtn.addEventListener('click', () => fetchMoreImages(imagesSectionElement, query));
-
     // Add event listener to "More Images" button
     const moreImagesBtn = messageElement.querySelector('.more-images-btn');
     
@@ -1146,9 +1172,43 @@ function insertAndStyleImages(images, messageElement, headingText, originalQuery
         const query = imagesSectionElement.getAttribute('data-query');
         fetchMoreImages(imagesSectionElement, query);
     });
+    // If this message is a recipe, use robustScrollToRecipeResults
+    if (messageElement.classList.contains('recipe-card') || messageElement.classList.contains('recipe')) {
+        window.forceRecipeScrollToTop = true;
+        robustScrollToRecipeResults();
+        setTimeout(() => { window.forceRecipeScrollToTop = false; }, 3000); // 3 seconds after images
+    } else {
+        robustScrollToParentMessage(messageElement);
+    }
+}
 
-    // Add hover effects and error handling to initial images
-    addImageEventListeners(messageElement);
+function robustScrollToParentMessage(messageElement) {
+    // Repeatedly scroll to the top of the parent message element
+    const scrollToParent = () => {
+        if (window.forceRecipeScrollToTop) {
+            // Always scroll to the top of the recipe card
+            const recipeCard = document.querySelector('.message.assistant.recipe-card:last-child');
+            if (recipeCard) {
+                recipeCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                return;
+            }
+        }
+        if (messageElement && messageElement.scrollIntoView) {
+            messageElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    };
+    scrollToParent();
+    setTimeout(scrollToParent, 0);
+    setTimeout(scrollToParent, 10);
+    setTimeout(scrollToParent, 25);
+    setTimeout(scrollToParent, 50);
+    setTimeout(scrollToParent, 100);
+    setTimeout(scrollToParent, 150);
+    setTimeout(scrollToParent, 200);
+    setTimeout(scrollToParent, 300);
+    setTimeout(scrollToParent, 500);
+    setTimeout(scrollToParent, 800);
+    setTimeout(scrollToParent, 1200);
 }
 
 function displayImageResults(images, messageContainer) {
@@ -2348,9 +2408,9 @@ async function getAIResponse(message, selectedModel, history, systemPrompt, sess
                         }
                     }
 
-                    // Queue audio for complete sentences
+                    // Only queue audio for non-recipe queries during streaming
                     const sentences = currentChunk.match(/[^.!?]+[.!?]+/g);
-                    if (sentences) {
+                    if (!isRecipeQuery && sentences) {
                         queueAudioChunk(sentences.join(' '));
                         currentChunk = currentChunk.replace(sentences.join(''), '');
                     }
@@ -2359,8 +2419,13 @@ async function getAIResponse(message, selectedModel, history, systemPrompt, sess
         }
     }
 
+    // At the end, only queue audio for non-recipe queries
+    if (!isRecipeQuery && currentChunk && currentChunk.trim() && state.selectedVoice) {
+        queueAudioChunk(currentChunk.trim());
+    }
+
     // 🎯 Handle any remaining text for audio
-    if (currentChunk && currentChunk.trim() && state.selectedVoice) {
+    if (!isRecipeQuery && currentChunk && currentChunk.trim() && state.selectedVoice) {
         queueAudioChunk(currentChunk.trim());
     }
 
@@ -2384,11 +2449,34 @@ async function getAIResponse(message, selectedModel, history, systemPrompt, sess
                 updateStatusAndConversation(MESSAGES.STATUS.AISPEAKING, state.isConversationMode ? MESSAGES.CONVERSATION.ENABLE : '');
             }
             // Only queue audio if not already queued for this recipe
-            if (state.selectedVoice && recipeBuffer.trim() && !state.lastRecipeAudio || state.lastRecipeAudio !== recipeBuffer.trim()) {
-                queueAudioChunk(recipeBuffer.trim());
+            if (state.selectedVoice && recipeBuffer.trim() && (!state.lastRecipeAudio || state.lastRecipeAudio !== recipeBuffer.trim())) {
+                // Remove any image heading before sending to TTS
+                const { heading, cleanedText } = extractImageHeading(recipeBuffer.trim());
+                queueAudioChunk(cleanedText);
                 state.lastRecipeAudio = recipeBuffer.trim();
+                // After the recipe, queue the image heading if it exists
+                if (heading) {
+                    queueAudioChunk(heading);
+                }
+            }
+            // NEW: If user requested images, trigger image search for the main subject
+            if (userRequestedImages(message)) {
+                // Try to extract the main subject from the recipe title (first line)
+                const titleMatch = recipeBuffer.trim().match(/^([A-Za-z0-9 ,.'-]+)$/m);
+                const subject = titleMatch ? titleMatch[1].trim() : message.replace(/images/gi, '').trim();
+                const latestAssistantMsg = document.querySelector('.message.assistant:last-child');
+                searchAndDisplayImages(subject, latestAssistantMsg);
             }
         });
+    } else {
+        // For general queries, after rendering, also check for image request
+        if (userRequestedImages(message)) {
+            // Try to extract the main subject from the response (first line)
+            const titleMatch = responseText.trim().match(/^([A-Za-z0-9 ,.'-]+)$/m);
+            const subject = titleMatch ? titleMatch[1].trim() : message.replace(/images/gi, '').trim();
+            const latestAssistantMsg = document.querySelector('.message.assistant:last-child');
+            searchAndDisplayImages(subject, latestAssistantMsg);
+        }
     }
 
     state.isRendering = false;
@@ -2483,6 +2571,10 @@ function addMessageToChat(role, content, options = {}) {
         } else if (type === 'exit') {
             messageElement.classList.add('exit-bubble');
         }
+        // Add recipe-card class for recipes
+        if (options.isRecipeQuery) {
+            messageElement.classList.add('recipe-card');
+        }
     }
 
     const contentElement = document.createElement('div');
@@ -2510,37 +2602,30 @@ function addMessageToChat(role, content, options = {}) {
 
     // --- RECIPE CARD EARLY RETURN ---
     if (role === 'assistant' && options.isRecipeQuery && window.recipeManager) {
-        console.log('RENDERING RECIPE CARD:', content);
-        
-        // First, render the recipe
+       
+        // scroll-to-top for recipe robust fix
         window.recipeManager.renderRecipe(messageElement, content);
         elements.chatMessages.appendChild(messageElement);
-        
+        window.forceRecipeScrollToTop = true;
+        robustScrollToRecipeResults();
+        setTimeout(() => { window.forceRecipeScrollToTop = false; }, 2000);
+
         // Insert images if the recipe text contains the image trigger phrase
         const imageTrigger = content.toLowerCase().match(/here are some relevant images for (.*?)[.!?\n]/i);
         if (imageTrigger && imageTrigger[1]) {
             const searchQuery = imageTrigger[1].trim();
-            console.log('Detected image request for:', searchQuery);
-            
-            // Use a small delay to ensure the message element is fully rendered
-            setTimeout(() => {
-                fetch(`/api/google-image-search?q=${encodeURIComponent(searchQuery)}`)
-                    .then(res => res.json())
-                    .then(imageData => {
-                        if (imageData.images && imageData.images.length > 0) {
-                            console.log('Inserting images into chat (post-recipe)');
-                            // Ensure messageElement still exists before inserting images
-                            if (messageElement && messageElement.isConnected) {
-                                insertAndStyleImages(imageData.images, messageElement, searchQuery, searchQuery);
-                            } else {
-                                console.warn('Message element no longer exists, cannot insert images');
-                            }
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error fetching images:', error);
-                    });
-            }, 100); // Small delay to ensure DOM is ready
+            fetch(`/api/google-image-search?q=${encodeURIComponent(searchQuery)}`)
+                .then(res => res.json())
+                .then(imageData => {
+                    if (imageData.images && imageData.images.length > 0) {
+                        insertAndStyleImages(imageData.images, messageElement, searchQuery, searchQuery);
+                        // Reinforce scroll-to-top after images load
+                        robustScrollToRecipeResults();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching images:', error);
+                });
         }
         handleScroll({ content, options, role });
         return messageElement;
@@ -2550,6 +2635,10 @@ function addMessageToChat(role, content, options = {}) {
     if (typeof content === 'object' && content.type === 'youtube') {
         contentElement.innerHTML = content.html;
     } else if (typeof content === 'string') {
+        // Restore honorifics for assistant messages before rendering
+        if (role === 'assistant') {
+            content = restoreHonorifics(content);
+        }
         // Check for HTML-based search results
         if (
             content.includes('<h2>Web Results') ||
@@ -2592,18 +2681,24 @@ function addMessageToChat(role, content, options = {}) {
     
     // IMMEDIATE scroll for user messages AND assistant responses (especially story requests)
     if (role === 'user') {
-        console.log('📍 [USER-SCROLL] User message added, scrolling immediately to show user query');
         const chatContainer = document.getElementById('chat-messages');
         if (chatContainer) {
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-            console.log('📍 [USER-SCROLL] Immediate scroll to user message completed');
+            if (!window.forceRecipeScrollToTop) {
+                console.log('[SCROLL-DEBUG] User message: chatContainer.scrollTop = chatContainer.scrollHeight');
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            } else {
+                console.log('[SCROLL-DEBUG] User message: scroll-to-bottom SUPPRESSED by forceRecipeScrollToTop');
+            }
         }
     } else if (role === 'assistant') {
-        console.log('📍 [ASSISTANT-SCROLL] Assistant message element created, scrolling to stay at bottom');
         const chatContainer = document.getElementById('chat-messages');
         if (chatContainer) {
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-            console.log('📍 [ASSISTANT-SCROLL] Immediate scroll to assistant message area completed');
+            if (!window.forceRecipeScrollToTop) {
+                console.log('[SCROLL-DEBUG] Assistant message: chatContainer.scrollTop = chatContainer.scrollHeight');
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            } else {
+                console.log('[SCROLL-DEBUG] Assistant message: scroll-to-bottom SUPPRESSED by forceRecipeScrollToTop');
+            }
         }
     }
     
@@ -2678,83 +2773,78 @@ async function warmUpTTS() {
     console.log('🔊 [AUDIO] TTS warm-up complete');
 }
 
+
+// =============================================================
+// HANDLE SCROLL
+// ============================================================= 
+
 // Handle scroll function
 function handleScroll({ content = '', options = {}, role = '' }) {
-    // Detect scroll type
-    let scrollType = 'bottom';
-    if (options.isYoutube || content.includes('YouTube Results') || content.includes('youtube-multi-bubble')) {
-        scrollType = 'youtube';
-    } else if (options.isRecipe || (content.toLowerCase().includes('ingredients:') && (content.toLowerCase().includes('instructions:') || content.toLowerCase().includes('steps:')))) {
-        scrollType = 'recipe';
-    } else if (options.isImageQuery || content.includes('image-results') || content.includes('image-gallery') || content.includes('img-responsive') || content.includes('image-section')) {
-        scrollType = 'image';
-    }
+    // Always scroll to TOP for YouTube, Recipe, and General queries (with or without images)
+    const lowerContent = typeof content === 'string' ? content.toLowerCase() : '';
+    const isYouTube = lowerContent.includes('youtube') || options.isYoutube || options.isYoutubeQuery;
+    const isRecipe = options.isRecipeQuery || options.isRecipe || (lowerContent.includes('ingredients:') && (lowerContent.includes('instructions:') || lowerContent.includes('steps:')));
+    const isStory = options.type === 'story' || options.messageType === 'story' || (role === 'assistant' && lowerContent.includes('once upon a time'));
+    const isTimeOrDate = ['time', 'date', 'datetime'].includes(options.type) || ['time', 'date', 'datetime'].includes(options.messageType);
+    const isJoke = options.type === 'joke' || options.messageType === 'joke' || options.isJoke;
 
-    switch (scrollType) {
-        case 'youtube':
-            robustScrollToYouTubeResults();
-            break;
-        case 'recipe':
-            if (window.recipeManager && typeof window.recipeManager.scrollToRecipeResults === 'function') {
-                window.recipeManager.scrollToRecipeResults();
-            }
-            break;
-        case 'image':
-            robustScrollToImageResults();
-            break;
-        default:
-            robustScrollToBottom();
-            break;
-    }
-}
-
-// Robust, repeated scroll for YouTube results
-function robustScrollToYouTubeResults() {
-    const doScroll = () => {
-        if (window.youtubeSearchManager && typeof window.youtubeSearchManager.scrollToYouTubeResults === 'function') {
-            window.youtubeSearchManager.scrollToYouTubeResults();
-        } else {
-            const chatContainer = document.getElementById('chat-messages');
-            if (chatContainer) chatContainer.scrollTop = 0;
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-    };
-    requestAnimationFrame(() => {
-        doScroll();
-        setTimeout(doScroll, 300);
-        setTimeout(doScroll, 800);
-    });
-}
-
-// Robust, repeated scroll for image results
-function robustScrollToImageResults() {
-    const imageSection = document.querySelector('.image-section');
-    if (imageSection) {
-        const doScroll = () => imageSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        requestAnimationFrame(() => {
-            doScroll();
-            setTimeout(doScroll, 300);
-            setTimeout(doScroll, 800);
-        });
-    } else {
-        robustScrollToBottom();
-    }
-}
-
-// Robust, repeated scroll to bottom for general content
-function robustScrollToBottom() {
-    const scrollToBottom = () => {
+    if (isYouTube || isRecipe || (!isStory && !isTimeOrDate && !isJoke)) {
+        // Always scroll to TOP for YouTube, Recipe, and General queries
         const chatContainer = document.getElementById('chat-messages');
-        if (chatContainer) {
+        if (window.youtubeSearchManager && isYouTube && typeof window.youtubeSearchManager.scrollToYouTubeResults === 'function') {
+            window.youtubeSearchManager.scrollToYouTubeResults();
+        } else if (chatContainer) {
+            chatContainer.scrollTop = 0;
+        }
+        return;
+    }
+
+    // For stories, time/date, jokes, and MyJokes, scroll to BOTTOM as content grows
+    const chatContainer = document.getElementById('chat-messages');
+    if (chatContainer) {
+        const scrollToBottom = () => {
             chatContainer.scrollTop = chatContainer.scrollHeight;
+        };
+        scrollToBottom();
+        setTimeout(scrollToBottom, 0);
+        setTimeout(scrollToBottom, 10);
+        setTimeout(scrollToBottom, 25);
+        setTimeout(scrollToBottom, 50);
+        setTimeout(scrollToBottom, 100);
+        setTimeout(scrollToBottom, 150);
+        setTimeout(scrollToBottom, 200);
+        setTimeout(scrollToBottom, 300);
+        setTimeout(scrollToBottom, 500);
+        setTimeout(scrollToBottom, 800);
+        setTimeout(scrollToBottom, 1200);
+        setTimeout(scrollToBottom, 1500);
+        setTimeout(scrollToBottom, 2000);
+        setTimeout(scrollToBottom, 3000);
+        setTimeout(scrollToBottom, 5000);
+        setTimeout(scrollToBottom, 7500);
+        setTimeout(scrollToBottom, 10000);
+    }
+}
+
+function robustScrollToRecipeResults() {
+    const scrollToRecipe = () => {
+        const lastRecipe = document.querySelector('.message.assistant:last-child');
+        if (lastRecipe) {
+            lastRecipe.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
     };
-    scrollToBottom();
-    setTimeout(scrollToBottom, 0);
-    setTimeout(scrollToBottom, 10);
-    setTimeout(scrollToBottom, 25);
-    setTimeout(scrollToBottom, 50);
-    setTimeout(scrollToBottom, 100);
+    scrollToRecipe();
+    setTimeout(scrollToRecipe, 0);
+    setTimeout(scrollToRecipe, 10);
+    setTimeout(scrollToRecipe, 25);
+    setTimeout(scrollToRecipe, 50);
+    setTimeout(scrollToRecipe, 100);
+    setTimeout(scrollToRecipe, 150);
+    setTimeout(scrollToRecipe, 200);
+    setTimeout(scrollToRecipe, 300);
+    setTimeout(scrollToRecipe, 500);
+    setTimeout(scrollToRecipe, 800);
+    setTimeout(scrollToRecipe, 1200);
 }
 
 // Helper function to convert text to title case
@@ -5155,9 +5245,9 @@ async function handleImageAnalysis(imageData, prompt = '') {
                                 updateMetadata(messageElement, updatedMetrics);
                             }
 
-                            // Queue audio for complete sentences
+                            // Only queue audio for non-recipe queries during streaming
                             const sentences = currentChunk.match(/[^.!?]+[.!?]+/g);
-                            if (sentences) {
+                            if (!isRecipeQuery && sentences) {
                                 queueAudioChunk(sentences.join(' '));
                                 currentChunk = currentChunk.replace(sentences.join(''), '');
                             }
@@ -5169,8 +5259,8 @@ async function handleImageAnalysis(imageData, prompt = '') {
             }
         }
 
-        // Queue any remaining text
-        if (currentChunk.trim()) {
+        // At the end, only queue audio for non-recipe queries
+        if (!isRecipeQuery && currentChunk && currentChunk.trim() && state.selectedVoice) {
             queueAudioChunk(currentChunk.trim());
         }
 
@@ -5314,10 +5404,10 @@ function addMoreImages(newImages, imagesSectionElement) {
     const imageContainer = imagesSectionElement.querySelector('.image-container');
     
     // Create new images HTML
-    const newImagesHtml = newImages.map(image => `
-        <a href="${image.contextLink || image.link}" target="_blank" rel="noopener noreferrer" class="image-link new-image"
+    const newImagesHtml = newImages.map(imgObj => `
+        <a href="${imgObj.contextLink || imgObj.link}" target="_blank" rel="noopener noreferrer" class="image-link new-image"
             style="cursor: pointer; text-decoration: none; display: block; border: 1px solid #ddd; border-radius: 5px; overflow: hidden; transition: transform 0.2s ease-in-out; aspect-ratio: 1;">
-            <img src="${image.link}" alt="${image.title}" title="${image.title}"
+            <img src="${imgObj.link}" alt="${imgObj.title}" title="${imgObj.title}"
                     style="width: 100%; height: 100%; object-fit: cover; display: block;">
         </a>
     `).join('');
@@ -5337,47 +5427,36 @@ function addMoreImages(newImages, imagesSectionElement) {
 // Simplified function - no pagination needed!
 async function fetchMoreImages(imagesSectionElement, query) {
     const moreImagesBtn = imagesSectionElement.querySelector('.more-images-btn');
-    
     // Show loading state
     moreImagesBtn.textContent = 'Loading...';
     moreImagesBtn.disabled = true;
     moreImagesBtn.style.background = '#6c757d';
-    
     try {
         console.log('IMAGE DEBUG: Fetching more images for:', query);
-        
-        // Just make the same API call - let deduplication handle variety
-        const response = await fetch(window.appConfig.getApiUrl(`/api/google-image-search?q=${encodeURIComponent(query)}`));
+        const response = await fetch(window.appConfig.getApiUrl('/api/google-image-search?q=' + encodeURIComponent(query)));
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
         const data = await response.json();
         console.log('IMAGE DEBUG: More images response:', data);
-        
         if (data.images && data.images.length > 0) {
             // Remove duplicates from new batch
             const existingLinks = new Set(
                 Array.from(imagesSectionElement.querySelectorAll('.image-link img')).map(img => img.src)
             );
-            
-            const newUniqueImages = data.images.filter(item => 
+            const newUniqueImages = data.images.filter(item =>
                 item.link && item.title && !existingLinks.has(item.link)
             );
-            
             if (newUniqueImages.length > 0) {
                 console.log('IMAGE DEBUG: Adding', newUniqueImages.length, 'new unique images');
                 addMoreImages(newUniqueImages, imagesSectionElement);
             } else {
-                // If no new images, modify query slightly for variety
                 fetchMoreImagesWithVariation(imagesSectionElement, query);
             }
         }
-        
     } catch (error) {
         console.error('Error fetching more images:', error);
     } finally {
-        // Restore button state
         moreImagesBtn.textContent = 'More Images';
         moreImagesBtn.disabled = false;
         moreImagesBtn.style.background = '#007bff';
@@ -6259,7 +6338,7 @@ function setupSSEConnection() {
                     if (data.timestamp) {
                         console.log('💓 Heartbeat received:', new Date(data.timestamp).toLocaleTimeString());
                     } else {
-                        // console.log('💓 Heartbeat received (no valid timestamp)');
+                        console.log('💓 Heartbeat received (no valid timestamp)');
                     }
         return;
       }
@@ -6449,5 +6528,10 @@ async function openAdminPanel() {
         await window.adminPanel.init();
     }
     showAdminPanel();
+}
+
+// Add a helper to detect image requests in the user query
+function userRequestedImages(query) {
+    return /images/i.test(query);
 }
 

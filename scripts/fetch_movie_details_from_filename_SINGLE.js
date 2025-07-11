@@ -1,11 +1,9 @@
 /*
-  FETCH_MOVIE_DETAILS_FROM_FILENAME.JS
-  Version: 1
-  AppName: MultiChat_Chatty [v6]
-  Created by Assistant for Paul Welby
-  
-  Usage:
-    node scripts/fetch_movie_details_from_filename.js "Ace Ventura Pet Detective (1994) [1080p]"
+  FETCH_MOVIE_DETAILS_FROM_FILENAME_SINGLE.JS
+  Version: 7
+  AppName: MultiChat_Chatty [v7]
+  Updated: 7/11/2025 @3:40PM
+  Created by Paul Welby
 */
 
 require('dotenv').config({ path: require('path').join(__dirname, '../server/.env') });
