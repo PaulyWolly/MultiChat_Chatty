@@ -6,6 +6,7 @@
   Created by Paul Welby
 */
 
+const tvShowsRoot = 'S:/MEDIA/TV-SHOWS/';
 const fs = require('fs');
 const path = require('path');
 const { exec } = require('child_process');
@@ -18,6 +19,39 @@ const { logToFile } = require('./logging-helper');
 // Paths
 const AUDIO_REPORT_PATH = path.join(__dirname, 'audio_codec_report_tv-shows.json');
 const CONVERSION_LOG_PATH = path.join(__dirname, 'audio_conversion_log_tv-shows.json');
+
+function fuzzyMatch(a, b) {
+  const clean = s => s.toLowerCase().replace(/[^a-z0-9]/g, '');
+  return clean(a) === clean(b);
+}
+
+function findBestMatchShow(title) {
+  const folders = fs.readdirSync(tvShowsRoot, { withFileTypes: true })
+    .filter(d => d.isDirectory())
+    .map(d => d.name);
+  let best = folders.find(f => fuzzyMatch(f, title));
+  if (!best) {
+    best = folders.find(f => f.toLowerCase().includes(title.toLowerCase()));
+  }
+  return best ? path.join(tvShowsRoot, best) : null;
+}
+
+const inputArg = process.argv[2];
+if (!inputArg) {
+  console.error('Usage: node scripts/convert_audio_to_aac_tv-shows.js "TV Show Name"');
+  process.exit(1);
+}
+
+let showFolder = inputArg;
+if (!inputArg.match(/[\/]/)) {
+  const folder = findBestMatchShow(inputArg);
+  if (!folder) {
+    console.error(`[ERROR] No matching TV show folder found for '${inputArg}' in ${tvShowsRoot}`);
+    process.exit(1);
+  }
+  showFolder = folder;
+  console.log(`[MATCH] Found TV show folder: ${showFolder}`);
+}
 
 // FFmpeg command template for converting audio to AAC
 function getFFmpegCommand(inputPath, outputPath) {
@@ -84,7 +118,15 @@ async function main() {
             return;
         }
         
-        const startMsg = `🎵 [AUDIO-CONVERT] Found ${problematicFiles.length} files to convert`;
+        // Only process files in the selected show folder
+        const showFiles = problematicFiles.filter(file => file.path.startsWith(showFolder));
+
+        if (showFiles.length === 0) {
+            console.log(`[INFO] No files to convert for show: ${showFolder}`);
+            return;
+        }
+
+        const startMsg = `🎵 [AUDIO-CONVERT] Found ${showFiles.length} files to convert`;
         logToFile('convert_audio_to_aac_tv-shows', startMsg);
         console.log(startMsg);
         console.log('\n⚠️  WARNING: This will create backups and replace original files!');
@@ -100,8 +142,8 @@ async function main() {
         let converted = 0;
         let failed = 0;
         
-        for (const file of problematicFiles) {
-            const progressMsg = `\n📺 [CONVERT] Processing ${converted + failed + 1}/${problematicFiles.length}: ${file.title}`;
+        for (const file of showFiles) {
+            const progressMsg = `\n📺 [CONVERT] Processing ${converted + failed + 1}/${showFiles.length}: ${file.title}`;
             logToFile('convert_audio_to_aac_tv-shows', progressMsg);
             console.log(progressMsg);
             
@@ -126,7 +168,12 @@ async function main() {
                 console.log(codecMsg);
             }
             
+            // Debug: print ffmpeg command
+            console.log(`[DEBUG] About to run ffmpeg/ffprobe on: ${file.path}`);
             const result = await convertFile(file.path);
+            if (!result.success && result.error) {
+                console.error(`[DEBUG] Full error for ${file.path}: ${result.error}`);
+            }
             results.push({
                 path: file.path,
                 title: file.title,
@@ -146,7 +193,7 @@ async function main() {
         // Save conversion log
         const log = {
             timestamp: new Date().toISOString(),
-            totalFiles: problematicFiles.length,
+            totalFiles: showFiles.length,
             converted,
             failed,
             results
@@ -155,7 +202,7 @@ async function main() {
         fs.writeFileSync(CONVERSION_LOG_PATH, JSON.stringify(log, null, 2));
         
         const completeMsg = '\n🎉 [AUDIO-CONVERT] Conversion complete!';
-        const summaryMsg = `📊 Summary:\n   Total files: ${problematicFiles.length}\n   Successfully converted: ${converted}\n   Failed: ${failed}`;
+        const summaryMsg = `📊 Summary:\n   Total files: ${showFiles.length}\n   Successfully converted: ${converted}\n   Failed: ${failed}`;
         const logSavedMsg = `\n📄 Conversion log saved to: ${CONVERSION_LOG_PATH}`;
         
         logToFile('convert_audio_to_aac_tv-shows', completeMsg);

@@ -111,7 +111,7 @@ function scanDirectory(dir, baseDir) {
         
         if (fs.statSync(fullPath).isDirectory()) {
             // Skip node_modules directories
-            if (entry === 'node_modules') continue;
+            if (entry === 'node_modules' || entry === 'SANDBOX') continue;
             // Recursively scan subdirectories
             files.push(...scanDirectory(fullPath, baseDir));
         } else {

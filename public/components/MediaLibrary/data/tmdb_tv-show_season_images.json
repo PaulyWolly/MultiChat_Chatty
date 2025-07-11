@@ -1,4 +1,18 @@
 {
+  "Cosmos Possible Worlds": {
+    "seasons": {
+      "3": {
+        "poster": "S:/MEDIA/TV-SHOWS/Cosmos Possible Worlds/Season 03/poster.jpg"
+      }
+    }
+  },
+  "Cosmos A Spacetime Odyssey": {
+    "seasons": {
+      "1": {
+        "poster": "https://image.tmdb.org/t/p/w500/mGXf40nGJDNnNwLIo48nhtaRNs2.jpg"
+      }
+    }
+  },
   "The Big Bang Theory": {
     "seasons": {
       "1": {
@@ -162,29 +176,25 @@
   "LOST": {
     "seasons": {
       "1": {
-        "poster": "https://image.tmdb.org/t/p/w500/ejLEJwmh3ptBpdYlKw0xgjjYXmP.jpg"
+        "poster": "https://image.tmdb.org/t/p/w500/fc9f4ERC09U1GziCgDWilWWgjKx.jpg"
       },
       "2": {
-        "poster": "https://image.tmdb.org/t/p/w500/jvYAdIQ9f1HwlutyFW8ZXWbcmFe.jpg"
+        "poster": "https://image.tmdb.org/t/p/w500/vGLddXoXJhKPsAWeDYbAsE4wW1z.jpg"
       },
       "3": {
-        "poster": "https://image.tmdb.org/t/p/w500/lNQPUCru6oHmgGNSVwpjaJp6u4V.jpg"
+        "poster": "https://image.tmdb.org/t/p/w500/zLnuh6DVyrz5iaNVO6KNKubtffo.jpg"
       },
       "4": {
-        "poster": "https://image.tmdb.org/t/p/w500/poGAFZaSrl1Gf57neIEsbmFt2zb.jpg"
+        "poster": "https://image.tmdb.org/t/p/w500/TOfSxtW76sWrPn3YSm5GooaR3Y.jpg"
       },
       "5": {
-        "poster": "https://image.tmdb.org/t/p/w500/jOW77AyrfDoCBFFjBleVQjOhoTK.jpg"
+        "poster": "https://image.tmdb.org/t/p/w500/2OYKA6UIC56loPxgL4IMshg4mVr.jpg"
       },
       "6": {
         "poster": "https://image.tmdb.org/t/p/w500/29tcXCeFa3CWmavGw4D7UlERjF2.jpg"
-      }
-    }
-  },
-  "Cosmos - A Spacetime Odyssey": {
-    "seasons": {
-      "1": {
-        "poster": "https://image.tmdb.org/t/p/w500/mGXf40nGJDNnNwLIo48nhtaRNs2.jpg"
+      },
+      "7": {
+        "poster": null
       }
     }
   },
@@ -223,13 +233,10 @@
       }
     }
   },
-  "Blue Planet II (2017) [BBC.iPlayer] [4K-HLG]": {
-    "seasons": {}
-  },
   "The Twilight Zone (2019)": {
     "seasons": {
       "1": {
-        "poster": "https://image.tmdb.org/t/p/w500/1DKVWl80YSLi0TE8IbyUdqq2o5l.jpg"
+        "poster": "https://image.tmdb.org/t/p/w500/16YVC3Gu3wdCRrSockziRkJ98aG.jpg"
       }
     }
   },
@@ -258,6 +265,19 @@
       }
     }
   },
+  "Tiger Spy in the Jungle": {
+    "seasons": {
+      "1": {
+        "poster": "https://media.themoviedb.org/t/p/w454_and_h254_bestv2/qM3GpVpZjOVZ4pfOKUfMgx0GG8y.jpg"
+      },
+      "2": {
+        "poster": "https://media.themoviedb.org/t/p/w454_and_h254_bestv2/mBRAqyMC0Hz3O2acBi1TtLtRw4u.jpg"
+      },
+      "3": {
+        "poster": "https://media.themoviedb.org/t/p/w454_and_h254_bestv2/clNRz0alIivS4xOw2AG3mBE3fST.jpg"
+      }
+    }
+  },
   "La Brea": {
     "seasons": {
       "1": {
@@ -271,7 +291,7 @@
       }
     }
   },
-  "Glitch": {
+  "Glitch (2015)": {
     "seasons": {
       "1": {
         "poster": "https://image.tmdb.org/t/p/w500/vp8NE5KY7lM3Ep0PuihzgNTi5MN.jpg"
@@ -317,20 +337,13 @@
       }
     }
   },
-  "Cosmos - Possible Worlds": {
-    "seasons": {
-      "1": {
-        "poster": "https://image.tmdb.org/t/p/w500/mGXf40nGJDNnNwLIo48nhtaRNs2.jpg"
-      }
-    }
-  },
   "Another Life": {
     "seasons": {
       "1": {
-        "poster": "https://image.tmdb.org/t/p/w500/a8p5VEnstPypeZWhsKhEadRG3jW.jpg"
+        "poster": "https://image.tmdb.org/t/p/w500/htazQ0cPoloL5SJ2bqOCKh9UTcc.jpg"
       },
       "2": {
-        "poster": null
+        "poster": "https://image.tmdb.org/t/p/w500/gW3FJouZ3Ab57OR50Fy2jLaKAKH.jpg"
       }
     }
   },
@@ -344,13 +357,6 @@
       },
       "3": {
         "poster": "https://image.tmdb.org/t/p/w500/ba1mXQ4HbO4UXkyd29O4tl3CJuT.jpg"
-      }
-    }
-  },
-  "Earth 2": {
-    "seasons": {
-      "1": {
-        "poster": "https://image.tmdb.org/t/p/w500/6q1cUM3nd51SIKogzDd0oB1o6rU.jpg"
       }
     }
   },
@@ -445,7 +451,7 @@
   "Cosmos": {
     "seasons": {
       "1": {
-        "poster": "https://image.tmdb.org/t/p/w500/mGXf40nGJDNnNwLIo48nhtaRNs2.jpg"
+        "poster": "https://image.tmdb.org/t/p/w1280/nOGArjE0WMkzY2GW1taJm8l9gxD.jpg"
       }
     }
   },
@@ -489,7 +495,7 @@
       }
     }
   },
-  "Daisy Jones and The Six": {
+  "Daisy Jones & The Six": {
     "seasons": {
       "1": {
         "poster": "https://image.tmdb.org/t/p/w500/ltfscPUljehY7IwGG85vij2TEbQ.jpg"
@@ -536,13 +542,13 @@
   "Lost in Space": {
     "seasons": {
       "1": {
-        "poster": "https://image.tmdb.org/t/p/w500/cW5zmGlnfgPBQhEhRv4QGVY1xbQ.jpg"
+        "poster": "https://image.tmdb.org/t/p/w500/bD3RGUx3BN4mHqTBo3xuCAPIgLB.jpg"
       },
       "2": {
-        "poster": "https://image.tmdb.org/t/p/w500/tiyo1h6UVneH5XM3JXaXJDbYE43.jpg"
+        "poster": "https://image.tmdb.org/t/p/w500/83mK4CnvRPFSqcyO3s3lq6aDy1x.jpg"
       },
       "3": {
-        "poster": "https://image.tmdb.org/t/p/w500/jAKft4sBtWBIL1eOCFB3bnnJJTI.jpg"
+        "poster": "https://image.tmdb.org/t/p/w500/nF6x04wogGbnF1mUwRzEaePHDOr.jpg"
       }
     }
   },
@@ -553,16 +559,6 @@
       },
       "2": {
         "poster": "https://image.tmdb.org/t/p/w500/gZbYRBQ88zcv8ybVOksrsHgJnwv.jpg"
-      }
-    }
-  },
-  "History 101": {
-    "seasons": {
-      "1": {
-        "poster": "https://image.tmdb.org/t/p/w500/3wY1EwinwrtpNZCwFmpDHZ5ISaK.jpg"
-      },
-      "2": {
-        "poster": "https://image.tmdb.org/t/p/w500/qoQ2WivPuqdzUQTGEakKJMNok5K.jpg"
       }
     }
   },
@@ -934,7 +930,11 @@
       }
     }
   },
-  "V (1983)": {
-    "seasons": {}
+  "Galapagos": {
+    "seasons": {
+      "1": {
+        "poster": "https://image.tmdb.org/t/p/w500/qK98dHVkdrOT4JzzUltGYMmaxC6.jpg"
+      }
+    }
   }
 }
