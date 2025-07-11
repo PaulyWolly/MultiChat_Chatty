@@ -11,6 +11,7 @@ ref_repo-MultiChat_Chatty_GOLDEN-img-analysis/
 __REF_REPO-TEST-SAVE-LATER__/
 _ref_repo-DEV1/
 __REF-REPO_MCC-TEST__/
+_ref_repo-DEV1/
 
 # Archive folder
 archive/
@@ -20,7 +21,9 @@ backups/*.env*
 backups/.env*
 *.env.backup*
 .env.backup*
-/backups
+/backups/
+/__ARCHIVE__/
+
 
 # Any files containing API keys or tokens
 *api*key*

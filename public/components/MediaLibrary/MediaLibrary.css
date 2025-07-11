@@ -122,9 +122,8 @@
     position: relative;
     top: 6px;
 }
-
 .media-library-card-info h3 {
-    margin: 0;
+  margin: 0;
 }
 
 .media-info {
@@ -967,6 +966,11 @@
 }
 
 /* Hide A-Z sidebar in Season view */
+.media-library-show-info ~ .media-library-az-sidebar {
+  display: none !important;
+}
+
+/* Hide A-Z sidebar in Season view */
 .media-library-show-info~.media-library-az-sidebar {
     display: none !important;
 }
@@ -1226,36 +1230,30 @@
 }
 
 .movie-description {
-    font-size: 1.08em;
-    color: #6c757d;
-    margin-bottom: 16px;
-    line-height: 1.5;
-    width: 50vw;
-    text-align: justify;
+  font-size: 1.08em;
+  color: #6c757d;
+  margin-bottom: 16px;
+  line-height: 1.5;
+  width: 50vw;
+  text-align: justify;
 }
-
 .movie-description .no-description {
-    color: #bbb;
-    font-style: italic;
+  color: #bbb;
+  font-style: italic;
 }
 
 .media-library-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(0, 0, 0, 0.55);
-    z-index: 9998;
-    /* below the modal, above the rest */
-    backdrop-filter: blur(2px);
-    transition: opacity 0.2s;
-    opacity: 1;
+  position: fixed;
+  top: 0; left: 0; width: 100vw; height: 100vh;
+  background: rgba(0,0,0,0.55);
+  z-index: 9998; /* below the modal, above the rest */
+  backdrop-filter: blur(2px);
+  transition: opacity 0.2s;
+  opacity: 1;
 }
-
 .media-library-overlay.hide {
-    opacity: 0;
-    pointer-events: none;
+  opacity: 0;
+  pointer-events: none;
 }
 
 /* Watch Later Layout */
@@ -1265,49 +1263,42 @@
     justify-content: space-between;
     width: 100%;
     height: 525px;
-}
-
-.watch-later-column {
+  }
+  .watch-later-column {
     flex: 1;
     min-width: 0;
     display: flex;
     flex-direction: column;
-}
-
-.watch-later-section-title {
+  }
+  .watch-later-section-title {
     font-size: 1.3em;
     font-weight: 600;
     margin-bottom: 4px;
-}
-
-.watch-later-section-divider {
+  }
+  .watch-later-section-divider {
     margin: 0 0 12px 0;
-}
-
-.watch-later-scroll {
+  }
+  .watch-later-scroll {
     flex: 1;
     overflow-y: auto;
     max-height: 480px;
-}
-
-.watch-later-grid {
+  }
+  .watch-later-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 18px;
-}
-
-.watch-later-card {
+  }
+  .watch-later-card {
     position: relative;
     background: #fff;
     border-radius: 10px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
     padding: 8px 8px 12px 8px;
     display: flex;
     flex-direction: column;
     align-items: center;
-}
-
-.watch-later-img {
+  }
+  .watch-later-img {
     width: 100%;
     height: 300px;
     object-fit: cover;
@@ -1315,23 +1306,19 @@
     margin-bottom: 0px;
     position: relative;
     top: 0px;
-}
-
-.watch-later-title {
+  }
+  .watch-later-title {
     font-size: 1em;
     margin: 0 0 4px 0;
     text-align: center;
-}
-
-.watch-later-btn-row {
+  }
+  .watch-later-btn-row {
     display: flex;
     gap: 8px;
     justify-content: center;
     margin-top: 6px;
-}
-
-.watch-later-resume-btn,
-.watch-later-delete-btn {
+  }
+  .watch-later-resume-btn, .watch-later-delete-btn {
     padding: 6px 14px;
     border-radius: 6px;
     border: none;
@@ -1340,235 +1327,67 @@
     background: #1976d2;
     color: #fff;
     transition: background 0.2s;
-}
-
-.watch-later-delete-btn {
+  }
+  .watch-later-delete-btn {
     background: #e53935;
-}
-
-.watch-later-resume-btn:hover {
+  }
+  .watch-later-resume-btn:hover {
     background: #1251a3;
-}
-
-.watch-later-delete-btn:hover {
+  }
+  .watch-later-delete-btn:hover {
     background: #b71c1c;
-}
-
-.watch-later-empty {
+  }
+  .watch-later-empty {
     color: #888;
     grid-column: 1/-1;
     text-align: center;
     margin: 12px 0;
-}
-
-@media (max-width: 900px) {
+  }
+  @media (max-width: 900px) {
     .watch-later-grid {
-        grid-template-columns: 1fr !important;
+      grid-template-columns: 1fr !important;
     }
-
     .watch-later-flex-container {
-        flex-direction: column;
-        height: auto;
+      flex-direction: column;
+      height: auto;
     }
-}
-
-.media-library-movie-card-movies {
+  }
+  
+  .media-library-movie-card-movies {
     width: 200px;
     padding: 10px;
-}
-
-.media-library-movie-card-tvshows {
+  }
+  .media-library-movie-card-tvshows {
     /* height: 35vh; */
-}
+  }
 
 .watch-later-img-movie {
-    width: 100%;
-    display: block;
-    margin: 0 auto;
+  width: 100%;
+  display: block;
+  margin: 0 auto;
 }
 
 .watch-later-img-clickable {
-    cursor: pointer;
+  cursor: pointer;
 }
 
 .watch-later-timestamp {
     font-size: 0.65em;
-    color: #888;
-    margin: 4px 0 2px 0;
-    text-align: center;
+  color: #888;
+  margin: 4px 0 2px 0;
+  text-align: center;
 }
 
 .watch-later-img-tv {
-    height: 180px;
-    object-fit: contain;
-    background: #222;
+  height: 180px;
+  object-fit: contain;
+  background: #222;
 }
 
 .media-library-anchor {
-    display: contents;
-    height: 0;
-    width: 0;
-    margin: 0;
-    padding: 0;
-}
-
-.media-library-cast-image {
-    width: 88px !important;
-    height: 88px !important;
-    border-radius: 50% !important;
-    overflow: hidden !important;
-    background: #eee !important;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.13) !important;
-    margin-bottom: 10px !important;
-}
-
-.media-library-cast-name {
-    font-size: .80em !important;
-    text-align: center !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    width: 100% !important;
-}
-
-/* Actor images row for movie details modal */
-.media-library-cast-row {
-    display: flex;
-    gap: 24px;
-    align-items: flex-end;
-    margin: 28px 0 0 0;
-    flex-wrap: wrap;
-    justify-content: flex-start;
-}
-
-.media-library-cast-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 100px;
-}
-
-.media-library-cast-image {
-    width: 88px;
-    height: 88px;
-    border-radius: 50%;
-    overflow: hidden;
-    background: #eee;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.13);
-    margin-bottom: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.media-library-cast-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-}
-
-.media-library-cast-image-placeholder {
-    width: 100%;
-    height: 100%;
-    background: #ccc;
-    border-radius: 50%;
-}
-
-.media-library-cast-name {
-    font-size: 1.05em;
-    text-align: center;
-    white-space: nowrap;
-    overflow: hidden;
-    width: 100%;
-}
-
-/* DETAILS MODAL LAYOUT */
-.media-library-details-modal {
-    background: #fff;
-    padding: 32px 32px 24px 32px;
-    border-radius: 14px;
-    box-shadow: rgba(57, 57, 57, 0.35) 0px 5px 15px;
-    min-width: 340px;
-    max-width: 1200px;
-    width: 100%;
-    max-height: 90vh;
-    overflow-y: auto;
-    position: relative;
-    display: flex;
-    gap: 40px;
-    align-items: flex-start;
-}
-
-.media-library-details-poster {
-    /* poster image container */
-}
-
-.media-library-details-content {
-    flex: 1;
-    min-width: 220px;
-}
-
-.media-library-details-back {
-    margin-bottom: 18px;
-    padding: 7px 18px;
-    border-radius: 6px;
-    background: #eee;
-    color: #333;
-    border: none;
-    cursor: pointer;
-    font-size: 1em;
-}
-
-.media-library-details-title {
-    margin-top: 0;
-    margin-bottom: 10px;
-}
-
-.media-library-details-meta {
-    color: #888;
-    font-size: 1.05em;
-    margin-bottom: 8px;
-}
-
-.media-library-details-description {
-    margin-bottom: 0;
-}
-
-.media-library-details-buttons {
-    display: flex;
-    gap: 16px;
-    align-items: center;
-    margin-bottom: 24px;
-    margin-top: 18px;
-}
-
-.media-library-details-play {
-    padding: 10px 28px;
-    border-radius: 7px;
-    background: #1976d2;
-    color: #fff;
-    border: none;
-    cursor: pointer;
-    font-size: 1.1em;
-    font-weight: bold;
-}
-
-.media-library-details-favorite {
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 1.5em;
-    line-height: 1;
-}
-
-.media-library-details-collection {
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 1.3em;
-    line-height: 1;
-}
-
-.media-library-details-cast-list {
-    margin-bottom: 16px;
+  display: contents;
+  height: 0;
+  width: 0;
+  margin: 0;
+  padding: 0;
 }

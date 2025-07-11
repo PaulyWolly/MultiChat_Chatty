@@ -20,7 +20,7 @@
     "@google-cloud/vertexai": "^1.4.1",
     "@google/generative-ai": "^0.17.0",
     "@octokit/rest": "^21.1.1",
-    "axios": "^1.7.7",
+    "axios": "^1.10.0",
     "chalk": "^4.1.2",
     "cheerio": "^1.0.0",
     "cors": "^2.8.5",
@@ -37,6 +37,7 @@
     "mongoose": "^8.8.3",
     "node-cache": "^5.1.2",
     "node-fetch": "^2.7.0",
+    "open": "^10.1.2",
     "openai": "^4.57.0",
     "puppeteer": "^24.12.1"
   },
