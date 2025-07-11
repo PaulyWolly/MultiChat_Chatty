@@ -1,8 +1,8 @@
 /*
   MEDIALIBRARY.CSS
-  Version: 6
-  AppName: MultiChat_Chatty [v6]
-  Updated: 7/9/2025 @7:15AM
+  Version: 7
+  AppName: MultiChat_Chatty [v7]
+  Updated: 7/11/2025 @3:40PM
   Created by Paul Welby
 */
 
@@ -100,7 +100,7 @@
     flex-direction: column;
     align-items: center;
     width: 135px;
-    height: 35vh;
+    height: 29vh;
     min-width: 120px;
     max-width: 150px;
     padding: 10px 6px 12px 6px;
@@ -256,6 +256,18 @@
 
 .skip-intro-btn:hover {
     background: rgba(0, 0, 0, 0.9);
+}
+
+.tv-show-season-episode-name {
+    font-size: 0.85em !important;
+    line-height: 1.2;
+    white-space: normal;
+}
+
+.tv-show-episode-name {
+    font-size: 0.8em !important;
+    line-height: 1.2;
+    white-space: normal;
 }
 
 /* Responsive Design */
@@ -1390,4 +1402,226 @@
   width: 0;
   margin: 0;
   padding: 0;
+}
+
+.media-library-cast-image {
+    width: 88px !important;
+    height: 88px !important;
+    border-radius: 50% !important;
+    overflow: hidden !important;
+    background: #eee !important;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.13) !important;
+    margin-bottom: 10px !important;
+}
+
+.media-library-cast-name {
+    font-size: .80em !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    width: 100% !important;
+}
+
+/* Actor images row for movie details modal */
+.media-library-cast-row {
+    display: flex;
+    gap: 24px;
+    align-items: flex-end;
+    margin: 28px 0 0 0;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+}
+
+.media-library-cast-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100px;
+}
+
+.media-library-cast-image {
+    width: 88px;
+    height: 88px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: #eee;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.13);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.media-library-cast-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.media-library-cast-image-placeholder {
+    width: 100%;
+    height: 100%;
+    background: #ccc;
+    border-radius: 50%;
+}
+
+.media-library-cast-name {
+    font-size: 1.05em;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    width: 100%;
+}
+
+/* DETAILS MODAL LAYOUT */
+.media-library-details-modal {
+    background: #fff;
+    padding: 32px 32px 24px 32px;
+    border-radius: 14px;
+    box-shadow: rgba(57, 57, 57, 0.35) 0px 5px 15px;
+    min-width: 340px;
+    max-width: 1200px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    display: flex;
+    gap: 40px;
+    align-items: flex-start;
+}
+
+.media-library-details-poster {
+    /* poster image container */
+}
+
+.media-library-details-content {
+    flex: 1;
+    min-width: 220px;
+}
+
+.media-library-details-back {
+    margin-bottom: 18px;
+    padding: 7px 18px;
+    border-radius: 6px;
+    background: #eee;
+    color: #333;
+    border: none;
+    cursor: pointer;
+    font-size: 1em;
+}
+
+.media-library-details-title {
+    margin-top: 0;
+    margin-bottom: 10px;
+}
+
+.media-library-details-meta {
+    color: #888;
+    font-size: 1.05em;
+    margin-bottom: 8px;
+}
+
+.media-library-details-description {
+    margin-bottom: 0;
+}
+
+.media-library-details-buttons {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    margin-bottom: 24px;
+    margin-top: 18px;
+}
+
+.media-library-details-play {
+    padding: 10px 28px;
+    border-radius: 7px;
+    background: #1976d2;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    font-size: 1.1em;
+    font-weight: bold;
+}
+
+.media-library-details-favorite {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.5em;
+    line-height: 1;
+}
+
+.media-library-details-collection {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.3em;
+    line-height: 1;
+}
+
+.media-library-details-cast-list {
+    margin-bottom: 16px;
+}
+
+@media print {
+  .image-section,
+  .image-container,
+  .image-section img {
+    display: block !important;
+    visibility: visible !important;
+    max-width: 100% !important;
+    max-height: 3in !important;
+    page-break-inside: avoid;
+  }
+  .image-section {
+    margin-top: 24px !important;
+    border: none !important;
+    padding: 0 !important;
+  }
+  .image-container {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+  .image-section img {
+    border-radius: 8px !important;
+    box-shadow: none !important;
+    margin: 0 8px 8px 0 !important;
+  }
+  /* Remove any print: none rules for images */
+  img, .image-section, .image-container {
+    display: block !important;
+  }
+}
+
+.image-link {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    border-radius: 8px;
+    background: rgb(248, 248, 248);
+    box-shadow: rgba(0, 0, 0, 0.07) 0px 1px 4px;
+    position: relative;
+    text-align: center;
+    padding: 0px;
+    margin: 0px;
+    cursor: pointer;
+    transition: box-shadow 0.2s;
+    min-height: 100px;
+    min-width: 100px;
+    max-height: 220px;
+    max-width: 220px;
+    align-items: center;
+    justify-content: center;
+}
+
+.image-link-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 8px;
+    display: block;
 }

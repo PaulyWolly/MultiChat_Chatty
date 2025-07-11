@@ -1,8 +1,8 @@
 /*
   YOUTUBESEARCHMANAGER.JS
-  Version: 6
-  AppName: MultiChat_Chatty [v6]
-  Updated: 7/9/2025 @7:15AM
+  Version: 7
+  AppName: MultiChat_Chatty [v7]
+  Updated: 7/11/2025 @3:40PM
   Created by Paul Welby
 */
 
@@ -176,7 +176,7 @@ export default class YouTubeSearchManager {
             minimizedBar.id = 'minimized-paginator-bar';
             minimizedBar.className = 'minimized-paginator-bar';
             minimizedBar.style.display = 'none';
-            minimizedBar.innerHTML = '<span class="minimized-paginator-bar-text">Restore Paginator bar</span>';
+            minimizedBar.innerHTML = '<span class="minimized-paginator-bar-text">🔃 Restore Paginator bar</span>';
             minimizedBar.title = 'Click to switch back to YouTube paginator';
             minimizedBar.onclick = () => {
                 this.setPaginatorBar('restored');

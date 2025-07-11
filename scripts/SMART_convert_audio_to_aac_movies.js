@@ -1,8 +1,8 @@
 /*
   SMART_CONVERT_AUDIO_TO_AAC_MOVIES.JS
-  Version: 6
-  AppName: MultiChat_Chatty [v6]
-  Updated: 7/9/2025 @7:15AM
+  Version: 7
+  AppName: MultiChat_Chatty [v7]
+  Updated: 7/11/2025 @3:40PM
   Created by Paul Welby
 */
 

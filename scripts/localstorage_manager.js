@@ -1,4 +1,12 @@
 /*
+  LOCALSTORAGE_MANAGER.JS
+  Version: 7
+  AppName: MultiChat_Chatty [v7]
+  Updated: 7/11/2025 @3:40PM
+  Created by Paul Welby
+*/
+
+/*
  * localstorage_manager.js
  *
  * Usage:
