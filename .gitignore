@@ -20,6 +20,7 @@ backups/*.env*
 backups/.env*
 *.env.backup*
 .env.backup*
+/backups
 
 # Any files containing API keys or tokens
 *api*key*
