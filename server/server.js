@@ -2,7 +2,7 @@
   SERVER.JS
   Version: 7
   AppName: MultiChat_Chatty [v7]
-  Updated: 7/11/2025 @3:40PM
+  Updated: 7/12/2025 @5:40AM
   Created by Paul Welby
 */
 
@@ -42,6 +42,8 @@ const Bug = require('./models/Bug');
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-in-production';
 const SUPERADMIN_PASSWORD = process.env.SUPERADMIN_PASSWORD || 'superadmin-secret-2025';
 const SALT_ROUNDS = 12;
+
+console.log('TMDB_API_KEY:', process.env.TMDB_API_KEY);
 
 // Debug log environment variables
 console.log('Environment variables loaded:');
@@ -3915,5 +3917,8 @@ app.post('/api/admin/backfill-youtube-timestamps', async (req, res) => {
         res.status(500).json({ success: false, error: error.message });
     }
 });
+
+const mediaManagerRoutes = require('./routes/mediaManager.routes');
+app.use('/api/media', mediaManagerRoutes);
 
 

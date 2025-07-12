@@ -2,7 +2,7 @@
   POSTERSELECTOR.CSS
   Version: 7
   AppName: MultiChat_Chatty [v7]
-  Updated: 7/11/2025 @3:40PM
+  Updated: 7/12/2025 @5:40AM
   Created by Paul Welby
 */
 
@@ -156,9 +156,36 @@
     text-align: center;
     margin: 0 auto;
     z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
 }
 .poster-selector-use-btn:hover {
     background: #285a99;
+}
+.use-btn-spinner {
+    display: inline-block;
+    width: 22px;
+    height: 22px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #3a7bd5;
+    border-radius: 50%;
+    animation: poster-spin 0.8s linear infinite;
+    margin-right: 8px;
+    vertical-align: middle;
+}
+.use-btn-label {
+    vertical-align: middle;
+    font-size: 1.1em;
+}
+.poster-selector-use-complete {
+    display: block;
+    text-align: center;
+    color: #0c0;
+    font-weight: 600;
+    font-size: 1.1em;
+    margin-top: 18px;
 }
 #poster-selector-feedback {
     min-height: 22px;
