@@ -2585,19 +2585,19 @@
       ]
     },
     {
-      "path": "V (1983) [1080p]",
+      "path": "V (1984) [1080p]",
       "folders": [
         {
-          "path": "V (1983) [1080p]\\Subs",
+          "path": "V (1984) [1080p]\\Subs",
           "folders": [],
           "files": []
         }
       ],
       "files": [
         {
-          "name": "V.(1983).[1080p].mp4",
-          "absPath": "S:\\MEDIA\\MOVIES\\V (1983) [1080p]\\V.(1983).[1080p].mp4",
-          "relPath": "V (1983) [1080p]\\V.(1983).[1080p].mp4"
+          "name": "V.(1984).[1080p].mp4",
+          "absPath": "S:\\MEDIA\\MOVIES\\V (1984) [1080p]\\V.(1984).[1080p].mp4",
+          "relPath": "V (1984) [1080p]\\V.(1984).[1080p].mp4"
         }
       ]
     },
@@ -4867,11 +4867,6 @@
     {
       "path": "Yes Man (2008) [1080p]",
       "folders": [],
-      "files": []
-    },
-    {
-      "path": "Yes Man (2008) [1080p]",
-      "folders": [],
       "files": [
         {
           "name": "Yes.Man.(2008).[1080p].mp4",
@@ -4888,6 +4883,61 @@
           "name": "RED.(2010).[1080p].mp4",
           "absPath": "S:\\MEDIA\\MOVIES\\RED (2010) [1080p]\\RED.(2010).[1080p].mp4",
           "relPath": "RED (2010) [1080p]\\RED.(2010).[1080p].mp4"
+        }
+      ]
+    },
+    {
+      "path": "The Parent Trap (1961) [1080p]",
+      "folders": [],
+      "files": [
+        {
+          "name": "The.Parent.Trap.(1961).[1080p].mp4",
+          "absPath": "S:\\MEDIA\\MOVIES\\The Parent Trap (1961) [1080p]\\The.Parent.Trap.(1961).[1080p].mp4",
+          "relPath": "The Parent Trap (1961) [1080p]\\The.Parent.Trap.(1961).[1080p].mp4"
+        }
+      ]
+    },
+    {
+      "path": "Transcendence (2014) [1080p]",
+      "folders": [],
+      "files": [
+        {
+          "name": "Transcendence.(2014).[1080].mp4",
+          "absPath": "S:\\MEDIA\\MOVIES\\Transcendence (2014) [1080p]\\Transcendence.(2014).[1080].mp4",
+          "relPath": "Transcendence (2014) [1080p]\\Transcendence.(2014).[1080].mp4"
+        }
+      ]
+    },
+    {
+      "path": "Gran Turismo (2023) [1080p]",
+      "folders": [],
+      "files": [
+        {
+          "name": "Gran.Turismo.(2023).[1080p].mp4",
+          "absPath": "S:\\MEDIA\\MOVIES\\Gran Turismo (2023) [1080p]\\Gran.Turismo.(2023).[1080p].mp4",
+          "relPath": "Gran Turismo (2023) [1080p]\\Gran.Turismo.(2023).[1080p].mp4"
+        }
+      ]
+    },
+    {
+      "path": "Troy (2004) [DC] [1080p]",
+      "folders": [],
+      "files": [
+        {
+          "name": "Troy.(2004).[1080p].mp4",
+          "absPath": "S:\\MEDIA\\MOVIES\\Troy (2004) [DC] [1080p]\\Troy.(2004).[1080p].mp4",
+          "relPath": "Troy (2004) [DC] [1080p]\\Troy.(2004).[1080p].mp4"
+        }
+      ]
+    },
+    {
+      "path": "Mr and Mrs Smith (2005) [1080p]",
+      "folders": [],
+      "files": [
+        {
+          "name": "Mr.and.Mrs.Smith.(2005).[1080p].mp4",
+          "absPath": "S:\\MEDIA\\MOVIES\\Mr and Mrs Smith (2005) [1080p]\\Mr.and.Mrs.Smith.(2005).[1080p].mp4",
+          "relPath": "Mr and Mrs Smith (2005) [1080p]\\Mr.and.Mrs.Smith.(2005).[1080p].mp4"
         }
       ]
     }
