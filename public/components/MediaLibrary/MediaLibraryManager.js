@@ -2,7 +2,7 @@
   MEDIALIBRARYMANAGER.JS
   Version: 7
   AppName: MultiChat_Chatty [v7]
-  Updated: 7/11/2025 @3:40PM
+  Updated: 7/12/2025 @5:40AM
   Created by Paul Welby
 */
 
@@ -317,11 +317,15 @@ class MediaLibraryManager {
             { id: 'watchlater', label: 'Watch Later' }
         ];
         return `
-          <div class="media-library-modal-tabs">
-            ${tabs.map(tab =>
-                `<button class="media-library-tab-btn${this.currentTab === tab.id ? ' active' : ''}"
-                  onclick="mediaLibraryManager.switchTab('${tab.id}')">${tab.label}</button>`
-            ).join('')}
+          <div class="media-library-modal-tabs-row">
+            <div class="media-library-modal-tabs-left">
+              ${tabs.map(tab =>
+                  `<button class="media-library-tab-btn${this.currentTab === tab.id ? ' active' : ''}"
+                    onclick="mediaLibraryManager.switchTab('${tab.id}')">${tab.label}</button>`
+              ).join('')}
+            </div>
+            <div class="media-library-modal-tabs-spacer"></div>
+            <button class="media-library-media-manager-btn" onclick="mediaLibraryManager.openMediaManager()">Media Manager</button>
           </div>
         `;
     }
@@ -815,7 +819,8 @@ class MediaLibraryManager {
                     <button class="favorite-btn" title="Toggle Favorite" style="background:none;border:none;cursor:pointer;font-size:1.5em;line-height:1;">${this.isFavorite(item.path) ? '❤️' : '🤍'}</button>
                     <button class="collection-btn" title="Add to Collection" style="background:none;border:none;cursor:pointer;font-size:1.4em;line-height:1;">➕</button>
                 </div>
-                <img src="${this.getPosterPath(item)}" alt="${item.title}" style="margin-top:6px;">
+                <div class="movie-poster-spinner"></div>
+                <img src="${this.getPosterPath(item)}" alt="${item.title}" style="margin-top:6px;" onload="this.previousElementSibling.style.display='none';" onerror="this.previousElementSibling.style.display='none'; this.src='/assets/img/placeholder-poster.jpg';">
                 <div class="media-info"><h3>${cleanTitle}</h3></div>
             `;
 
@@ -839,6 +844,32 @@ class MediaLibraryManager {
         });
         // After rendering the grid, attach poster selector handlers
         this.attachPosterSelectorHandlers();
+        // Add spinner CSS if not already present
+        if (!document.getElementById('movie-poster-spinner-style')) {
+            const style = document.createElement('style');
+            style.id = 'movie-poster-spinner-style';
+            style.innerHTML = `
+            .movie-poster-spinner {
+                position: absolute;
+                top: 50%; left: 50%;
+                width: 32px; height: 32px;
+                margin: -16px 0 0 -16px;
+                border: 4px solid #ccc;
+                border-top: 4px solid #333;
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
+                z-index: 2;
+                background: transparent;
+                display: block;
+            }
+            @keyframes spin {
+                0% { transform: rotate(0deg);}
+                100% { transform: rotate(360deg);}
+            }
+            .media-library-movie-card { position: relative; }
+            `;
+            document.head.appendChild(style);
+        }
     }
 
     getItemsForCurrentTab() {
@@ -1511,7 +1542,12 @@ class MediaLibraryManager {
                 // Pass an object with .name and .path for compatibility
                 const epObj = { name: episode, path: path };
                 const img = self.getEpisodeImage(show, season, epObj);
-                if (img && !img.includes('placeholder')) return img;
+                if (img && !img.includes('placeholder') && !img.includes('undefined') && img.trim() !== '') return img;
+            }
+            // Try show poster as fallback
+            if (show) {
+                const poster = self.getPosterPath({ name: show, path: path });
+                if (poster && !poster.includes('placeholder') && !poster.includes('undefined') && poster.trim() !== '') return poster;
             }
             return '/assets/img/placeholder-poster.jpg';
         }
@@ -1545,7 +1581,7 @@ class MediaLibraryManager {
                     <div class="watch-later-grid">
                         ${tvshows.map(item => `
                             <div class="media-library-movie-card-tvshows watch-later-card" data-path="${item.path}">
-                                <img class="watch-later-img-tv watch-later-img watch-later-img-clickable" src="${getTvShowScreenshot(item, this)}" alt="${getTvShowLabel(item)}">
+                                <img class="watch-later-img-tv watch-later-img watch-later-img-clickable" src="${getTvShowScreenshot(item, this)}" alt="${getTvShowLabel(item)}" onerror="this.onerror=null;this.src='/assets/img/placeholder-poster.jpg';">
                                 ${item.lastWatched ? `<div class="watch-later-timestamp">Last watched: ${formatDateTime(item.lastWatched)}<br><span class=\"watch-later-resume-info\">Resume from ${this.formatTime(item.currentTime)}</span></div>` : ''}
                                 <div class="media-info"><h3 class="watch-later-title">${getTvShowLabel(item)}</h3></div>
                                 <div class="watch-later-btn-row">
@@ -2048,29 +2084,31 @@ class MediaLibraryManager {
         let castRow = '';
         const movieCast = await this.loadMovieCast();
         let castData = null;
+        
+        // Try multiple possible keys for cast lookup (same logic as descriptions)
+        console.log('[DEBUG] Trying possible keys for cast:', possibleKeys);
         for (const key of possibleKeys) {
             if (movieCast[key] && Array.isArray(movieCast[key].cast) && movieCast[key].cast.length > 0) {
                 castData = movieCast[key].cast;
+                console.log('[DEBUG] Found cast with key:', key);
                 break;
             }
         }
+        
+        // Fallback: try to find by title if no exact match
         if (!castData && movieCast) {
             const folderKey = Object.keys(movieCast).find(k => k.includes(movie.title));
             if (folderKey && Array.isArray(movieCast[folderKey].cast) && movieCast[folderKey].cast.length > 0) {
                 castData = movieCast[folderKey].cast;
+                console.log('[DEBUG] Fallback found cast with folderKey:', folderKey);
             }
         }
+        
+        if (!castData) {
+            console.warn('[WARN] No cast found for movie:', movie.title);
+        }
         if (castData && castData.length > 0) {
-            castRow = `<div class="media-library-cast-row">
-                ${castData.map(actor => `
-                    <div class="media-library-cast-item">
-                        <div class="media-library-cast-image">
-                            ${actor.profile ? `<img src="${actor.profile}" alt="${actor.name}">` : `<div class='media-library-cast-image-placeholder'></div>`}
-                        </div>
-                        <div class="media-library-cast-name">${actor.name}</div>
-                    </div>
-                `).join('')}
-            </div>`;
+            castRow = `<div class=\"media-library-cast-row\">\n                ${castData.map(actor => `\n                    <div class=\"media-library-cast-item\">\n                        <div class=\"media-library-cast-image\">\n                            ${actor.profile ? `<img src=\"${actor.profile}\" alt=\"${actor.name}\">` : `<div class='media-library-cast-image-placeholder'></div>`}\n                        </div>\n                        <div class=\"media-library-cast-name\">${actor.name}</div>\n                    </div>\n                `).join('')}\n            </div>`;
         }
         grid.innerHTML = `
             <div class="media-library-details-modal">
@@ -2648,7 +2686,8 @@ class MediaLibraryManager {
                         <button class="favorite-btn" title="Toggle Favorite" style="background:none;border:none;cursor:pointer;font-size:1.5em;line-height:1;">${this.isFavorite(item.path) ? '❤️' : '🤍'}</button>
                         <button class="collection-btn" title="Add to Collection" style="background:none;border:none;cursor:pointer;font-size:1.4em;line-height:1;">➕</button>
                     </div>
-                    <img src="${this.getPosterPath(item)}" alt="${item.title}" style="margin-top:6px;">
+                    <div class="movie-poster-spinner"></div>
+                    <img src="${this.getPosterPath(item)}" alt="${item.title}" style="margin-top:6px;" onload="this.previousElementSibling.style.display='none';" onerror="this.previousElementSibling.style.display='none'; this.src='/assets/img/placeholder-poster.jpg';">
                     <div class="media-info">
                         <h3>${cleanTitle}</h3>
                     </div>
@@ -2677,7 +2716,8 @@ class MediaLibraryManager {
                         <button class="favorite-btn" title="Toggle Favorite" style="background:none;border:none;cursor:pointer;font-size:1.5em;line-height:1;">❤️</button>
                         <button class="collection-btn" title="Add to Collection" style="background:none;border:none;cursor:pointer;font-size:1.4em;line-height:1;">➕</button>
                     </div>
-                    <img src="${this.getPosterPath(item)}" alt="${item.title}" style="margin-top:6px;">
+                    <div class="movie-poster-spinner"></div>
+                    <img src="${this.getPosterPath(item)}" alt="${item.title}" style="margin-top:6px;" onload="this.previousElementSibling.style.display='none';" onerror="this.previousElementSibling.style.display='none'; this.src='/assets/img/placeholder-poster.jpg';">
                     <div class="media-info">
                         <h3>${cleanTitle}</h3>
                     </div>
@@ -3015,6 +3055,20 @@ class MediaLibraryManager {
         }
         this.movieCast = {};
         return this.movieCast;
+    }
+
+    openMediaManager() {
+        this.closeMediaLibrary();
+        if (window.MediaManager) {
+            const mm = new window.MediaManager();
+            mm.init();
+        } else {
+            if (window.showToast) {
+                window.showToast('MediaManager component not loaded.', 'error', 4000);
+            } else {
+                console.error('MediaManager component not loaded.');
+            }
+        }
     }
 }
 

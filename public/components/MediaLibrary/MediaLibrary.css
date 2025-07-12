@@ -2,7 +2,7 @@
   MEDIALIBRARY.CSS
   Version: 7
   AppName: MultiChat_Chatty [v7]
-  Updated: 7/11/2025 @3:40PM
+  Updated: 7/12/2025 @5:40AM
   Created by Paul Welby
 */
 
@@ -1624,4 +1624,34 @@
     object-fit: cover;
     border-radius: 8px;
     display: block;
+}
+
+.media-library-modal-tabs-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 0;
+}
+.media-library-modal-tabs-left {
+  display: flex;
+  gap: 8px;
+}
+.media-library-modal-tabs-spacer {
+  flex: 1 1 auto;
+}
+.media-library-media-manager-btn {
+    background: #4a90e2 !important;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    padding: 8px 22px;
+    font-size: 1em;
+    cursor: pointer;
+    margin-left: 18px;
+    margin-right: 20px;
+    transition: background 0.2s;
+}
+.media-library-media-manager-btn:hover {
+  background: #357ab8;
 }

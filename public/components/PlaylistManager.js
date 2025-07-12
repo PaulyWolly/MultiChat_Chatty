@@ -16,7 +16,7 @@ export default class PlaylistManager {
   PLAYLISTMANAGER.JS
   Version: 7
   AppName: MultiChat_Chatty [v7]
-  Updated: 7/11/2025 @3:40PM
+  Updated: 7/12/2025 @5:40AM
   Created by Paul Welby
 */
   cleanPlaylistNameForDisplay(name) {

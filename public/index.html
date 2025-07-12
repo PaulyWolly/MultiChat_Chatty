@@ -2,7 +2,7 @@
   INDEX.html
   Version: 7
   AppName: MultiChat_Chatty [v7]
-  Updated: 7/11/2025 @3:40PM
+  Updated: 7/12/2025 @5:40AM
   Created by Paul Welby
 -->
 
@@ -19,6 +19,7 @@
     <link rel="stylesheet" href="components/YouTubeSearch/YouTubeSearchManager.css">
     <link rel="stylesheet" href="components/VideoPlayer/VideoPlayer.css">
     <link rel="stylesheet" href="components/MediaLibrary/MediaLibrary.css">
+    <link rel="stylesheet" href="components/CustomTooltip/CustomTooltip.css">
     <!-- Video.js CSS -->
     <link href="lib/videojs/video-js.css" rel="stylesheet" />
     <!-- Video.js JS -->
@@ -43,7 +44,7 @@
           <option value="phi-3-mini-4k-instruct">Phi-3-mini-4k-instruct</option>
         </select>
 
-        <h3 class="top-bar-title" style="order: 2;">MultiChat_Chatty [v7] 7/11/2025 @3:40PM</h3>
+        <h3 class="top-bar-title" style="order: 2;">MultiChat_Chatty [v7] 7/12/2025 @5:40AM</h3>
 
         <div id="user-profile-menu">
           <img src="assets/img/user-default.png" alt="User" id="user-profile-icon" class="user-profile-icon" />
@@ -187,8 +188,10 @@
     
     <!-- Load PosterSelector globally for modal support -->
     <script src="components/PosterSelector/PosterSelector.js"></script>
-    
+    <!-- Load MediaManager globally for modal support -->
+    <script src="components/MediaManager/MediaManager.js"></script>
     <script type="module" src="components/MediaLibrary/MediaLibraryManager.js"></script>
+    <script src="components/CustomTooltip/CustomTooltip.js"></script>
     
     <!-- Load main app as module -->
     <script type="module" src="app.js?v=20250603-1715"></script>
