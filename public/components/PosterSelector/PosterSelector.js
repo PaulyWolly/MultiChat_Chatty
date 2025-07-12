@@ -2,7 +2,7 @@
   POSTERSELECTOR.JS
   Version: 7
   AppName: MultiChat_Chatty [v7]
-  Updated: 7/11/2025 @3:40PM
+  Updated: 7/12/2025 @5:40AM
   Created by Paul Welby
 */
 
@@ -66,10 +66,15 @@ class PosterSelector {
         this.closeBtn = document.getElementById('poster-selector-close');
         this.searchBtn = document.getElementById('poster-selector-search');
         this.queryInput = document.getElementById('poster-selector-query');
+        this.tmdbIdInput = document.getElementById('poster-selector-tmdbid');
         this.feedback = document.getElementById('poster-selector-feedback');
         this.grid = document.getElementById('poster-selector-grid');
         this.sourceDropdown = document.getElementById('poster-selector-source');
         this.selectedSource = 'tmdb';
+        this.useBtn = document.getElementById('poster-selector-use-btn');
+        this.useBtnSpinner = this.useBtn ? this.useBtn.querySelector('.use-btn-spinner') : null;
+        this.useBtnLabel = this.useBtn ? this.useBtn.querySelector('.use-btn-label') : null;
+        this.useCompleteMsg = document.getElementById('poster-selector-use-complete');
     }
 
     setupEventListeners() {
@@ -83,11 +88,23 @@ class PosterSelector {
                 }
             };
         }
+        if (this.tmdbIdInput) {
+            this.tmdbIdInput.onkeydown = (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    this.handleSearch();
+                }
+            };
+            this.tmdbIdInput.oninput = () => {
+                // Optionally, auto-search on TMDB ID change
+            };
+        }
         if (this.sourceDropdown) {
             this.sourceDropdown.onchange = (e) => {
                 this.selectedSource = e.target.value;
                 this.feedback.textContent = '';
                 this.grid.innerHTML = '';
+                this.handleSearch();
             };
         }
     }
@@ -110,22 +127,31 @@ class PosterSelector {
 
     async handleSearch() {
         const query = this.queryInput.value.trim();
+        const tmdbId = this.tmdbIdInput ? this.tmdbIdInput.value.trim() : '';
         this.feedback.textContent = '';
         this.grid.innerHTML = '';
         this.selectedPoster = null;
-        const useBtn = document.getElementById('poster-selector-use-btn');
-        if (useBtn) useBtn.style.display = 'none';
+        if (this.useBtn) {
+            this.useBtn.style.display = 'none';
+            if (this.useBtnSpinner) this.useBtnSpinner.style.display = 'none';
+            if (this.useBtnLabel) this.useBtnLabel.style.display = 'inline';
+        }
+        if (this.useCompleteMsg) this.useCompleteMsg.style.display = 'none';
         const spinner = document.getElementById('poster-selector-spinner');
-        console.log('[PosterSelector] Search triggered. Query:', query, 'Source:', this.selectedSource);
-        if (!query) {
-            this.feedback.textContent = 'Please enter a search query.';
+        console.log('[PosterSelector] Search triggered. Query:', query, 'TMDB ID:', tmdbId, 'Source:', this.selectedSource);
+        if (!query && !tmdbId) {
+            this.feedback.textContent = 'Please enter a search query or TMDB ID.';
             return;
         }
         if (spinner) spinner.style.display = 'flex';
         this.feedback.textContent = 'Searching...';
         let url;
         if (this.selectedSource === 'tmdb') {
-            url = `/api/tmdb/posters/${this.mode}?query=${encodeURIComponent(query)}`;
+            if (tmdbId) {
+                url = `/api/tmdb/posters/${this.mode}?tmdbId=${encodeURIComponent(tmdbId)}`;
+            } else {
+                url = `/api/tmdb/posters/${this.mode}?query=${encodeURIComponent(query)}`;
+            }
         } else if (this.selectedSource === 'imdb') {
             if (spinner) spinner.style.display = 'none';
             this.feedback.textContent = 'IMDB search is not implemented yet.';
@@ -141,7 +167,7 @@ class PosterSelector {
             if (spinner) spinner.style.display = 'none';
             if (!data.posters || data.posters.length === 0) {
                 this.feedback.textContent = 'No posters found.';
-                console.log('[PosterSelector] No posters found for query:', query);
+                console.log('[PosterSelector] No posters found for query:', query, 'TMDB ID:', tmdbId);
                 return;
             }
             this.feedback.textContent = '';
@@ -157,15 +183,24 @@ class PosterSelector {
                     this.grid.querySelectorAll('.poster-selector-item.selected').forEach(el => el.classList.remove('selected'));
                     itemDiv.classList.add('selected');
                     this.selectedPoster = data.posters[i];
-                    if (useBtn) useBtn.style.display = 'block';
+                    if (this.useBtn) this.useBtn.style.display = 'block';
+                    if (this.useBtnSpinner) this.useBtnSpinner.style.display = 'none';
+                    if (this.useBtnLabel) this.useBtnLabel.style.display = 'inline';
+                    if (this.useCompleteMsg) this.useCompleteMsg.style.display = 'none';
                     console.log('[PosterSelector] Poster selected:', this.selectedPoster);
                 };
             });
-            if (useBtn) {
-                useBtn.onclick = () => {
+            if (this.useBtn) {
+                this.useBtn.onclick = async () => {
                     if (this.selectedPoster) {
-                        console.log('[PosterSelector] Use Poster clicked:', this.selectedPoster);
-                        this.handlePosterClick(this.selectedPoster);
+                        if (this.useBtnSpinner) this.useBtnSpinner.style.display = 'inline-block';
+                        if (this.useBtnLabel) this.useBtnLabel.style.display = 'none';
+                        this.useBtn.disabled = true;
+                        await this.handlePosterClick(this.selectedPoster);
+                        this.useBtn.disabled = false;
+                        this.useBtn.style.display = 'none';
+                        if (this.useBtnSpinner) this.useBtnSpinner.style.display = 'none';
+                        if (this.useCompleteMsg) this.useCompleteMsg.style.display = 'block';
                     }
                 };
             }
