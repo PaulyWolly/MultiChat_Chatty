@@ -10,7 +10,11 @@ const fs = require('fs');
 const path = require('path');
 
 // Configuration
-const TMDB_API_KEY = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI1NzUzN2ZmMTlmMzgxZGQ3YjY3ZWVlMWVhOGI4MTY0NyIsInN1YiI6IjY0N2Q1YzE1YzI4MjNhMDEzNzMxYzM0YyIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.nOpZ_nBtM8Lu8-DEwQTA4VzJqOW6QKQJjqKqKqKqKqK';
+const TMDB_API_KEY = process.env.TMDB_API_KEY;
+if (!TMDB_API_KEY) {
+    console.error('❌ [REGENERATE-CAST] TMDB_API_KEY not set in environment variables. Please add it to your /server/.env file.');
+    process.exit(1);
+}
 const MOVIES_JSON = path.join(__dirname, '../server/data/media-library-movies.json');
 const OUTPUT_JSON = path.join(__dirname, '../public/data/movie_cast.json');
 
