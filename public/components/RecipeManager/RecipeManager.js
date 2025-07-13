@@ -191,6 +191,9 @@ export default class RecipeManager {
         }
 
         // Instructions
+        // Remove any line that matches the images heading pattern from instructionLines
+        const imagesHeadingPattern = /^here are some (delightful|beautiful|relevant)? ?images of/i;
+        instructionLines = instructionLines.filter(line => !imagesHeadingPattern.test(line));
         if (instructionLines.length > 0) {
             const instructionsEl = document.createElement('div');
             instructionsEl.className = 'recipe-instructions';
@@ -212,7 +215,33 @@ export default class RecipeManager {
         console.log('[RECIPE] Recipe container appended. messageContent.innerHTML length:', messageContent.innerHTML.length);
 
         // Insert images below the recipe if any - FIXED: Use messageContent instead of messageElement
+        const moreImagesBtn = messageContent.querySelector('.more-images-btn');
+        if ((imageUrls && imageUrls.length > 0) || moreImagesBtn) {
+            // Create a flex row for heading and More Images button
+            const imagesHeaderRow = document.createElement('div');
+            imagesHeaderRow.className = 'recipe-images-header-row';
+            imagesHeaderRow.style.display = 'flex';
+            imagesHeaderRow.style.alignItems = 'center';
+            imagesHeaderRow.style.justifyContent = 'space-between';
+            imagesHeaderRow.style.margin = '16px 0 8px 0';
+
+            // Heading on the left
+            const headingEl = document.createElement('h3');
+            headingEl.className = 'recipe-images-heading';
+            headingEl.textContent = `Here are some relevant images of ${title}`;
+            headingEl.style.margin = '0';
+            imagesHeaderRow.appendChild(headingEl);
+
+            // Move the More Images button to the right if it exists
+            if (moreImagesBtn) {
+                moreImagesBtn.style.marginLeft = 'auto';
+                imagesHeaderRow.appendChild(moreImagesBtn);
+            }
+
+            messageContent.appendChild(imagesHeaderRow);
+        }
         if (imageUrls && imageUrls.length > 0) {
+            // Images grid below
             console.log('[RECIPE] Inserting', imageUrls.length, 'images into recipe');
             const imagesDiv = document.createElement('div');
             imagesDiv.className = 'recipe-images';
@@ -226,6 +255,54 @@ export default class RecipeManager {
             messageContent.appendChild(imagesDiv);
             console.log('[RECIPE] Images inserted successfully');
         }
+        
+        // Use MutationObserver to guarantee the heading in .image-section if More Images button is present
+        if (messageContent) {
+            const observer = new MutationObserver(() => {
+                const imageSection = messageElement.querySelector('.image-section');
+                const moreImagesBtn = imageSection && imageSection.querySelector('.more-images-btn');
+                if (imageSection && moreImagesBtn) {
+                    // Remove any previous heading
+                    const oldHeader = imageSection.querySelector('.recipe-images-heading');
+                    if (oldHeader) oldHeader.remove();
+                    // Create heading
+                    const headingEl = document.createElement('h3');
+                    headingEl.className = 'recipe-images-heading';
+                    headingEl.textContent = `Here are some relevant images of ${title}`;
+                    headingEl.style.margin = '0 0 8px 0';
+                    // Insert as first child of imageSection
+                    imageSection.insertBefore(headingEl, imageSection.firstChild);
+                    observer.disconnect();
+                }
+            });
+            observer.observe(messageContent, { childList: true, subtree: true });
+        }
+
+        setTimeout(() => {
+            const imageSection = messageElement.querySelector('.image-section');
+            const moreImagesBtn = imageSection && imageSection.querySelector('.more-images-btn');
+            if (imageSection && moreImagesBtn) {
+                // Remove any previous heading
+                const oldHeader = imageSection.querySelector('.recipe-images-heading');
+                if (oldHeader) oldHeader.remove();
+                // Create and insert heading
+                const headingEl = document.createElement('h3');
+                headingEl.className = 'recipe-images-heading';
+                headingEl.textContent = `Here are some relevant images of ${title}`;
+                headingEl.style.position = 'absolute';
+                headingEl.style.top = '10px';
+                headingEl.style.left = '10px';
+                headingEl.style.margin = '0';
+                headingEl.style.fontWeight = 'normal';
+                imageSection.insertBefore(headingEl, moreImagesBtn);
+                // Ensure imageSection is position: relative
+                imageSection.style.position = 'relative';
+                // Optionally, adjust button style for top right
+                moreImagesBtn.style.position = 'absolute';
+                moreImagesBtn.style.top = '10px';
+                moreImagesBtn.style.right = '10px';
+            }
+        }, 0);
         
         console.log('[RECIPE] renderRecipe completed successfully');
     }
