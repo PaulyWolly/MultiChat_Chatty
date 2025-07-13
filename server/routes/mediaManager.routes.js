@@ -124,17 +124,64 @@ router.post('/fetch-tmdb', async (req, res) => {
 // POST /api/media/save
 router.post('/save', (req, res) => {
   try {
-    const { type, absPath, poster, description, cast, title, year } = req.body;
+    const { type } = req.body;
     if (!type || (type !== 'movie' && type !== 'tv')) {
       return res.status(400).json({ success: false, error: 'Invalid or missing type (movie|tv)' });
     }
+    if (type === 'tv') {
+      // --- TV SHOW SAVE LOGIC ---
+      const { tmdbId, title, year, description, cast, poster, seasons, showPath } = req.body;
+      if (!title || !seasons || !Array.isArray(seasons) || seasons.length === 0) {
+        return res.status(400).json({ success: false, error: 'Missing required TV show fields (title, at least one season)' });
+      }
+      // Load existing TV shows
+      let tvData = [];
+      if (fs.existsSync(TV_JSON)) {
+        try { tvData = JSON.parse(fs.readFileSync(TV_JSON, 'utf8')); } catch (e) { tvData = []; }
+      }
+      // If tvData is an object with folders, convert to flat array
+      if (!Array.isArray(tvData) && tvData && Array.isArray(tvData.folders)) {
+        tvData = tvData.folders.map(showFolder => {
+          const showTitle = showFolder.path.split(/[/\\]/)[0] || showFolder.path;
+          const showSeasons = (showFolder.folders || []).map(seasonFolder => {
+            // Try to extract season number from folder name
+            let seasonNumber = 1;
+            const match = seasonFolder.path.match(/Season\s*(-?\d+)/i);
+            if (match) seasonNumber = Math.abs(parseInt(match[1], 10));
+            // Fallback: try to extract from first episode filename
+            if (!seasonNumber && seasonFolder.files && seasonFolder.files[0]) {
+              const epMatch = seasonFolder.files[0].name.match(/S(\d{1,2})E\d{1,2}/i);
+              if (epMatch) seasonNumber = parseInt(epMatch[1], 10);
+            }
+            const episodes = (seasonFolder.files || []).map(file => ({
+              filename: file.name,
+              filePath: file.absPath || file.relPath || '',
+            }));
+            return { seasonNumber, episodes };
+          });
+          return { title: showTitle, seasons: showSeasons };
+        });
+      }
+      // Find existing show by tmdbId or title
+      let idx = -1;
+      if (tmdbId) idx = tvData.findIndex(show => show.tmdbId === tmdbId);
+      if (idx === -1) idx = tvData.findIndex(show => show.title && show.title.toLowerCase() === title.toLowerCase());
+      const showObj = { tmdbId, title, year, description, cast, poster, seasons, showPath };
+      if (idx !== -1) {
+        tvData[idx] = showObj;
+      } else {
+        tvData.push(showObj);
+      }
+      fs.writeFileSync(TV_JSON, JSON.stringify(tvData, null, 2));
+      return res.json({ success: true, saved: showObj });
+    }
+    // --- MOVIE SAVE LOGIC (unchanged) ---
+    const { absPath, poster, description, cast, title, year } = req.body;
     if (!absPath) {
       return res.status(400).json({ success: false, error: 'Missing absPath' });
     }
-    
     // Save under ONE key: the full absPath
     console.log('[MEDIA SAVE] Saving under key:', absPath);
-    
     // Save description
     let descData = {};
     if (fs.existsSync(MOVIE_DESC_JSON)) descData = JSON.parse(fs.readFileSync(MOVIE_DESC_JSON, 'utf8'));
@@ -143,7 +190,6 @@ router.post('/save', (req, res) => {
     descData[absPath].year = year || '';
     descData[absPath].description = description || '';
     fs.writeFileSync(MOVIE_DESC_JSON, JSON.stringify(descData, null, 2));
-    
     // Save cast
     let castData = {};
     if (fs.existsSync(MOVIE_CAST_JSON)) castData = JSON.parse(fs.readFileSync(MOVIE_CAST_JSON, 'utf8'));
@@ -153,9 +199,7 @@ router.post('/save', (req, res) => {
       cast: cast || [] 
     };
     fs.writeFileSync(MOVIE_CAST_JSON, JSON.stringify(castData, null, 2));
-    
     console.log('[MEDIA SAVE] Saved data under key:', absPath);
-    
     // Poster saving would be handled elsewhere (file copy/upload), but can store poster URL/path here if needed
     return res.json({ success: true, keySaved: absPath });
   } catch (err) {
@@ -189,4 +233,54 @@ router.post('/api/media/validate-path', (req, res) => {
   }
 });
 
-module.exports = router; 
+// POST /api/media/scan-tv-structure
+router.post('/scan-tv-structure', (req, res) => {
+  try {
+    if (!req.body || !req.body.showPath) {
+      return res.status(400).json({ success: false, error: 'Missing showPath in request body' });
+    }
+    const { showPath } = req.body;
+    if (!showPath) {
+      return res.status(400).json({ success: false, error: 'Missing showPath parameter' });
+    }
+    if (!fs.existsSync(showPath)) {
+      return res.status(404).json({ success: false, error: `Path not found: ${showPath}` });
+    }
+    // Scan for season folders
+    const seasons = [];
+    const showDir = fs.readdirSync(showPath, { withFileTypes: true });
+    const seasonFolders = showDir
+      .filter(dirent => dirent.isDirectory())
+      .filter(dirent => /season\s*\d+/i.test(dirent.name));
+    seasonFolders.forEach(seasonFolder => {
+      const seasonPath = path.join(showPath, seasonFolder.name);
+      const seasonMatch = seasonFolder.name.match(/season\s*(\d+)/i);
+      const seasonNumber = seasonMatch ? parseInt(seasonMatch[1], 10) : undefined;
+      const episodes = [];
+      const files = fs.readdirSync(seasonPath, { withFileTypes: true })
+        .filter(dirent => dirent.isFile())
+        .filter(dirent => /\.(mp4|mkv|avi|mov)$/i.test(dirent.name));
+      files.forEach(file => {
+        episodes.push({
+          filename: file.name,
+          filePath: path.join(seasonPath, file.name)
+        });
+      });
+      seasons.push({ seasonNumber, seasonName: seasonFolder.name, episodes });
+    });
+    return res.json({
+      success: true,
+      data: {
+        showPath,
+        seasons,
+        totalSeasons: seasons.length,
+        totalEpisodes: seasons.reduce((sum, s) => sum + s.episodes.length, 0)
+      }
+    });
+  } catch (err) {
+    console.error('[TV STRUCTURE SCAN] Error:', err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+module.exports = router;

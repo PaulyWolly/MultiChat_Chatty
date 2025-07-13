@@ -5151,61 +5151,117 @@
               "path": "Halo\\Season 01\\Episode_images",
               "folders": [],
               "files": []
+            },
+            {
+              "path": "Halo\\Season 01\\Halo S01 Complete Season 1 720p WEBRip AAC x264-HODL",
+              "folders": [],
+              "files": []
+            },
+            {
+              "path": "Halo\\Season 01\\mp4-no-AAC",
+              "folders": [],
+              "files": [
+                {
+                  "name": "Halo - S01E08 - Allegiance.mp4",
+                  "absPath": "S:\\MEDIA\\TV-SHOWS\\Halo\\Season 01\\mp4-no-AAC\\Halo - S01E08 - Allegiance.mp4",
+                  "relPath": "Halo\\Season 01\\mp4-no-AAC\\Halo - S01E08 - Allegiance.mp4"
+                },
+                {
+                  "name": "Halo - S01E09 - Transcendence.mp4",
+                  "absPath": "S:\\MEDIA\\TV-SHOWS\\Halo\\Season 01\\mp4-no-AAC\\Halo - S01E09 - Transcendence.mp4",
+                  "relPath": "Halo\\Season 01\\mp4-no-AAC\\Halo - S01E09 - Transcendence.mp4"
+                },
+                {
+                  "name": "Halo - S01E01 - Contact.mp4",
+                  "absPath": "S:\\MEDIA\\TV-SHOWS\\Halo\\Season 01\\mp4-no-AAC\\Halo - S01E01 - Contact.mp4",
+                  "relPath": "Halo\\Season 01\\mp4-no-AAC\\Halo - S01E01 - Contact.mp4"
+                },
+                {
+                  "name": "Halo - S01E02 - Unbound.mp4",
+                  "absPath": "S:\\MEDIA\\TV-SHOWS\\Halo\\Season 01\\mp4-no-AAC\\Halo - S01E02 - Unbound.mp4",
+                  "relPath": "Halo\\Season 01\\mp4-no-AAC\\Halo - S01E02 - Unbound.mp4"
+                },
+                {
+                  "name": "Halo - S01E03 - Emergence.mp4",
+                  "absPath": "S:\\MEDIA\\TV-SHOWS\\Halo\\Season 01\\mp4-no-AAC\\Halo - S01E03 - Emergence.mp4",
+                  "relPath": "Halo\\Season 01\\mp4-no-AAC\\Halo - S01E03 - Emergence.mp4"
+                },
+                {
+                  "name": "Halo - S01E04 - Homecoming.mp4",
+                  "absPath": "S:\\MEDIA\\TV-SHOWS\\Halo\\Season 01\\mp4-no-AAC\\Halo - S01E04 - Homecoming.mp4",
+                  "relPath": "Halo\\Season 01\\mp4-no-AAC\\Halo - S01E04 - Homecoming.mp4"
+                },
+                {
+                  "name": "Halo - S01E05 - Reckoning.mp4",
+                  "absPath": "S:\\MEDIA\\TV-SHOWS\\Halo\\Season 01\\mp4-no-AAC\\Halo - S01E05 - Reckoning.mp4",
+                  "relPath": "Halo\\Season 01\\mp4-no-AAC\\Halo - S01E05 - Reckoning.mp4"
+                },
+                {
+                  "name": "Halo - S01E06 - Solace.mp4",
+                  "absPath": "S:\\MEDIA\\TV-SHOWS\\Halo\\Season 01\\mp4-no-AAC\\Halo - S01E06 - Solace.mp4",
+                  "relPath": "Halo\\Season 01\\mp4-no-AAC\\Halo - S01E06 - Solace.mp4"
+                },
+                {
+                  "name": "Halo - S01E07 - Inheritance.mp4",
+                  "absPath": "S:\\MEDIA\\TV-SHOWS\\Halo\\Season 01\\mp4-no-AAC\\Halo - S01E07 - Inheritance.mp4",
+                  "relPath": "Halo\\Season 01\\mp4-no-AAC\\Halo - S01E07 - Inheritance.mp4"
+                }
+              ]
             }
           ],
           "files": [
             {
-              "name": "Halo - S01E01 - Contact.mp4",
-              "absPath": "S:\\MEDIA\\TV-SHOWS\\Halo\\Season 01\\Halo - S01E01 - Contact.mp4",
-              "relPath": "Halo\\Season 01\\Halo - S01E01 - Contact.mp4",
+              "name": "Halo S01E01.mp4",
+              "absPath": "S:\\MEDIA\\TV-SHOWS\\Halo\\Season 01\\Halo S01E01.mp4",
+              "relPath": "Halo\\Season 01\\Halo S01E01.mp4",
               "still": "https://image.tmdb.org/t/p/w500/zfBMkRvJ1M859881quboW3mnwEr.jpg"
             },
             {
-              "name": "Halo - S01E02 - Unbound.mp4",
-              "absPath": "S:\\MEDIA\\TV-SHOWS\\Halo\\Season 01\\Halo - S01E02 - Unbound.mp4",
-              "relPath": "Halo\\Season 01\\Halo - S01E02 - Unbound.mp4",
+              "name": "Halo S01E02.mp4",
+              "absPath": "S:\\MEDIA\\TV-SHOWS\\Halo\\Season 01\\Halo S01E02.mp4",
+              "relPath": "Halo\\Season 01\\Halo S01E02.mp4",
               "still": "https://image.tmdb.org/t/p/w500/wsBa3hDCmUg3h7c6h27KqhbhCff.jpg"
             },
             {
-              "name": "Halo - S01E03 - Emergence.mp4",
-              "absPath": "S:\\MEDIA\\TV-SHOWS\\Halo\\Season 01\\Halo - S01E03 - Emergence.mp4",
-              "relPath": "Halo\\Season 01\\Halo - S01E03 - Emergence.mp4",
+              "name": "Halo S01E03.mp4",
+              "absPath": "S:\\MEDIA\\TV-SHOWS\\Halo\\Season 01\\Halo S01E03.mp4",
+              "relPath": "Halo\\Season 01\\Halo S01E03.mp4",
               "still": "https://image.tmdb.org/t/p/w500/7lVJdxrqk6AJLxZrRuCujbQKTp6.jpg"
             },
             {
-              "name": "Halo - S01E04 - Homecoming.mp4",
-              "absPath": "S:\\MEDIA\\TV-SHOWS\\Halo\\Season 01\\Halo - S01E04 - Homecoming.mp4",
-              "relPath": "Halo\\Season 01\\Halo - S01E04 - Homecoming.mp4",
+              "name": "Halo S01E04.mp4",
+              "absPath": "S:\\MEDIA\\TV-SHOWS\\Halo\\Season 01\\Halo S01E04.mp4",
+              "relPath": "Halo\\Season 01\\Halo S01E04.mp4",
               "still": "https://image.tmdb.org/t/p/w500/20EcSRmvdQiJcxwXHoBzgGfHmvP.jpg"
             },
             {
-              "name": "Halo - S01E05 - Reckoning.mp4",
-              "absPath": "S:\\MEDIA\\TV-SHOWS\\Halo\\Season 01\\Halo - S01E05 - Reckoning.mp4",
-              "relPath": "Halo\\Season 01\\Halo - S01E05 - Reckoning.mp4",
+              "name": "Halo S01E05.mp4",
+              "absPath": "S:\\MEDIA\\TV-SHOWS\\Halo\\Season 01\\Halo S01E05.mp4",
+              "relPath": "Halo\\Season 01\\Halo S01E05.mp4",
               "still": "https://image.tmdb.org/t/p/w500/eAPqbbHFZBrsTcZhxnoWChq2nX4.jpg"
             },
             {
-              "name": "Halo - S01E06 - Solace.mp4",
-              "absPath": "S:\\MEDIA\\TV-SHOWS\\Halo\\Season 01\\Halo - S01E06 - Solace.mp4",
-              "relPath": "Halo\\Season 01\\Halo - S01E06 - Solace.mp4",
+              "name": "Halo S01E06.mp4",
+              "absPath": "S:\\MEDIA\\TV-SHOWS\\Halo\\Season 01\\Halo S01E06.mp4",
+              "relPath": "Halo\\Season 01\\Halo S01E06.mp4",
               "still": "https://image.tmdb.org/t/p/w500/9FGGWwBZeN8YrNmcgIyG8QNnJ6T.jpg"
             },
             {
-              "name": "Halo - S01E07 - Inheritance.mp4",
-              "absPath": "S:\\MEDIA\\TV-SHOWS\\Halo\\Season 01\\Halo - S01E07 - Inheritance.mp4",
-              "relPath": "Halo\\Season 01\\Halo - S01E07 - Inheritance.mp4",
+              "name": "Halo S01E07.mp4",
+              "absPath": "S:\\MEDIA\\TV-SHOWS\\Halo\\Season 01\\Halo S01E07.mp4",
+              "relPath": "Halo\\Season 01\\Halo S01E07.mp4",
               "still": "https://image.tmdb.org/t/p/w500/qvt1RzfgEUejE9dWqXjyX3xaQtk.jpg"
             },
             {
-              "name": "Halo - S01E08 - Allegiance.mp4",
-              "absPath": "S:\\MEDIA\\TV-SHOWS\\Halo\\Season 01\\Halo - S01E08 - Allegiance.mp4",
-              "relPath": "Halo\\Season 01\\Halo - S01E08 - Allegiance.mp4",
+              "name": "Halo S01E08.mp4",
+              "absPath": "S:\\MEDIA\\TV-SHOWS\\Halo\\Season 01\\Halo S01E08.mp4",
+              "relPath": "Halo\\Season 01\\Halo S01E08.mp4",
               "still": "https://image.tmdb.org/t/p/w500/ww9Q1pDeWV0LsOCD6v3uXYaX5SH.jpg"
             },
             {
-              "name": "Halo - S01E09 - Transcendence.mp4",
-              "absPath": "S:\\MEDIA\\TV-SHOWS\\Halo\\Season 01\\Halo - S01E09 - Transcendence.mp4",
-              "relPath": "Halo\\Season 01\\Halo - S01E09 - Transcendence.mp4",
+              "name": "Halo S01E09.mp4",
+              "absPath": "S:\\MEDIA\\TV-SHOWS\\Halo\\Season 01\\Halo S01E09.mp4",
+              "relPath": "Halo\\Season 01\\Halo S01E09.mp4",
               "still": "https://image.tmdb.org/t/p/w500/AkSS0MyRpjbQ6WrOhIwQw4t7Ea8.jpg"
             }
           ],
@@ -5218,6 +5274,52 @@
               "path": "Halo\\Season 02\\Episode_images",
               "folders": [],
               "files": []
+            },
+            {
+              "path": "Halo\\Season 02\\Halo.S02.1080p.ITA-ENG.WEBRip.x265.AAC-V3SP4EV3R",
+              "folders": [],
+              "files": [
+                {
+                  "name": "Halo.S02E02.Sword.1080p.ITA-ENG.WEBRip.x265.AAC-V3SP4EV3R.mkv",
+                  "absPath": "S:\\MEDIA\\TV-SHOWS\\Halo\\Season 02\\Halo.S02.1080p.ITA-ENG.WEBRip.x265.AAC-V3SP4EV3R\\Halo.S02E02.Sword.1080p.ITA-ENG.WEBRip.x265.AAC-V3SP4EV3R.mkv",
+                  "relPath": "Halo\\Season 02\\Halo.S02.1080p.ITA-ENG.WEBRip.x265.AAC-V3SP4EV3R\\Halo.S02E02.Sword.1080p.ITA-ENG.WEBRip.x265.AAC-V3SP4EV3R.mkv"
+                },
+                {
+                  "name": "Halo.S02E03.Visegrad.1080p.ITA-ENG.WEBRip.x265.AAC-V3SP4EV3R.mkv",
+                  "absPath": "S:\\MEDIA\\TV-SHOWS\\Halo\\Season 02\\Halo.S02.1080p.ITA-ENG.WEBRip.x265.AAC-V3SP4EV3R\\Halo.S02E03.Visegrad.1080p.ITA-ENG.WEBRip.x265.AAC-V3SP4EV3R.mkv",
+                  "relPath": "Halo\\Season 02\\Halo.S02.1080p.ITA-ENG.WEBRip.x265.AAC-V3SP4EV3R\\Halo.S02E03.Visegrad.1080p.ITA-ENG.WEBRip.x265.AAC-V3SP4EV3R.mkv"
+                },
+                {
+                  "name": "Halo.S02E04.Reach.1080p.ITA-ENG.WEBRip.x265.AAC-V3SP4EV3R.mkv",
+                  "absPath": "S:\\MEDIA\\TV-SHOWS\\Halo\\Season 02\\Halo.S02.1080p.ITA-ENG.WEBRip.x265.AAC-V3SP4EV3R\\Halo.S02E04.Reach.1080p.ITA-ENG.WEBRip.x265.AAC-V3SP4EV3R.mkv",
+                  "relPath": "Halo\\Season 02\\Halo.S02.1080p.ITA-ENG.WEBRip.x265.AAC-V3SP4EV3R\\Halo.S02E04.Reach.1080p.ITA-ENG.WEBRip.x265.AAC-V3SP4EV3R.mkv"
+                },
+                {
+                  "name": "Halo.S02E01.Sanctuary.1080p.ITA-ENG.WEBRip.x265.AAC-V3SP4EV3R.mkv",
+                  "absPath": "S:\\MEDIA\\TV-SHOWS\\Halo\\Season 02\\Halo.S02.1080p.ITA-ENG.WEBRip.x265.AAC-V3SP4EV3R\\Halo.S02E01.Sanctuary.1080p.ITA-ENG.WEBRip.x265.AAC-V3SP4EV3R.mkv",
+                  "relPath": "Halo\\Season 02\\Halo.S02.1080p.ITA-ENG.WEBRip.x265.AAC-V3SP4EV3R\\Halo.S02E01.Sanctuary.1080p.ITA-ENG.WEBRip.x265.AAC-V3SP4EV3R.mkv"
+                },
+                {
+                  "name": "Halo.S02E06.Onyx.1080p.ITA-ENG.WEBRip.x265.AAC-V3SP4EV3R.mkv",
+                  "absPath": "S:\\MEDIA\\TV-SHOWS\\Halo\\Season 02\\Halo.S02.1080p.ITA-ENG.WEBRip.x265.AAC-V3SP4EV3R\\Halo.S02E06.Onyx.1080p.ITA-ENG.WEBRip.x265.AAC-V3SP4EV3R.mkv",
+                  "relPath": "Halo\\Season 02\\Halo.S02.1080p.ITA-ENG.WEBRip.x265.AAC-V3SP4EV3R\\Halo.S02E06.Onyx.1080p.ITA-ENG.WEBRip.x265.AAC-V3SP4EV3R.mkv"
+                },
+                {
+                  "name": "Halo.S02E07.Thermopylae.1080p.ITA-ENG.WEBRip.x265.AAC-V3SP4EV3R.mkv",
+                  "absPath": "S:\\MEDIA\\TV-SHOWS\\Halo\\Season 02\\Halo.S02.1080p.ITA-ENG.WEBRip.x265.AAC-V3SP4EV3R\\Halo.S02E07.Thermopylae.1080p.ITA-ENG.WEBRip.x265.AAC-V3SP4EV3R.mkv",
+                  "relPath": "Halo\\Season 02\\Halo.S02.1080p.ITA-ENG.WEBRip.x265.AAC-V3SP4EV3R\\Halo.S02E07.Thermopylae.1080p.ITA-ENG.WEBRip.x265.AAC-V3SP4EV3R.mkv"
+                },
+                {
+                  "name": "Halo.S02E08.Halo.1080p.ITA-ENG.WEBRip.x265.AAC-V3SP4EV3R.mkv",
+                  "absPath": "S:\\MEDIA\\TV-SHOWS\\Halo\\Season 02\\Halo.S02.1080p.ITA-ENG.WEBRip.x265.AAC-V3SP4EV3R\\Halo.S02E08.Halo.1080p.ITA-ENG.WEBRip.x265.AAC-V3SP4EV3R.mkv",
+                  "relPath": "Halo\\Season 02\\Halo.S02.1080p.ITA-ENG.WEBRip.x265.AAC-V3SP4EV3R\\Halo.S02E08.Halo.1080p.ITA-ENG.WEBRip.x265.AAC-V3SP4EV3R.mkv"
+                },
+                {
+                  "name": "Halo.S02E05.Aleria.1080p.ITA-ENG.WEBRip.x265.AAC-V3SP4EV3R.mkv",
+                  "absPath": "S:\\MEDIA\\TV-SHOWS\\Halo\\Season 02\\Halo.S02.1080p.ITA-ENG.WEBRip.x265.AAC-V3SP4EV3R\\Halo.S02E05.Aleria.1080p.ITA-ENG.WEBRip.x265.AAC-V3SP4EV3R.mkv",
+                  "relPath": "Halo\\Season 02\\Halo.S02.1080p.ITA-ENG.WEBRip.x265.AAC-V3SP4EV3R\\Halo.S02E05.Aleria.1080p.ITA-ENG.WEBRip.x265.AAC-V3SP4EV3R.mkv"
+                }
+              ]
             }
           ],
           "files": [
@@ -12447,82 +12549,82 @@
               "name": "Cosmos.Posssible.Worlds.S03E02 - The Fleeting Grace of the Habitable Zone.mkv",
               "absPath": "S:\\MEDIA\\TV-SHOWS\\Cosmos Possible Worlds\\Season 03\\Cosmos.Posssible.Worlds.S03E02 - The Fleeting Grace of the Habitable Zone.mkv",
               "relPath": "Cosmos Possible Worlds\\Season 03\\Cosmos.Posssible.Worlds.S03E02 - The Fleeting Grace of the Habitable Zone.mkv",
-              "still": "/media/TV-SHOWS/Cosmos Possible Worlds/Season 03/E02.jpg"
+              "still": null
             },
             {
               "name": "Cosmos.Posssible.Worlds.S03E03 - Lost City of Life.mkv",
               "absPath": "S:\\MEDIA\\TV-SHOWS\\Cosmos Possible Worlds\\Season 03\\Cosmos.Posssible.Worlds.S03E03 - Lost City of Life.mkv",
               "relPath": "Cosmos Possible Worlds\\Season 03\\Cosmos.Posssible.Worlds.S03E03 - Lost City of Life.mkv",
-              "still": "/media/TV-SHOWS/Cosmos Possible Worlds/Season 03/E03.jpg"
+              "still": null
             },
             {
               "name": "Cosmos.Posssible.Worlds.S03E05 - The Cosmic Connectome.mkv",
               "absPath": "S:\\MEDIA\\TV-SHOWS\\Cosmos Possible Worlds\\Season 03\\Cosmos.Posssible.Worlds.S03E05 - The Cosmic Connectome.mkv",
               "relPath": "Cosmos Possible Worlds\\Season 03\\Cosmos.Posssible.Worlds.S03E05 - The Cosmic Connectome.mkv",
-              "still": "/media/TV-SHOWS/Cosmos Possible Worlds/Season 03/E05.jpg"
+              "still": null
             },
             {
               "name": "Cosmos.Posssible.Worlds.S03E06 - The Man of a Trillion Worlds.mkv",
               "absPath": "S:\\MEDIA\\TV-SHOWS\\Cosmos Possible Worlds\\Season 03\\Cosmos.Posssible.Worlds.S03E06 - The Man of a Trillion Worlds.mkv",
               "relPath": "Cosmos Possible Worlds\\Season 03\\Cosmos.Posssible.Worlds.S03E06 - The Man of a Trillion Worlds.mkv",
-              "still": "/media/TV-SHOWS/Cosmos Possible Worlds/Season 03/E06.jpg"
+              "still": null
             },
             {
               "name": "Cosmos.Posssible.Worlds.S03E07 - The Search for Intelligent Life on Earth.mkv",
               "absPath": "S:\\MEDIA\\TV-SHOWS\\Cosmos Possible Worlds\\Season 03\\Cosmos.Posssible.Worlds.S03E07 - The Search for Intelligent Life on Earth.mkv",
               "relPath": "Cosmos Possible Worlds\\Season 03\\Cosmos.Posssible.Worlds.S03E07 - The Search for Intelligent Life on Earth.mkv",
-              "still": "/media/TV-SHOWS/Cosmos Possible Worlds/Season 03/E07.jpg"
+              "still": null
             },
             {
               "name": "Cosmos.Posssible.Worlds.S03E08 - The Sacrifice of Cassini.mkv",
               "absPath": "S:\\MEDIA\\TV-SHOWS\\Cosmos Possible Worlds\\Season 03\\Cosmos.Posssible.Worlds.S03E08 - The Sacrifice of Cassini.mkv",
               "relPath": "Cosmos Possible Worlds\\Season 03\\Cosmos.Posssible.Worlds.S03E08 - The Sacrifice of Cassini.mkv",
-              "still": "/media/TV-SHOWS/Cosmos Possible Worlds/Season 03/E08.jpg"
+              "still": null
             },
             {
               "name": "Cosmos.Posssible.Worlds.S03E09 - Magic Without Lies.mkv",
               "absPath": "S:\\MEDIA\\TV-SHOWS\\Cosmos Possible Worlds\\Season 03\\Cosmos.Posssible.Worlds.S03E09 - Magic Without Lies.mkv",
               "relPath": "Cosmos Possible Worlds\\Season 03\\Cosmos.Posssible.Worlds.S03E09 - Magic Without Lies.mkv",
-              "still": "/media/TV-SHOWS/Cosmos Possible Worlds/Season 03/E09.jpg"
+              "still": null
             },
             {
               "name": "Cosmos.Posssible.Worlds.S03E10 - A Tale of Two Atoms.mkv",
               "absPath": "S:\\MEDIA\\TV-SHOWS\\Cosmos Possible Worlds\\Season 03\\Cosmos.Posssible.Worlds.S03E10 - A Tale of Two Atoms.mkv",
               "relPath": "Cosmos Possible Worlds\\Season 03\\Cosmos.Posssible.Worlds.S03E10 - A Tale of Two Atoms.mkv",
-              "still": "/media/TV-SHOWS/Cosmos Possible Worlds/Season 03/E10.jpg"
+              "still": null
             },
             {
               "name": "Cosmos.Posssible.Worlds.S03E11 - Shadows of Forgotten Ancestors.mkv",
               "absPath": "S:\\MEDIA\\TV-SHOWS\\Cosmos Possible Worlds\\Season 03\\Cosmos.Posssible.Worlds.S03E11 - Shadows of Forgotten Ancestors.mkv",
               "relPath": "Cosmos Possible Worlds\\Season 03\\Cosmos.Posssible.Worlds.S03E11 - Shadows of Forgotten Ancestors.mkv",
-              "still": "/media/TV-SHOWS/Cosmos Possible Worlds/Season 03/E11.jpg"
+              "still": null
             },
             {
               "name": "Cosmos.Posssible.Worlds.S03E12 - Coming of Age In The Anthropocene.mkv",
               "absPath": "S:\\MEDIA\\TV-SHOWS\\Cosmos Possible Worlds\\Season 03\\Cosmos.Posssible.Worlds.S03E12 - Coming of Age In The Anthropocene.mkv",
               "relPath": "Cosmos Possible Worlds\\Season 03\\Cosmos.Posssible.Worlds.S03E12 - Coming of Age In The Anthropocene.mkv",
-              "still": "/media/TV-SHOWS/Cosmos Possible Worlds/Season 03/E12.jpg"
+              "still": null
             },
             {
               "name": "Cosmos.Posssible.Worlds.S03E13 - Seven Wonders of The New World.mkv",
               "absPath": "S:\\MEDIA\\TV-SHOWS\\Cosmos Possible Worlds\\Season 03\\Cosmos.Posssible.Worlds.S03E13 - Seven Wonders of The New World.mkv",
               "relPath": "Cosmos Possible Worlds\\Season 03\\Cosmos.Posssible.Worlds.S03E13 - Seven Wonders of The New World.mkv",
-              "still": "/media/TV-SHOWS/Cosmos Possible Worlds/Season 03/E13.jpg"
+              "still": null
             },
             {
               "name": "Cosmos.Posssible.Worlds.S03E01 - Ladder to the Stars.mkv",
               "absPath": "S:\\MEDIA\\TV-SHOWS\\Cosmos Possible Worlds\\Season 03\\Cosmos.Posssible.Worlds.S03E01 - Ladder to the Stars.mkv",
               "relPath": "Cosmos Possible Worlds\\Season 03\\Cosmos.Posssible.Worlds.S03E01 - Ladder to the Stars.mkv",
-              "still": "/media/TV-SHOWS/Cosmos Possible Worlds/Season 03/E01.jpg"
+              "still": null
             },
             {
               "name": "Cosmos.Posssible.Worlds.S03E04 - Vavilov.mkv",
               "absPath": "S:\\MEDIA\\TV-SHOWS\\Cosmos Possible Worlds\\Season 03\\Cosmos.Posssible.Worlds.S03E04 - Vavilov.mkv",
               "relPath": "Cosmos Possible Worlds\\Season 03\\Cosmos.Posssible.Worlds.S03E04 - Vavilov.mkv",
-              "still": "/media/TV-SHOWS/Cosmos Possible Worlds/Season 03/E04.jpg"
+              "still": null
             }
           ],
-          "poster": "S:/MEDIA/TV-SHOWS/Cosmos Possible Worlds/Season 03/poster.jpg"
+          "poster": "/MEDIA/TV-SHOWS/Cosmos Possible Worlds/Season 03/poster.jpg"
         }
       ],
       "files": [],
@@ -12538,6 +12640,17 @@
               "path": "Another Life\\Season 01\\Episode_images",
               "folders": [],
               "files": []
+            },
+            {
+              "path": "Another Life\\Season 01\\mp4",
+              "folders": [],
+              "files": [
+                {
+                  "name": "Another Life - S01E02 - Through the Valley of Shadows.mp4",
+                  "absPath": "S:\\MEDIA\\TV-SHOWS\\Another Life\\Season 01\\mp4\\Another Life - S01E02 - Through the Valley of Shadows.mp4",
+                  "relPath": "Another Life\\Season 01\\mp4\\Another Life - S01E02 - Through the Valley of Shadows.mp4"
+                }
+              ]
             }
           ],
           "files": [
@@ -12600,12 +12713,6 @@
               "absPath": "S:\\MEDIA\\TV-SHOWS\\Another Life\\Season 01\\Another Life - S01E10 - Hello.mkv",
               "relPath": "Another Life\\Season 01\\Another Life - S01E10 - Hello.mkv",
               "still": "https://image.tmdb.org/t/p/w500/v3vlMi1C5k8EhUmOQ4YlhxG4pUt.jpg"
-            },
-            {
-              "name": "Another Life - S01E02 - Through the Valley of Shadows.mp4",
-              "absPath": "S:\\MEDIA\\TV-SHOWS\\Another Life\\Season 01\\Another Life - S01E02 - Through the Valley of Shadows.mp4",
-              "relPath": "Another Life\\Season 01\\Another Life - S01E02 - Through the Valley of Shadows.mp4",
-              "still": "https://image.tmdb.org/t/p/w500/ol99mydGgGln1BIZ8KQzlNFVPyP.jpg"
             }
           ],
           "poster": "https://image.tmdb.org/t/p/w500/htazQ0cPoloL5SJ2bqOCKh9UTcc.jpg"
@@ -13584,7 +13691,8 @@
             {
               "name": "Life in Cold Blood - S01E05 - Birds.mp4",
               "absPath": "S:\\MEDIA\\TV-SHOWS\\Life in Cold Blood\\Season 01\\Life in Cold Blood - S01E05 - Birds.mp4",
-              "relPath": "Life in Cold Blood\\Season 01\\Life in Cold Blood - S01E05 - Birds.mp4"
+              "relPath": "Life in Cold Blood\\Season 01\\Life in Cold Blood - S01E05 - Birds.mp4",
+              "still": "https://image.tmdb.org/t/p/w500/cK6odUhZnrPmwC7uIN6aPm07iEN.jpg"
             }
           ],
           "poster": "https://image.tmdb.org/t/p/w500/wLmJ5gUNR9fRHczyKpmREkM8IYQ.jpg"
@@ -13601,8 +13709,7 @@
           "files": []
         }
       ],
-      "files": [],
-      "poster": "https://image.tmdb.org/t/p/w500/wLmJ5gUNR9fRHczyKpmREkM8IYQ.jpg"
+      "files": []
     },
     {
       "path": "The Pacific",
@@ -13666,7 +13773,7 @@
               "still": "https://image.tmdb.org/t/p/w500/HCR4Y6qcbCemtOZe3VqqOhVzYW.jpg"
             }
           ],
-          "poster": null
+          "poster": "https://image.tmdb.org/t/p/w1280/8OKIC10V0vKoFoV088GSD6uMT11.jpg"
         },
         {
           "path": "Pacific Abyss\\images",
@@ -13909,8 +14016,7 @@
           "files": []
         }
       ],
-      "files": [],
-      "poster": "https://image.tmdb.org/t/p/w500/5x3ExyQ6sWrQdMyg8kgyJhmfrIT.jpg"
+      "files": []
     },
     {
       "path": "Blue Planet II",
@@ -14945,79 +15051,79 @@
               "name": "Cosmos (1980) - S01E01 - The Shores of the Cosmic Ocean.mp4",
               "absPath": "S:\\MEDIA\\TV-SHOWS\\Cosmos\\Season 01\\Cosmos (1980) - S01E01 - The Shores of the Cosmic Ocean.mp4",
               "relPath": "Cosmos\\Season 01\\Cosmos (1980) - S01E01 - The Shores of the Cosmic Ocean.mp4",
-              "still": "https://media.themoviedb.org/t/p/w454_and_h254_bestv2/sAp5RwWRVF3gJ5VKhU4oxJ55hlj.jpg"
+              "still": "https://image.tmdb.org/t/p/w500/4F9kbEp4PFe6CfHDMdQynOCiFmL.jpg"
             },
             {
               "name": "Cosmos (1980) - S01E03 - Harmony of the Worlds.mp4",
               "absPath": "S:\\MEDIA\\TV-SHOWS\\Cosmos\\Season 01\\Cosmos (1980) - S01E03 - Harmony of the Worlds.mp4",
               "relPath": "Cosmos\\Season 01\\Cosmos (1980) - S01E03 - Harmony of the Worlds.mp4",
-              "still": "https://media.themoviedb.org/t/p/w454_and_h254_bestv2/vUHfiicahadxcC8NiYsrLvxO8Y9.jpg"
+              "still": "https://image.tmdb.org/t/p/w500/qGi5Tu6dTA7TZU8j9ZCa6jo0kZ4.jpg"
             },
             {
               "name": "Cosmos (1980) - S01E05 - Blues for a Red Planet.mp4",
               "absPath": "S:\\MEDIA\\TV-SHOWS\\Cosmos\\Season 01\\Cosmos (1980) - S01E05 - Blues for a Red Planet.mp4",
               "relPath": "Cosmos\\Season 01\\Cosmos (1980) - S01E05 - Blues for a Red Planet.mp4",
-              "still": "https://media.themoviedb.org/t/p/w454_and_h254_bestv2/92SjEitSQc2ObsxqMLhw7AJSzp6.jpg"
+              "still": "https://image.tmdb.org/t/p/w500/q9XFUwD7uwubjZFTgG49tX3diB.jpg"
             },
             {
               "name": "Cosmos (1980) - S01E09 - The Lives of the Stars.mp4",
               "absPath": "S:\\MEDIA\\TV-SHOWS\\Cosmos\\Season 01\\Cosmos (1980) - S01E09 - The Lives of the Stars.mp4",
               "relPath": "Cosmos\\Season 01\\Cosmos (1980) - S01E09 - The Lives of the Stars.mp4",
-              "still": "https://media.themoviedb.org/t/p/w454_and_h254_bestv2/uR3kSwxWH2x8cXiiIw0PXUOsLjq.jpg"
+              "still": "https://image.tmdb.org/t/p/w500/2czDEyu1oGIRXpI6EMNcx0sCvMK.jpg"
             },
             {
               "name": "Cosmos (1980) - S01E06 - Travellers' Tales.mp4",
               "absPath": "S:\\MEDIA\\TV-SHOWS\\Cosmos\\Season 01\\Cosmos (1980) - S01E06 - Travellers' Tales.mp4",
               "relPath": "Cosmos\\Season 01\\Cosmos (1980) - S01E06 - Travellers' Tales.mp4",
-              "still": "https://media.themoviedb.org/t/p/w454_and_h254_bestv2/zCcIaVIVE1I6gUnpZrzt15XVuga.jpg"
+              "still": "https://image.tmdb.org/t/p/w500/uUaOZFE8BXAZ6607U1sedYats4W.jpg"
             },
             {
               "name": "Cosmos (1980) - S01E08 - Journeys in Space and Time.mp4",
               "absPath": "S:\\MEDIA\\TV-SHOWS\\Cosmos\\Season 01\\Cosmos (1980) - S01E08 - Journeys in Space and Time.mp4",
               "relPath": "Cosmos\\Season 01\\Cosmos (1980) - S01E08 - Journeys in Space and Time.mp4",
-              "still": "https://media.themoviedb.org/t/p/w454_and_h254_bestv2/tvFw1uNC2TWzTExYCeDPL32uXUS.jpg"
+              "still": "https://image.tmdb.org/t/p/w500/xwQY1ZU2XP118teBrvSwkXQESQp.jpg"
             },
             {
               "name": "Cosmos (1980) - S01E12 - Encyclopedia Galactica.mp4",
               "absPath": "S:\\MEDIA\\TV-SHOWS\\Cosmos\\Season 01\\Cosmos (1980) - S01E12 - Encyclopedia Galactica.mp4",
               "relPath": "Cosmos\\Season 01\\Cosmos (1980) - S01E12 - Encyclopedia Galactica.mp4",
-              "still": "https://media.themoviedb.org/t/p/w454_and_h254_bestv2/olQ9el0lsNqNABXx8oYWYz3fCvB.jpg"
+              "still": "https://image.tmdb.org/t/p/w500/tcSnZ0zDWFwC6BAC5APY6PPPV96.jpg"
             },
             {
               "name": "Cosmos (1980) - S01E13 - Who Speaks for Earth.mp4",
               "absPath": "S:\\MEDIA\\TV-SHOWS\\Cosmos\\Season 01\\Cosmos (1980) - S01E13 - Who Speaks for Earth.mp4",
               "relPath": "Cosmos\\Season 01\\Cosmos (1980) - S01E13 - Who Speaks for Earth.mp4",
-              "still": "https://media.themoviedb.org/t/p/w454_and_h254_bestv2/7TQRZaAFs0gQRBPEr59UalG0z7X.jpg"
+              "still": "https://image.tmdb.org/t/p/w500/1AABie1pF3tbfusWi5yqRefKi5E.jpg"
             },
             {
               "name": "Cosmos (1980) - S01E02 - One Voice in the Cosmic Fugue.mp4",
               "absPath": "S:\\MEDIA\\TV-SHOWS\\Cosmos\\Season 01\\Cosmos (1980) - S01E02 - One Voice in the Cosmic Fugue.mp4",
               "relPath": "Cosmos\\Season 01\\Cosmos (1980) - S01E02 - One Voice in the Cosmic Fugue.mp4",
-              "still": "https://media.themoviedb.org/t/p/w454_and_h254_bestv2/7qpyXJahEPUAMr7n4Hu6ch6sdIb.jpg"
+              "still": "https://image.tmdb.org/t/p/w500/oN6FHlQfQiZQy1TKuLHG1Nn415U.jpg"
             },
             {
               "name": "Cosmos (1980) - S01E04 - Heaven and Hell.mp4",
               "absPath": "S:\\MEDIA\\TV-SHOWS\\Cosmos\\Season 01\\Cosmos (1980) - S01E04 - Heaven and Hell.mp4",
               "relPath": "Cosmos\\Season 01\\Cosmos (1980) - S01E04 - Heaven and Hell.mp4",
-              "still": "https://media.themoviedb.org/t/p/w454_and_h254_bestv2/6jPkkl2iZrTcF3XsnXeLHqxwzbP.jpg"
+              "still": "https://image.tmdb.org/t/p/w500/q8ubQz9NDIMukbev1wG30g60OgI.jpg"
             },
             {
               "name": "Cosmos (1980) - S01E07 - The Backbone of Night.mp4",
               "absPath": "S:\\MEDIA\\TV-SHOWS\\Cosmos\\Season 01\\Cosmos (1980) - S01E07 - The Backbone of Night.mp4",
               "relPath": "Cosmos\\Season 01\\Cosmos (1980) - S01E07 - The Backbone of Night.mp4",
-              "still": "https://media.themoviedb.org/t/p/w454_and_h254_bestv2/tzFDMolLbm71MtWO2emGDZbjLS2.jpg"
+              "still": "https://image.tmdb.org/t/p/w500/ljJlqURrlY4h0Jy0Cx9iTFNIgup.jpg"
             },
             {
               "name": "Cosmos (1980) - S01E10 - The Edge of Forever.mp4",
               "absPath": "S:\\MEDIA\\TV-SHOWS\\Cosmos\\Season 01\\Cosmos (1980) - S01E10 - The Edge of Forever.mp4",
               "relPath": "Cosmos\\Season 01\\Cosmos (1980) - S01E10 - The Edge of Forever.mp4",
-              "still": "https://media.themoviedb.org/t/p/w454_and_h254_bestv2/tekbBRggCaXxKTmyolm2rnHivMO.jpg"
+              "still": "https://image.tmdb.org/t/p/w500/uKa08V2NhiaCJ8vDgwV2OGwexqt.jpg"
             },
             {
               "name": "Cosmos (1980) - S01E11 - The Persistence of Memory.mp4",
               "absPath": "S:\\MEDIA\\TV-SHOWS\\Cosmos\\Season 01\\Cosmos (1980) - S01E11 - The Persistence of Memory.mp4",
               "relPath": "Cosmos\\Season 01\\Cosmos (1980) - S01E11 - The Persistence of Memory.mp4",
-              "still": "https://media.themoviedb.org/t/p/w454_and_h254_bestv2/uX4q6Sfba1KB8rg1vnUNpGc3RA5.jpg"
+              "still": "https://image.tmdb.org/t/p/w500/bfwwGeiSzrkfPfM0wZZJqDSGWsz.jpg"
             }
           ],
           "poster": "https://image.tmdb.org/t/p/w1280/nOGArjE0WMkzY2GW1taJm8l9gxD.jpg"
@@ -30527,26 +30633,359 @@
               "name": "S01E01.mp4",
               "absPath": "S:\\MEDIA\\TV-SHOWS\\Tiger Spy in the Jungle\\Season 01\\S01E01.mp4",
               "relPath": "Tiger Spy in the Jungle\\Season 01\\S01E01.mp4",
-              "still": "https://media.themoviedb.org/t/p/w454_and_h254_bestv2/qM3GpVpZjOVZ4pfOKUfMgx0GG8y.jpg"
+              "still": "https://image.tmdb.org/t/p/w500/qM3GpVpZjOVZ4pfOKUfMgx0GG8y.jpg"
             },
             {
               "name": "S01E02.mp4",
               "absPath": "S:\\MEDIA\\TV-SHOWS\\Tiger Spy in the Jungle\\Season 01\\S01E02.mp4",
               "relPath": "Tiger Spy in the Jungle\\Season 01\\S01E02.mp4",
-              "still": "https://media.themoviedb.org/t/p/w454_and_h254_bestv2/mBRAqyMC0Hz3O2acBi1TtLtRw4u.jpg"
+              "still": "https://image.tmdb.org/t/p/w500/mBRAqyMC0Hz3O2acBi1TtLtRw4u.jpg"
             },
             {
               "name": "S01E03.mp4",
               "absPath": "S:\\MEDIA\\TV-SHOWS\\Tiger Spy in the Jungle\\Season 01\\S01E03.mp4",
               "relPath": "Tiger Spy in the Jungle\\Season 01\\S01E03.mp4",
-              "still": "https://media.themoviedb.org/t/p/w454_and_h254_bestv2/clNRz0alIivS4xOw2AG3mBE3fST.jpg"
+              "still": "https://image.tmdb.org/t/p/w500/clNRz0alIivS4xOw2AG3mBE3fST.jpg"
             }
           ],
           "poster": "https://media.themoviedb.org/t/p/w454_and_h254_bestv2/qM3GpVpZjOVZ4pfOKUfMgx0GG8y.jpg"
         }
       ],
+      "files": []
+    },
+    {
+      "path": "[unknown]",
+      "folders": [],
+      "files": []
+    },
+    {
+      "path": "Titans (2018)",
+      "folders": [
+        {
+          "path": "Titans (2018)\\Season 01",
+          "folders": [],
+          "files": [
+            {
+              "name": "Titans.(2018).S01E02.[720p].mkv",
+              "absPath": "S:\\MEDIA\\TV-SHOWS\\Titans (2018)\\Season 01\\Titans.(2018).S01E02.[720p].mkv",
+              "relPath": "Titans (2018)\\Season 01\\Titans.(2018).S01E02.[720p].mkv",
+              "still": "https://image.tmdb.org/t/p/w500/kZ07ePwIOKePbZuZ5OmJHNcimHp.jpg"
+            },
+            {
+              "name": "Titans.(2018).S01E03.[720p].mkv",
+              "absPath": "S:\\MEDIA\\TV-SHOWS\\Titans (2018)\\Season 01\\Titans.(2018).S01E03.[720p].mkv",
+              "relPath": "Titans (2018)\\Season 01\\Titans.(2018).S01E03.[720p].mkv",
+              "still": "https://image.tmdb.org/t/p/w500/3a5pvn28eb0chP19KmHrJCJNcXn.jpg"
+            },
+            {
+              "name": "Titans.(2018).S01E05.[720p].mkv",
+              "absPath": "S:\\MEDIA\\TV-SHOWS\\Titans (2018)\\Season 01\\Titans.(2018).S01E05.[720p].mkv",
+              "relPath": "Titans (2018)\\Season 01\\Titans.(2018).S01E05.[720p].mkv",
+              "still": "https://image.tmdb.org/t/p/w500/uidOyDbc5G4QyshRNxPHjB7Gr7Y.jpg"
+            },
+            {
+              "name": "Titans.(2018).S01E06.[720p].mkv",
+              "absPath": "S:\\MEDIA\\TV-SHOWS\\Titans (2018)\\Season 01\\Titans.(2018).S01E06.[720p].mkv",
+              "relPath": "Titans (2018)\\Season 01\\Titans.(2018).S01E06.[720p].mkv",
+              "still": "https://image.tmdb.org/t/p/w500/1VE5vqi4m0x4UHemw0lzjQSNjSf.jpg"
+            },
+            {
+              "name": "Titans.(2018).S01E04.[720p].mkv",
+              "absPath": "S:\\MEDIA\\TV-SHOWS\\Titans (2018)\\Season 01\\Titans.(2018).S01E04.[720p].mkv",
+              "relPath": "Titans (2018)\\Season 01\\Titans.(2018).S01E04.[720p].mkv",
+              "still": "https://image.tmdb.org/t/p/w500/gOVDpVAmJbHMWC44S64klycO0RB.jpg"
+            },
+            {
+              "name": "Titans.(2018).S01E07.[720p].mkv",
+              "absPath": "S:\\MEDIA\\TV-SHOWS\\Titans (2018)\\Season 01\\Titans.(2018).S01E07.[720p].mkv",
+              "relPath": "Titans (2018)\\Season 01\\Titans.(2018).S01E07.[720p].mkv",
+              "still": "https://image.tmdb.org/t/p/w500/uKw2hQlWS74M4Musw5RMQKMuKCw.jpg"
+            },
+            {
+              "name": "Titans.(2018).S01E08.[720p].mkv",
+              "absPath": "S:\\MEDIA\\TV-SHOWS\\Titans (2018)\\Season 01\\Titans.(2018).S01E08.[720p].mkv",
+              "relPath": "Titans (2018)\\Season 01\\Titans.(2018).S01E08.[720p].mkv",
+              "still": "https://image.tmdb.org/t/p/w500/bf1zdS49ulAvXyhvkTPOiIbE9q1.jpg"
+            },
+            {
+              "name": "Titans.(2018).S01E09.[720p].mkv",
+              "absPath": "S:\\MEDIA\\TV-SHOWS\\Titans (2018)\\Season 01\\Titans.(2018).S01E09.[720p].mkv",
+              "relPath": "Titans (2018)\\Season 01\\Titans.(2018).S01E09.[720p].mkv",
+              "still": "https://image.tmdb.org/t/p/w500/6FvAlWWk86I3IcIokJQe9Ib2Q5Q.jpg"
+            },
+            {
+              "name": "Titans.(2018).S01E10.[720p].mkv",
+              "absPath": "S:\\MEDIA\\TV-SHOWS\\Titans (2018)\\Season 01\\Titans.(2018).S01E10.[720p].mkv",
+              "relPath": "Titans (2018)\\Season 01\\Titans.(2018).S01E10.[720p].mkv",
+              "still": "https://image.tmdb.org/t/p/w500/52q7KSEpZZA0tEwnANuxeiiPorZ.jpg"
+            },
+            {
+              "name": "Titans.(2018).S01E11.[720p].mkv",
+              "absPath": "S:\\MEDIA\\TV-SHOWS\\Titans (2018)\\Season 01\\Titans.(2018).S01E11.[720p].mkv",
+              "relPath": "Titans (2018)\\Season 01\\Titans.(2018).S01E11.[720p].mkv",
+              "still": "https://image.tmdb.org/t/p/w500/iF34nVRtTCXdsRXXBTnUaprY9Tw.jpg"
+            },
+            {
+              "name": "Titans.(2018).S01E01.[720p].mkv",
+              "absPath": "S:\\MEDIA\\TV-SHOWS\\Titans (2018)\\Season 01\\Titans.(2018).S01E01.[720p].mkv",
+              "relPath": "Titans (2018)\\Season 01\\Titans.(2018).S01E01.[720p].mkv",
+              "still": "https://image.tmdb.org/t/p/w500/9TinoMsifn0CML0jq1k1vOvGsN0.jpg"
+            }
+          ],
+          "poster": "https://image.tmdb.org/t/p/original/z2TbtzW1ih5b9RIAFWl8LGwsWNa.jpg"
+        },
+        {
+          "path": "Titans (2018)\\Season 04",
+          "folders": [],
+          "files": [
+            {
+              "name": "Titans.2018.S04E02.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "absPath": "S:\\MEDIA\\TV-SHOWS\\Titans (2018)\\Season 04\\Titans.2018.S04E02.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "relPath": "Titans (2018)\\Season 04\\Titans.2018.S04E02.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "still": "https://image.tmdb.org/t/p/w500/645gzp34CGhYxhgGDQlCAlSAO1H.jpg"
+            },
+            {
+              "name": "Titans.2018.S04E03.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "absPath": "S:\\MEDIA\\TV-SHOWS\\Titans (2018)\\Season 04\\Titans.2018.S04E03.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "relPath": "Titans (2018)\\Season 04\\Titans.2018.S04E03.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "still": "https://image.tmdb.org/t/p/w500/aZ14GzeVXxcO0YOL2sgGfUHNfR6.jpg"
+            },
+            {
+              "name": "Titans.2018.S04E04.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "absPath": "S:\\MEDIA\\TV-SHOWS\\Titans (2018)\\Season 04\\Titans.2018.S04E04.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "relPath": "Titans (2018)\\Season 04\\Titans.2018.S04E04.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "still": "https://image.tmdb.org/t/p/w500/jgddaq7KFmvwtjS0ruDlYjAmFTA.jpg"
+            },
+            {
+              "name": "Titans.2018.S04E05.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "absPath": "S:\\MEDIA\\TV-SHOWS\\Titans (2018)\\Season 04\\Titans.2018.S04E05.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "relPath": "Titans (2018)\\Season 04\\Titans.2018.S04E05.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "still": "https://image.tmdb.org/t/p/w500/5uyxgFwuC7LsKB9rlXjBWFYDBFT.jpg"
+            },
+            {
+              "name": "Titans.2018.S04E06.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "absPath": "S:\\MEDIA\\TV-SHOWS\\Titans (2018)\\Season 04\\Titans.2018.S04E06.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "relPath": "Titans (2018)\\Season 04\\Titans.2018.S04E06.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "still": "https://image.tmdb.org/t/p/w500/eXQe3C8bFomg7TAi2gUX3q6HGlU.jpg"
+            },
+            {
+              "name": "Titans.2018.S04E07.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "absPath": "S:\\MEDIA\\TV-SHOWS\\Titans (2018)\\Season 04\\Titans.2018.S04E07.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "relPath": "Titans (2018)\\Season 04\\Titans.2018.S04E07.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "still": "https://image.tmdb.org/t/p/w500/jzEOj7VWqeusJr5qJXyuYHz0zyv.jpg"
+            },
+            {
+              "name": "Titans.2018.S04E08.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "absPath": "S:\\MEDIA\\TV-SHOWS\\Titans (2018)\\Season 04\\Titans.2018.S04E08.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "relPath": "Titans (2018)\\Season 04\\Titans.2018.S04E08.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "still": "https://image.tmdb.org/t/p/w500/psPWJiMkXqw99QpZZEpYlgIkK6.jpg"
+            },
+            {
+              "name": "Titans.2018.S04E09.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "absPath": "S:\\MEDIA\\TV-SHOWS\\Titans (2018)\\Season 04\\Titans.2018.S04E09.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "relPath": "Titans (2018)\\Season 04\\Titans.2018.S04E09.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "still": "https://image.tmdb.org/t/p/w500/tPHRi7gbR8O4fU3hSZRxLV1VYTy.jpg"
+            },
+            {
+              "name": "Titans.2018.S04E10.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "absPath": "S:\\MEDIA\\TV-SHOWS\\Titans (2018)\\Season 04\\Titans.2018.S04E10.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "relPath": "Titans (2018)\\Season 04\\Titans.2018.S04E10.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "still": "https://image.tmdb.org/t/p/w500/xmTkAAHxJt0LgTKkXUGivDK0zQh.jpg"
+            },
+            {
+              "name": "Titans.2018.S04E11.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "absPath": "S:\\MEDIA\\TV-SHOWS\\Titans (2018)\\Season 04\\Titans.2018.S04E11.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "relPath": "Titans (2018)\\Season 04\\Titans.2018.S04E11.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "still": "https://image.tmdb.org/t/p/w500/sQs8UeWOE0APYLJZHX1rYIO6Eb9.jpg"
+            },
+            {
+              "name": "Titans.2018.S04E12.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "absPath": "S:\\MEDIA\\TV-SHOWS\\Titans (2018)\\Season 04\\Titans.2018.S04E12.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "relPath": "Titans (2018)\\Season 04\\Titans.2018.S04E12.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "still": "https://image.tmdb.org/t/p/w500/sQ1dFa94c37iW2SOJb83PPKqKts.jpg"
+            },
+            {
+              "name": "Titans.2018.S04E01.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "absPath": "S:\\MEDIA\\TV-SHOWS\\Titans (2018)\\Season 04\\Titans.2018.S04E01.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "relPath": "Titans (2018)\\Season 04\\Titans.2018.S04E01.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "still": "https://image.tmdb.org/t/p/w500/1HuE6I5pBpwsPf4Nyw4wWvcTSh7.jpg"
+            }
+          ],
+          "poster": "https://image.tmdb.org/t/p/original/4T0THAlS7JzZk6Z1iItqSERIh9i.jpg"
+        },
+        {
+          "path": "Titans (2018)\\Season 03",
+          "folders": [],
+          "files": [
+            {
+              "name": "Titans.2018.S03E01.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "absPath": "S:\\MEDIA\\TV-SHOWS\\Titans (2018)\\Season 03\\Titans.2018.S03E01.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "relPath": "Titans (2018)\\Season 03\\Titans.2018.S03E01.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "still": "https://image.tmdb.org/t/p/w500/3PtYggHFgNNnFZhTG0Pq9YlFfA5.jpg"
+            },
+            {
+              "name": "Titans.2018.S03E02.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "absPath": "S:\\MEDIA\\TV-SHOWS\\Titans (2018)\\Season 03\\Titans.2018.S03E02.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "relPath": "Titans (2018)\\Season 03\\Titans.2018.S03E02.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "still": "https://image.tmdb.org/t/p/w500/woNeSXWXjje8WtI1jQ2pcwCYEXB.jpg"
+            },
+            {
+              "name": "Titans.2018.S03E03.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "absPath": "S:\\MEDIA\\TV-SHOWS\\Titans (2018)\\Season 03\\Titans.2018.S03E03.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "relPath": "Titans (2018)\\Season 03\\Titans.2018.S03E03.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "still": "https://image.tmdb.org/t/p/w500/gNVfwsSvnlx7UloUxkQc8sbTEE4.jpg"
+            },
+            {
+              "name": "Titans.2018.S03E05.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "absPath": "S:\\MEDIA\\TV-SHOWS\\Titans (2018)\\Season 03\\Titans.2018.S03E05.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "relPath": "Titans (2018)\\Season 03\\Titans.2018.S03E05.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "still": "https://image.tmdb.org/t/p/w500/3cqvKlwN5KrBsmb5ScZYsrSUScL.jpg"
+            },
+            {
+              "name": "Titans.2018.S03E04.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "absPath": "S:\\MEDIA\\TV-SHOWS\\Titans (2018)\\Season 03\\Titans.2018.S03E04.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "relPath": "Titans (2018)\\Season 03\\Titans.2018.S03E04.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "still": "https://image.tmdb.org/t/p/w500/3zH31AMTg026NEpSxp24mOM3WVN.jpg"
+            },
+            {
+              "name": "Titans.2018.S03E06.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "absPath": "S:\\MEDIA\\TV-SHOWS\\Titans (2018)\\Season 03\\Titans.2018.S03E06.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "relPath": "Titans (2018)\\Season 03\\Titans.2018.S03E06.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "still": "https://image.tmdb.org/t/p/w500/6mi4lwYuKWBmy3Ie0Xp5YOd2dv8.jpg"
+            },
+            {
+              "name": "Titans.2018.S03E07.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "absPath": "S:\\MEDIA\\TV-SHOWS\\Titans (2018)\\Season 03\\Titans.2018.S03E07.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "relPath": "Titans (2018)\\Season 03\\Titans.2018.S03E07.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "still": "https://image.tmdb.org/t/p/w500/ksSC8WDP5XdPCSlk6DhOKCq51bG.jpg"
+            },
+            {
+              "name": "Titans.2018.S03E08.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "absPath": "S:\\MEDIA\\TV-SHOWS\\Titans (2018)\\Season 03\\Titans.2018.S03E08.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "relPath": "Titans (2018)\\Season 03\\Titans.2018.S03E08.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "still": "https://image.tmdb.org/t/p/w500/y4eDX7DplCdizsZabQPScY5l99l.jpg"
+            },
+            {
+              "name": "Titans.2018.S03E10.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "absPath": "S:\\MEDIA\\TV-SHOWS\\Titans (2018)\\Season 03\\Titans.2018.S03E10.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "relPath": "Titans (2018)\\Season 03\\Titans.2018.S03E10.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "still": "https://image.tmdb.org/t/p/w500/oZ1ydFV1bFgWYIlLLLh0mqhPwN3.jpg"
+            },
+            {
+              "name": "Titans.2018.S03E09.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "absPath": "S:\\MEDIA\\TV-SHOWS\\Titans (2018)\\Season 03\\Titans.2018.S03E09.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "relPath": "Titans (2018)\\Season 03\\Titans.2018.S03E09.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "still": "https://image.tmdb.org/t/p/w500/przAvtalNUXfSt93ga81ESPziEO.jpg"
+            },
+            {
+              "name": "Titans.2018.S03E11.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "absPath": "S:\\MEDIA\\TV-SHOWS\\Titans (2018)\\Season 03\\Titans.2018.S03E11.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "relPath": "Titans (2018)\\Season 03\\Titans.2018.S03E11.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "still": "https://image.tmdb.org/t/p/w500/vhCJYLLgJC3QBzdJvt2ZXYhouIL.jpg"
+            },
+            {
+              "name": "Titans.2018.S03E12.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "absPath": "S:\\MEDIA\\TV-SHOWS\\Titans (2018)\\Season 03\\Titans.2018.S03E12.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "relPath": "Titans (2018)\\Season 03\\Titans.2018.S03E12.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "still": "https://image.tmdb.org/t/p/w500/yldz6JaZ9r2ihpVrXBzOJ2XohqP.jpg"
+            },
+            {
+              "name": "Titans.2018.S03E13.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "absPath": "S:\\MEDIA\\TV-SHOWS\\Titans (2018)\\Season 03\\Titans.2018.S03E13.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "relPath": "Titans (2018)\\Season 03\\Titans.2018.S03E13.720p.HMAX.WEBRip.x264-GalaxyTV.mkv",
+              "still": "https://image.tmdb.org/t/p/w500/avsljnvFXBEGRXvSAmq3m10tNWF.jpg"
+            }
+          ],
+          "poster": "https://image.tmdb.org/t/p/original/cfaWZm8m3OoKdzAUnLsF6TCpZcJ.jpg"
+        },
+        {
+          "path": "Titans (2018)\\Season 02",
+          "folders": [],
+          "files": [
+            {
+              "name": "Titans - S02E07 - Bruce Wayne.mkv",
+              "absPath": "S:\\MEDIA\\TV-SHOWS\\Titans (2018)\\Season 02\\Titans - S02E07 - Bruce Wayne.mkv",
+              "relPath": "Titans (2018)\\Season 02\\Titans - S02E07 - Bruce Wayne.mkv",
+              "still": "https://image.tmdb.org/t/p/w500/rzk8DDKCl8oCED7P5f9Kf1PysLS.jpg"
+            },
+            {
+              "name": "Titans - S02E05 - Deathstroke.mkv",
+              "absPath": "S:\\MEDIA\\TV-SHOWS\\Titans (2018)\\Season 02\\Titans - S02E05 - Deathstroke.mkv",
+              "relPath": "Titans (2018)\\Season 02\\Titans - S02E05 - Deathstroke.mkv",
+              "still": "https://image.tmdb.org/t/p/w500/AwFgzDndYgxUmkqG0g0MMpu44Ep.jpg"
+            },
+            {
+              "name": "Titans - S02E06 - Conner.mkv",
+              "absPath": "S:\\MEDIA\\TV-SHOWS\\Titans (2018)\\Season 02\\Titans - S02E06 - Conner.mkv",
+              "relPath": "Titans (2018)\\Season 02\\Titans - S02E06 - Conner.mkv",
+              "still": "https://image.tmdb.org/t/p/w500/6K2L7v9neSFnZREipumi5wHXg8K.jpg"
+            },
+            {
+              "name": "Titans - S02E10 - Fallen.mkv",
+              "absPath": "S:\\MEDIA\\TV-SHOWS\\Titans (2018)\\Season 02\\Titans - S02E10 - Fallen.mkv",
+              "relPath": "Titans (2018)\\Season 02\\Titans - S02E10 - Fallen.mkv",
+              "still": "https://image.tmdb.org/t/p/w500/lhQzk4ThuQHc2Eop9GbN1ILsc8w.jpg"
+            },
+            {
+              "name": "Titans - S02E09 - Atonement.mkv",
+              "absPath": "S:\\MEDIA\\TV-SHOWS\\Titans (2018)\\Season 02\\Titans - S02E09 - Atonement.mkv",
+              "relPath": "Titans (2018)\\Season 02\\Titans - S02E09 - Atonement.mkv",
+              "still": "https://image.tmdb.org/t/p/w500/e2tx6It8M1ia5TeZn3M1HNs3cUr.jpg"
+            },
+            {
+              "name": "Titans - S02E02 - Rose.mkv",
+              "absPath": "S:\\MEDIA\\TV-SHOWS\\Titans (2018)\\Season 02\\Titans - S02E02 - Rose.mkv",
+              "relPath": "Titans (2018)\\Season 02\\Titans - S02E02 - Rose.mkv",
+              "still": "https://image.tmdb.org/t/p/w500/uye6ynx3SD5qm4d3UN9QClBbgRH.jpg"
+            },
+            {
+              "name": "Titans - S02E11 - E.L._.O..mkv",
+              "absPath": "S:\\MEDIA\\TV-SHOWS\\Titans (2018)\\Season 02\\Titans - S02E11 - E.L._.O..mkv",
+              "relPath": "Titans (2018)\\Season 02\\Titans - S02E11 - E.L._.O..mkv",
+              "still": "https://image.tmdb.org/t/p/w500/5gR9FRYNfVmuyrrb5wNul9RdbzG.jpg"
+            },
+            {
+              "name": "Titans - S02E03 - Ghosts.mkv",
+              "absPath": "S:\\MEDIA\\TV-SHOWS\\Titans (2018)\\Season 02\\Titans - S02E03 - Ghosts.mkv",
+              "relPath": "Titans (2018)\\Season 02\\Titans - S02E03 - Ghosts.mkv",
+              "still": "https://image.tmdb.org/t/p/w500/tliXx3BCVjvInG8dcLknwEnGwdA.jpg"
+            },
+            {
+              "name": "Titans - S02E04 - Aqualad.mkv",
+              "absPath": "S:\\MEDIA\\TV-SHOWS\\Titans (2018)\\Season 02\\Titans - S02E04 - Aqualad.mkv",
+              "relPath": "Titans (2018)\\Season 02\\Titans - S02E04 - Aqualad.mkv",
+              "still": "https://image.tmdb.org/t/p/w500/o1vvtiNPuimfrZ8fFTGGZM4gowA.jpg"
+            },
+            {
+              "name": "Titans - S02E12 - Faux Hawk.mkv",
+              "absPath": "S:\\MEDIA\\TV-SHOWS\\Titans (2018)\\Season 02\\Titans - S02E12 - Faux Hawk.mkv",
+              "relPath": "Titans (2018)\\Season 02\\Titans - S02E12 - Faux Hawk.mkv",
+              "still": "https://image.tmdb.org/t/p/w500/2Deh7ELlC8iYx3YtFrrA5QeoHva.jpg"
+            },
+            {
+              "name": "Titans - S02E08 - Jericho.mkv",
+              "absPath": "S:\\MEDIA\\TV-SHOWS\\Titans (2018)\\Season 02\\Titans - S02E08 - Jericho.mkv",
+              "relPath": "Titans (2018)\\Season 02\\Titans - S02E08 - Jericho.mkv",
+              "still": "https://image.tmdb.org/t/p/w500/dLsCsNIFDxEkqObyyD9YRiKWsHs.jpg"
+            },
+            {
+              "name": "Titans - S02E13 - Nightwing.mkv",
+              "absPath": "S:\\MEDIA\\TV-SHOWS\\Titans (2018)\\Season 02\\Titans - S02E13 - Nightwing.mkv",
+              "relPath": "Titans (2018)\\Season 02\\Titans - S02E13 - Nightwing.mkv",
+              "still": "https://image.tmdb.org/t/p/w500/smX4qUqhn0kpIrVk0hZ5sgmlWnI.jpg"
+            },
+            {
+              "name": "Titans - S02E01 - Trigon.mkv",
+              "absPath": "S:\\MEDIA\\TV-SHOWS\\Titans (2018)\\Season 02\\Titans - S02E01 - Trigon.mkv",
+              "relPath": "Titans (2018)\\Season 02\\Titans - S02E01 - Trigon.mkv",
+              "still": "https://image.tmdb.org/t/p/w500/i0Cnw0PM2JK2lPvNHhotzTu9ksr.jpg"
+            }
+          ],
+          "poster": "https://image.tmdb.org/t/p/original/obGCOIdxGuI3lmm2Fq9crokKLNL.jpg"
+        }
+      ],
       "files": [],
-      "poster": "https://image.tmdb.org/t/p/w1280/gEbpPJj4N85z8kxSLZYu7CofkXs.jpg"
+      "poster": "https://image.tmdb.org/t/p/w1280/xKnUNWFsAOaKIviIYBLei02Bauu.jpg"
     }
   ],
   "files": []
