@@ -1488,19 +1488,13 @@
           "poster": "https://image.tmdb.org/t/p/w500/txta7TTNUfGCgsJI9oB6vb6uFlA.jpg"
         },
         {
-          "path": "The Big Bang Theory\\Season 00",
-          "folders": [
-            {
-              "path": "The Big Bang Theory\\Season 00\\Episode_images",
-              "folders": [],
-              "files": []
-            }
-          ],
+          "path": "The Big Bang Theory\\Specials",
+          "folders": [],
           "files": [
             {
               "name": "The.Big.Bang.Theory.S00E01.mp4",
-              "absPath": "S:\\MEDIA\\TV-SHOWS\\The Big Bang Theory\\Season 00\\The.Big.Bang.Theory.S00E01.mp4",
-              "relPath": "The Big Bang Theory\\Season 00\\The.Big.Bang.Theory.S00E01.mp4"
+              "absPath": "S:\\MEDIA\\TV-SHOWS\\The Big Bang Theory\\Specials\\The.Big.Bang.Theory.S00E01.mp4",
+              "relPath": "The Big Bang Theory\\Specials\\The.Big.Bang.Theory.S00E01.mp4"
             }
           ]
         },
@@ -13712,42 +13706,6 @@
       "files": []
     },
     {
-      "path": "The Pacific",
-      "folders": [
-        {
-          "path": "The Pacific\\Season 01",
-          "folders": [
-            {
-              "path": "The Pacific\\Season 01\\Episode_images",
-              "folders": [],
-              "files": []
-            }
-          ],
-          "files": [
-            {
-              "name": "The Pacific - S01E01 - Part One.mp4",
-              "absPath": "S:\\MEDIA\\TV-SHOWS\\The Pacific\\Season 01\\The Pacific - S01E01 - Part One.mp4",
-              "relPath": "The Pacific\\Season 01\\The Pacific - S01E01 - Part One.mp4",
-              "still": "https://image.tmdb.org/t/p/w500/uJKK19WYmcdoSCLaMkyZPm88fYG.jpg"
-            }
-          ],
-          "poster": "https://image.tmdb.org/t/p/w500/1AmsfHHyp76W71qiqLlvYMkSTie.jpg"
-        },
-        {
-          "path": "The Pacific\\images",
-          "folders": [
-            {
-              "path": "The Pacific\\images\\season_1",
-              "folders": [],
-              "files": []
-            }
-          ],
-          "files": []
-        }
-      ],
-      "files": []
-    },
-    {
       "path": "Pacific Abyss",
       "folders": [
         {
@@ -13771,6 +13729,11 @@
               "absPath": "S:\\MEDIA\\TV-SHOWS\\Pacific Abyss\\Season 01\\Pacific Abyss - S01E03 - Into the Abyss.mp4",
               "relPath": "Pacific Abyss\\Season 01\\Pacific Abyss - S01E03 - Into the Abyss.mp4",
               "still": "https://image.tmdb.org/t/p/w500/HCR4Y6qcbCemtOZe3VqqOhVzYW.jpg"
+            },
+            {
+              "name": "Pacific Abyss - S01E01 - The Ghosts of Chuuk Lagoon.mp4",
+              "absPath": "S:\\MEDIA\\TV-SHOWS\\Pacific Abyss\\Season 01\\Pacific Abyss - S01E01 - The Ghosts of Chuuk Lagoon.mp4",
+              "relPath": "Pacific Abyss\\Season 01\\Pacific Abyss - S01E01 - The Ghosts of Chuuk Lagoon.mp4"
             }
           ],
           "poster": "https://image.tmdb.org/t/p/w1280/8OKIC10V0vKoFoV088GSD6uMT11.jpg"
@@ -30651,11 +30614,6 @@
           "poster": "https://media.themoviedb.org/t/p/w454_and_h254_bestv2/qM3GpVpZjOVZ4pfOKUfMgx0GG8y.jpg"
         }
       ],
-      "files": []
-    },
-    {
-      "path": "[unknown]",
-      "folders": [],
       "files": []
     },
     {

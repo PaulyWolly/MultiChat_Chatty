@@ -8,6 +8,7 @@
 
 const fs = require('fs');
 const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '../server/.env') });
 
 // Configuration
 const TMDB_API_KEY = process.env.TMDB_API_KEY;
