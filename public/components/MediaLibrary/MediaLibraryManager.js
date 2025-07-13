@@ -106,35 +106,57 @@ class MediaLibraryManager {
             const response = await fetch(endpoint);
             const result = await response.json();
             
+            console.log('🎬 [MEDIA-LIBRARY] Raw result:', result);
+            console.log('🎬 [MEDIA-LIBRARY] Raw result type:', typeof result, 'isArray:', Array.isArray(result));
+            if (Array.isArray(result)) {
+                console.log('🎬 [MEDIA-LIBRARY] Result is array with', result.length, 'items');
+                if (result.length > 0) {
+                    console.log('🎬 [MEDIA-LIBRARY] First item sample:', result[0]);
+                }
+            }
             // --- FLEXIBLE FORMAT HANDLING ---
             // Try to extract the main library array from various possible formats
             let raw = null;
-            if (Array.isArray(result)) {
-                // Legacy: array at top level
-                raw = { folders: result };
-            } else if (result && Array.isArray(result.folders)) {
-                // Legacy: folders at top level
-                raw = result;
-            } else if (result && result.library && Array.isArray(result.library.folders)) {
-                // New: wrapped in { success, library: { folders: [...] } }
-                raw = result.library;
-            } else if (result && result.tvShows && Array.isArray(result.tvShows)) {
-                // Optional: tvShows array at top level
-                raw = { folders: result.tvShows };
+            if (this.currentTab === 'movies') {
+                // Movies endpoint: { success: true, library: { folders: [...] } }
+                if (result && result.library && Array.isArray(result.library.folders)) {
+                    raw = result.library.folders;
+                } else if (Array.isArray(result)) {
+                    raw = result;
+                } else {
+                    throw new Error('Unrecognized movies media library format');
+                }
+            } else if (this.currentTab === 'tvshows') {
+                // TV shows endpoint: { path: '', folders: [...] }
+                if (result && Array.isArray(result.folders)) {
+                    raw = result.folders;
+                } else if (Array.isArray(result)) {
+                    raw = result;
+                } else {
+                    throw new Error('Unrecognized tvshows media library format');
+                }
             } else {
-                throw new Error('Unrecognized media library format');
+                // Fallback for other tabs
+                if (Array.isArray(result)) {
+                    raw = result;
+                } else if (result && Array.isArray(result.folders)) {
+                    raw = result.folders;
+                } else if (result && result.library && Array.isArray(result.library.folders)) {
+                    raw = result.library.folders;
+                } else if (result && result.tvShows && Array.isArray(result.tvShows)) {
+                    raw = result.tvShows;
+                } else {
+                    throw new Error('Unrecognized media library format');
+                }
             }
-
+            console.log('🎬 [MEDIA-LIBRARY] Extracted media array:', raw);
             this.mediaLibraryRaw = raw;
-            this.mediaLibrary = this.flattenMediaLibrary(this.mediaLibraryRaw);
-            console.log('🎬 [MEDIA-LIBRARY] Loaded', this.mediaLibrary.length, 'media items');
-        } catch (error) {
-            console.error('🎬 [MEDIA-LIBRARY] Failed to load media library:', error);
-            this.mediaLibrary = [];
-            this.showError('Failed to load media library.');
-        } finally {
             this.isLoading = false;
-            this.removeSpinner();
+            this.updateModalContent();
+        } catch (error) {
+            this.isLoading = false;
+            this.showError('Failed to load media library.');
+            console.error(error);
         }
     }
 
@@ -406,7 +428,6 @@ class MediaLibraryManager {
                 <div class="media-library-flex-row">
                   <div class="media-library-az-sidebar" id="mediaLibraryAZSidebar"></div>
                   <div id="mediaGrid" class="media-library-movie-grid media-library-movie-grid-scroll">
-                    ${this.renderTabContent()}
                   </div>
                 </div>
               </div>
@@ -423,6 +444,9 @@ class MediaLibraryManager {
         document.body.appendChild(modal);
         document.getElementById('mediaLibraryCloseBtn').onclick = () => this.closeMediaLibrary();
         if (this.isLoading) this.renderSpinner();
+        
+        // Use updateModalContent to properly render the grid with click handlers
+        this.updateModalContent();
         // After rendering the modal and before calling renderAZSidebar, add:
         if (this.currentTab === 'tvshows' && this.currentTVShow && !this.currentTVSeason) {
           const azSidebar = document.getElementById('mediaLibraryAZSidebar');
@@ -473,68 +497,7 @@ class MediaLibraryManager {
         genreDropdown.value = this.selectedGenre || 'All Genres';
         genreDropdown.onchange = (e) => this.handleGenreChange(e);
 
-        // --- Attach click handlers to movie cards if present ---
-        setTimeout(() => {
-            const cards = document.querySelectorAll('.media-library-movie-card');
-            cards.forEach(card => {
-                // Remove any previous click handler
-                card.onclick = null;
-                card.addEventListener('click', async (e) => { // ensure arrow function
-                    // Ignore clicks on action buttons
-                    if (
-                        e.target.closest('.favorite-btn') ||
-                        e.target.closest('.collection-btn') ||
-                        e.target.closest('.poster-selector-btn') ||
-                        e.target.closest('.refresh-poster-btn')
-                    ) return;
-                    const title = card.querySelector('.media-info h3')?.textContent;
-                    const items = this.getFilteredAndSortedItems();
-                    const item = items.find(i => this.cleanMovieTitle(i.title) === title);
-                    if (item) await this.showMovieDetailsModal(item);
-                });
-            });
-        }, 0);
 
-        // --- Attach click handlers to movie cards if present ---
-        setTimeout(() => {
-            const cards = document.querySelectorAll('.media-library-movie-card');
-            cards.forEach(card => {
-                // Main card click opens details, but ignore action buttons
-                card.onclick = async (e) => { // ensure arrow function
-                    if (
-                        e.target.closest('.favorite-btn') ||
-                        e.target.closest('.collection-btn') ||
-                        e.target.closest('.poster-selector-btn')
-                    ) return;
-                    const title = card.querySelector('.media-info h3')?.textContent;
-                    const items = this.getFilteredAndSortedItems();
-                    const item = items.find(i => this.cleanMovieTitle(i.title) === title);
-                    if (item) await this.showMovieDetailsModal(item);
-                };
-                // Favorite button
-                const favBtn = card.querySelector('.favorite-btn');
-                if (favBtn) {
-                    favBtn.onclick = (e) => { // ensure arrow function
-                        e.stopPropagation();
-                        const title = card.querySelector('.media-info h3')?.textContent;
-                        const items = this.getFilteredAndSortedItems();
-                        const item = items.find(i => this.cleanMovieTitle(i.title) === title);
-                        if (item) this.toggleFavorite(item.path);
-                    };
-                }
-                // Collection button
-                const colBtn = card.querySelector('.collection-btn');
-                if (colBtn) {
-                    colBtn.onclick = (e) => { // ensure arrow function
-                        e.stopPropagation();
-                        const title = card.querySelector('.media-info h3')?.textContent;
-                        const items = this.getFilteredAndSortedItems();
-                        const item = items.find(i => this.cleanMovieTitle(i.title) === title);
-                        if (item) this.showAddToCollectionModal(item);
-                    };
-                }
-            });
-        }, 0);
 
         // --- Attach click handlers to poster-selector-btn after rendering ---
         setTimeout(() => {
@@ -744,6 +707,10 @@ class MediaLibraryManager {
         const grid = document.getElementById('mediaGrid');
         if (!grid) return;
 
+        console.log('[UPDATE DEBUG] Current tab:', this.currentTab);
+        console.log('[UPDATE DEBUG] Current TV show:', this.currentTVShow);
+        console.log('[UPDATE DEBUG] Current TV season:', this.currentTVSeason);
+
         // Handle TV Shows navigation (show, season, episode views)
         if (this.currentTab === 'tvshows') {
             if (this.currentTVShow && this.currentTVSeason) {
@@ -753,9 +720,14 @@ class MediaLibraryManager {
             } else {
                 grid.innerHTML = this.renderTVShowsTab();
             }
-        } else {
-            // For all other tabs, use the existing renderMediaGrid logic
+        } else if (this.currentTab === 'movies') {
+            // For movies, use renderMediaGrid to ensure click handlers are set up
+            console.log('[UPDATE DEBUG] Calling renderMediaGrid for movies tab');
             this.renderMediaGrid();
+        } else {
+            // For other tabs (favorites, collections, etc.), use the content functions
+            console.log('[UPDATE DEBUG] Using content function for tab:', this.currentTab);
+            grid.innerHTML = this.renderTabContent();
         }
     }
 
@@ -801,7 +773,7 @@ class MediaLibraryManager {
             card.style.position = 'relative';
             
             // Get the first letter of the movie title for anchor
-            const cleanTitle = this.cleanMovieTitle(item.title || a.name || a.filename || a.path || '').toLowerCase();
+            const cleanTitle = this.cleanMovieTitle(item.title || item.name || item.filename || item.path || '').toLowerCase();
             const firstLetter = cleanTitle.charAt(0).toUpperCase();
             
             // Add anchor if this is the first movie starting with this letter
@@ -819,8 +791,7 @@ class MediaLibraryManager {
                     <button class="favorite-btn" title="Toggle Favorite" style="background:none;border:none;cursor:pointer;font-size:1.5em;line-height:1;">${this.isFavorite(item.path) ? '❤️' : '🤍'}</button>
                     <button class="collection-btn" title="Add to Collection" style="background:none;border:none;cursor:pointer;font-size:1.4em;line-height:1;">➕</button>
                 </div>
-                <div class="movie-poster-spinner"></div>
-                <img src="${this.getPosterPath(item)}" alt="${item.title}" style="margin-top:6px;" onload="this.previousElementSibling.style.display='none';" onerror="this.previousElementSibling.style.display='none'; this.src='/assets/img/placeholder-poster.jpg';">
+                <img src="${this.getPosterPath(item)}" alt="${item.title}" style="margin-top:6px;">
                 <div class="media-info"><h3>${cleanTitle}</h3></div>
             `;
 
@@ -834,9 +805,10 @@ class MediaLibraryManager {
                 this.showAddToCollectionModal(item);
             };
             // Main card click opens details
-            console.log('>>> 2. >>>[MOVIE-LIBRARY] Attaching click handler to:', item.title);
+            console.log('>>> 2. >>>[MOVIE-LIBRARY] Attaching click handler to:', item.path);
             card.addEventListener('click', async (e) => {
-                console.log('>>> 3. >>>[MOVIE-LIBRARY] Movie card clicked:', item);
+                console.log('>>> 3. >>>[MOVIE-LIBRARY] Movie card clicked:', item.path);
+                console.log('>>> 4. >>>[MOVIE-LIBRARY] Full item object:', item);
                 await this.showMovieDetailsModal(item);
             });
             card.setAttribute('data-path', item.path);
@@ -844,61 +816,18 @@ class MediaLibraryManager {
         });
         // After rendering the grid, attach poster selector handlers
         this.attachPosterSelectorHandlers();
-        // Add spinner CSS if not already present
-        if (!document.getElementById('movie-poster-spinner-style')) {
-            const style = document.createElement('style');
-            style.id = 'movie-poster-spinner-style';
-            style.innerHTML = `
-            .movie-poster-spinner {
-                position: absolute;
-                top: 50%; left: 50%;
-                width: 32px; height: 32px;
-                margin: -16px 0 0 -16px;
-                border: 4px solid #ccc;
-                border-top: 4px solid #333;
-                border-radius: 50%;
-                animation: spin 1s linear infinite;
-                z-index: 2;
-                background: transparent;
-                display: block;
-            }
-            @keyframes spin {
-                0% { transform: rotate(0deg);}
-                100% { transform: rotate(360deg);}
-            }
-            .media-library-movie-card { position: relative; }
-            `;
-            document.head.appendChild(style);
-        }
     }
 
     getItemsForCurrentTab() {
-        if (this.currentTab === 'favorites') {
-            return this.getFavoritesList();
-        }
-        // Filter items based on current tab
+        let items = [];
         if (this.currentTab === 'movies') {
-            // Only show items that are in the movies directory
-            return this.mediaLibrary.filter(item => 
-                item.path && (
-                    item.path.includes('\\movies\\') || 
-                    item.path.includes('/movies/') ||
-                    item.path.includes('\\MOVIES\\') ||
-                    item.path.includes('/MOVIES/')
-                )
-            );
+            items = this.mediaLibraryRaw || [];
+            console.log('[MOVIE DEBUG] Raw movies array:', items.slice(0, 5));
         } else if (this.currentTab === 'tvshows') {
-            // Only show items that are in the TV-SHOWS directory
-            return this.mediaLibrary.filter(item => 
-                item.path && (
-                    item.path.includes('\\TV-SHOWS\\') || 
-                    item.path.includes('/TV-SHOWS/') ||
-                    item.path.includes('\\tv-shows\\') ||
-                    item.path.includes('/tv-shows/')
-                )
-            );
+            items = this.getTVShows();
         }
-        return [];
+        // ... existing code ...
+        return items;
     }
 
     getPosterPath(mediaItem) {
@@ -931,6 +860,22 @@ class MediaLibraryManager {
                 mediaItem.title,
                 mediaItem.name
             ].filter(Boolean);
+            
+            // For movies, we need to construct the full file path that matches the poster data
+            if (mediaItem.path && mediaItem.files && mediaItem.files.length > 0) {
+                // Get the first video file in the folder
+                const videoFile = mediaItem.files.find(file => 
+                    file.name && (file.name.endsWith('.mp4') || file.name.endsWith('.mkv') || file.name.endsWith('.avi'))
+                );
+                if (videoFile) {
+                    // Construct the full path that matches the poster data format
+                    const fullPath = `S:/MEDIA/MOVIES/${mediaItem.path}/${videoFile.name}`;
+                    tryKeys.unshift(fullPath); // Add this as the first key to try
+                    tryKeys.push(fullPath.replace(/\\/g, '/'));
+                    tryKeys.push(fullPath.replace(/\//g, '\\'));
+                }
+            }
+            
             // Also try normalized slashes and just the filename
             if (mediaItem.path) {
                 tryKeys.push(mediaItem.path.replace(/\\/g, '/'));
@@ -942,11 +887,12 @@ class MediaLibraryManager {
                 tryKeys.push(mediaItem.relPath.replace(/\//g, '\\'));
                 tryKeys.push(mediaItem.relPath.split(/[\\/]/).pop());
             }
+            
             if (this.moviePosters) {
                 for (const key of tryKeys) {
                     if (this.moviePosters[key]) {
                         let url = this.moviePosters[key];
-                        if (this.cacheBusters[key]) {
+                        if (this.cacheBusters && this.cacheBusters[key]) {
                             url += (url.includes('?') ? '&' : '?') + 't=' + this.cacheBusters[key];
                         }
                         return url;
@@ -955,7 +901,7 @@ class MediaLibraryManager {
                     for (const [k, v] of Object.entries(this.moviePosters)) {
                         if (k.toLowerCase() === lowerKey) {
                             let url = v;
-                            if (this.cacheBusters[k]) {
+                            if (this.cacheBusters && this.cacheBusters[k]) {
                                 url += (url.includes('?') ? '&' : '?') + 't=' + this.cacheBusters[k];
                             }
                             return url;
@@ -963,6 +909,7 @@ class MediaLibraryManager {
                     }
                 }
             }
+            
             // Fallback: try to find a poster by filename only
             if (this.moviePosters) {
                 const filename = (mediaItem.path || mediaItem.relPath || mediaItem.title || mediaItem.name || '').split(/[\\/]/).pop();
@@ -972,8 +919,9 @@ class MediaLibraryManager {
                     }
                 }
             }
+            
             // Log a warning if no poster found
-            console.warn('[MEDIA-LIBRARY] No poster found for:', mediaItem);
+            console.warn('[MEDIA-LIBRARY] No poster found for:', mediaItem, 'Tried keys:', tryKeys);
         }
         return '/assets/img/placeholder-poster.jpg';
     }
@@ -989,7 +937,17 @@ class MediaLibraryManager {
             return;
         }
         // Always use absolute path for playback
-        let pathParam = mediaItem.path || mediaItem.absPath || mediaItem.relPath;
+        let pathParam = '';
+        if (mediaItem.absPath) {
+            pathParam = mediaItem.absPath;
+        } else if (mediaItem.files && mediaItem.files.length > 0 && mediaItem.files[0].absPath) {
+            pathParam = mediaItem.files[0].absPath;
+        } else if (mediaItem.path && mediaItem.files && mediaItem.files.length > 0 && mediaItem.files[0].name) {
+            // Construct the full path
+            pathParam = `S:/MEDIA/MOVIES/${mediaItem.path}/${mediaItem.files[0].name}`;
+        } else {
+            pathParam = mediaItem.path || mediaItem.relPath || '';
+        }
         if (!pathParam.includes('%')) {
             pathParam = encodeURIComponent(pathParam);
         }
@@ -1236,6 +1194,8 @@ class MediaLibraryManager {
                     ...file,
                     title: file.name || parentTitle,
                     path: file.absPath || file.relPath || '',
+                    absPath: file.absPath || '', // Preserve absPath for cast lookup
+                    relPath: file.relPath || '', // Preserve relPath for cast lookup
                     parent: parentTitle,
                     folder: parentPath
                 });
@@ -1388,33 +1348,24 @@ class MediaLibraryManager {
 
     // Update: renderMediaGrid to use search, sort, shuffle
     getFilteredAndSortedItems() {
-        let items = this.getItemsForCurrentTab();
-        // Search filter
-        if (this.searchQuery) {
-            const q = this.searchQuery.toLowerCase();
-            items = items.filter(item => (item.title || '').toLowerCase().includes(q));
+        const items = this.getItemsForCurrentTab();
+        console.log('[MOVIE DEBUG] Items before filtering:', items.length, items.slice(0, 3));
+        let filtered = this.filterItems(items, this.searchTerm);
+        console.log('[MOVIE DEBUG] Items after filtering:', filtered.length, filtered.slice(0, 3));
+        // For movies, sort by clean display title; for TV shows, keep as is
+        if (this.currentTab === 'movies') {
+            return filtered.slice().sort((a, b) => {
+                const titleA = this.cleanMovieTitle(a.title || a.name || a.filename || a.path || '').toLowerCase();
+                const titleB = this.cleanMovieTitle(b.title || b.name || b.filename || b.path || '').toLowerCase();
+                if (this.sortBy === 'asc') {
+                    return titleA.localeCompare(titleB);
+                } else {
+                    return titleB.localeCompare(titleA);
+                }
+            });
+        } else {
+            return this.sortItems(filtered, this.sortBy, 'name');
         }
-        // Genre filter
-        if (this.selectedGenre && this.selectedGenre !== 'All Genres') {
-            const genre = this.selectedGenre.toLowerCase();
-            items = items.filter(item => this.getMovieGenres(item).includes(genre));
-        }
-        // Sort
-        items = items.slice().sort((a, b) => {
-            const titleA = this.cleanMovieTitle(a.title || a.name || a.filename || a.path || '').toLowerCase();
-            const titleB = this.cleanMovieTitle(b.title || b.name || b.filename || b.path || '').toLowerCase();
-            if (titleA < titleB) return this.sortBy === 'asc' ? -1 : 1;
-            if (titleA > titleB) return this.sortBy === 'asc' ? 1 : -1;
-            return 0;
-        });
-        // Shuffle
-        if (this.shuffle) {
-            for (let i = items.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [items[i], items[j]] = [items[j], items[i]];
-            }
-        }
-        return items;
     }
 
     // Format time for resume info
@@ -2049,7 +2000,7 @@ class MediaLibraryManager {
             console.log('Could not load movie descriptions:', error);
         }
         // --- DEBUG LOGGING ---
-        console.log('[DEBUG] Movie object:', movie);
+        console.log('[DETAILS DEBUG] Movie object:', movie);
         // Poster, genres, etc. as before
         const poster = `<img src="${this.getPosterPath(movie)}" alt="${movie.title}" style="width:180px;max-width:40vw;border-radius:10px;box-shadow:0 2px 12px rgba(0,0,0,0.12);">`;
         const genres = (movie.genre || movie.genres || []).toString();
@@ -2057,58 +2008,70 @@ class MediaLibraryManager {
         const cast = Array.isArray(movie.cast) ? movie.cast.join(', ') : (movie.cast || '');
         let desc = movie.description || movie.overview || movie.plot || '';
         let foundDesc = false;
+        
+        // Construct the full file path for lookup
         const possibleKeys = [];
-        if (movie.absPath) possibleKeys.push(movie.absPath);
-        if (movie.relPath) possibleKeys.push(movie.relPath);
-        if (movie.path && movie.fileName) possibleKeys.push(`${movie.path.replace(/\\/g, '/')}/${movie.fileName}`);
-        if (movie.path) possibleKeys.push(movie.path);
-        if (movie.fileName) possibleKeys.push(movie.fileName);
-        if (movie.title) possibleKeys.push(movie.title);
-        console.log('[DEBUG] Trying possible keys for description:', possibleKeys);
+        if (movie.absPath) {
+            possibleKeys.push(movie.absPath);
+        } else if (movie.files && movie.files.length > 0 && movie.files[0].absPath) {
+            possibleKeys.push(movie.files[0].absPath);
+        } else if (movie.path) {
+            // Try to construct the full path
+            const movieTitle = movie.path;
+            const fileName = movieTitle.replace(/[^a-zA-Z0-9\s]/g, '.').replace(/\s+/g, '.') + '.mp4';
+            const fullPath = `S:\\MEDIA\\MOVIES\\${movieTitle}\\${fileName}`;
+            possibleKeys.push(fullPath);
+        }
+        
+        console.log('[DETAILS DEBUG] Trying possible keys for description:', possibleKeys);
         for (const key of possibleKeys) {
             if (movieDescriptions[key] && movieDescriptions[key].description) {
                 desc = movieDescriptions[key].description;
                 foundDesc = true;
-                console.log('[DEBUG] Found description with key:', key);
+                console.log('[DETAILS DEBUG] Found description with key:', key);
                 break;
             }
         }
         if (!foundDesc && movieDescriptions) {
-            const folderKey = Object.keys(movieDescriptions).find(k => k.includes(movie.title));
+            const folderKey = Object.keys(movieDescriptions).find(k => k.includes(movie.path));
             if (folderKey && movieDescriptions[folderKey].description) {
                 desc = movieDescriptions[folderKey].description;
-                console.log('[DEBUG] Fallback found description with folderKey:', folderKey);
+                console.log('[DETAILS DEBUG] Fallback found description with folderKey:', folderKey);
+            } else {
+                console.log('[DETAILS DEBUG] No description found for:', movie.path);
             }
         }
         // --- ACTOR IMAGES ROW ---
         let castRow = '';
         const movieCast = await this.loadMovieCast();
         let castData = null;
-        
-        // Try multiple possible keys for cast lookup (same logic as descriptions)
-        console.log('[DEBUG] Trying possible keys for cast:', possibleKeys);
         for (const key of possibleKeys) {
             if (movieCast[key] && Array.isArray(movieCast[key].cast) && movieCast[key].cast.length > 0) {
                 castData = movieCast[key].cast;
-                console.log('[DEBUG] Found cast with key:', key);
+                console.log('[DETAILS DEBUG] Found cast with key:', key);
                 break;
             }
         }
-        
-        // Fallback: try to find by title if no exact match
         if (!castData && movieCast) {
-            const folderKey = Object.keys(movieCast).find(k => k.includes(movie.title));
+            const folderKey = Object.keys(movieCast).find(k => k.includes(movie.path));
             if (folderKey && Array.isArray(movieCast[folderKey].cast) && movieCast[folderKey].cast.length > 0) {
                 castData = movieCast[folderKey].cast;
-                console.log('[DEBUG] Fallback found cast with folderKey:', folderKey);
+                console.log('[DETAILS DEBUG] Fallback found cast with folderKey:', folderKey);
+            } else {
+                console.log('[DETAILS DEBUG] No cast found for:', movie.path);
             }
         }
-        
-        if (!castData) {
-            console.warn('[WARN] No cast found for movie:', movie.title);
-        }
         if (castData && castData.length > 0) {
-            castRow = `<div class=\"media-library-cast-row\">\n                ${castData.map(actor => `\n                    <div class=\"media-library-cast-item\">\n                        <div class=\"media-library-cast-image\">\n                            ${actor.profile ? `<img src=\"${actor.profile}\" alt=\"${actor.name}\">` : `<div class='media-library-cast-image-placeholder'></div>`}\n                        </div>\n                        <div class=\"media-library-cast-name\">${actor.name}</div>\n                    </div>\n                `).join('')}\n            </div>`;
+            castRow = `<div class="media-library-cast-row">
+                ${castData.map(actor => `
+                    <div class="media-library-cast-item">
+                        <div class="media-library-cast-image">
+                            ${actor.profile ? `<img src="${actor.profile}" alt="${actor.name}">` : `<div class='media-library-cast-image-placeholder'></div>`}
+                        </div>
+                        <div class="media-library-cast-name">${actor.name}</div>
+                    </div>
+                `).join('')}
+            </div>`;
         }
         grid.innerHTML = `
             <div class="media-library-details-modal">
@@ -2150,40 +2113,38 @@ class MediaLibraryManager {
 
     // --- TV SHOW STRUCTURE ---
     getTVShows() {
-        // Returns array of main TV show objects from the nested structure
+        // Returns array of main TV show objects from the flat array structure
         const tvShows = [];
-        let folders = [];
-        let parentPath = 'TV-SHOWS';
+        
         if (this.mediaLibraryRaw) {
-            // Try to find the TV-SHOWS folder or treat all folders as shows if not present
-            if (Array.isArray(this.mediaLibraryRaw.folders)) {
-                // Look for a folder named TV-SHOWS (case-insensitive)
-            const tvShowsFolder = this.mediaLibraryRaw.folders.find(f => /tv[-_ ]shows/i.test(f.path));
-                if (tvShowsFolder && Array.isArray(tvShowsFolder.folders) && tvShowsFolder.folders.length > 0) {
-                    folders = tvShowsFolder.folders;
-                    parentPath = tvShowsFolder.path || 'TV-SHOWS';
-                } else {
-                    // If no TV-SHOWS folder, treat all as shows
-                    folders = this.mediaLibraryRaw.folders;
-                }
-            } else if (Array.isArray(this.mediaLibraryRaw)) {
-                folders = this.mediaLibraryRaw;
+            let shows = [];
+            
+            // Handle different possible data structures
+            if (Array.isArray(this.mediaLibraryRaw)) {
+                // Direct flat array of TV show objects
+                shows = this.mediaLibraryRaw;
+            } else if (this.mediaLibraryRaw.folders && Array.isArray(this.mediaLibraryRaw.folders)) {
+                // Nested structure with folders
+                shows = this.mediaLibraryRaw.folders;
+            } else if (this.mediaLibraryRaw.tvShows && Array.isArray(this.mediaLibraryRaw.tvShows)) {
+                // Nested structure with tvShows
+                shows = this.mediaLibraryRaw.tvShows;
             }
-        }
-        folders.forEach(folder => {
-                    const showName = this.extractShowName(folder.path);
-            // If folder.path already includes the parent, don't double it
-            let fullPath = folder.path;
-            if (parentPath && fullPath && !fullPath.startsWith(parentPath)) {
-                fullPath = parentPath.replace(/\/+$/,'') + '/' + fullPath.replace(/^\+/,'');
-            }
+            
+            shows.forEach(show => {
+                // Use title, or fallback to path if title is missing
+                const name = show.title || show.name || show.path || show.filename || '';
+                if (name) {
                     tvShows.push({
-                        name: showName,
-                path: fullPath,
-                        data: folder
+                        name,
+                        path: show.path || name,
+                        data: show
                     });
-                });
-                console.log('[TV DEBUG] Total TV shows detected:', tvShows.length);
+                }
+            });
+        }
+        
+        console.log('[TV DEBUG] Total TV shows detected:', tvShows.length);
         return tvShows;
     }
 
@@ -2205,66 +2166,86 @@ class MediaLibraryManager {
     getSeasonsForShow(showOrPath) {
         // Accepts either a show object or a show path
         let show = null;
-        if (typeof showOrPath === 'object' && showOrPath && showOrPath.data && Array.isArray(showOrPath.data.folders)) {
+        if (typeof showOrPath === 'object' && showOrPath && showOrPath.data) {
             show = showOrPath.data;
-        } else if (typeof showOrPath === 'object' && showOrPath && Array.isArray(showOrPath.folders)) {
+        } else if (typeof showOrPath === 'object' && showOrPath) {
             show = showOrPath;
         } else {
             show = this.findShowByPath(showOrPath);
         }
 
-        function findSeasons(folders, parentPath, showPath) {
-            let seasons = [];
-            if (!Array.isArray(folders)) return seasons;
-            for (const folder of folders) {
-                const name = (folder.name || folder.path.split(/[\\/]/).pop() || '').toLowerCase();
-                // Debug: print every folder name being checked
-                console.log('[SEASON DETECTION DEBUG] Checking folder name:', name);
-                // Match any folder containing 'season' or 'series' or 's' followed by a number (with optional separators)
-                if (/^(season[ _-]?\d+|s\d+|series[ _-]?\d+)$/i.test(name) ||
-                    /season[ _-]?\d+/i.test(name) ||
-                    /^s\d+/i.test(name) ||
-                    /series[ _-]?\d+/i.test(name) ||
-                    /^season\d+$/i.test(name) ||
-                    /^s\d+$/i.test(name)) {
-                    // Force full path
-                    let fullPath = folder.path;
-                    if (showPath && fullPath && !fullPath.startsWith(showPath)) {
-                        fullPath = showPath.replace(/\/+$/, '') + '/' + fullPath.replace(/^\/+/, '');
-                    }
-                    fullPath = fullPath.replace(/\\/g, '/'); // Normalize to forward slashes
-                    console.log('[SEASON DETECTION DEBUG] Computed fullPath for season:', fullPath);
-                    seasons.push({ ...folder, path: fullPath });
-                }
-                // Recurse into subfolders
-                if (Array.isArray(folder.folders) && folder.folders.length > 0) {
-                    seasons = seasons.concat(findSeasons(folder.folders, folder.path, showPath));
+        if (!show) {
+            console.log('[SEASON DEBUG] No show found for:', showOrPath);
+            return [];
+        }
+
+        // Handle flat array structure where seasons are directly in the show object
+        if (show.seasons && Array.isArray(show.seasons)) {
+            console.log('[SEASON DEBUG] Found seasons array with', show.seasons.length, 'seasons');
+            // Deduplicate by seasonNumber
+            const seen = new Set();
+            const uniqueSeasons = [];
+            for (const season of show.seasons) {
+                if (!season || season.seasonNumber == null) continue;
+                const key = String(season.seasonNumber);
+                if (!seen.has(key)) {
+                    seen.add(key);
+                    uniqueSeasons.push(season);
                 }
             }
-            return seasons;
+            return uniqueSeasons.map(season => ({
+                seasonNumber: season.seasonNumber,
+                path: `Season ${season.seasonNumber.toString().padStart(2, '0')}`,
+                episodes: season.episodes || []
+            })).sort((a, b) => a.seasonNumber - b.seasonNumber);
         }
 
-        // Deduplicate by season number (normalize to 'season N')
-        function dedupeSeasons(seasons) {
-            const seen = new Set();
-            return seasons.filter(folder => {
-                const name = (folder.name || folder.path.split(/[\\/]/).pop() || '').toLowerCase();
-                // Match season number in various patterns
-                const match = name.match(/season[ _-]?(\d+)/i) || name.match(/^s(\d+)/i) || name.match(/series[ _-]?(\d+)/i);
-                if (match) {
-                    const seasonNum = match[1].padStart(2, '0');
-                    if (seen.has(seasonNum)) return false;
-                    seen.add(seasonNum);
-                    return true;
+        // Fallback to folder-based detection for legacy support
+        if (show.folders && Array.isArray(show.folders)) {
+            function findSeasons(folders, parentPath, showPath) {
+                let seasons = [];
+                if (!Array.isArray(folders)) return seasons;
+                for (const folder of folders) {
+                    const name = (folder.name || folder.path.split(/[\\/]/).pop() || '').toLowerCase();
+                    console.log('[SEASON DETECTION DEBUG] Checking folder name:', name);
+                    if (/^(season[ _-]?\d+|s\d+|series[ _-]?\d+)$/i.test(name) ||
+                        /season[ _-]?\d+/i.test(name) ||
+                        /^s\d+/i.test(name) ||
+                        /series[ _-]?\d+/i.test(name) ||
+                        /^season\d+$/i.test(name) ||
+                        /^s\d+$/i.test(name)) {
+                        let fullPath = folder.path;
+                        if (showPath && fullPath && !fullPath.startsWith(showPath)) {
+                            fullPath = showPath.replace(/\/+$/, '') + '/' + fullPath.replace(/^\/+/, '');
+                        }
+                        fullPath = fullPath.replace(/\\/g, '/');
+                        console.log('[SEASON DETECTION DEBUG] Computed fullPath for season:', fullPath);
+                        seasons.push({ ...folder, path: fullPath });
+                    }
+                    if (Array.isArray(folder.folders) && folder.folders.length > 0) {
+                        seasons = seasons.concat(findSeasons(folder.folders, folder.path, showPath));
+                    }
                 }
-                return false;
-            });
-        }
+                return seasons;
+            }
 
-        if (show && Array.isArray(show.folders)) {
+            function dedupeSeasons(seasons) {
+                const seen = new Set();
+                return seasons.filter(folder => {
+                    const name = (folder.name || folder.path.split(/[\\/]/).pop() || '').toLowerCase();
+                    const match = name.match(/season[ _-]?(\d+)/i) || name.match(/^s(\d+)/i) || name.match(/series[ _-]?(\d+)/i);
+                    if (match) {
+                        const seasonNum = match[1].padStart(2, '0');
+                        if (seen.has(seasonNum)) return false;
+                        seen.add(seasonNum);
+                        return true;
+                    }
+                    return false;
+                });
+            }
+
             const allSeasons = findSeasons(show.folders, show.path, show.path);
             console.log('[SEASON DETECTION DEBUG] All detected season folders:', allSeasons.map(f => f.name || f.path));
-            // Sort numerically by season number
             return dedupeSeasons(allSeasons).sort((a, b) => {
                 const getNum = s => {
                     const m = (s.name || s.path).match(/season[ _-]?(\d+)/i) || (s.name || s.path).match(/^s(\d+)/i);
@@ -2273,84 +2254,117 @@ class MediaLibraryManager {
                 return getNum(a) - getNum(b);
             });
         }
+
         return [];
     }
 
     getEpisodesForSeason(showPath, seasonPath) {
         if (!showPath || !seasonPath) return [];
-        // Returns array of episodes for a given season
+        
         let show = null;
         console.log('[EPISODE DEBUG] getEpisodesForSeason called with showPath:', showPath, 'seasonPath:', seasonPath);
-        if (typeof showPath === 'object' && showPath && showPath.data && Array.isArray(showPath.data.folders)) {
+        
+        if (typeof showPath === 'object' && showPath && showPath.data) {
             show = showPath.data;
-        } else if (typeof showPath === 'object' && showPath && Array.isArray(showPath.folders)) {
+        } else if (typeof showPath === 'object' && showPath) {
             show = showPath;
         } else {
             show = this.findShowByPath(showPath);
         }
+        
         console.log('[EPISODE DEBUG] show object:', show);
-        // Patch: use show.data if present
-        if (show && show.data && Array.isArray(show.data.folders)) {
-            show = show.data;
-            console.log('[EPISODE DEBUG] Using show.data for folder search:', show);
-        }
+        
         if (!show) {
             console.log('[EPISODE DEBUG] show is null or undefined');
             return [];
         }
-        if (!Array.isArray(show.folders)) {
-            console.log('[EPISODE DEBUG] show.folders is not an array:', show.folders);
-            return [];
-        }
-        if (show.folders.length === 0) {
-            console.log('[EPISODE DEBUG] show.folders is empty');
-            return [];
-        }
-        console.log('[EPISODE DEBUG] show.folders length:', show.folders.length, 'sample:', show.folders.slice(0,2));
 
-        // Normalize seasonPath for matching
-        const normalizedSeasonPath = (seasonPath || '').replace(/\\/g, '/').toLowerCase().trim();
-        console.log('[EPISODE DEBUG] Normalized seasonPath:', normalizedSeasonPath);
+        // Handle flat array structure where episodes are directly in seasons
+        if (show.seasons && Array.isArray(show.seasons)) {
+            console.log('[EPISODE DEBUG] Found seasons array with', show.seasons.length, 'seasons');
+            
+            // Extract season number from seasonPath (e.g., "Season 01" -> 1)
+            const seasonMatch = seasonPath.match(/season[ _-]?(\d+)/i) || seasonPath.match(/^s(\d+)/i);
+            if (!seasonMatch) {
+                console.log('[EPISODE DEBUG] Could not extract season number from:', seasonPath);
+                return [];
+            }
+            
+            const seasonNumber = parseInt(seasonMatch[1], 10);
+            console.log('[EPISODE DEBUG] Looking for season number:', seasonNumber);
+            
+            const season = show.seasons.find(s => s.seasonNumber === seasonNumber);
+            if (!season) {
+                console.log('[EPISODE DEBUG] Season not found:', seasonNumber);
+                return [];
+            }
+            
+            console.log('[EPISODE DEBUG] Found season with', season.episodes?.length || 0, 'episodes');
+            return season.episodes || [];
+        }
 
-            // Recursively search for the season folder
-        function findSeasonFolder(folders, parentPath = '') {
+        // Fallback to folder-based detection for legacy support
+        if (show.folders && Array.isArray(show.folders)) {
+            console.log('[EPISODE DEBUG] Using folder-based episode detection');
+            
+            const normalizedSeasonPath = (seasonPath || '').replace(/\\/g, '/').toLowerCase().trim();
+            console.log('[EPISODE DEBUG] Normalized seasonPath:', normalizedSeasonPath);
+
+            function findSeasonFolder(folders, parentPath = '') {
                 for (const folder of folders) {
-                let folderPath = (folder.path || '').replace(/\\/g, '/').toLowerCase().trim();
-                console.log('[EPISODE DEBUG] Checking folderPath:', folderPath);
-                if (folderPath === normalizedSeasonPath) {
-                    console.log('[EPISODE DEBUG] Found matching season folder:', folderPath);
-                    console.log('[EPISODE DEBUG] season.files:', folder.files);
+                    let folderPath = (folder.path || '').replace(/\\/g, '/').toLowerCase().trim();
+                    console.log('[EPISODE DEBUG] Checking folderPath:', folderPath);
+                    if (folderPath === normalizedSeasonPath) {
+                        console.log('[EPISODE DEBUG] Found matching season folder:', folderPath);
+                        console.log('[EPISODE DEBUG] season.files:', folder.files);
                         return folder;
                     }
-                if (folder.folders && folder.folders.length) {
-                    const found = findSeasonFolder(folder.folders, folderPath);
+                    if (folder.folders && folder.folders.length) {
+                        const found = findSeasonFolder(folder.folders, folderPath);
                         if (found) return found;
                     }
                 }
                 return null;
             }
 
-        const seasonFolder = findSeasonFolder(show.folders);
-        if (!seasonFolder) {
-            console.log('[EPISODE DEBUG] No matching season folder found for:', normalizedSeasonPath);
-            return [];
+            const seasonFolder = findSeasonFolder(show.folders);
+            if (!seasonFolder) {
+                console.log('[EPISODE DEBUG] No matching season folder found for:', normalizedSeasonPath);
+                return [];
+            }
+            if (!Array.isArray(seasonFolder.files)) {
+                console.log('[EPISODE DEBUG] seasonFolder.files is not an array:', seasonFolder.files);
+                return [];
+            }
+            
+            // Filter for video files (basic check)
+            let episodes = seasonFolder.files.filter(f => /\.(mp4|mkv|avi|mov|wmv|flv|webm)$/i.test(f.name));
+            
+            // Sort episodes by episode number (S01E01, S01E02, etc.)
+            episodes.sort((a, b) => {
+                const aMatch = (a.name || '').match(/E(\d{1,2})/i);
+                const bMatch = (b.name || '').match(/E(\d{1,2})/i);
+                
+                if (!aMatch && !bMatch) return 0;
+                if (!aMatch) return 1;  // Put episodes without numbers at the end
+                if (!bMatch) return -1;
+                
+                const aNum = parseInt(aMatch[1], 10);
+                const bNum = parseInt(bMatch[1], 10);
+                return aNum - bNum;
+            });
+            
+            console.log('[EPISODE DEBUG] Sorted episodes:', episodes.map(e => e.name));
+            
+            // Debug: Check if S01E01 and S04E01 are present
+            const hasS01E01 = episodes.some(e => e.name && e.name.includes('S01E01'));
+            const hasS04E01 = episodes.some(e => e.name && e.name.includes('S04E01'));
+            console.log('[EPISODE DEBUG] Has S01E01:', hasS01E01, 'Has S04E01:', hasS04E01);
+            
+            return episodes;
         }
-        if (!Array.isArray(seasonFolder.files)) {
-            console.log('[EPISODE DEBUG] seasonFolder.files is not an array:', seasonFolder.files);
+
         return [];
-        }
-        // Filter for video files (basic check)
-        let episodes = seasonFolder.files.filter(f => /\.(mp4|mkv|avi|mov|wmv|flv|webm)$/i.test(f.name));
-        // Sort numerically by episode number
-        episodes = episodes.sort((a, b) => {
-            const getNum = ep => {
-                const m = (ep.name || '').match(/E(\d{1,2})/i);
-                return m ? parseInt(m[1], 10) : 0;
-            };
-            return getNum(a) - getNum(b);
-        });
-        console.log('[EPISODE DEBUG] Detected episodes:', episodes);
-        return episodes;
     }
 
     findShowByPath(showPath) {
@@ -2429,41 +2443,67 @@ class MediaLibraryManager {
 
     getEpisodeImage(showName, seasonName, episode) {
         try {
-            // Use the loaded season episode images data
             if (!this.seasonEpisodeImages) {
-                return '/assets/img/episode-default.jpg';
+                console.warn('[EPISODE IMAGE] seasonEpisodeImages not loaded');
+                return '/assets/img/placeholder-poster.jpg';
             }
-            // Extract season number from season name
-            const seasonMatch = seasonName.match(/season[ _-]?(\d+)/i);
-            if (!seasonMatch) return '/assets/img/episode-default.jpg';
-            const seasonNumber = String(parseInt(seasonMatch[1], 10));
-            // Extract episode number from episode filename
-
-            let episodeNumber = null;
-            let match = episode.name.match(/S\d{2}E(\d{2})/i) || episode.path.match(/S\d{2}E(\d{2})/i);
-            if (match) {
-                episodeNumber = String(parseInt(match[1], 10));
-            } else {
-                match = episode.name.match(/E(\d{1,2})/i) || episode.path.match(/E(\d{1,2})/i);
-                if (match) {
-                    episodeNumber = String(parseInt(match[1], 10));
-                } else if (episode.episodeNumber) {
-                    episodeNumber = String(episode.episodeNumber);
+            // Normalize show name
+            const showKey = showName && typeof showName === 'string' ? showName.trim() : '';
+            // Normalize season number (handle both 'Season 01' and 1)
+            let seasonNum = null;
+            if (typeof seasonName === 'string') {
+                const match = seasonName.match(/season[ _-]?(\d+)/i);
+                if (match) seasonNum = String(parseInt(match[1], 10));
+            } else if (typeof seasonName === 'number') {
+                seasonNum = String(seasonName);
+            }
+            // Try to get episode number from episode object
+            let episodeNum = null;
+            if (episode) {
+                if (typeof episode.episodeNumber !== 'undefined') {
+                    episodeNum = String(parseInt(episode.episodeNumber, 10));
+                } else if (episode.name || episode.filename || episode.path) {
+                    const epStr = episode.name || episode.filename || episode.path;
+                    const match = epStr.match(/E(\d{1,2})/i);
+                    if (match) episodeNum = String(parseInt(match[1], 10));
                 }
             }
-            if (!episodeNumber) return '/assets/img/episode-default.jpg';
-
-
-            const showData = this.seasonEpisodeImages[showName];
-            if (showData && showData.seasons && showData.seasons[seasonNumber] && 
-                showData.seasons[seasonNumber].episodes && showData.seasons[seasonNumber].episodes[episodeNumber] &&
-                showData.seasons[seasonNumber].episodes[episodeNumber].still) {
-                return showData.seasons[seasonNumber].episodes[episodeNumber].still;
+            // Debug log the lookup keys
+            console.log('[EPISODE IMAGE LOOKUP]', { showKey, seasonNum, episodeNum, episodeName: episode?.name });
+            // Lookup
+            const showData = this.seasonEpisodeImages[showKey];
+            if (!showData) {
+                console.warn('[EPISODE IMAGE] No showData for', showKey);
+                return '/assets/img/placeholder-poster.jpg';
             }
-            return '/assets/img/episode-default.jpg';
+            const seasonData = showData.seasons && showData.seasons[seasonNum];
+            if (!seasonData) {
+                console.warn('[EPISODE IMAGE] No seasonData for', showKey, seasonNum);
+                return '/assets/img/placeholder-poster.jpg';
+            }
+            if (!seasonData.episodes) {
+                console.warn('[EPISODE IMAGE] No episodes for', showKey, seasonNum);
+                return '/assets/img/placeholder-poster.jpg';
+            }
+            const epData = seasonData.episodes[episodeNum];
+            if (!epData || !epData.still) {
+                console.warn('[EPISODE IMAGE] No still for', showKey, seasonNum, episodeNum);
+                return '/assets/img/placeholder-poster.jpg';
+            }
+            // If the still path starts with /media/, convert to /assets/ if needed
+            let stillPath = epData.still;
+            if (stillPath.startsWith('/media/TV-SHOWS/')) {
+                // Try to map to /assets/img/ if the file exists there
+                const localPath = stillPath.replace('/media/TV-SHOWS/', '/assets/img/');
+                // Optionally, check if the file exists (requires async or pre-scan)
+                // For now, just use the mapped path
+                stillPath = localPath;
+            }
+            console.log('[EPISODE IMAGE] Found still:', stillPath);
+            return stillPath;
         } catch (error) {
-            console.error('Error getting episode image:', error);
-            return '/assets/img/episode-default.jpg';
+            console.error('[EPISODE IMAGE ERROR]', error);
+            return '/assets/img/placeholder-poster.jpg';
         }
     }
 
@@ -2507,6 +2547,7 @@ class MediaLibraryManager {
             <div class="media-library-grid">
                 ${seasons.map(season => {
                     const seasonImage = this.getSeasonImage(showName, season.path);
+                    const episodeCount = season.episodes ? season.episodes.length : this.getEpisodesForSeason(show, season.path).length;
                     return `
                         <div class="media-library-card" onclick="mediaLibraryManager.openTVSeason('${season.path.replace(/\\/g, '/')}')">
                         <div class="media-library-card-poster">
@@ -2514,7 +2555,7 @@ class MediaLibraryManager {
                         </div>
                         <div class="media-library-card-info">
                                 <h3>${season.path.split(/[\\/]/).pop()}</h3>
-                            <p>${this.getEpisodesForSeason(this.currentTVShow, season.path).length} Episodes</p>
+                            <p>${episodeCount} Episodes</p>
                         </div>
                     </div>
                     `;
@@ -2542,53 +2583,61 @@ class MediaLibraryManager {
     }
 
     renderEpisodesView() {
-        const showName = this.extractShowName(this.currentTVShow);
-        const seasonName = this.currentTVSeason.split(/[\/]/).pop();
-        const episodes = this.getEpisodesForSeason(this.currentTVShow, this.currentTVSeason);
+        try {
+            const show = this.findShowByPath(this.currentTVShow);
+            const showName = this.extractShowName(this.currentTVShow);
+            const seasonName = this.currentTVSeason.split(/[\/]/).pop();
+            const episodes = this.getEpisodesForSeason(show, this.currentTVSeason) || [];
 
-        console.log('[DEBUG] episode:', episodes);
+            console.log('[DEBUG] episode:', episodes);
 
-        return `
-            <div class="media-library-breadcrumbs">
-                <span class="breadcrumb-link" onclick="mediaLibraryManager.backToTVShows()">TV Shows</span>
-                <span class="breadcrumb-separator"> > </span>
-                <span class="breadcrumb-link" onclick="mediaLibraryManager.backToSeasons()">${showName}</span>
-                <span class="breadcrumb-separator"> > </span>
-                <span>${seasonName}</span>
-            </div>
-            <div class="media-library-season-info">
-                <h2>${seasonName}</h2>
-                <p>${episodes.length} Episodes</p>
-            </div>
-            <div class="media-library-episodes-scroll">
-            <div class="media-library-grid">
-                ${episodes.map(episode => {
-                    const episodeImage = this.getEpisodeImage(showName, seasonName, episode);
-                    // Robust relPath for playback
-                    const relPath = ((episode.relPath) ? episode.relPath : (this.currentTVSeason.replace(/\\/g, '/') + '/' + episode.name.replace(/\\/g, '/'))).replace(/\\/g, '/');
-                    return `
-                    <div class="media-library-card" onclick="mediaLibraryManager.playEpisode('${relPath}')">
-                        <div class="media-library-card-poster">
-                            <img src="${episodeImage}" alt="${episode.name}" onerror="this.src='/assets/img/placeholder-poster.jpg'">
-                            <div class="media-library-play-overlay">▶</div>
-                        </div>
-                        <div class="media-library-card-info">
-                            <h3 class="tv-show-season-episode-name" style="font-size:1em;line-height:1.2;margin-bottom:2px;">
-                                ${showName} - ${seasonName} - ${(() => {
-                                    const match = (episode.name || episode.path).match(/E(\d{1,2})/i);
-                                    return match ? `E${match[1].padStart(2, '0')}` : '';
-                                })()}
-                            </h3>
-                            <div class="tv-show-episode-name" style="font-size:0.98em;line-height:1.2;white-space:normal;">
-                                ${this.extractEpisodeTitle(episode.name || episode.path.split(/[\\/]/).pop())}
+            return `
+                <div class="media-library-breadcrumbs">
+                    <span class="breadcrumb-link" onclick="mediaLibraryManager.backToTVShows()">TV Shows</span>
+                    <span class="breadcrumb-separator"> > </span>
+                    <span class="breadcrumb-link" onclick="mediaLibraryManager.backToSeasons()">${showName}</span>
+                    <span class="breadcrumb-separator"> > </span>
+                    <span>${seasonName}</span>
+                </div>
+                <div class="media-library-season-info">
+                    <h2>${seasonName}</h2>
+                    <p>${episodes.length} Episodes</p>
+                </div>
+                <div class="media-library-episodes-scroll">
+                <div class="media-library-grid">
+                    ${episodes.map(episode => {
+                        const episodeImage = this.getEpisodeImage(showName, seasonName, episode);
+                        // Robust relPath for playback
+                        const relPath = ((episode.relPath) ? episode.relPath : (this.currentTVSeason.replace(/\\/g, '/') + '/' + (episode.name || episode.filename || '').replace(/\\/g, '/'))).replace(/\\/g, '/');
+                        return `
+                        <div class="media-library-card" onclick="mediaLibraryManager.playEpisode('${relPath}')">
+                            <div class="media-library-card-poster">
+                                <img src="${episodeImage}" alt="${episode.name || episode.filename}" onerror="this.src='/assets/img/placeholder-poster.jpg'">
+                                <div class="media-library-play-overlay">▶</div>
+                            </div>
+                            <div class="media-library-card-info">
+                                <h3 class="tv-show-season-episode-name" style="font-size:1em;line-height:1.2;margin-bottom:2px;">
+                                    ${showName} - ${seasonName} - ${(() => {
+                                        const match = ((episode.name || episode.filename || episode.path) || '').match(/E(\d{1,2})/i);
+                                        return match ? `E${match[1].padStart(2, '0')}` : '';
+                                    })()}
+                                </h3>
+                                <div class="tv-show-episode-name" style="font-size:0.98em;line-height:1.2;white-space:normal;">
+                                    ${this.extractEpisodeTitle((episode.name || episode.filename || episode.path || '').split(/[\\/]/).pop())}
+                                </div>
                             </div>
                         </div>
+                    `;
+                    }).join('')}
                     </div>
-                `;
-                }).join('')}
                 </div>
-            </div>
-        `;
+            `;
+        } catch (error) {
+            console.error('[EPISODE VIEW ERROR]', error);
+            this.showError('Failed to load episodes for this season. Please check the data or try again.');
+            // Fallback: keep modal open and show error message
+            return `<div class="media-library-error">An error occurred loading episodes. Please check the console for details.</div>`;
+        }
     }
 
     backToTVShows() {
@@ -2686,8 +2735,7 @@ class MediaLibraryManager {
                         <button class="favorite-btn" title="Toggle Favorite" style="background:none;border:none;cursor:pointer;font-size:1.5em;line-height:1;">${this.isFavorite(item.path) ? '❤️' : '🤍'}</button>
                         <button class="collection-btn" title="Add to Collection" style="background:none;border:none;cursor:pointer;font-size:1.4em;line-height:1;">➕</button>
                     </div>
-                    <div class="movie-poster-spinner"></div>
-                    <img src="${this.getPosterPath(item)}" alt="${item.title}" style="margin-top:6px;" onload="this.previousElementSibling.style.display='none';" onerror="this.previousElementSibling.style.display='none'; this.src='/assets/img/placeholder-poster.jpg';">
+                    <img src="${this.getPosterPath(item)}" alt="${item.title}" style="margin-top:6px;">
                     <div class="media-info">
                         <h3>${cleanTitle}</h3>
                     </div>
@@ -2716,8 +2764,7 @@ class MediaLibraryManager {
                         <button class="favorite-btn" title="Toggle Favorite" style="background:none;border:none;cursor:pointer;font-size:1.5em;line-height:1;">❤️</button>
                         <button class="collection-btn" title="Add to Collection" style="background:none;border:none;cursor:pointer;font-size:1.4em;line-height:1;">➕</button>
                     </div>
-                    <div class="movie-poster-spinner"></div>
-                    <img src="${this.getPosterPath(item)}" alt="${item.title}" style="margin-top:6px;" onload="this.previousElementSibling.style.display='none';" onerror="this.previousElementSibling.style.display='none'; this.src='/assets/img/placeholder-poster.jpg';">
+                    <img src="${this.getPosterPath(item)}" alt="${item.title}" style="margin-top:6px;">
                     <div class="media-info">
                         <h3>${cleanTitle}</h3>
                     </div>
