@@ -4,43 +4,43 @@
       "3": {
         "episodes": {
           "1": {
-            "still": "/media/TV-SHOWS/Cosmos Possible Worlds/Season 03/E01.jpg"
+            "still": null
           },
           "2": {
-            "still": "/media/TV-SHOWS/Cosmos Possible Worlds/Season 03/E02.jpg"
+            "still": null
           },
           "3": {
-            "still": "/media/TV-SHOWS/Cosmos Possible Worlds/Season 03/E03.jpg"
+            "still": null
           },
           "4": {
-            "still": "/media/TV-SHOWS/Cosmos Possible Worlds/Season 03/E04.jpg"
+            "still": null
           },
           "5": {
-            "still": "/media/TV-SHOWS/Cosmos Possible Worlds/Season 03/E05.jpg"
+            "still": null
           },
           "6": {
-            "still": "/media/TV-SHOWS/Cosmos Possible Worlds/Season 03/E06.jpg"
+            "still": null
           },
           "7": {
-            "still": "/media/TV-SHOWS/Cosmos Possible Worlds/Season 03/E07.jpg"
+            "still": null
           },
           "8": {
-            "still": "/media/TV-SHOWS/Cosmos Possible Worlds/Season 03/E08.jpg"
+            "still": null
           },
           "9": {
-            "still": "/media/TV-SHOWS/Cosmos Possible Worlds/Season 03/E09.jpg"
+            "still": null
           },
           "10": {
-            "still": "/media/TV-SHOWS/Cosmos Possible Worlds/Season 03/E10.jpg"
+            "still": null
           },
           "11": {
-            "still": "/media/TV-SHOWS/Cosmos Possible Worlds/Season 03/E11.jpg"
+            "still": null
           },
           "12": {
-            "still": "/media/TV-SHOWS/Cosmos Possible Worlds/Season 03/E12.jpg"
+            "still": null
           },
           "13": {
-            "still": "/media/TV-SHOWS/Cosmos Possible Worlds/Season 03/E13.jpg"
+            "still": null
           }
         }
       }
@@ -960,16 +960,16 @@
             "still": "https://image.tmdb.org/t/p/w500/b5W5bY3c8L5HWkShLXO8rGmCid0.jpg"
           },
           "2": {
-            "still": "/media/TV-SHOWS/Banacek/Season 01/banacek_S01E02.png"
+            "still": null
           },
           "3": {
-            "still": "/media/TV-SHOWS/Banacek/Season 01/banacek_S01E03.png"
+            "still": null
           },
           "4": {
-            "still": "/media/TV-SHOWS/Banacek/Season 01/banacek_S01E04.png"
+            "still": null
           },
           "5": {
-            "still": "/media/TV-SHOWS/Banacek/Season 01/banacek_S01E05.png"
+            "still": null
           }
         }
       }
@@ -4391,6 +4391,9 @@
           },
           "4": {
             "still": "https://image.tmdb.org/t/p/w500/r60GETUHM4QoRzZnfQqMbWnhPQW.jpg"
+          },
+          "5": {
+            "still": "https://image.tmdb.org/t/p/w500/cK6odUhZnrPmwC7uIN6aPm07iEN.jpg"
           }
         }
       }
@@ -4932,43 +4935,43 @@
       "1": {
         "episodes": {
           "1": {
-            "still": "https://media.themoviedb.org/t/p/w454_and_h254_bestv2/sAp5RwWRVF3gJ5VKhU4oxJ55hlj.jpg"
+            "still": "https://image.tmdb.org/t/p/w500/4F9kbEp4PFe6CfHDMdQynOCiFmL.jpg"
           },
           "2": {
-            "still": "https://media.themoviedb.org/t/p/w454_and_h254_bestv2/7qpyXJahEPUAMr7n4Hu6ch6sdIb.jpg"
+            "still": "https://image.tmdb.org/t/p/w500/oN6FHlQfQiZQy1TKuLHG1Nn415U.jpg"
           },
           "3": {
-            "still": "https://media.themoviedb.org/t/p/w454_and_h254_bestv2/vUHfiicahadxcC8NiYsrLvxO8Y9.jpg"
+            "still": "https://image.tmdb.org/t/p/w500/qGi5Tu6dTA7TZU8j9ZCa6jo0kZ4.jpg"
           },
           "4": {
-            "still": "https://media.themoviedb.org/t/p/w454_and_h254_bestv2/6jPkkl2iZrTcF3XsnXeLHqxwzbP.jpg"
+            "still": "https://image.tmdb.org/t/p/w500/q8ubQz9NDIMukbev1wG30g60OgI.jpg"
           },
           "5": {
-            "still": "https://media.themoviedb.org/t/p/w454_and_h254_bestv2/92SjEitSQc2ObsxqMLhw7AJSzp6.jpg"
+            "still": "https://image.tmdb.org/t/p/w500/q9XFUwD7uwubjZFTgG49tX3diB.jpg"
           },
           "6": {
-            "still": "https://media.themoviedb.org/t/p/w454_and_h254_bestv2/zCcIaVIVE1I6gUnpZrzt15XVuga.jpg"
+            "still": "https://image.tmdb.org/t/p/w500/uUaOZFE8BXAZ6607U1sedYats4W.jpg"
           },
           "7": {
-            "still": "https://media.themoviedb.org/t/p/w454_and_h254_bestv2/tzFDMolLbm71MtWO2emGDZbjLS2.jpg"
+            "still": "https://image.tmdb.org/t/p/w500/ljJlqURrlY4h0Jy0Cx9iTFNIgup.jpg"
           },
           "8": {
-            "still": "https://media.themoviedb.org/t/p/w454_and_h254_bestv2/tvFw1uNC2TWzTExYCeDPL32uXUS.jpg"
+            "still": "https://image.tmdb.org/t/p/w500/xwQY1ZU2XP118teBrvSwkXQESQp.jpg"
           },
           "9": {
-            "still": "https://media.themoviedb.org/t/p/w454_and_h254_bestv2/uR3kSwxWH2x8cXiiIw0PXUOsLjq.jpg"
+            "still": "https://image.tmdb.org/t/p/w500/2czDEyu1oGIRXpI6EMNcx0sCvMK.jpg"
           },
           "10": {
-            "still": "https://media.themoviedb.org/t/p/w454_and_h254_bestv2/tekbBRggCaXxKTmyolm2rnHivMO.jpg"
+            "still": "https://image.tmdb.org/t/p/w500/uKa08V2NhiaCJ8vDgwV2OGwexqt.jpg"
           },
           "11": {
-            "still": "https://media.themoviedb.org/t/p/w454_and_h254_bestv2/uX4q6Sfba1KB8rg1vnUNpGc3RA5.jpg"
+            "still": "https://image.tmdb.org/t/p/w500/bfwwGeiSzrkfPfM0wZZJqDSGWsz.jpg"
           },
           "12": {
-            "still": "https://media.themoviedb.org/t/p/w454_and_h254_bestv2/olQ9el0lsNqNABXx8oYWYz3fCvB.jpg"
+            "still": "https://image.tmdb.org/t/p/w500/tcSnZ0zDWFwC6BAC5APY6PPPV96.jpg"
           },
           "13": {
-            "still": "https://media.themoviedb.org/t/p/w454_and_h254_bestv2/7TQRZaAFs0gQRBPEr59UalG0z7X.jpg"
+            "still": "https://image.tmdb.org/t/p/w500/1AABie1pF3tbfusWi5yqRefKi5E.jpg"
           }
         }
       }
@@ -10339,13 +10342,13 @@
       "1": {
         "episodes": {
           "1": {
-            "still": "https://media.themoviedb.org/t/p/w454_and_h254_bestv2/qM3GpVpZjOVZ4pfOKUfMgx0GG8y.jpg"
+            "still": "https://image.tmdb.org/t/p/w500/qM3GpVpZjOVZ4pfOKUfMgx0GG8y.jpg"
           },
           "2": {
-            "still": "https://media.themoviedb.org/t/p/w454_and_h254_bestv2/mBRAqyMC0Hz3O2acBi1TtLtRw4u.jpg"
+            "still": "https://image.tmdb.org/t/p/w500/mBRAqyMC0Hz3O2acBi1TtLtRw4u.jpg"
           },
           "3": {
-            "still": "https://media.themoviedb.org/t/p/w454_and_h254_bestv2/clNRz0alIivS4xOw2AG3mBE3fST.jpg"
+            "still": "https://image.tmdb.org/t/p/w500/clNRz0alIivS4xOw2AG3mBE3fST.jpg"
           }
         }
       }
@@ -10692,6 +10695,173 @@
           },
           "3": {
             "still": "https://image.tmdb.org/t/p/w500/3U0I449Yq5RS5gVIJwyVRtBiHqC.jpg"
+          }
+        }
+      }
+    }
+  },
+  "Titans (2018)": {
+    "seasons": {
+      "1": {
+        "episodes": {
+          "1": {
+            "still": "https://image.tmdb.org/t/p/w500/9TinoMsifn0CML0jq1k1vOvGsN0.jpg"
+          },
+          "2": {
+            "still": "https://image.tmdb.org/t/p/w500/kZ07ePwIOKePbZuZ5OmJHNcimHp.jpg"
+          },
+          "3": {
+            "still": "https://image.tmdb.org/t/p/w500/3a5pvn28eb0chP19KmHrJCJNcXn.jpg"
+          },
+          "4": {
+            "still": "https://image.tmdb.org/t/p/w500/gOVDpVAmJbHMWC44S64klycO0RB.jpg"
+          },
+          "5": {
+            "still": "https://image.tmdb.org/t/p/w500/uidOyDbc5G4QyshRNxPHjB7Gr7Y.jpg"
+          },
+          "6": {
+            "still": "https://image.tmdb.org/t/p/w500/1VE5vqi4m0x4UHemw0lzjQSNjSf.jpg"
+          },
+          "7": {
+            "still": "https://image.tmdb.org/t/p/w500/uKw2hQlWS74M4Musw5RMQKMuKCw.jpg"
+          },
+          "8": {
+            "still": "https://image.tmdb.org/t/p/w500/bf1zdS49ulAvXyhvkTPOiIbE9q1.jpg"
+          },
+          "9": {
+            "still": "https://image.tmdb.org/t/p/w500/6FvAlWWk86I3IcIokJQe9Ib2Q5Q.jpg"
+          },
+          "10": {
+            "still": "https://image.tmdb.org/t/p/w500/52q7KSEpZZA0tEwnANuxeiiPorZ.jpg"
+          },
+          "11": {
+            "still": "https://image.tmdb.org/t/p/w500/iF34nVRtTCXdsRXXBTnUaprY9Tw.jpg"
+          }
+        }
+      },
+      "2": {
+        "episodes": {
+          "1": {
+            "still": "https://image.tmdb.org/t/p/w500/i0Cnw0PM2JK2lPvNHhotzTu9ksr.jpg"
+          },
+          "2": {
+            "still": "https://image.tmdb.org/t/p/w500/uye6ynx3SD5qm4d3UN9QClBbgRH.jpg"
+          },
+          "3": {
+            "still": "https://image.tmdb.org/t/p/w500/tliXx3BCVjvInG8dcLknwEnGwdA.jpg"
+          },
+          "4": {
+            "still": "https://image.tmdb.org/t/p/w500/o1vvtiNPuimfrZ8fFTGGZM4gowA.jpg"
+          },
+          "5": {
+            "still": "https://image.tmdb.org/t/p/w500/AwFgzDndYgxUmkqG0g0MMpu44Ep.jpg"
+          },
+          "6": {
+            "still": "https://image.tmdb.org/t/p/w500/6K2L7v9neSFnZREipumi5wHXg8K.jpg"
+          },
+          "7": {
+            "still": "https://image.tmdb.org/t/p/w500/rzk8DDKCl8oCED7P5f9Kf1PysLS.jpg"
+          },
+          "8": {
+            "still": "https://image.tmdb.org/t/p/w500/dLsCsNIFDxEkqObyyD9YRiKWsHs.jpg"
+          },
+          "9": {
+            "still": "https://image.tmdb.org/t/p/w500/e2tx6It8M1ia5TeZn3M1HNs3cUr.jpg"
+          },
+          "10": {
+            "still": "https://image.tmdb.org/t/p/w500/lhQzk4ThuQHc2Eop9GbN1ILsc8w.jpg"
+          },
+          "11": {
+            "still": "https://image.tmdb.org/t/p/w500/5gR9FRYNfVmuyrrb5wNul9RdbzG.jpg"
+          },
+          "12": {
+            "still": "https://image.tmdb.org/t/p/w500/2Deh7ELlC8iYx3YtFrrA5QeoHva.jpg"
+          },
+          "13": {
+            "still": "https://image.tmdb.org/t/p/w500/smX4qUqhn0kpIrVk0hZ5sgmlWnI.jpg"
+          }
+        }
+      },
+      "3": {
+        "episodes": {
+          "1": {
+            "still": "https://image.tmdb.org/t/p/w500/3PtYggHFgNNnFZhTG0Pq9YlFfA5.jpg"
+          },
+          "2": {
+            "still": "https://image.tmdb.org/t/p/w500/woNeSXWXjje8WtI1jQ2pcwCYEXB.jpg"
+          },
+          "3": {
+            "still": "https://image.tmdb.org/t/p/w500/gNVfwsSvnlx7UloUxkQc8sbTEE4.jpg"
+          },
+          "4": {
+            "still": "https://image.tmdb.org/t/p/w500/3zH31AMTg026NEpSxp24mOM3WVN.jpg"
+          },
+          "5": {
+            "still": "https://image.tmdb.org/t/p/w500/3cqvKlwN5KrBsmb5ScZYsrSUScL.jpg"
+          },
+          "6": {
+            "still": "https://image.tmdb.org/t/p/w500/6mi4lwYuKWBmy3Ie0Xp5YOd2dv8.jpg"
+          },
+          "7": {
+            "still": "https://image.tmdb.org/t/p/w500/ksSC8WDP5XdPCSlk6DhOKCq51bG.jpg"
+          },
+          "8": {
+            "still": "https://image.tmdb.org/t/p/w500/y4eDX7DplCdizsZabQPScY5l99l.jpg"
+          },
+          "9": {
+            "still": "https://image.tmdb.org/t/p/w500/przAvtalNUXfSt93ga81ESPziEO.jpg"
+          },
+          "10": {
+            "still": "https://image.tmdb.org/t/p/w500/oZ1ydFV1bFgWYIlLLLh0mqhPwN3.jpg"
+          },
+          "11": {
+            "still": "https://image.tmdb.org/t/p/w500/vhCJYLLgJC3QBzdJvt2ZXYhouIL.jpg"
+          },
+          "12": {
+            "still": "https://image.tmdb.org/t/p/w500/yldz6JaZ9r2ihpVrXBzOJ2XohqP.jpg"
+          },
+          "13": {
+            "still": "https://image.tmdb.org/t/p/w500/avsljnvFXBEGRXvSAmq3m10tNWF.jpg"
+          }
+        }
+      },
+      "4": {
+        "episodes": {
+          "1": {
+            "still": "https://image.tmdb.org/t/p/w500/1HuE6I5pBpwsPf4Nyw4wWvcTSh7.jpg"
+          },
+          "2": {
+            "still": "https://image.tmdb.org/t/p/w500/645gzp34CGhYxhgGDQlCAlSAO1H.jpg"
+          },
+          "3": {
+            "still": "https://image.tmdb.org/t/p/w500/aZ14GzeVXxcO0YOL2sgGfUHNfR6.jpg"
+          },
+          "4": {
+            "still": "https://image.tmdb.org/t/p/w500/jgddaq7KFmvwtjS0ruDlYjAmFTA.jpg"
+          },
+          "5": {
+            "still": "https://image.tmdb.org/t/p/w500/5uyxgFwuC7LsKB9rlXjBWFYDBFT.jpg"
+          },
+          "6": {
+            "still": "https://image.tmdb.org/t/p/w500/eXQe3C8bFomg7TAi2gUX3q6HGlU.jpg"
+          },
+          "7": {
+            "still": "https://image.tmdb.org/t/p/w500/jzEOj7VWqeusJr5qJXyuYHz0zyv.jpg"
+          },
+          "8": {
+            "still": "https://image.tmdb.org/t/p/w500/psPWJiMkXqw99QpZZEpYlgIkK6.jpg"
+          },
+          "9": {
+            "still": "https://image.tmdb.org/t/p/w500/tPHRi7gbR8O4fU3hSZRxLV1VYTy.jpg"
+          },
+          "10": {
+            "still": "https://image.tmdb.org/t/p/w500/xmTkAAHxJt0LgTKkXUGivDK0zQh.jpg"
+          },
+          "11": {
+            "still": "https://image.tmdb.org/t/p/w500/sQs8UeWOE0APYLJZHX1rYIO6Eb9.jpg"
+          },
+          "12": {
+            "still": "https://image.tmdb.org/t/p/w500/sQ1dFa94c37iW2SOJb83PPKqKts.jpg"
           }
         }
       }

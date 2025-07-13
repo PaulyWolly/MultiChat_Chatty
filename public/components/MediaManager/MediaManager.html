@@ -107,6 +107,91 @@
         <button class="media-manager-cancel-btn" type="button">Cancel</button>
       </div>
     </div>
+    <div class="media-manager-content media-manager-content-tv" style="display:none;">
+      <form class="media-manager-tv-form">
+        <div class="media-manager-tv-flex-row">
+          <div class="media-manager-tv-form-fields">
+            <div class="MM-form-fields-BKGD-tv">
+              <div class="media-manager-form-row-tv media-manager-tv-title-row">
+                <label class="media-manager-label-tv" for="media-manager-tv-title" style="flex:0 0 90px;">Show Title <span class="media-manager-required">*</span></label>
+                <input class="media-manager-input-tv" id="media-manager-tv-title" type="text" placeholder="e.g. Titans (2018)" style="flex:2; min-width:0; margin-right:10px;">
+                <label class="media-manager-label-tv" for="media-manager-tv-year" style="flex:0 0 50px; margin-left:10px;">Year</label>
+                <input class="media-manager-input-tv" id="media-manager-tv-year" type="text" placeholder="e.g. 2018" style="flex:1; min-width:0; margin-right:10px;">
+                <label class="media-manager-label-tv" for="media-manager-tv-tmdbid" style="flex:0 0 70px; margin-left:10px;">TMDB ID</label>
+                <input class="media-manager-input-tv" id="media-manager-tv-tmdbid" type="text" placeholder="e.g. 79501" style="flex:1; min-width:0; margin-right:10px;">
+                <button class="media-manager-btn media-manager-fetch-btn-tv" type="button" style="margin-left:10px;">Fetch Info</button>
+              </div>
+              <div class="media-manager-field-error-tv" id="tv-title-error" style="display: none;">Show Title is required</div>
+              <div class="media-manager-form-row-tv">
+                <label class="media-manager-label-tv" for="media-manager-tv-path">Show Path <span class="media-manager-required">*</span>
+                  <span title="Absolute path to the TV show folder on the file server (e.g., S:/MEDIA/TV-SHOWS/Titans (2018))" style="cursor:help; color:#4a90e2;">&#9432;</span>
+                </label>
+                <input class="media-manager-input-tv" id="media-manager-tv-path" type="text" placeholder="e.g. S:/MEDIA/TV-SHOWS/Titans (2018)">
+                <div class="media-manager-field-error-tv" id="tv-path-error" style="display: none;">Show Path is required</div>
+              </div>
+              <div class="media-manager-form-row-tv">
+                <label class="media-manager-label-tv" for="media-manager-tv-description">Description</label>
+                <textarea class="media-manager-input-tv media-manager-description-input-tv" id="media-manager-tv-description" placeholder="e.g. A team of young superheroes fight evil and other perils."></textarea>
+              </div>
+              <div class="media-manager-form-row-tv">
+                <label class="media-manager-label-tv">Cast</label>
+                <div class="media-manager-cast-list-tv"></div>
+                <button class="media-manager-btn media-manager-edit-cast-btn-tv" type="button">Edit Cast</button>
+                <button class="media-manager-btn media-manager-view-json-btn-tv" type="button">View/Edit JSON</button>
+              </div>
+            </div>
+          </div>
+          <div class="media-manager-tv-right-col">
+            <div class="media-manager-tv-poster-col">
+              <label class="media-manager-label-tv">Poster</label>
+              <div class="media-manager-preview-poster-tv">
+                <img class="media-manager-poster-img-tv" src="" alt="Poster Preview">
+                <button class="media-manager-btn media-manager-edit-poster-btn-tv" type="button">Edit Poster</button>
+              </div>
+            </div>
+            <div class="media-manager-tv-seasons-col">
+              <button class="media-manager-btn media-manager-manage-seasons-btn" type="button">Manage Seasons & Episodes</button>
+            </div>
+          </div>
+        </div>
+      </form>
+      <!-- Seasons & Episodes Modal -->
+      <div class="media-manager-seasons-modal-overlay" style="display:none;">
+        <div class="media-manager-seasons-modal">
+          <div class="media-manager-seasons-modal-header">
+            <h3>Manage Seasons & Episodes</h3>
+            <button class="media-manager-seasons-modal-close-btn" type="button">&times;</button>
+          </div>
+          <div class="media-manager-seasons-modal-content">
+            <!-- Dynamic season/episode controls will be rendered here -->
+          </div>
+          <div class="media-manager-seasons-modal-actions">
+            <button class="media-manager-btn media-manager-seasons-modal-save-btn" type="button">Save</button>
+            <button class="media-manager-btn media-manager-seasons-modal-cancel-btn" type="button">Cancel</button>
+          </div>
+        </div>
+      </div>
+      <!-- TMDB Selection Modal -->
+      <div class="media-manager-tmdb-select-modal-overlay" style="display:none;">
+        <div class="media-manager-tmdb-select-modal">
+          <div class="media-manager-tmdb-select-modal-header">
+            <h3>Select a TMDB Result</h3>
+            <button class="media-manager-tmdb-select-modal-close-btn" type="button">&times;</button>
+          </div>
+          <div class="media-manager-tmdb-select-modal-content">
+            <!-- Results will be rendered here -->
+          </div>
+          <div class="media-manager-tmdb-select-modal-actions">
+            <button class="media-manager-btn media-manager-tmdb-select-modal-cancel-btn" type="button">Cancel</button>
+          </div>
+        </div>
+      </div>
+      <div class="media-manager-actions-tv media-manager-actions-fixed">
+        <button class="media-manager-btn media-manager-confirm-btn-tv" type="button">Confirm</button>
+        <button class="media-manager-btn media-manager-edit-btn-tv" type="button">Edit/Resubmit</button>
+        <button class="media-manager-btn media-manager-cancel-btn-tv" type="button">Cancel</button>
+      </div>
+    </div>
     <div class="media-manager-content media-manager-content-all" style="display:none;">
       <button class="media-manager-fetch-all-btn" type="button">Fetch All Info</button>
       <div class="media-manager-progress-bar">

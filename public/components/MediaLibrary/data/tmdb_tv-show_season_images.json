@@ -907,6 +907,14 @@
       }
     }
   },
+  "Titans (2018)": {
+    "seasons": {
+      "1": { "poster": "https://image.tmdb.org/t/p/original/z2TbtzW1ih5b9RIAFWl8LGwsWNa.jpg" },
+      "2": { "poster": "https://image.tmdb.org/t/p/original/obGCOIdxGuI3lmm2Fq9crokKLNL.jpg" },
+      "3": { "poster": "https://image.tmdb.org/t/p/original/cfaWZm8m3OoKdzAUnLsF6TCpZcJ.jpg" },
+      "4": { "poster": "https://image.tmdb.org/t/p/original/4T0THAlS7JzZk6Z1iItqSERIh9i.jpg" }
+    }
+  },
   "UFO": {
     "seasons": {
       "1": {
