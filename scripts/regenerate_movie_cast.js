@@ -8,6 +8,7 @@
 
 const fs = require('fs');
 const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '../server/.env') });
 
 // Configuration
 const TMDB_API_KEY = process.env.TMDB_API_KEY;
@@ -15,6 +16,7 @@ if (!TMDB_API_KEY) {
     console.error('❌ [REGENERATE-CAST] TMDB_API_KEY not set in environment variables. Please add it to your /server/.env file.');
     process.exit(1);
 }
+
 const MOVIES_JSON = path.join(__dirname, '../server/data/media-library-movies.json');
 const OUTPUT_JSON = path.join(__dirname, '../public/data/movie_cast.json');
 

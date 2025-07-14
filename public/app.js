@@ -433,6 +433,8 @@ REGARDING GENERAL QUERIES:
         3. Each step on its own line with number
         [space]
         Enjoy your [recipe name]!
+    
+
 
 6. General responses: When asked for a response, ALWAYS provide at least 2-4 paragraphs of text.
 7. Story responses: When telling a story or providing a longer response, break the response into paragraphs of 4-5 sentences each. 
@@ -1082,63 +1084,60 @@ async function searchAndDisplayImages(query, messageElement) {
     }
 }
 
+// Helper to clean the subject for image headings
+function cleanImageSubject(subject) {
+    if (!subject) return '';
+    // Remove leading phrases
+    subject = subject.replace(/^here are some relevant images (of|for)\s*/i, '');
+    subject = subject.replace(/^here are some images (of|for)\s*/i, '');
+    // Remove trailing image request phrases
+    subject = subject.replace(/(and|with)? ?(provide|show|display)? ?(images?|pictures?|photos?)\.?$/gi, '');
+    // Remove trailing punctuation (period or exclamation mark)
+    subject = subject.replace(/[.!]+$/, '');
+    // Remove extra whitespace
+    return subject.trim();
+}
+
 function insertAndStyleImages(images, messageElement, headingText, originalQuery) {
+    console.log('[IMAGE DEBUG] insertAndStyleImages called', { images, messageElement, headingText, originalQuery });
     // Add null check to prevent errors
     if (!messageElement) {
         console.warn('insertAndStyleImages: messageElement is null, cannot insert images');
         return;
     }
-    
-    const headingHtml = headingText ? `<h3 style="margin: 15px 0 10px 0; color: #333; font-size: 16px;">${headingText}</h3>` : "";
-    
-    // Check if images section already exists
+    // Stronger guard: check for any existing .image-section in the messageElement
     const existingImageSection = messageElement.querySelector('.image-section');
     if (existingImageSection) {
-        // If section exists, just add new images to the top
-        addMoreImages(images, existingImageSection);
-        // If this message is a recipe, use robustScrollToRecipeResults
-        if (messageElement.classList.contains('recipe-card') || messageElement.classList.contains('recipe')) {
-            robustScrollToRecipeResults();
-        } else {
-            robustScrollToParentMessage(messageElement);
-        }
+        console.log('[IMAGE DEBUG] image-section already exists, skipping duplicate insert.');
         return;
     }
-
+    
+    // Images header for Recipe Images redesigned to use CSS styles
+    // Clean the subject for the heading
+    let subject = '';
+    if (headingText && headingText.trim()) {
+        // Try to extract subject from headingText if it contains 'for' or 'of'
+        const match = headingText.match(/images (?:of|for) (.+)/i);
+        subject = match && match[1] ? cleanImageSubject(match[1]) : cleanImageSubject(headingText);
+    } else {
+        subject = cleanImageSubject(originalQuery);
+    }
     const imageSection = `
-        ${headingHtml}
-        <div class="image-section" style="margin-top: 15px; border-top: 1px solid #ccc; padding-top: 10px; position: relative;">
-            <!-- More Images Button -->
-            <button class="more-images-btn" style="
-                position: absolute; 
-                top: 10px; 
-                right: 10px; 
-                background: #007bff; 
-                color: white; 
-                border: none; 
-                padding: 8px 12px; 
-                border-radius: 5px; 
-                cursor: pointer; 
-                font-size: 12px; 
-                z-index: 10;
-                transition: background 0.2s ease;
-            " onmouseover="this.style.background='#0056b3'" onmouseout="this.style.background='#007bff'">
-                More Images
-            </button>
-            <!-- Scrollable Container -->
-            <div class="image-container-scroll" style="
-                max-height: 505px; 
-                overflow-y: auto; 
-                overflow-x: hidden; 
-                border: 1px solid #ddd; 
-                border-radius: 8px; 
-                padding: 10px;
-                margin-top: 35px;
-            ">
-                <div class="image-container" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; max-width: 100%;">
-                </div>
+    <div class="image-section">
+        <!-- Images Heading -->
+        <h3 class="recipe-images-heading">
+            Here are some relevant images for ${subject}!
+        </h3>
+        <!-- More Images Button -->
+        <button class="more-images-btn">
+            More Images
+        </button>
+        <!-- Scrollable Container -->
+        <div class="image-container-scroll">
+            <div class="image-container">
             </div>
-        </div>`;
+        </div>
+    </div>`;
     
     // Insert the image section at the end of the message element
     messageElement.insertAdjacentHTML('beforeend', imageSection);
@@ -1180,6 +1179,8 @@ function insertAndStyleImages(images, messageElement, headingText, originalQuery
     } else {
         robustScrollToParentMessage(messageElement);
     }
+    // After inserting images
+    console.log('[IMAGE DEBUG] Images inserted into DOM. messageElement:', messageElement);
 }
 
 function robustScrollToParentMessage(messageElement) {
@@ -2382,28 +2383,35 @@ async function getAIResponse(message, selectedModel, history, systemPrompt, sess
                         continue; // Skip all other processing for Bing results
                     }
 
-                    // Check for image trigger phrase
-                    if (responseText.toLowerCase().includes('here are some relevant images for')) {
+                    // Check for image trigger phrase or placeholder
+                    if (
+                        responseText.toLowerCase().includes('here are some relevant images for') ||
+                        containsImagePlaceholder(responseText)
+                    ) {
+                        // Try to extract the subject from the heading or placeholder
+                        let searchQuery = '';
                         const imageMatch = responseText.match(/here are some relevant images for (.*?)[.!?\n]/i);
                         if (imageMatch && imageMatch[1]) {
-                            const searchQuery = imageMatch[1].trim();
-                            console.log('Detected image request for:', searchQuery);
-
+                            searchQuery = imageMatch[1].trim();
+                        } else {
+                            // Try to extract from placeholder or any 'Here are ... images of/for ...' line
+                            searchQuery = extractSubjectFromPlaceholder(responseText);
+                        }
+                        if (searchQuery) {
+                            console.log('[IMAGE DEBUG] Detected image request for:', searchQuery);
                             try {
                                 const imageResponse = await fetch(`/api/google-image-search?q=${encodeURIComponent(searchQuery)}`);
                                 if (!imageResponse.ok) {
                                     throw new Error(`HTTP error! status: ${imageResponse.status}`);
                                 }
-
                                 const imageData = await imageResponse.json();
-                                console.log('Received image data:', imageData);
-
+                                console.log('[IMAGE DEBUG] Received image data:', imageData);
                                 if (imageData.images && imageData.images.length > 0) {
-                                    console.log('Inserting images into chat');
+                                    console.log('[IMAGE DEBUG] Inserting images into chat');
                                     insertAndStyleImages(imageData.images, messageElement, `Here are some relevant images for ${searchQuery}.`, searchQuery);
                                 }
                             } catch (error) {
-                                console.error('Error fetching images:', error);
+                                console.error('[IMAGE DEBUG] Error fetching images:', error);
                             }
                         }
                     }
@@ -2459,22 +2467,20 @@ async function getAIResponse(message, selectedModel, history, systemPrompt, sess
                     queueAudioChunk(heading);
                 }
             }
-            // NEW: If user requested images, trigger image search for the main subject
-            if (userRequestedImages(message)) {
-                // Try to extract the main subject from the recipe title (first line)
-                const titleMatch = recipeBuffer.trim().match(/^([A-Za-z0-9 ,.'-]+)$/m);
-                const subject = titleMatch ? titleMatch[1].trim() : message.replace(/images/gi, '').trim();
+            // Use improved detection and subject extraction for image search
+            if (userRequestedImages(message) || containsImagePlaceholder(recipeBuffer)) {
+                const subject = extractImageSubject(message, recipeBuffer);
                 const latestAssistantMsg = document.querySelector('.message.assistant:last-child');
+                console.log('[IMAGE DEBUG] Triggering image search for recipe with subject:', subject);
                 searchAndDisplayImages(subject, latestAssistantMsg);
             }
         });
     } else {
         // For general queries, after rendering, also check for image request
-        if (userRequestedImages(message)) {
-            // Try to extract the main subject from the response (first line)
-            const titleMatch = responseText.trim().match(/^([A-Za-z0-9 ,.'-]+)$/m);
-            const subject = titleMatch ? titleMatch[1].trim() : message.replace(/images/gi, '').trim();
+        if (userRequestedImages(message) || containsImagePlaceholder(responseText)) {
+            const subject = extractImageSubject(message, responseText);
             const latestAssistantMsg = document.querySelector('.message.assistant:last-child');
+            console.log('[IMAGE DEBUG] Triggering image search for general query with subject:', subject);
             searchAndDisplayImages(subject, latestAssistantMsg);
         }
     }
@@ -2602,30 +2608,40 @@ function addMessageToChat(role, content, options = {}) {
 
     // --- RECIPE CARD EARLY RETURN ---
     if (role === 'assistant' && options.isRecipeQuery && window.recipeManager) {
-       
-        // scroll-to-top for recipe robust fix
+        console.log('RENDERING RECIPE CARD:', content);
+        // First, render the recipe
         window.recipeManager.renderRecipe(messageElement, content);
         elements.chatMessages.appendChild(messageElement);
-        window.forceRecipeScrollToTop = true;
-        robustScrollToRecipeResults();
-        setTimeout(() => { window.forceRecipeScrollToTop = false; }, 2000);
-
-        // Insert images if the recipe text contains the image trigger phrase
+        // Insert images if the recipe text contains the image trigger phrase (restored logic)
         const imageTrigger = content.toLowerCase().match(/here are some relevant images for (.*?)[.!?\n]/i);
+        let searchQuery = null;
         if (imageTrigger && imageTrigger[1]) {
-            const searchQuery = imageTrigger[1].trim();
-            fetch(`/api/google-image-search?q=${encodeURIComponent(searchQuery)}`)
-                .then(res => res.json())
-                .then(imageData => {
-                    if (imageData.images && imageData.images.length > 0) {
-                        insertAndStyleImages(imageData.images, messageElement, searchQuery, searchQuery);
-                        // Reinforce scroll-to-top after images load
-                        robustScrollToRecipeResults();
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching images:', error);
-                });
+            searchQuery = imageTrigger[1].trim();
+            console.log('Detected image request for:', searchQuery);
+        } else if (options.originalUserQuery && userRequestedImages(options.originalUserQuery)) {
+            // Extract the recipe title (first non-empty line)
+            const firstLine = content.split('\n').map(l => l.trim()).find(l => l.length > 0) || '';
+            searchQuery = firstLine;
+            console.log('[IMAGE DEBUG] User requested images, using recipe title for image search:', searchQuery);
+        }
+        if (searchQuery) {
+            setTimeout(() => {
+                fetch(`/api/google-image-search?q=${encodeURIComponent(searchQuery)}`)
+                    .then(res => res.json())
+                    .then(imageData => {
+                        if (imageData.images && imageData.images.length > 0) {
+                            console.log('Inserting images into chat (post-recipe)');
+                            if (messageElement && messageElement.isConnected) {
+                                insertAndStyleImages(imageData.images, messageElement, searchQuery, searchQuery);
+                            } else {
+                                console.warn('Message element no longer exists, cannot insert images');
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching images:', error);
+                    });
+            }, 100); // Small delay to ensure DOM is ready
         }
         handleScroll({ content, options, role });
         return messageElement;
@@ -2704,6 +2720,44 @@ function addMessageToChat(role, content, options = {}) {
     
     // Handle scrolling
     handleScroll({ content, options, role });
+    
+    // After rendering any assistant message, if the user's original query requests images, trigger image search for the main subject
+    if (role === 'assistant' && options.originalUserQuery && userRequestedImages(options.originalUserQuery)) {
+        // Try to extract the main subject from the user query
+        let subject = '';
+        // 1. Try to extract before 'and provide images' or similar
+        const generalMatch = options.originalUserQuery.match(/tell me about (.*?) (and|with)? (provide|show|display)? ?(images?|pictures?|photos?)/i);
+        if (generalMatch && generalMatch[1]) {
+            subject = generalMatch[1].trim();
+        } else {
+            // 2. Fallback: remove image-related words and trim
+            subject = options.originalUserQuery.replace(/(and|with)? ?(provide|show|display)? ?(images?|pictures?|photos?)/gi, '').trim();
+        }
+        // 3. Final fallback: use the first non-empty line of the assistant's response
+        if (!subject) {
+            subject = content.split('\n').map(l => l.trim()).find(l => l.length > 0) || '';
+        }
+        if (subject) {
+            console.log('[IMAGE DEBUG] General query: user requested images, using subject for image search:', subject);
+            setTimeout(() => {
+                fetch(`/api/google-image-search?q=${encodeURIComponent(subject)}`)
+                    .then(res => res.json())
+                    .then(imageData => {
+                        if (imageData.images && imageData.images.length > 0) {
+                            console.log('Inserting images into chat (general query)');
+                            if (messageElement && messageElement.isConnected) {
+                                insertAndStyleImages(imageData.images, messageElement, subject, subject);
+                            } else {
+                                console.warn('Message element no longer exists, cannot insert images');
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching images:', error);
+                    });
+            }, 100);
+        }
+    }
     
     return messageElement;
 }
@@ -6532,6 +6586,60 @@ async function openAdminPanel() {
 
 // Add a helper to detect image requests in the user query
 function userRequestedImages(query) {
-    return /images/i.test(query);
+    // Detect common image request patterns
+    return /(image|images|picture|pictures|photo|photos|provide images|show images|show me images|show me a picture|show me photos|show me pictures|show me an image|show me some images|show me some pictures|show me some photos|show me|display images|display pictures|display photos|display an image|display a picture|display a photo|display some images|display some pictures|display some photos)/i.test(query);
+}
+
+// Improved subject extraction for image search
+function extractImageSubject(message, responseText) {
+    // Try to extract the main subject from the recipe title (first line) or before 'and provide images' etc.
+    let subject = '';
+    // 1. For recipes, use the first non-empty line as the subject
+    const recipeTitleMatch = responseText && responseText.trim().match(/^([A-Za-z0-9 ,.'-]+)$/m);
+    if (recipeTitleMatch && recipeTitleMatch[1]) {
+        subject = recipeTitleMatch[1].trim();
+    } else {
+        // 2. For general queries, extract before 'and provide images' or similar
+        const generalMatch = message.match(/tell me about (.*?) (and|with)? (provide|show|display)? ?(images?|pictures?|photos?)/i);
+        if (generalMatch && generalMatch[1]) {
+            subject = generalMatch[1].trim();
+        } else {
+            // 3. Fallback: remove image-related words and trim
+            subject = message.replace(/(and|with)? ?(provide|show|display)? ?(images?|pictures?|photos?)/gi, '').trim();
+        }
+    }
+    // 4. Final fallback: if still empty, use the whole message
+    if (!subject) subject = message.trim();
+    console.log('[IMAGE DEBUG] Extracted subject for image search:', subject);
+    return subject;
+}
+
+// Add logic to detect assistant output placeholders as image triggers
+function containsImagePlaceholder(responseText) {
+    // Match lines like 'Here are some mouthwatering images of ...', 'Here are images for ...', etc.
+    const regex = /here are( some)?( [a-z]+)? images (of|for) ([^\n\.]*)/i;
+    const match = responseText.match(regex);
+    if (match) {
+        console.log('[IMAGE DEBUG] Detected image placeholder line:', match[0]);
+        return true;
+    }
+    // Also match bracketed placeholders
+    return /\[here are( some)?( [a-z]+)? images? (of|for) .+\]/i.test(responseText);
+}
+
+// Update subject extraction from placeholder
+function extractSubjectFromPlaceholder(responseText) {
+    // Extract subject from 'Here are ... images of/for ...' line
+    const regex = /here are( some)?( [a-z]+)? images (of|for) ([^\n\.]*)/i;
+    const match = responseText.match(regex);
+    if (match && match[4]) {
+        return match[4].trim();
+    }
+    // Fallback: bracketed placeholder
+    const bracketMatch = responseText.match(/\[here are( some)?( [a-z]+)? images? (of|for) (.+?)\]/i);
+    if (bracketMatch && bracketMatch[4]) {
+        return bracketMatch[4].trim();
+    }
+    return '';
 }
 
