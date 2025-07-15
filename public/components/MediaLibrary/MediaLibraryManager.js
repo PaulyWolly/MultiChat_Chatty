@@ -1,0 +1,3292 @@
+/*
+  MEDIALIBRARYMANAGER.JS
+  Version: 7
+  AppName: MultiChat_Chatty [v7]
+  Updated: 7/13/2025 @7:30PM
+  Created by Paul Welby
+*/
+
+// Import the shared VideoPlayer
+import VideoPlayer from '../VideoPlayer/VideoPlayer.js';
+
+class MediaLibraryManager {
+    constructor() {
+        console.log('[DEBUG] MediaLibraryManager constructor called');
+        this.mediaLibrary = [];
+        this.embyPosters = [];
+        this.moviePosters = {};
+        this.tvPosters = {};
+        this.currentTab = 'movies';
+        this.isLoading = false;
+        this.videoPlayer = null;
+        this.currentVideo = null;
+        this.nextVideo = null;
+        this.isModalOpen = false;
+        this.currentCollectionView = null;
+        
+        // Search and sort properties
+        this.searchTerm = '';
+        this.sortBy = 'asc';
+        this.selectedGenre = 'All Genres';
+        
+        // Voice command patterns for media library
+        this.voiceCommands = [
+            'open media library',
+            'show media library',
+            'media library',
+            'open movies',
+            'show movies',
+            'movie library',
+            'open tv shows',
+            'show tv shows',
+            'tv show library',
+            'browse movies',
+            'browse tv shows',
+            'view media',
+            'media browser',
+            'open media browser',
+            'show media browser',
+            'movie listings',
+            'tv show listings',
+            'media listings',
+            'view movie listings',
+            'view tv show listings',
+            'view media listings'
+        ];
+        
+        this.init();
+        this.cacheBusters = {}; // Add cacheBusters map for poster cache-busting
+    }
+
+    async init() {
+        this.isLoading = false;
+        
+        // Wait for the global VideoPlayer to be available
+        if (window.videoPlayer) {
+            this.videoPlayer = window.videoPlayer;
+        } else {
+            // Wait for it to be created
+            const checkVideoPlayer = () => {
+                if (window.videoPlayer) {
+                    this.videoPlayer = window.videoPlayer;
+                    this.continueInit();
+                } else {
+                    setTimeout(checkVideoPlayer, 100);
+                }
+            };
+            checkVideoPlayer();
+            return;
+        }
+        
+        this.continueInit();
+    }
+
+    async continueInit() {
+        await this.loadMediaLibrary();
+        await this.loadEmbyPosters();
+        await this.loadMoviePosters();
+        await this.loadTVPosters();
+        await this.loadSeasonEpisodeImages();
+        this.setupEventListeners();
+        this.setupVoiceCommandIntegration();
+        this.setupTextCommandIntegration();
+        console.log('🎬 [MEDIA-LIBRARY] Media library manager initialized with voice/text command support');
+    }
+
+    async loadMediaLibrary() {
+        this.isLoading = true;
+        this.renderSpinner();
+        try {
+            let endpoint = '/api/media-library';
+            if (this.currentTab === 'movies') {
+                endpoint = '/api/media-library-movies';
+            } else if (this.currentTab === 'tvshows') {
+                endpoint = '/api/media-library-tv-shows';
+            }
+            console.log('🎬 [MEDIA-LIBRARY] Loading media library from:', endpoint);
+            const response = await fetch(endpoint);
+            const result = await response.json();
+            
+            console.log('🎬 [MEDIA-LIBRARY] Raw result:', result);
+            console.log('🎬 [MEDIA-LIBRARY] Raw result type:', typeof result, 'isArray:', Array.isArray(result));
+            if (Array.isArray(result)) {
+                console.log('🎬 [MEDIA-LIBRARY] Result is array with', result.length, 'items');
+                if (result.length > 0) {
+                    console.log('🎬 [MEDIA-LIBRARY] First item sample:', result[0]);
+                }
+            }
+            // --- FLEXIBLE FORMAT HANDLING ---
+            // Try to extract the main library array from various possible formats
+            let raw = null;
+            if (this.currentTab === 'movies') {
+                // Movies endpoint: { success: true, library: { folders: [...] } }
+                if (result && result.library && Array.isArray(result.library.folders)) {
+                    raw = result.library.folders;
+                } else if (Array.isArray(result)) {
+                    raw = result;
+                } else {
+                    throw new Error('Unrecognized movies media library format');
+                }
+            } else if (this.currentTab === 'tvshows') {
+                // TV shows endpoint: { path: '', folders: [...] }
+                if (result && Array.isArray(result.folders)) {
+                    raw = result.folders;
+                } else if (Array.isArray(result)) {
+                    raw = result;
+                } else {
+                    throw new Error('Unrecognized tvshows media library format');
+                }
+            } else {
+                // Fallback for other tabs
+                if (Array.isArray(result)) {
+                    raw = result;
+                } else if (result && Array.isArray(result.folders)) {
+                    raw = result.folders;
+                } else if (result && result.library && Array.isArray(result.library.folders)) {
+                    raw = result.library.folders;
+                } else if (result && result.tvShows && Array.isArray(result.tvShows)) {
+                    raw = result.tvShows;
+                } else {
+                    throw new Error('Unrecognized media library format');
+                }
+            }
+            console.log('🎬 [MEDIA-LIBRARY] Extracted media array:', raw);
+            this.mediaLibraryRaw = raw;
+            this.isLoading = false;
+            this.updateModalContent();
+        } catch (error) {
+            this.isLoading = false;
+            this.showError('Failed to load media library.');
+            console.error(error);
+        }
+    }
+
+    async loadEmbyPosters() {
+        this.isLoading = true;
+        this.renderSpinner();
+        try {
+            console.log('🎬 [MEDIA-LIBRARY] Loading Emby posters...');
+            const response = await fetch('/emby-posters.json');
+            this.embyPosters = await response.json();
+            console.log('🎬 [MEDIA-LIBRARY] Loaded', this.embyPosters.length, 'poster entries');
+        } catch (error) {
+            console.error('🎬 [MEDIA-LIBRARY] Failed to load Emby posters:', error);
+            this.embyPosters = [];
+            this.showError('Failed to load poster images.');
+        } finally {
+            this.isLoading = false;
+            this.removeSpinner();
+        }
+    }
+
+    async loadMoviePosters() {
+        try {
+            console.log('🎬 [MEDIA-LIBRARY] Loading movie posters...');
+            const response = await fetch('/components/MediaLibrary/data/movies/movie_posters.json');
+            if (response.ok) {
+                this.moviePosters = await response.json();
+                console.log(`✅ [MEDIA-LIBRARY] Loaded ${Object.keys(this.moviePosters).length} movie posters`);
+            } else {
+                console.warn('⚠️ [MEDIA-LIBRARY] Could not load movie posters');
+                this.moviePosters = {};
+            }
+        } catch (error) {
+            console.warn('⚠️ [MEDIA-LIBRARY] Error loading movie posters:', error);
+            this.moviePosters = {};
+        }
+    }
+
+    async loadTVPosters() {
+        try {
+            console.log('📺 [MEDIA-LIBRARY] Loading TV show posters...');
+            const response = await fetch('/components/MediaLibrary/data/tv-shows/tv_posters.json');
+            if (response.ok) {
+                this.tvPosters = await response.json();
+                console.log(`✅ [MEDIA-LIBRARY] Loaded ${Object.keys(this.tvPosters).length} TV show posters`);
+            } else {
+                console.warn('⚠️ [MEDIA-LIBRARY] Could not load TV show posters');
+                this.tvPosters = {};
+            }
+        } catch (error) {
+            console.warn('⚠️ [MEDIA-LIBRARY] Error loading TV show posters:', error);
+            this.tvPosters = {};
+        }
+    }
+
+    async loadSeasonEpisodeImages() {
+        try {
+            console.log('🎬 [MEDIA-LIBRARY] Loading season and episode images...');
+            
+            // Load season images
+            const seasonResponse = await fetch('/components/MediaLibrary/data/tv-shows/tv-show_season_images.json');
+            let seasonData = {};
+            if (seasonResponse.ok) {
+                seasonData = await seasonResponse.json();
+                console.log(`✅ [MEDIA-LIBRARY] Loaded season images for ${Object.keys(seasonData).length} shows`);
+            } else {
+                console.warn('⚠️ [MEDIA-LIBRARY] Could not load season images');
+            }
+            
+            // Load episode images
+            const episodeResponse = await fetch('/components/MediaLibrary/data/tv-shows/tv-show_episode_images.json');
+            let episodeData = {};
+            if (episodeResponse.ok) {
+                episodeData = await episodeResponse.json();
+                console.log(`✅ [MEDIA-LIBRARY] Loaded episode images for ${Object.keys(episodeData).length} shows`);
+            } else {
+                console.warn('⚠️ [MEDIA-LIBRARY] Could not load episode images');
+            }
+            
+            // Merge the data into a single structure for compatibility
+            this.seasonEpisodeImages = {};
+            for (const showName in seasonData) {
+                this.seasonEpisodeImages[showName] = { seasons: {} };
+                if (seasonData[showName].seasons) {
+                    for (const seasonNum in seasonData[showName].seasons) {
+                        this.seasonEpisodeImages[showName].seasons[seasonNum] = {
+                            poster: seasonData[showName].seasons[seasonNum].poster || null,
+                            episodes: {}
+                        };
+                        
+                        // Add episode data if available
+                        if (episodeData[showName] && 
+                            episodeData[showName].seasons && 
+                            episodeData[showName].seasons[seasonNum] &&
+                            episodeData[showName].seasons[seasonNum].episodes) {
+                            this.seasonEpisodeImages[showName].seasons[seasonNum].episodes = episodeData[showName].seasons[seasonNum].episodes;
+                        }
+                    }
+                }
+            }
+            
+            console.log(`✅ [MEDIA-LIBRARY] Merged season/episode images for ${Object.keys(this.seasonEpisodeImages).length} shows`);
+        } catch (error) {
+            console.warn('⚠️ [MEDIA-LIBRARY] Error loading season episode images:', error);
+            this.seasonEpisodeImages = {};
+        }
+    }
+
+    renderSpinner() {
+        let modal = document.getElementById('mediaLibraryModal');
+        if (!modal) return;
+        if (!document.getElementById('mediaLibrarySpinner')) {
+            const spinnerOverlay = document.createElement('div');
+            spinnerOverlay.className = 'media-library-spinner-overlay';
+            spinnerOverlay.id = 'mediaLibrarySpinner';
+            spinnerOverlay.innerHTML = `<div class="media-library-spinner"></div>`;
+            modal.appendChild(spinnerOverlay);
+        }
+    }
+
+    removeSpinner() {
+        const spinner = document.getElementById('mediaLibrarySpinner');
+        if (spinner) spinner.remove();
+    }
+
+    showError(msg) {
+        let modal = document.getElementById('mediaLibraryModal');
+        if (!modal) return;
+        let errDiv = document.getElementById('mediaLibraryError');
+        if (!errDiv) {
+            errDiv = document.createElement('div');
+            errDiv.id = 'mediaLibraryError';
+            errDiv.style.cssText = 'color: red; text-align: center; margin: 20px; font-weight: bold;';
+            modal.appendChild(errDiv);
+        }
+        errDiv.textContent = msg;
+    }
+
+    setupEventListeners() {
+        console.log('[DEBUG] MediaLibraryManager.setupEventListeners called');
+        // Add event listeners for media library button
+        const mediaLibraryBtn = document.getElementById('mediaLibraryBtn');
+        if (mediaLibraryBtn) {
+            mediaLibraryBtn.addEventListener('click', () => this.openMediaBrowser()); // ensure arrow function
+        }
+    }
+
+    async openMediaBrowser() {
+        this.isModalOpen = true;
+        if (this.currentTab === 'movies') {
+            await this.loadMoviePosters();
+        }
+        await this.loadMediaLibrary();
+        this.renderModal();
+    }
+
+    closeMediaBrowser() {
+        this.isModalOpen = false;
+        this.removeModal();
+        // Remove the media-library-overlay if present
+        const overlay = document.querySelector('.media-library-overlay');
+        if (overlay) overlay.remove();
+        // Remove Video.js overlay alert if present
+        const videoOverlay = document.querySelector('.videojs-overlay-alert');
+        if (videoOverlay) videoOverlay.remove();
+        // Stop video playback if open
+        if (this.videoPlayer && typeof this.videoPlayer.pause === 'function') {
+            this.videoPlayer.pause();
+            if (typeof this.videoPlayer.currentTime === 'function') {
+                this.videoPlayer.currentTime(0); // Optionally reset to start
+            } else if (typeof this.videoPlayer.currentTime === 'number') {
+                this.videoPlayer.currentTime = 0;
+            }
+        }
+    }
+
+    // Dedicated function to render the tab bar/header
+    renderTabBar() {
+        const tabs = [
+            { id: 'movies', label: 'Movies' },
+            { id: 'tvshows', label: 'TV Shows' },
+            { id: 'favorites', label: 'Favorites' },
+            { id: 'collections', label: 'Collections' },
+            { id: 'suggestions', label: 'Suggestions' },
+            { id: 'watchlater', label: 'Watch Later' }
+        ];
+        return `
+          <div class="media-library-modal-tabs-row">
+            <div class="media-library-modal-tabs-left">
+              ${tabs.map(tab =>
+                  `<button class="media-library-tab-btn${this.currentTab === tab.id ? ' active' : ''}"
+                    onclick="mediaLibraryManager.switchTab('${tab.id}')">${tab.label}</button>`
+              ).join('')}
+            </div>
+            <div class="media-library-modal-tabs-spacer"></div>
+            <button class="media-library-media-manager-btn" onclick="mediaLibraryManager.openMediaManager()">Media Manager</button>
+          </div>
+        `;
+    }
+
+    async renderModal() {
+        // Add overlay if not present
+        if (!document.querySelector('.media-library-overlay')) {
+            const overlay = document.createElement('div');
+            overlay.className = 'media-library-overlay';
+            document.body.appendChild(overlay);
+        }
+        // Remove existing modal if any (but NOT the overlay)
+        const existingModal = document.getElementById('mediaLibraryModal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+
+        // --- Ensure correct tab is highlighted based on navigation state ---
+        // Only override currentTab if navigating within TV shows or collections
+        if (this.currentTab === 'tvshows' && this.currentTVShow) {
+            this.currentTab = 'tvshows';
+        } else if (this.currentTab === 'collections' && this.currentCollectionView) {
+            this.currentTab = 'collections';
+        }
+        
+        console.log('[DEBUG - RenderModal] currentTab:', this.currentTab);
+        console.log('[DEBUG - RenderModal] currentTVShow:', this.currentTVShow);
+        console.log('[DEBUG - RenderModal] currentTVSeason:', this.currentTVSeason);
+
+        const getSearchPlaceholder = () => {
+            switch (this.currentTab) {
+                case 'tvshows': return 'Search TV-Shows...';
+                case 'favorites': return 'Search Favorites...';
+                case 'collections': return 'Search Collections...';
+                case 'watchlater': return 'Search Watch Later...';
+                case 'suggestions': return 'Search Suggestions...';
+                default: return 'Search Movies...';
+            }
+        };
+
+        const getShuffleButtonText = () => {
+            switch (this.currentTab) {
+                case 'tvshows': return 'Shuffle Shows';
+                case 'favorites': return 'Shuffle Favorites';
+                case 'collections': return 'Shuffle Collection';
+                case 'watchlater': return 'Shuffle Watch Later';
+                case 'suggestions': return 'Shuffle Suggestions';
+                default: return 'Shuffle';
+            }
+        };
+
+        // Create only the modal, no overlay
+        const modal = document.createElement('div');
+        modal.id = 'mediaLibraryModal';
+        modal.className = 'media-library-modal';
+        modal.innerHTML = `
+            <div class="media-library-modal-header">
+            <div class="media-library-header-overlay"></div>
+            <h2 class="media-library-header-title media-library-header-title-glow">Media Library</h2>
+            <button class="media-library-close-btn" id="mediaLibraryCloseBtn">&times;</button>
+            </div>
+            <div class="media-library-modal-content">
+              ${this.renderTabBar()}
+              <div class="media-library-top-bar">
+                <span class="media-library-count" id="mediaLibraryCount"></span>
+                <div class="media-library-search-container">
+                  <input type="text" id="mediaLibrarySearch" class="media-library-search" placeholder="${getSearchPlaceholder()}" oninput="mediaLibraryManager.handleSearchInput(event)">
+                  <button id="mediaLibraryClearSearch" class="media-library-clear-search">&times;</button>
+                </div>
+                <select id="mediaLibraryGenre" class="media-library-genre" onchange="mediaLibraryManager.handleGenreChange(event)"></select>
+                <select id="mediaLibrarySort" class="media-library-sort" onchange="mediaLibraryManager.handleSortChange(event)">
+                  <option value="asc">A-Z</option>
+                  <option value="desc">Z-A</option>
+                </select>
+                <button class="media-library-shuffle-btn" onclick="mediaLibraryManager.shuffleMovies()">${getShuffleButtonText()}</button>
+              </div>
+              <div class="media-library-content-wrapper">
+                <div class="media-library-flex-row">
+                  <div class="media-library-az-sidebar" id="mediaLibraryAZSidebar"></div>
+                  <div id="mediaGrid" class="media-library-movie-grid media-library-movie-grid-scroll">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+        // Add tab-specific class to modal content for CSS targeting
+        const modalContent = modal.querySelector('.media-library-modal-content');
+        if (modalContent) {
+            // Remove all possible tab classes first
+            modalContent.classList.remove('movies', 'tvshows', 'favorites', 'collections', 'suggestions', 'watchlater');
+            modalContent.classList.add(this.currentTab);
+        }
+        document.body.appendChild(modal);
+        document.getElementById('mediaLibraryCloseBtn').onclick = () => this.closeMediaLibrary();
+        if (this.isLoading) this.renderSpinner();
+        
+        // Use updateModalContent to properly render the grid with click handlers
+        await this.updateModalContent();
+        // After rendering the modal and before calling renderAZSidebar, add:
+        if (this.currentTab === 'tvshows' && !this.currentTVShow && !this.currentTVSeason) {
+            const grid = document.getElementById('mediaGrid');
+            if (grid) {
+                grid.innerHTML = this.renderTVShowsTab();
+                // Attach click handler to each TV show card
+                grid.querySelectorAll('.media-library-card.poster').forEach(card => {
+                    card.onclick = (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        window.mediaLibraryManager.openTVShowFromData(card);
+                    };
+                });
+            }
+            // --- Ensure the A-Z sidebar is always populated ---
+            this.renderAZSidebar();
+            return;
+        }
+        if (this.currentTab === 'tvshows' && this.currentTVShow && !this.currentTVSeason) {
+          const azSidebar = document.getElementById('mediaLibraryAZSidebar');
+          if (azSidebar) azSidebar.style.display = 'none';
+        } else {
+          const azSidebar = document.getElementById('mediaLibraryAZSidebar');
+          if (azSidebar) azSidebar.style.display = '';
+        }
+        this.renderAZSidebar();
+        this.updateCount();
+        this.restoreSearchSortUI();
+        if (this.currentTab === 'watchlater') {
+            const grid = document.getElementById('mediaGrid');
+            if (grid) grid.innerHTML = this.renderWatchLaterContent();
+        }
+        // Defer collections rendering until grid exists
+        if (this.currentTab === 'collections') {
+            setTimeout(() => this.renderCollectionsTab(), 0);
+        }
+        // --- Add clear search button logic ---
+        const searchInput = document.getElementById('mediaLibrarySearch');
+        const clearBtn = document.getElementById('mediaLibraryClearSearch');
+        const updateClearBtn = () => {
+            if (searchInput.value) {
+                clearBtn.style.display = 'block';
+            } else {
+                clearBtn.style.display = 'none';
+            }
+        };
+        searchInput.addEventListener('input', updateClearBtn);
+        updateClearBtn();
+        clearBtn.onclick = (e) => {
+            e.preventDefault();
+            searchInput.value = '';
+            this.handleSearchInput({ target: searchInput });
+            updateClearBtn();
+            searchInput.focus();
+        };
+        // --- Add genre dropdown logic ---
+        const genreDropdown = document.getElementById('mediaLibraryGenre');
+        genreDropdown.innerHTML = '';
+        this.getCommonGenres().forEach(g => {
+            const opt = document.createElement('option');
+            opt.value = g;
+            opt.textContent = g;
+            genreDropdown.appendChild(opt);
+        });
+        genreDropdown.value = this.selectedGenre || 'All Genres';
+        genreDropdown.onchange = (e) => this.handleGenreChange(e);
+
+
+
+        // --- Attach click handlers to poster-selector-btn after rendering ---
+        setTimeout(() => {
+            document.querySelectorAll('.poster-selector-btn').forEach(btn => {
+                btn.onclick = (e) => { // ensure arrow function
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const card = btn.closest('.media-library-movie-card');
+                    let itemPath = card ? card.getAttribute('data-path') : '';
+                    let item = null;
+                    let errorDetails = '';
+                    if (this.currentTab === 'tvshows') {
+                        const tvShows = this.getTVShows();
+                        item = tvShows.find(show =>
+                            (show.path || '').replace(/\\/g, '/').toLowerCase().trim() === (itemPath || '').replace(/\\/g, '/').toLowerCase().trim()
+                        );
+                        if (!item && card) {
+                            // Fallback: try by title
+                            const title = card.querySelector('h3')?.textContent?.trim().toLowerCase();
+                            item = tvShows.find(show => (show.name || show.title || '').trim().toLowerCase() === title);
+                            errorDetails += `\nTried fallback by title: ${title}`;
+                        }
+                    } else {
+                        const items = this.getFilteredAndSortedItems();
+                        item = items.find(i =>
+                            (i.path || '').replace(/\\/g, '/').toLowerCase().trim() === (itemPath || '').replace(/\\/g, '/').toLowerCase().trim()
+                        );
+                        if (!item && card) {
+                            // Fallback: try by title
+                            const title = card.querySelector('h3')?.textContent?.trim().toLowerCase();
+                            item = items.find(i => (i.title || i.name || '').trim().toLowerCase() === title);
+                            errorDetails += `\nTried fallback by title: ${title}`;
+                        }
+                    }
+                    if (window.PosterSelector) {
+                        const mode = this.currentTab === 'tvshows' ? 'tv' : 'movie';
+                        const selector = new window.PosterSelector(mode);
+                        selector.getMediaContext = () => {
+                            if (item) {
+                                return {
+                            mediaId: item.path,
+                            name: item.name || item.title,
+                            path: item.path,
+                            type: mode
+                                };
+                            } else {
+                                // Minimal fallback context
+                                // --- DEBUG LOGGING FOR PATH MISMATCH ---
+                                console.warn('[PosterSelector DEBUG] Fallback context used!');
+                                console.warn('[PosterSelector DEBUG] itemPath:', itemPath);
+                                if (this.currentTab === 'tvshows') {
+                                    const tvShows = this.getTVShows();
+                                    console.warn('[PosterSelector DEBUG] Available TV show paths:', tvShows.map(s => s.path));
+                                } else {
+                                    const items = this.getFilteredAndSortedItems();
+                                    console.warn('[PosterSelector DEBUG] Available movie paths:', items.map(i => i.path));
+                                }
+                                console.warn('[PosterSelector DEBUG] Card HTML:', card ? card.outerHTML : '[none]');
+                                // --- END DEBUG LOGGING ---
+                                return {
+                                    mediaId: itemPath || '[unknown]',
+                                    name: card?.querySelector('h3')?.textContent || '[unknown]',
+                                    path: itemPath || '[unknown]',
+                                    type: mode
+                                };
+                            }
+                        };
+                        selector.onPosterSelected = ({filePath, posterType, poster}) => {
+                            if ((mode === 'movie' || mode === 'tv') && this.moviePosters && item) {
+                                // Always use item.path as the key for both movies and TV shows
+                                this.moviePosters[item.path] = filePath;
+                                this.cacheBusters[item.path] = Date.now();
+                                this.renderMediaGrid();
+                                this.showToast('Poster updated!');
+                            }
+                        };
+                        selector.init();
+                        if (!item) {
+                            // Show a warning toast if fallback was used
+                            const warnMsg = 'Warning: Movie/Show not found by path. Fallback context used.';
+                            this.showToast(warnMsg);
+                            // --- ALWAYS LOG ALERTS TO CONSOLE ---
+                            console.warn('[PosterSelector ALERT]', warnMsg);
+                            console.warn('[PosterSelector DEBUG] itemPath:', itemPath);
+                            if (this.currentTab === 'tvshows') {
+                                const tvShows = this.getTVShows();
+                                console.warn('[PosterSelector DEBUG] Available TV show paths:', tvShows.map(s => s.path));
+                    } else {
+                                const items = this.getFilteredAndSortedItems();
+                                console.warn('[PosterSelector DEBUG] Available movie paths:', items.map(i => i.path));
+                            }
+                            console.warn('[PosterSelector DEBUG] Card HTML:', card ? card.outerHTML : '[none]');
+                        }
+                    } else {
+                        // Show detailed error info in the alert/toast
+                        let details = `PosterSelector is not available or item not found.\n`;
+                        details += `itemPath: ${itemPath}\n`;
+                        details += `card: ${card ? card.outerHTML : '[none]'}\n`;
+                        details += `errorDetails: ${errorDetails}`;
+                        this.showToast(details);
+                    }
+                    return false;
+                };
+            });
+        }, 0);
+
+        // After rendering the modal, attach click handlers to TV show posters
+        setTimeout(() => {
+            document.querySelectorAll('.tvshow-poster-img').forEach(img => {
+                img.onclick = (e) => {
+                    console.log('[DEBUG] TV show poster clicked!');
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const card = img.closest('.media-library-tv-card');
+                    console.log('[DEBUG] Found card:', card);
+                    if (card) {
+                        console.log('[DEBUG] Card data-path:', card.getAttribute('data-path'));
+                        console.log('[DEBUG] Card data-show-name:', card.getAttribute('data-show-name'));
+                        window.mediaLibraryManager.openTVShowFromData(card);
+                    } else {
+                        console.error('[DEBUG] No card found for clicked poster');
+                    }
+                };
+            });
+        }, 0);
+
+        // if (this.currentTab === 'movies') {
+        //     await this.loadMoviePosters();
+        // }
+    }
+
+    removeModal() {
+        // Remove the modal from the DOM
+        const modal = document.querySelector('.media-library-modal');
+        if (modal) modal.remove();
+    }
+
+    // Add this method to close the MediaLibrary and remove the overlay
+    closeMediaLibrary() {
+        this.removeModal();
+        const overlay = document.querySelector('.media-library-overlay');
+        if (overlay) overlay.remove();
+    }
+
+    switchTab(tab) {
+        console.log('[TAB DEBUG] Switching to tab:', tab);
+
+        if (this.currentTab === 'collections') {
+            setTimeout(() => this.renderCollectionsTab(), 0);
+        }
+
+        this.currentTab = tab;
+        this.currentTVShow = null;
+        this.currentTVSeason = null;
+        
+        // Update the search placeholder and shuffle button text for the new tab
+        this.updateTabSpecificUI();
+        
+        // Reload the correct media library data for the selected tab
+        this.loadMediaLibrary().then(() => {
+            this.renderModal();
+            // Force a re-render of the grid if Movies tab is opened
+            if (this.currentTab === 'movies') {
+                setTimeout(() => this.renderMediaGrid(), 0);
+            }
+        });
+    }
+
+    updateTabSpecificUI() {
+        const searchInput = document.getElementById('mediaLibrarySearch');
+        const shuffleBtn = document.querySelector('.media-library-shuffle-btn');
+        
+        if (searchInput) {
+            const getSearchPlaceholder = () => {
+                switch (this.currentTab) {
+                    case 'tvshows': return 'Search TV-Shows...';
+                    case 'favorites': return 'Search Favorites...';
+                    case 'collections': return 'Search Collections...';
+                    case 'watchlater': return 'Search Watch Later...';
+                    case 'suggestions': return 'Search Suggestions...';
+                    default: return 'Search Movies...';
+                }
+            };
+            searchInput.placeholder = getSearchPlaceholder();
+        }
+        
+        if (shuffleBtn) {
+            const getShuffleButtonText = () => {
+                switch (this.currentTab) {
+                    case 'tvshows': return 'Shuffle Shows';
+                    case 'favorites': return 'Shuffle Favorites';
+                    case 'collections': return 'Shuffle Collection';
+                    case 'watchlater': return 'Shuffle Watch Later';
+                    case 'suggestions': return 'Shuffle Suggestions';
+                    default: return 'Shuffle';
+                }
+            };
+            shuffleBtn.textContent = getShuffleButtonText();
+        }
+    }
+
+    async updateModalContent() {
+        // Called after modal is rendered, updates the main grid content
+        const grid = document.getElementById('mediaGrid');
+        if (!grid) return;
+        grid.innerHTML = await this.renderTabContent();
+        // --- FIX: Attach movie card click handlers on initial load ---
+        if (this.currentTab === 'movies') {
+            this.renderMediaGrid();
+        }
+        // ... existing code ...
+    }
+
+    async renderTabContent() {
+        switch (this.currentTab) {
+            case 'movies':
+                return this.renderMoviesContent();
+            case 'tvshows':
+                if (this.currentTVShow) {
+                    if (this.currentTVSeason) {
+                        return this.renderEpisodesView();
+                    } else {
+                        return await this.renderSeasonsView(this.currentTVShow);
+                    }
+                } else {
+                    return this.renderTVShowsTab();
+                }
+            case 'favorites':
+                return this.renderFavoritesContent();
+            case 'collections':
+                return this.renderCollectionsTab();
+            case 'suggestions':
+                return this.renderSuggestionsContent();
+            case 'watchlater':
+                return this.renderWatchLaterContent();
+            default:
+                return this.renderMoviesContent();
+        }
+    }
+
+    renderMediaGrid() {
+        console.log('>> 1. >>>>[MOVIE-LIBRARY] renderMediaGrid called');
+
+        if (this.currentTab === 'tvshows' && !this.currentTVShow && !this.currentTVSeason) {
+            const grid = document.getElementById('mediaGrid');
+            if (grid) {
+                grid.innerHTML = this.renderTVShowsTab();
+                // Attach click handler to TV show poster images
+                grid.querySelectorAll('.tvshow-poster-img').forEach(img => {
+                    img.onclick = (e) => {
+                        console.log('[DEBUG] TV show poster clicked!');
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const card = img.closest('.media-library-tv-card');
+                        console.log('[DEBUG] Found card:', card);
+                        if (card) {
+                            console.log('[DEBUG] Card data-path:', card.getAttribute('data-path'));
+                            console.log('[DEBUG] Card data-show-name:', card.getAttribute('data-show-name'));
+                            window.mediaLibraryManager.openTVShowFromData(card);
+                        } else {
+                            console.error('[DEBUG] No card found for clicked poster');
+                        }
+                    };
+                });
+            }
+            return;
+        }
+
+        const grid = document.getElementById('mediaGrid');
+        if (!grid) return;
+        const items = this.getFilteredAndSortedItems();
+        grid.innerHTML = '';
+        
+        // Track which letters we've already added anchors for
+        const addedAnchors = new Set();
+        
+        items.forEach(item => {
+            const card = document.createElement('div');
+            card.className = 'media-library-movie-card';
+            card.style.position = 'relative';
+            
+            // Get the first letter of the movie title for anchor
+            const cleanTitle = this.cleanMovieTitle(item.title || item.name || item.filename || item.path || '').toLowerCase();
+            const firstLetter = cleanTitle.charAt(0).toUpperCase();
+            
+            // Add anchor if this is the first movie starting with this letter
+            let anchorHTML = '';
+            if (!addedAnchors.has(firstLetter)) {
+                anchorHTML = `<a name="${firstLetter}" id="anchor-${firstLetter}"></a>`;
+                addedAnchors.add(firstLetter);
+            }
+            
+            // For movies, use the HTML string method
+            card.innerHTML = `
+                ${anchorHTML}
+                <div class="media-card-actions" style="display:flex;justify-content:flex-end;align-items:center;gap:10px;padding:6px 10px 0 10px;">
+                    <button class="poster-selector-btn" title="Change Poster">🖼️</button>
+                    <button class="favorite-btn" title="Toggle Favorite" style="background:none;border:none;cursor:pointer;font-size:1.5em;line-height:1;">${this.isFavorite(item.path) ? '❤️' : '🤍'}</button>
+                    <button class="collection-btn" title="Add to Collection" style="background:none;border:none;cursor:pointer;font-size:1.4em;line-height:1;">➕</button>
+                </div>
+                <img src="${this.getPosterPath(item)}" alt="${item.title}" style="margin-top:6px;">
+                <div class="media-info"><h3>${cleanTitle}</h3></div>
+            `;
+
+            // Ensure favorite and collection buttons do not trigger card click
+            card.querySelector('.favorite-btn').onclick = (e) => {
+                e.stopPropagation();
+                this.toggleFavorite(item.path);
+            };
+            card.querySelector('.collection-btn').onclick = (e) => {
+                e.stopPropagation();
+                this.showAddToCollectionModal(item);
+            };
+            // Main card click opens details
+            console.log('>>> 2. >>>[MOVIE-LIBRARY] Attaching click handler to:', item.path);
+            card.addEventListener('click', async (e) => {
+                console.log('>>> 3. >>>[MOVIE-LIBRARY] Movie card clicked:', item.path);
+                console.log('>>> 4. >>>[MOVIE-LIBRARY] Full item object:', item);
+                await this.showMovieDetailsModal(item);
+            });
+            card.setAttribute('data-path', item.path);
+            grid.appendChild(card);
+        });
+        // After rendering the grid, attach poster selector handlers
+        this.attachPosterSelectorHandlers();
+    }
+
+    getItemsForCurrentTab() {
+        let items = [];
+        if (this.currentTab === 'movies') {
+            items = this.mediaLibraryRaw || [];
+            console.log('[MOVIE DEBUG] Raw movies array:', items.slice(0, 5));
+        } else if (this.currentTab === 'tvshows') {
+            items = this.getTVShows();
+        }
+        // ... existing code ...
+        return items;
+    }
+
+    getPosterPath(mediaItem) {
+        // TV Shows: Prefer mapping, then constructed root poster path, then placeholder
+        if (this.currentTab === 'tvshows' && mediaItem && mediaItem.path) {
+            if (this.tvPosters && mediaItem.name) {
+                // Try exact match
+                if (this.tvPosters[mediaItem.name]) {
+                    return this.tvPosters[mediaItem.name];
+                }
+                // Try case-insensitive match
+                const lowerName = mediaItem.name.toLowerCase();
+                for (const [key, value] of Object.entries(this.tvPosters)) {
+                    if (key.toLowerCase() === lowerName) {
+                        return value;
+                    }
+                }
+            }
+            // Fallback: Construct root poster path
+            let showRoot = mediaItem.path.replace(/\\/g, '/');
+            if (!showRoot.endsWith('/')) showRoot += '/';
+            const rootPosterUrl = `/media${showRoot.split('/media').pop()}/poster.jpg`;
+            return rootPosterUrl;
+        }
+        // Movies: robust lookup
+        if (mediaItem) {
+            const tryKeys = [
+                mediaItem.path,
+                mediaItem.relPath,
+                mediaItem.title,
+                mediaItem.name
+            ].filter(Boolean);
+            
+            // For movies, we need to construct the full file path that matches the poster data
+            if (mediaItem.path && mediaItem.files && mediaItem.files.length > 0) {
+                // Get the first video file in the folder
+                const videoFile = mediaItem.files.find(file => 
+                    file.name && (file.name.endsWith('.mp4') || file.name.endsWith('.mkv') || file.name.endsWith('.avi'))
+                );
+                if (videoFile) {
+                    // Construct the full path that matches the poster data format
+                    const fullPath = `S:/MEDIA/MOVIES/${mediaItem.path}/${videoFile.name}`;
+                    tryKeys.unshift(fullPath); // Add this as the first key to try
+                    tryKeys.push(fullPath.replace(/\\/g, '/'));
+                    tryKeys.push(fullPath.replace(/\//g, '\\'));
+                }
+            }
+            
+            // Also try normalized slashes and just the filename
+            if (mediaItem.path) {
+                tryKeys.push(mediaItem.path.replace(/\\/g, '/'));
+                tryKeys.push(mediaItem.path.replace(/\//g, '\\'));
+                tryKeys.push(mediaItem.path.split(/[\\/]/).pop());
+            }
+            if (mediaItem.relPath) {
+                tryKeys.push(mediaItem.relPath.replace(/\\/g, '/'));
+                tryKeys.push(mediaItem.relPath.replace(/\//g, '\\'));
+                tryKeys.push(mediaItem.relPath.split(/[\\/]/).pop());
+            }
+            
+            if (this.moviePosters) {
+                for (const key of tryKeys) {
+                    if (this.moviePosters[key]) {
+                        let url = this.moviePosters[key];
+                        if (this.cacheBusters && this.cacheBusters[key]) {
+                            url += (url.includes('?') ? '&' : '?') + 't=' + this.cacheBusters[key];
+                        }
+                        return url;
+                    }
+                    const lowerKey = key.toLowerCase();
+                    for (const [k, v] of Object.entries(this.moviePosters)) {
+                        if (k.toLowerCase() === lowerKey) {
+                            let url = v;
+                            if (this.cacheBusters && this.cacheBusters[k]) {
+                                url += (url.includes('?') ? '&' : '?') + 't=' + this.cacheBusters[k];
+                            }
+                            return url;
+                        }
+                    }
+                }
+            }
+            
+            // Fallback: try to find a poster by filename only
+            if (this.moviePosters) {
+                const filename = (mediaItem.path || mediaItem.relPath || mediaItem.title || mediaItem.name || '').split(/[\\/]/).pop();
+                for (const [k, v] of Object.entries(this.moviePosters)) {
+                    if (k.endsWith(filename)) {
+                        return v;
+                    }
+                }
+            }
+            
+            // Log a warning if no poster found
+            console.warn('[MEDIA-LIBRARY] No poster found for:', mediaItem, 'Tried keys:', tryKeys);
+        }
+        return '/assets/img/placeholder-poster.jpg';
+    }
+
+    playMedia(mediaItem, startTime = 0) {
+        console.log('[MEDIA-LIBRARY] playMedia called:', {mediaItem, startTime});
+        this.closeMediaBrowser();
+        if (!this.videoPlayer) {
+            console.error('🎬 [MEDIA-LIBRARY] VideoPlayer not available');
+            if (window.addMessageToChat) {
+                window.addMessageToChat('assistant', '❌ Video player not available. Please try again.');
+            }
+            return;
+        }
+        // Always use absolute path for playback
+        let pathParam = '';
+        if (mediaItem.absPath) {
+            pathParam = mediaItem.absPath;
+        } else if (mediaItem.files && mediaItem.files.length > 0 && mediaItem.files[0].absPath) {
+            pathParam = mediaItem.files[0].absPath;
+        } else if (mediaItem.path && mediaItem.files && mediaItem.files.length > 0 && mediaItem.files[0].name) {
+            // Construct the full path
+            pathParam = `S:/MEDIA/MOVIES/${mediaItem.path}/${mediaItem.files[0].name}`;
+        } else {
+            pathParam = mediaItem.path || mediaItem.relPath || '';
+        }
+        if (!pathParam.includes('%')) {
+            pathParam = encodeURIComponent(pathParam);
+        }
+        const videoUrl = `/api/video?path=${pathParam}`;
+        this.videoPlayer.playUrl(videoUrl, 'video/mp4', startTime, mediaItem);
+        this.currentVideo = mediaItem;
+        this.findNextVideo(mediaItem);
+        // Attach resume event listeners
+        this.attachResumeEvents(mediaItem);
+    }
+
+    createVideoPlayer() {
+        const playerContainer = document.createElement('div');
+        playerContainer.id = 'videoPlayerContainer';
+        playerContainer.className = 'video-player-container';
+        playerContainer.innerHTML = `
+            <video id="videoPlayer" class="video-js vjs-default-skin" controls>
+                <p class="vjs-no-js">To view this video please enable JavaScript, and consider upgrading to a web browser that supports HTML5 video.</p>
+            </video>
+            <div id="upNextOverlay" class="up-next-overlay" style="display: none;">
+                <div class="up-next-content">
+                    <h3>Up Next</h3>
+                    <div id="nextVideoInfo"></div>
+                    <div class="up-next-buttons">
+                        <button id="playNextBtn" class="btn btn-primary">Play Now</button>
+                        <button id="cancelNextBtn" class="btn btn-secondary">Cancel</button>
+                    </div>
+                </div>
+            </div>
+            <button id="skipIntroBtn" class="skip-intro-btn" style="display: none;">Skip Intro</button>
+        `;
+
+        document.body.appendChild(playerContainer);
+        
+        // Initialize Video.js
+        const player = videojs('videoPlayer', {
+            fluid: true,
+            responsive: true
+        });
+
+        // Set up event listeners
+        this.setupVideoPlayerEvents(player);
+        
+        return player;
+    }
+
+    setupVideoPlayerEvents(player) {
+        let skipIntroTimeout;
+        let upNextTimeout;
+
+        player.on('loadedmetadata', () => {
+            // Show skip intro button after 5 seconds
+            setTimeout(() => {
+                const skipBtn = document.getElementById('skipIntroBtn');
+                if (skipBtn) {
+                    skipBtn.style.display = 'block';
+                    skipBtn.onclick = () => {
+                        player.currentTime(90); // Skip to 90 seconds
+                        skipBtn.style.display = 'none';
+                    };
+                }
+            }, 5000);
+        });
+
+        player.on('timeupdate', () => {
+            const currentTime = player.currentTime();
+            const duration = player.duration();
+            
+            // Show "Up Next" overlay 30 seconds before end
+            if (duration && currentTime > duration - 30) {
+                this.showUpNextOverlay();
+            }
+        });
+
+        player.on('ended', () => {
+            // Auto-play next episode after 5 seconds
+            if (this.nextVideo) {
+                upNextTimeout = setTimeout(() => {
+                    this.playNextVideo();
+                }, 5000);
+            }
+        });
+    }
+
+    findNextVideo(currentVideo) {
+        if (currentVideo.type === 'tvshow' && currentVideo.season && currentVideo.episode) {
+            // Find next episode in the same season
+            this.nextVideo = this.mediaLibrary.find(item => 
+                item.type === 'tvshow' &&
+                item.title === currentVideo.title &&
+                item.season === currentVideo.season &&
+                item.episode === currentVideo.episode + 1
+            );
+
+            // If no next episode in same season, try next season
+            if (!this.nextVideo) {
+                this.nextVideo = this.mediaLibrary.find(item => 
+                    item.type === 'tvshow' &&
+                    item.title === currentVideo.title &&
+                    item.season === currentVideo.season + 1 &&
+                    item.episode === 1
+                );
+            }
+        }
+    }
+
+    showUpNextOverlay() {
+        if (!this.nextVideo) return;
+
+        const overlay = document.getElementById('upNextOverlay');
+        const nextInfo = document.getElementById('nextVideoInfo');
+        
+        if (overlay && nextInfo) {
+            nextInfo.innerHTML = `
+                <h4>${this.nextVideo.title}</h4>
+                <p>Season ${this.nextVideo.season}, Episode ${this.nextVideo.episode}</p>
+            `;
+            overlay.style.display = 'flex';
+            
+            // Set up button events
+            document.getElementById('playNextBtn').onclick = () => this.playNextVideo();
+            document.getElementById('cancelNextBtn').onclick = () => overlay.style.display = 'none';
+        }
+    }
+
+    playNextVideo() {
+        if (this.nextVideo) {
+            this.playMedia(this.nextVideo);
+        }
+    }
+
+    setupVoiceCommandIntegration() {
+        // Listen for voice commands from the main app
+        document.addEventListener('voiceCommand', (event) => {
+            const command = event.detail?.command?.toLowerCase();
+            if (command && this.voiceCommands.some(pattern => command.includes(pattern))) {
+                console.log('🎬 [MEDIA-LIBRARY] Voice command detected:', command);
+                this.openMediaBrowser();
+                
+                // Add a message to the chat about the voice command
+                if (window.addMessageToChat) {
+                    window.addMessageToChat('assistant', '🎬 Opening media library... Browse your movies and TV shows.');
+                }
+            }
+        });
+
+        // Also listen for speech recognition results directly
+        if (window.speechRecognition) {
+            const originalOnResult = window.speechRecognition.onresult;
+            window.speechRecognition.onresult = (event) => {
+                if (originalOnResult) {
+                    originalOnResult.call(window.speechRecognition, event);
+                }
+                
+                const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase();
+                if (this.voiceCommands.some(pattern => transcript.includes(pattern))) {
+                    console.log('🎬 [MEDIA-LIBRARY] Direct speech recognition detected:', transcript);
+                    this.openMediaBrowser();
+                    
+                    if (window.addMessageToChat) {
+                        window.addMessageToChat('assistant', '🎬 Opening media library... Browse your movies and TV shows.');
+                    }
+                }
+            };
+        }
+    }
+
+    setupTextCommandIntegration() {
+        // Listen for text input commands
+        document.addEventListener('textCommand', (event) => {
+            const command = event.detail?.command?.toLowerCase();
+            if (command && this.voiceCommands.some(pattern => command.includes(pattern))) {
+                console.log('🎬 [MEDIA-LIBRARY] Text command detected:', command);
+                this.openMediaBrowser();
+                
+                if (window.addMessageToChat) {
+                    window.addMessageToChat('assistant', '🎬 Opening media library... Browse your movies and TV shows.');
+                }
+            }
+        });
+
+        // Hook into the main sendMessage function if available
+        if (window.sendMessage) {
+            const originalSendMessage = window.sendMessage;
+            window.sendMessage = (message, isGreeting = false) => {
+                const lowerMessage = message.toLowerCase();
+                if (this.voiceCommands.some(pattern => lowerMessage.includes(pattern))) {
+                    console.log('🎬 [MEDIA-LIBRARY] Text input command detected:', message);
+                    this.openMediaBrowser();
+                    
+                    if (window.addMessageToChat) {
+                        window.addMessageToChat('assistant', '🎬 Opening media library... Browse your movies and TV shows.');
+                    }
+                    return; // Don't send the command to the AI
+                }
+                
+                // Call the original function
+                return originalSendMessage(message, isGreeting);
+            };
+        }
+    }
+
+    // Method to check if a command should trigger the media library
+    shouldTriggerMediaLibrary(command) {
+        const lowerCommand = command.toLowerCase();
+        return this.voiceCommands.some(pattern => lowerCommand.includes(pattern));
+    }
+
+    // Method to handle media library commands
+    handleMediaLibraryCommand(command) {
+        const lowerCommand = command.toLowerCase();
+        
+        if (this.shouldTriggerMediaLibrary(lowerCommand)) {
+            console.log('🎬 [MEDIA-LIBRARY] Command handled:', command);
+            this.openMediaBrowser();
+            
+            if (window.addMessageToChat) {
+                window.addMessageToChat('assistant', '🎬 Opening media library... Browse your movies and TV shows.');
+            }
+            return true; // Command was handled
+        }
+        
+        return false; // Command was not handled
+    }
+
+    // Public method to register with the main app's command system
+    registerWithCommandSystem() {
+        if (window.registerCommandHandler) {
+            window.registerCommandHandler('mediaLibrary', (command) => {
+                return this.handleMediaLibraryCommand(command);
+            });
+            console.log('🎬 [MEDIA-LIBRARY] Registered with command system');
+        }
+    }
+
+    // Recursively flatten the media library tree into a flat array of video items
+    flattenMediaLibrary(node, parentTitle = '', parentPath = '') {
+        let items = [];
+        if (!node) return items;
+        // Add files in this node
+        if (Array.isArray(node.files)) {
+            for (const file of node.files) {
+                items.push({
+                    ...file,
+                    title: file.name || parentTitle,
+                    path: file.absPath || file.relPath || '',
+                    absPath: file.absPath || '', // Preserve absPath for cast lookup
+                    relPath: file.relPath || '', // Preserve relPath for cast lookup
+                    parent: parentTitle,
+                    folder: parentPath
+                });
+            }
+        }
+        // Recurse into folders
+        if (Array.isArray(node.folders)) {
+            for (const folder of node.folders) {
+                const folderTitle = folder.path || parentTitle;
+                items = items.concat(this.flattenMediaLibrary(folder, folderTitle, folder.path));
+            }
+        }
+        return items;
+    }
+
+    // Utility to clean up movie titles for display
+    cleanMovieTitle(filename) {
+        if (!filename || typeof filename !== 'string') return '';
+        // Remove extension
+        let name = filename.replace(/\.[^/.]+$/, "");
+        // Remove bracketed/parenthetical tags
+        name = name.replace(/\[[^\]]*\]|\([^\)]*\)/g, "");
+        // Remove years
+        name = name.replace(/\b(19|20)\d{2}\b/g, "");
+        // Remove audio channel tags like AAC5 1, AAC51, DDP5 1, DDP51, etc.
+        name = name.replace(/\b(aac|ddp|dd|dts|ac3)[ ._\-]*5[ ._\-]*1\b/gi, "");
+        name = name.replace(/\b(aac|ddp|dd|dts|ac3)[ ._\-]*7[ ._\-]*1\b/gi, "");
+        // Remove common tags (only as whole words or after separators)
+        name = name.replace(/(?:^|[ ._\-])(?:480p|720p|1080p|2160p|4k|8k|bluray|brrip|webrip|web-dl|hdrip|dvdrip|xvid|x264|x265|aac|dts|yify|rarbg|repack|extended|unrated|directors cut|remux|hdtv|amzn|nf|web|ddp|dd5[ ._\-]?1|5[ ._\-]?1|7[ ._\-]?1|mp3|flac|truehd|atmos|hevc|h265|h264|ac3|eac3|subs|dubbed|eng|ita|spa|fre|ger|rus|multi|proper|limited|internal|cam|tc|ts|scr|r5|dvdscr|dvdr|pal|ntsc|hdr|dv|remastered|criterion|criterion collection|criterion-collection|criterion)(?=$|[ ._\-])/gi, "");
+        // Remove trailing group tags (e.g., -YTS, -RARBG, etc.)
+        name = name.replace(/[-_. ]+(yts( mx| am)?|rarbg|jyk|kogi|web|amzn|nf|ddp|dd5[ ._\-]?1|aac|dts|hdtv|remux|bluray|brrip|webrip|web-dl|hdrip|dvdrip|xvid|x264|x265|ac3|eac3|subs|dubbed|eng|ita|spa|fre|ger|rus|multi|proper|limited|internal|cam|tc|ts|scr|r5|dvdscr|dvdr|pal|ntsc|hdr|dv|remastered|criterion|criterion collection|criterion-collection|criterion-collection|criterion)\b.*$/i, "");
+        // Replace dots, underscores, dashes with spaces
+        name = name.replace(/[._-]+/g, " ");
+        // Remove extra spaces
+        name = name.replace(/\s+/g, " ").trim();
+        // Capitalize each word
+        name = name.replace(/\b\w/g, c => c.toUpperCase());
+        return name;
+    }
+
+    // Add/Update: Top bar count
+    updateCount() {
+        const countSpan = document.getElementById('mediaLibraryCount');
+        if (!countSpan) return;
+        // Hide count on Watch Later tab
+        if (this.currentTab === 'watchlater') {
+            countSpan.textContent = '';
+            countSpan.style.display = 'none';
+            return;
+        }
+        const items = this.getFilteredAndSortedItems();
+        countSpan.textContent = `${items.length} Items`;
+        countSpan.style.display = '';
+    }
+
+    // Add/Update: Search and sort UI state
+    restoreSearchSortUI() {
+        const searchInput = document.getElementById('mediaLibrarySearch');
+        if (searchInput) searchInput.value = this.searchQuery || '';
+        const sortSelect = document.getElementById('mediaLibrarySort');
+        if (sortSelect) sortSelect.value = this.sortBy || 'asc';
+    }
+
+    // Add: Search and sort state
+    searchQuery = '';
+
+    handleSearchInput(event) {
+        this.searchQuery = event.target.value;
+        this.renderMediaGrid();
+        this.updateCount();
+    }
+
+    handleSortChange(event) {
+        this.sortBy = event.target.value;
+        // Use updateModalContent to handle all tabs including TV Shows
+        this.updateModalContent();
+        this.updateCount();
+    }
+
+    shuffleMovies() {
+        this.shuffle = true;
+        // Use updateModalContent to handle all tabs including TV Shows
+        this.updateModalContent();
+        this.updateCount();
+        this.shuffle = false;
+    }
+
+    // Add: A-Z sidebar rendering
+    renderAZSidebar() {
+        const azSidebar = document.getElementById('mediaLibraryAZSidebar');
+        if (!azSidebar) return;
+        azSidebar.innerHTML = '';
+        const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+        letters.forEach(letter => {
+            const btn = document.createElement('div');
+            btn.className = 'media-library-az-letter';
+            btn.textContent = letter;
+            btn.setAttribute('data-letter', letter);
+            azSidebar.appendChild(btn);
+        });
+        
+        // Use event delegation - single listener on the sidebar
+        azSidebar.onclick = (e) => { // ensure arrow function
+            const letterElement = e.target.closest('.media-library-az-letter');
+            if (letterElement) {
+                const letter = letterElement.getAttribute('data-letter');
+                if (letter) {
+                    this.scrollToLetter(letter);
+                }
+            }
+        };
+    }
+
+    scrollToLetter(letter) {
+        console.log('🔤 [A-Z] scrollToLetter called with letter:', letter);
+        // Find the anchor for this letter
+        const anchor = document.getElementById(`anchor-${letter}`);
+        if (anchor) {
+            console.log('🔤 [A-Z] Found anchor for letter:', letter);
+            // Scroll to the anchor smoothly (same as MOVIES)
+            anchor.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'nearest' 
+            });
+            // Highlight the card containing the anchor (support both movie and tv cards)
+            let movieCard = anchor.closest('.media-library-movie-card');
+            let tvCard = anchor.closest('.media-library-tv-card');  
+
+            if (movieCard) {
+                movieCard.style.transition = 'background 0.3s';
+                const originalBg = movieCard.style.background;
+                movieCard.style.background = '#fff9c4'; // light yellow
+                setTimeout(() => {
+                    movieCard.style.background = originalBg || '';
+                }, 600);
+            }
+            else if (tvCard) {
+                tvCard.style.transition = 'background 0.3s';
+                const originalBg = tvCard.style.background;
+                tvCard.style.background = '#fff9c4'; // light yellow
+                setTimeout(() => {
+                    tvCard.style.background = originalBg || '';
+                }, 600);
+            }
+
+        } else {
+            console.warn('🔤 [A-Z] No anchor found for letter:', letter);
+        }
+    }
+
+    // Update: renderMediaGrid to use search, sort, shuffle
+    getFilteredAndSortedItems() {
+        const items = this.getItemsForCurrentTab();
+        console.log('[MOVIE DEBUG] Items before filtering:', items.length, items.slice(0, 3));
+        let filtered = this.filterItems(items, this.searchTerm);
+        console.log('[MOVIE DEBUG] Items after filtering:', filtered.length, filtered.slice(0, 3));
+        // For movies, sort by clean display title; for TV shows, keep as is
+        if (this.currentTab === 'movies') {
+            return filtered.slice().sort((a, b) => {
+                const titleA = this.cleanMovieTitle(a.title || a.name || a.filename || a.path || '').toLowerCase();
+                const titleB = this.cleanMovieTitle(b.title || b.name || b.filename || b.path || '').toLowerCase();
+                if (this.sortBy === 'asc') {
+                    return titleA.localeCompare(titleB);
+                } else {
+                    return titleB.localeCompare(titleA);
+                }
+            });
+        } else {
+            return this.sortItems(filtered, this.sortBy, 'name');
+        }
+    }
+
+    // Format time for resume info
+    formatTime(seconds) {
+        if (!seconds) return '0:00';
+        const m = Math.floor(seconds / 60);
+        const s = Math.floor(seconds % 60).toString().padStart(2, '0');
+        return `${m}:${s}`;
+    }
+
+    renderGrid(items, labelFn) {
+        let grid = '<div class="media-library-movie-grid">';
+        items.forEach((item, index) => {
+            grid += `
+                <div class="media-library-movie-card" data-item-index="${index}" data-item-path="${item.path}">
+                    <img src="${item.poster}" alt="${labelFn(item)}">
+                    <div class="media-info"><h3>${labelFn(item)}</h3></div>
+                    <div class="media-library-resume-info" style="margin-bottom:6px;">Resume at ${this.formatTime(item.currentTime)} / ${this.formatTime(item.duration)}</div>
+                    <div style="display:flex;justify-content:center;gap:8px;">
+                        <button class="resume-btn" style="margin-top: 0; padding: 6px 14px; border-radius: 6px; background: #007bff; color: #fff; border: none; cursor: pointer; font-size: 1em;">Watch</button>
+                        <button class="delete-btn" title="Remove from Watch Later" style="margin-top: 0; padding: 6px 10px; border-radius: 6px; background: #e53935; color: #fff; border: none; cursor: pointer; font-size: 1em;">🗑️</button>
+                    </div>
+                </div>
+            `;
+        });
+        grid += '</div>';
+        
+        // Add event listeners after the HTML is inserted into the DOM
+        setTimeout(() => {
+            const cards = document.querySelectorAll('.media-library-movie-grid .media-library-movie-card');
+            cards.forEach(card => {
+                const resumeBtn = card.querySelector('.resume-btn');
+                const deleteBtn = card.querySelector('.delete-btn');
+                const itemPath = card.getAttribute('data-item-path');
+                
+                // Find the corresponding item from the resume list
+                const resumeList = this.getResumeList();
+                const item = resumeList.find(resumeItem => resumeItem.path === itemPath);
+                
+                if (item) {
+                    // Resume button click handler
+                    resumeBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        console.log('[WATCH-LATER] Resume clicked for:', item);
+                        this.playMedia(item, item.currentTime);
+                    });
+                    
+                    // Delete button click handler
+                    deleteBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        console.log('[WATCH-LATER] Delete clicked for:', item);
+                        this.removeResumeProgress(item.path);
+                        this.renderWatchLaterContent();
+                        this.showToast('Removed from Watch Later');
+                    });
+                    
+                    // Card click handler (resume from saved position)
+                    card.addEventListener('click', () => {
+                        console.log('[WATCH-LATER] Card clicked for:', item);
+                        this.playMedia(item, item.currentTime);
+                    });
+                }
+            });
+        }, 100);
+        
+        return grid;
+    }
+
+    renderWatchLaterContent() {
+        const resumeList = this.getResumeList();
+        // Separate movies and TV shows
+        const tvshows = resumeList.filter(item => {
+            if (item.type) return item.type.toLowerCase().includes('tv') || item.type.toLowerCase().includes('show');
+            if (item.path) return /season\s*\d+|s\d+e\d+/i.test(item.path);
+            return false;
+        });
+        const movies = resumeList.filter(item => !tvshows.includes(item));
+        // Helper for TV show label and screenshot
+        function getTvShowLabel(item) {
+            let path = decodeURIComponent(item.path || '');
+            // Try to extract show name and SxxExx
+            let show = '', code = '';
+            // Try to match 'TV-SHOWS/Show/Season 01/Show S01E02 ...'
+            let match = path.match(/TV-?SHOWS[\\/](.*?)[\\/].*?[Ss](\d{2})[Ee](\d{2})/i);
+            if (match) {
+                show = match[1].replace(/_/g, ' ').trim();
+                code = `S${match[2]}E${match[3]}`;
+            } else {
+                // Fallback: try to extract from filename
+                let file = path.split(/[\\/]/).pop();
+                let epMatch = file.match(/[Ss](\d{2})[Ee](\d{2})/i);
+                if (epMatch) {
+                    code = `S${epMatch[1]}E${epMatch[2]}`;
+                }
+                // Try to get show from parent folder
+                let parts = path.split(/[\\/]/);
+                if (parts.length > 2) show = parts[parts.length - 3].replace(/_/g, ' ').trim();
+            }
+            if (show && code) return `${show}: ${code}`;
+            return item.title || item.name || 'Episode';
+        }
+        function getTvShowScreenshot(item, self) {
+            // Try to robustly extract show/season/episode for screenshot
+            let path = decodeURIComponent(item.path || '');
+            let show = '', season = '', episode = '';
+            // Try to match common patterns
+            let match = path.match(/TV-?SHOWS[\\/](.*?)[\\/]Season[ _-]?(\d+)[\\/].*?[Ss](\d+)[Ee](\d+)/i);
+            if (match) {
+                show = match[1].replace(/_/g, ' ').trim();
+                season = `Season ${parseInt(match[2], 10)}`;
+                episode = match[0].match(/[Ss](\d+)[Ee](\d+)/i) ? match[0] : (item.name || item.title || '');
+            } else {
+                // Fallback: try to extract from filename
+                let file = path.split(/[\\/]/).pop();
+                let epMatch = file.match(/[Ss](\d+)[Ee](\d+)/i);
+                if (epMatch) {
+                    season = `Season ${parseInt(epMatch[1], 10)}`;
+                    episode = file;
+                }
+                // Try to get show from parent folder
+                let parts = path.split(/[\\/]/);
+                if (parts.length > 2) show = parts[parts.length - 3].replace(/_/g, ' ').trim();
+            }
+            if (show && season && episode) {
+                // Pass an object with .name and .path for compatibility
+                const epObj = { name: episode, path: path };
+                const img = self.getEpisodeImage(show, season, epObj);
+                if (img && !img.includes('placeholder') && !img.includes('undefined') && img.trim() !== '') return img;
+            }
+            // Try show poster as fallback
+            if (show) {
+                const poster = self.getPosterPath({ name: show, path: path });
+                if (poster && !poster.includes('placeholder') && !poster.includes('undefined') && poster.trim() !== '') return poster;
+            }
+            return '/assets/img/placeholder-poster.jpg';
+        }
+        // Main flex container
+        let html = `
+        <div class="watch-later-flex-container">
+            <div class="watch-later-column">
+                <div class="watch-later-section-title">Movies</div>
+                <hr class="watch-later-section-divider">
+                <div class="watch-later-scroll">
+                    <div class="watch-later-grid">
+                        ${movies.map(item => `
+                            <div class="media-library-movie-card-movies watch-later-card" data-path="${item.path}">
+                                <img class="watch-later-img-movie watch-later-img watch-later-img-clickable" src="${this.getPosterPath(item)}" alt="${item.title}">
+                                ${item.lastWatched ? `<div class="watch-later-timestamp">Last watched: ${formatDateTime(item.lastWatched)}<br><span class=\"watch-later-resume-info\">Resume from ${this.formatTime(item.currentTime)}</span></div>` : ''}
+                                <div class="media-info"><h3 class="watch-later-title">${this.cleanMovieTitle(item.title || item.name || 'Movie')}</h3></div>
+                                <div class="watch-later-btn-row">
+                                    <button class="watch-later-resume-btn">Watch</button>
+                                    <button class="watch-later-delete-btn">🗑️</button>
+                                </div>
+                            </div>
+                        `).join('')}
+                        ${movies.length === 0 ? '<div class="watch-later-empty">(No items)</div>' : ''}
+                    </div>
+                </div>
+            </div>
+            <div class="watch-later-column">
+                <div class="watch-later-section-title">TV Shows</div>
+                <hr class="watch-later-section-divider">
+                <div class="watch-later-scroll">
+                    <div class="watch-later-grid">
+                        ${tvshows.map(item => `
+                            <div class="media-library-movie-card-tvshows watch-later-card" data-path="${item.path}">
+                                <img class="watch-later-img-tv watch-later-img watch-later-img-clickable" src="${getTvShowScreenshot(item, this)}" alt="${getTvShowLabel(item)}" onerror="this.onerror=null;this.src='/assets/img/placeholder-poster.jpg';">
+                                ${item.lastWatched ? `<div class="watch-later-timestamp">Last watched: ${formatDateTime(item.lastWatched)}<br><span class=\"watch-later-resume-info\">Resume from ${this.formatTime(item.currentTime)}</span></div>` : ''}
+                                <div class="media-info"><h3 class="watch-later-title">${getTvShowLabel(item)}</h3></div>
+                                <div class="watch-later-btn-row">
+                                    <button class="watch-later-resume-btn">Watch</button>
+                                    <button class="watch-later-delete-btn">🗑️</button>
+                                </div>
+                            </div>
+                        `).join('')}
+                        ${tvshows.length === 0 ? '<div class="watch-later-empty">(No items)</div>' : ''}
+                    </div>
+                </div>
+            </div>
+        </div>
+        `;
+        // Update the modal content if the modal is open
+        const mediaGrid = document.getElementById('mediaGrid');
+        if (mediaGrid) {
+            mediaGrid.innerHTML = html;
+            // Attach resume and delete handlers for both columns
+            setTimeout(() => {
+                document.querySelectorAll('.watch-later-resume-btn').forEach(btn => {
+                btn.onclick = (e) => {
+                    e.stopPropagation();
+                        // Use .watch-later-card to match both movie and tvshow cards
+                        const card = btn.closest('.watch-later-card');
+                        const path = card ? card.getAttribute('data-path') : null;
+                        console.log('[WATCH LATER DEBUG] Resume clicked, resolved path:', path);
+                        const item = resumeList.find(i => (i.path || '').replace(/\\/g, '/').toLowerCase().trim() === (path || '').replace(/\\/g, '/').toLowerCase().trim());
+                        if (item) {
+                            if (tvshows.includes(item)) {
+                                // TV episode: look up relPath in main TV shows data
+                                const tvData = window.mediaLibraryManager?.tvShowsData || [];
+                                let foundEpisode = null;
+                                function searchFolders(folders) {
+                                    for (const show of folders) {
+                                        if (show.folders) {
+                                            for (const season of show.folders) {
+                                                if (season.files) {
+                                                    for (const ep of season.files) {
+                                                        if ((ep.relPath || '').replace(/\\/g, '/').toLowerCase().trim() === (item.path || '').replace(/\\/g, '/').toLowerCase().trim()) {
+                                                            foundEpisode = ep;
+                                                            return;
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                searchFolders(tvData.folders || tvData);
+                                if (foundEpisode && foundEpisode.relPath) {
+                                    console.log('[WATCH LATER DEBUG] Found episode relPath:', foundEpisode.relPath);
+                                    this.playEpisode(foundEpisode.relPath, item.currentTime || 0);
+                    } else {
+                                    console.warn('[WATCH LATER DEBUG] Could not find episode in main TV data, falling back to item.path:', item.path);
+                                    this.playEpisode(item.path, item.currentTime || 0);
+                                }
+                            } else {
+                                // Movie: playMedia
+                                console.log('[WATCH LATER DEBUG] Calling playMedia with:', item.path, item.currentTime);
+                                this.playMedia(item, item.currentTime);
+                            }
+                        } else {
+                            console.warn('[WATCH LATER DEBUG] No matching item found for path:', path);
+                    }
+                };
+                });
+                document.querySelectorAll('.watch-later-delete-btn').forEach(btn => {
+                    btn.onclick = (e) => {
+                        e.stopPropagation();
+                        // Use .watch-later-card to match both movie and tvshow cards
+                        const card = btn.closest('.watch-later-card');
+                        const path = card ? card.getAttribute('data-path') : null;
+                        this.removeResumeProgress(path);
+                        this.renderWatchLaterContent();
+                        this.showToast('Removed from Watch Later');
+                };
+                });
+                document.querySelectorAll('.watch-later-img-clickable').forEach(img => {
+                    img.onclick = (e) => {
+                        e.stopPropagation();
+                        const card = img.closest('.watch-later-card');
+                        const path = card ? card.getAttribute('data-path') : null;
+                        const item = resumeList.find(i => (i.path || '').replace(/\\/g, '/').toLowerCase().trim() === (path || '').replace(/\\/g, '/').toLowerCase().trim());
+                        if (item) {
+                            if (tvshows.includes(item)) {
+                                const tvData = window.mediaLibraryManager?.tvShowsData || [];
+                                let foundEpisode = null;
+                                function searchFolders(folders) {
+                                    for (const show of folders) {
+                                        if (show.folders) {
+                                            for (const season of show.folders) {
+                                                if (season.files) {
+                                                    for (const ep of season.files) {
+                                                        if ((ep.relPath || '').replace(/\\/g, '/').toLowerCase().trim() === (item.path || '').replace(/\\/g, '/').toLowerCase().trim()) {
+                                                            foundEpisode = ep;
+                                                            return;
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                searchFolders(tvData.folders || tvData);
+                                if (foundEpisode && foundEpisode.relPath) {
+                                    this.playEpisode(foundEpisode.relPath, item.currentTime || 0);
+                                } else {
+                                    this.playEpisode(item.path, item.currentTime || 0);
+                                }
+                            } else {
+                                this.playMedia(item, item.currentTime);
+                            }
+                        }
+                    };
+                });
+            }, 0);
+        }
+        return html;
+    }
+
+    // --- UTILITY METHODS ---
+    filterItems(items, searchTerm) {
+        if (!searchTerm) return items;
+        const term = searchTerm.toLowerCase();
+        return items.filter(item => 
+            (item.name && item.name.toLowerCase().includes(term)) ||
+            (item.title && item.title.toLowerCase().includes(term))
+        );
+    }
+
+    sortItems(items, sortBy, field = 'name') {
+        if (!items || items.length === 0) return items;
+        
+        return items.slice().sort((a, b) => {
+            const aValue = (a[field] || '').toString().toLowerCase();
+            const bValue = (b[field] || '').toString().toLowerCase();
+            
+            if (sortBy === 'asc') {
+                return aValue.localeCompare(bValue);
+            } else {
+                return bValue.localeCompare(aValue);
+            }
+        });
+    }
+
+    renderTVShowsTab() {
+        const tvShows = this.getTVShows();
+        console.log('[TV DEBUG] renderTVShowsTab: tvShows.length =', tvShows.length);
+        const filteredShows = this.filterItems(tvShows, this.searchTerm);
+        let sortedShows = this.sortItems(filteredShows, this.sortBy, 'name');
+
+        // Apply shuffle if requested
+        if (this.shuffle) {
+            for (let i = sortedShows.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [sortedShows[i], sortedShows[j]] = [sortedShows[j], sortedShows[i]];
+            }
+        }
+
+        // Track which letters we've already added anchors for
+        const addedAnchors = new Set();
+        const html = `
+            <div class="media-library-movie-grid">
+                ${sortedShows.map(show => {
+                    // Use the same cleanTitle logic as MOVIES
+                    const cleanTitle = this.cleanMovieTitle(show.name || show.title || show.filename || show.path || '').toLowerCase();
+                    const firstLetter = cleanTitle.charAt(0).toUpperCase();
+                    let anchorHTML = '';
+                    if (!addedAnchors.has(firstLetter)) {
+                        anchorHTML = `<a name="${firstLetter}" id="anchor-${firstLetter}"></a>`;
+                        addedAnchors.add(firstLetter);
+                    }
+                    return `
+                    <div class="media-library-card poster" data-path="${show.path}" data-show-name="${show.name || show.title || ''}">
+                      ${anchorHTML}
+                      <div class="media-card-actions" style="display:flex;justify-content:flex-end;align-items:center;gap:10px;padding:6px 10px 0 10px;">
+                        <button class="poster-selector-btn" title="Change Poster" style="background:none;border:none;cursor:pointer;font-size:1.4em;line-height:1;">🖼️</button>
+                        <button class="favorite-btn" title="Toggle Favorite" style="background:none;border:none;cursor:pointer;font-size:1.5em;line-height:1;">${this.isFavorite(show.path) ? '❤️' : '🤍'}</button>
+                        <button class="collection-btn" title="Add to Collection" style="background:none;border:none;cursor:pointer;font-size:1.4em;line-height:1;">➕</button>
+                      </div>
+                      <img class="media-library-poster poster" src="${this.getPosterPath(show)}" alt="${show.name}" onerror="this.src='/assets/img/placeholder-poster.jpg'">
+                      <div class="media-info"><h3>${cleanTitle}</h3></div>
+                    </div>
+                    `;
+                }).join('')}
+            </div>
+        `;
+        console.log('[TV DEBUG] renderTVShowsTab: html =', html);
+        return html;
+    }
+
+    closeModal() {
+        // Remove the modal from the DOM
+        const modal = document.querySelector('.media-library-modal');
+        if (modal) modal.remove();
+    }
+
+    // --- FAVORITES LOGIC ---
+    isFavorite(path) {
+        const favs = JSON.parse(localStorage.getItem('mediaLibraryFavorites') || '[]');
+        return favs.includes(path);
+    }
+    toggleFavorite(path) {
+        let favs = JSON.parse(localStorage.getItem('mediaLibraryFavorites') || '[]');
+        if (favs.includes(path)) {
+            favs = favs.filter(p => p !== path);
+        } else {
+            favs.push(path);
+        }
+        localStorage.setItem('mediaLibraryFavorites', JSON.stringify(favs));
+        this.renderMediaGrid();
+    }
+    getFavoritesList() {
+        const favs = JSON.parse(localStorage.getItem('mediaLibraryFavorites') || '[]');
+        return this.mediaLibrary.filter(item => favs.includes(item.path));
+    }
+
+    // --- COLLECTIONS LOGIC ---
+    getCollections() {
+        return JSON.parse(localStorage.getItem('mediaLibraryCollections') || '{}');
+    }
+    saveCollections(collections) {
+        localStorage.setItem('mediaLibraryCollections', JSON.stringify(collections));
+    }
+    showAddToCollectionModal(movie) {
+        // Remove any existing modal
+        const existing = document.getElementById('addToCollectionModal');
+        if (existing) existing.remove();
+        // Modal overlay
+        const overlay = document.createElement('div');
+        overlay.id = 'addToCollectionModal';
+        overlay.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.25);z-index:99999;display:flex;align-items:center;justify-content:center;';
+        // Modal box
+        const modal = document.createElement('div');
+        modal.style.cssText = 'background:#fff;padding:28px 28px 20px 28px;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.18);min-width:320px;max-width:90vw;position:relative;';
+        modal.innerHTML = `
+            <h3 style="margin-top:0;margin-bottom:18px;font-size:1.2em;">Add to Collection</h3>
+            <label style="font-size:1em;">Choose collection:</label><br>
+            <select id="collectionDropdown" style="width:100%;margin:8px 0 12px 0;padding:6px 8px;font-size:1em;">
+                <option value="">-- Select --</option>
+            </select>
+            <div style="margin:10px 0 8px 0;text-align:center;color:#888;">or</div>
+            <input id="newCollectionInput" type="text" placeholder="New collection name" style="width:100%;padding:6px 8px;font-size:1em;margin-bottom:16px;">
+            <div style="display:flex;justify-content:flex-end;gap:12px;">
+                <button id="cancelCollectionBtn" style="padding:7px 18px;border-radius:6px;background:#eee;color:#333;border:none;cursor:pointer;font-size:1em;">Cancel</button>
+                <button id="addCollectionBtn" style="padding:7px 18px;border-radius:6px;background:#1976d2;color:#fff;border:none;cursor:pointer;font-size:1em;">Add</button>
+            </div>
+            <button id="closeCollectionModal" style="position:absolute;top:10px;right:10px;background:none;border:none;font-size:1.3em;cursor:pointer;color:#888;">&times;</button>
+        `;
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
+        // Populate dropdown
+        const collections = this.getCollections();
+        const dropdown = modal.querySelector('#collectionDropdown');
+        Object.keys(collections).forEach(name => {
+            const opt = document.createElement('option');
+            opt.value = name;
+            opt.textContent = name;
+            dropdown.appendChild(opt);
+        });
+        // Close modal logic
+        const closeModal = () => { overlay.remove(); };
+        modal.querySelector('#closeCollectionModal').onclick = closeModal;
+        modal.querySelector('#cancelCollectionBtn').onclick = closeModal;
+        overlay.onclick = (e) => { if (e.target === overlay) closeModal(); };
+        // Add logic
+        modal.querySelector('#addCollectionBtn').onclick = () => {
+            let collectionName = dropdown.value.trim();
+            const newName = modal.querySelector('#newCollectionInput').value.trim();
+            if (newName) collectionName = newName;
+            if (!collectionName) {
+                alert('Please select or enter a collection name.');
+                return;
+            }
+            // Save to localStorage
+            const collections = this.getCollections();
+            if (!collections[collectionName]) collections[collectionName] = [];
+            if (collections[collectionName].includes(movie.path)) {
+                this.showToast('Already in this collection!');
+                closeModal();
+                return;
+            }
+            collections[collectionName].push(movie.path);
+            this.saveCollections(collections);
+            this.showToast(`Added to "${collectionName}"!`);
+            closeModal();
+        };
+    }
+
+    // --- COLLECTIONS TAB RENDERING ---
+    renderCollectionsTab() {
+        try {
+        const grid = document.getElementById('mediaGrid');
+            if (!grid) {
+                const modalContent = document.querySelector('.media-library-modal-content');
+                if (modalContent) {
+                    modalContent.innerHTML += '<div style="color:red;font-size:2em;">[COLLECTIONS ERROR] mediaGrid not found</div>';
+                }
+                console.error('[COLLECTIONS ERROR] mediaGrid not found');
+                return '';
+            }
+        grid.innerHTML = '';
+            grid.style.display = 'block'; // Ensure block layout, not flex row
+            const collections = this.getCollections();
+            const names = Object.keys(collections);
+        // If viewing a specific collection, show its movies
+        if (this.currentCollectionView) {
+            const moviePaths = collections[this.currentCollectionView] || [];
+                const normalize = p => (p || '').replace(/\\/g, '/').toLowerCase();
+                const normalizedMoviePaths = moviePaths.map(normalize);
+                const movies = this.mediaLibrary.filter(item => normalizedMoviePaths.includes(normalize(item.path)));
+                
+            // Header with back and delete (refactored layout)
+            const header = document.createElement('div');
+            header.style.cssText = `
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin-bottom: 24px;
+              padding: 12px 18px 12px 0;
+              border-bottom: 1px solid #eee;
+              background: #fafbfc;
+              border-radius: 10px 10px 0 0;
+            `;
+            header.innerHTML = `
+              <div style="display: flex; align-items: center; gap: 14px;">
+                <button id="backToCollectionsBtn" style="padding:6px 16px;border-radius:6px;background:#eee;color:#333;border:none;cursor:pointer;font-size:1em;">← Back</button>
+                <h3 style="margin:0;font-size:1.2em;">${this.currentCollectionView}</h3>
+              </div>
+              <button id="deleteCollectionBtn" style="padding:6px 16px;border-radius:6px;background:#e53935;color:#fff;border:none;cursor:pointer;font-size:1em;">Delete Collection</button>
+            `;
+            
+            grid.appendChild(header);
+            header.querySelector('#backToCollectionsBtn').onclick = () => {
+                this.currentCollectionView = null;
+                this.renderCollectionsTab();
+            };
+            header.querySelector('#deleteCollectionBtn').onclick = async () => {
+                await window.ConfirmModal.init();
+                window.ConfirmModal.open({
+                    message: `Are you sure you want to delete the collection "${this.currentCollectionView}"? This cannot be undone.`,
+                    onConfirm: () => {
+                        delete collections[this.currentCollectionView];
+                        this.saveCollections(collections);
+                        this.currentCollectionView = null;
+                        this.showToast('Collection deleted!');
+                        this.renderCollectionsTab();
+                    }
+                });
+            };
+
+            // Movie grid
+            const movieGrid = document.createElement('div');
+            movieGrid.className = 'media-library-movie-grid';
+            movies.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'media-library-movie-card';
+                card.style.position = 'relative';
+                card.innerHTML = `
+                    ${anchorHTML}
+                    <div class="media-library-movie-card" data-path="${(item.path || '').replace(/\\/g, '/').toLowerCase().trim()}" data-show-name="${item.title || item.name || ''}" style="position:relative;">
+                      <div class="media-card-actions" style="display:flex;justify-content:flex-end;align-items:center;gap:10px;padding:6px 10px 0 10px;">
+                        <button class="poster-selector-btn" title="Change Poster">🖼️</button>
+                        <button class="favorite-btn" title="Toggle Favorite" style="background:none;border:none;cursor:pointer;font-size:1.5em;line-height:1;">${this.isFavorite(item.path) ? '❤️' : '🤍'}</button>
+                        <button class="collection-btn" title="Add to Collection" style="background:none;border:none;cursor:pointer;font-size:1.4em;line-height:1;">➕</button>
+                      </div>
+                      <div class="media-library-card-poster" style="position:relative;">
+                        <img src="${this.getPosterPath(item)}" alt="${item.title}" style="margin-top:6px;">
+                      </div>
+                      <div class="media-library-card-info">
+                        <h3>${this.cleanMovieTitle(item.title)}</h3>
+                      </div>
+                    </div>
+                `;
+                card.querySelector('.remove-from-collection-btn').onclick = async (e) => {
+                    e.stopPropagation();
+                    await window.ConfirmModal.init();
+                    window.ConfirmModal.open({
+                        message: 'Are you sure you want to remove this item from the collection?',
+                        onConfirm: () => {
+                            collections[this.currentCollectionView] = collections[this.currentCollectionView].filter(p => p !== item.path);
+                            this.saveCollections(collections);
+                            this.showToast('Removed from collection!');
+                            this.renderCollectionsTab();
+                        }
+                    });
+                };
+                card.onclick = () => this.playMedia(item);
+                movieGrid.appendChild(card);
+            });
+            grid.appendChild(movieGrid);
+            if (movies.length === 0) {
+                const empty = document.createElement('div');
+                empty.style.cssText = 'padding:40px;text-align:center;color:#888;font-size:1.1em;';
+                empty.textContent = 'No movies in this collection yet.';
+                grid.appendChild(empty);
+            }
+        } else {
+                // Always show all collections if not viewing a specific one
+            if (names.length === 0) {
+                grid.innerHTML = '<div style="padding:40px;text-align:center;color:#888;font-size:1.1em;">No collections yet.<br>Add movies to a collection using the ➕ icon.</div>';
+                    return grid.innerHTML;
+            }
+            const list = document.createElement('div');
+            list.style.cssText = 'display:flex;flex-wrap:wrap;gap:24px;padding:24px 0;';
+            names.forEach(name => {
+                const btn = document.createElement('button');
+                btn.textContent = name;
+                btn.style.cssText = 'padding:28px 36px;border-radius:12px;background:#f5f5f5;color:#1976d2;font-size:1.1em;font-weight:bold;border:none;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.08);transition:background 0.2s;';
+                btn.onclick = () => {
+                    this.currentCollectionView = name;
+                    this.renderCollectionsTab();
+                };
+                list.appendChild(btn);
+            });
+            grid.appendChild(list);
+            }
+            return grid.innerHTML;
+        } catch (e) {
+            console.error('[COLLECTIONS FATAL ERROR]', e);
+            document.body.innerHTML += '<div style="color:red;font-size:2em;">[COLLECTIONS FATAL ERROR] ' + e.message + '</div>';
+        }
+    }
+
+    // --- GENRE FILTER LOGIC ---
+    getCommonGenres() {
+        // You can expand this list as needed
+        return [
+            'All Genres',
+            'Action', 'Adventure', 'Animation', 'Comedy', 'Crime', 'Documentary', 'Drama',
+            'Family', 'Fantasy', 'History', 'Horror', 'Music', 'Mystery', 'Romance',
+            'Sci-Fi', 'Science Fiction', 'Thriller', 'War', 'Western'
+        ];
+    }
+    getMovieGenres(movie) {
+        // Try to get genres from movie.genre or movie.genres (array or string)
+        if (Array.isArray(movie.genre)) return movie.genre.map(g => g.toLowerCase());
+        if (Array.isArray(movie.genres)) return movie.genres.map(g => g.toLowerCase());
+        if (typeof movie.genre === 'string') return movie.genre.toLowerCase().split(/[,/]/).map(g => g.trim());
+        if (typeof movie.genres === 'string') return movie.genres.toLowerCase().split(/[,/]/).map(g => g.trim());
+        // Fallback: try to guess from title
+        const title = (movie.title || '').toLowerCase();
+        const genres = this.getCommonGenres().slice(1).map(g => g.toLowerCase());
+        return genres.filter(g => title.includes(g));
+    }
+
+    selectedGenre = 'All Genres';
+    handleGenreChange(event) {
+        this.selectedGenre = event.target.value;
+        this.renderMediaGrid();
+        this.updateCount();
+    }
+
+    async showMovieDetailsModal(movie) {
+        const grid = document.getElementById('mediaGrid');
+        if (!grid) return;
+        let movieDescriptions = {};
+        try {
+            const response = await fetch('/components/MediaLibrary/data/movies/movie_descriptions.json');
+            if (response.ok) {
+                movieDescriptions = await response.json();
+            }
+        } catch (error) {
+            console.log('Could not load movie descriptions:', error);
+        }
+        // --- DEBUG LOGGING ---
+        console.log('[DETAILS DEBUG] Movie object:', movie);
+        // Poster, genres, etc. as before
+        const poster = `<img src="${this.getPosterPath(movie)}" alt="${movie.title}" style="width:180px;max-width:40vw;border-radius:10px;box-shadow:0 2px 12px rgba(0,0,0,0.12);">`;
+        const genres = (movie.genre || movie.genres || []).toString();
+        const year = movie.year || (movie.releaseDate ? ('' + movie.releaseDate).slice(0,4) : '');
+        const cast = Array.isArray(movie.cast) ? movie.cast.join(', ') : (movie.cast || '');
+        let desc = movie.description || movie.overview || movie.plot || '';
+        let foundDesc = false;
+        
+        // Construct the full file path for lookup
+        const possibleKeys = [];
+        if (movie.absPath) {
+            possibleKeys.push(movie.absPath);
+        } else if (movie.files && movie.files.length > 0 && movie.files[0].absPath) {
+            possibleKeys.push(movie.files[0].absPath);
+        } else if (movie.path) {
+            // Try to construct the full path
+            const movieTitle = movie.path;
+            const fileName = movieTitle.replace(/[^a-zA-Z0-9\s]/g, '.').replace(/\s+/g, '.') + '.mp4';
+            const fullPath = `S:\\MEDIA\\MOVIES\\${movieTitle}\\${fileName}`;
+            possibleKeys.push(fullPath);
+        }
+        
+        console.log('[DETAILS DEBUG] Trying possible keys for description:', possibleKeys);
+        for (const key of possibleKeys) {
+            if (movieDescriptions[key] && movieDescriptions[key].description) {
+                desc = movieDescriptions[key].description;
+                foundDesc = true;
+                console.log('[DETAILS DEBUG] Found description with key:', key);
+                break;
+            }
+        }
+        if (!foundDesc && movieDescriptions) {
+            const folderKey = Object.keys(movieDescriptions).find(k => k.includes(movie.path));
+            if (folderKey && movieDescriptions[folderKey].description) {
+                desc = movieDescriptions[folderKey].description;
+                console.log('[DETAILS DEBUG] Fallback found description with folderKey:', folderKey);
+            } else {
+                console.log('[DETAILS DEBUG] No description found for:', movie.path);
+            }
+        }
+        // --- ACTOR IMAGES ROW ---
+        let castRow = '';
+        const movieCast = await this.loadMovieCast();
+        let castData = null;
+        for (const key of possibleKeys) {
+            if (movieCast[key] && Array.isArray(movieCast[key].cast) && movieCast[key].cast.length > 0) {
+                castData = movieCast[key].cast;
+                console.log('[DETAILS DEBUG] Found cast with key:', key);
+                break;
+            }
+        }
+        if (!castData && movieCast) {
+            const folderKey = Object.keys(movieCast).find(k => k.includes(movie.path));
+            if (folderKey && Array.isArray(movieCast[folderKey].cast) && movieCast[folderKey].cast.length > 0) {
+                castData = movieCast[folderKey].cast;
+                console.log('[DETAILS DEBUG] Fallback found cast with folderKey:', folderKey);
+            } else {
+                console.log('[DETAILS DEBUG] No cast found for:', movie.path);
+            }
+        }
+        if (castData && castData.length > 0) {
+            castRow = `<div class="media-library-cast-row">
+                ${castData.map(actor => `
+                    <div class="media-library-cast-item">
+                        <div class="media-library-cast-image">
+                            ${actor.profile ? `<img src="${actor.profile}" alt="${actor.name}">` : `<div class='media-library-cast-image-placeholder'></div>`}
+                        </div>
+                        <div class="media-library-cast-name">${actor.name}</div>
+                    </div>
+                `).join('')}
+            </div>`;
+        }
+        grid.innerHTML = `
+            <div class="media-library-details-modal">
+                <div class="media-library-details-poster">${poster}</div>
+                <div class="media-library-details-content">
+                    <button id="backToGridBtn" class="media-library-details-back">← Back</button>
+                    <h2 class="media-library-details-title">${this.cleanMovieTitle(movie.title)}</h2>
+                    <div class="media-library-details-meta">${year ? year + ' • ' : ''}${genres}</div>
+                    <div class="media-library-details-description">${desc ? desc : '<span class="no-description">No description available.</span>'}</div>
+                    <div class="media-library-details-buttons">
+                        <button id="playMovieBtn" class="media-library-details-play">▶ Play</button>
+                        <button id="detailsFavoriteBtn" title="Toggle Favorite" class="media-library-details-favorite">${this.isFavorite(movie.path) ? '❤️' : '🤍'}</button>
+                        <button id="detailsCollectionBtn" title="Add to Collection" class="media-library-details-collection">➕</button>
+                    </div>
+                    ${castRow}
+                    ${cast ? `<div class="media-library-details-cast-list"><b>Cast:</b> ${cast}</div>` : ''}
+                </div>
+            </div>
+        `;
+        document.getElementById('backToGridBtn').onclick = () => this.renderMediaGrid();
+        document.getElementById('playMovieBtn').onclick = () => {
+            this.closeModal();
+            this.playMedia(movie);
+        };
+        document.getElementById('detailsFavoriteBtn').onclick = async (e) => {
+            e.stopPropagation();
+            this.toggleFavorite(movie.path);
+            await this.showMovieDetailsModal(movie); // Re-render to update icon
+        };
+        document.getElementById('detailsCollectionBtn').onclick = (e) => {
+            e.stopPropagation();
+            this.showAddToCollectionModal(movie);
+        };
+    }
+
+    // --- TV SHOW NAVIGATION ---
+    currentTVShow = null;
+    currentTVSeason = null;
+
+    // --- TV SHOW STRUCTURE ---
+    getTVShows() {
+        // Returns array of main TV show objects from the flat array structure
+        const tvShows = [];
+        
+        if (this.mediaLibraryRaw) {
+            let shows = [];
+            
+            // Handle different possible data structures
+            if (Array.isArray(this.mediaLibraryRaw)) {
+                // Direct flat array of TV show objects
+                shows = this.mediaLibraryRaw;
+            } else if (this.mediaLibraryRaw.folders && Array.isArray(this.mediaLibraryRaw.folders)) {
+                // Nested structure with folders
+                shows = this.mediaLibraryRaw.folders;
+            } else if (this.mediaLibraryRaw.tvShows && Array.isArray(this.mediaLibraryRaw.tvShows)) {
+                // Nested structure with tvShows
+                shows = this.mediaLibraryRaw.tvShows;
+            }
+            
+            shows.forEach(show => {
+                // Use title, or fallback to path if title is missing
+                const name = show.title || show.name || show.path || show.filename || '';
+                if (name) {
+                    tvShows.push({
+                        name,
+                        path: show.path || name,
+                        data: show
+                    });
+                }
+            });
+        }
+        
+        console.log('[TV DEBUG] Total TV shows detected:', tvShows.length);
+        return tvShows;
+    }
+
+    extractShowName(path) {
+        // Handles both 'TV-SHOWS/Show Name' and just 'Show Name' formats
+        if (!path || typeof path !== 'string') return 'Unknown Show';
+        const parts = path.split(/[\/]/).filter(Boolean);
+        // Try to find after TV-SHOWS
+        const tvShowsIndex = parts.findIndex(part => 
+            part.toLowerCase() === 'tv-shows' || part.toLowerCase() === 'tv_shows'
+        );
+        if (tvShowsIndex !== -1 && tvShowsIndex + 1 < parts.length) {
+            return parts[tvShowsIndex + 1];
+        }
+        // Otherwise, just use the last part (should be the show name)
+        return parts[parts.length - 1] || 'Unknown Show';
+    }
+
+    getSeasonsForShow(showOrPath) {
+        // Accepts either a show object or a show path
+        let show = null;
+        if (typeof showOrPath === 'object' && showOrPath && showOrPath.data) {
+            show = showOrPath.data;
+        } else if (typeof showOrPath === 'object' && showOrPath) {
+            show = showOrPath;
+        } else {
+            show = this.findShowByPath(showOrPath);
+        }
+
+        if (!show) {
+            console.log('[SEASON DEBUG] No show found for:', showOrPath);
+            return [];
+        }
+
+        // Handle flat array structure where seasons are directly in the show object
+        if (show.seasons && Array.isArray(show.seasons)) {
+            console.log('[SEASON DEBUG] Found seasons array with', show.seasons.length, 'seasons');
+            // Deduplicate by seasonNumber
+            const seen = new Set();
+            const uniqueSeasons = [];
+            for (const season of show.seasons) {
+                if (!season || season.seasonNumber == null) continue;
+                const key = String(season.seasonNumber);
+                if (!seen.has(key)) {
+                    seen.add(key);
+                    uniqueSeasons.push(season);
+                }
+            }
+            return uniqueSeasons.map(season => ({
+                seasonNumber: season.seasonNumber,
+                path: `Season ${season.seasonNumber.toString().padStart(2, '0')}`,
+                episodes: season.episodes || []
+            })).sort((a, b) => a.seasonNumber - b.seasonNumber);
+        }
+
+        // Fallback to folder-based detection for legacy support
+        if (show.folders && Array.isArray(show.folders)) {
+            function findSeasons(folders, parentPath, showPath) {
+                let seasons = [];
+                if (!Array.isArray(folders)) return seasons;
+                for (const folder of folders) {
+                    const name = (folder.name || folder.path.split(/[\\/]/).pop() || '').toLowerCase();
+                    console.log('[SEASON DETECTION DEBUG] Checking folder name:', name);
+                    if (/^(season[ _-]?\d+|s\d+|series[ _-]?\d+)$/i.test(name) ||
+                        /season[ _-]?\d+/i.test(name) ||
+                        /^s\d+/i.test(name) ||
+                        /series[ _-]?\d+/i.test(name) ||
+                        /^season\d+$/i.test(name) ||
+                        /^s\d+$/i.test(name)) {
+                        let fullPath = folder.path;
+                        if (showPath && fullPath && !fullPath.startsWith(showPath)) {
+                            fullPath = showPath.replace(/\/+$/, '') + '/' + fullPath.replace(/^\/+/, '');
+                        }
+                        fullPath = fullPath.replace(/\\/g, '/');
+                        console.log('[SEASON DETECTION DEBUG] Computed fullPath for season:', fullPath);
+                        seasons.push({ ...folder, path: fullPath });
+                    }
+                    if (Array.isArray(folder.folders) && folder.folders.length > 0) {
+                        seasons = seasons.concat(findSeasons(folder.folders, folder.path, showPath));
+                    }
+                }
+                return seasons;
+            }
+
+            function dedupeSeasons(seasons) {
+                const seen = new Set();
+                return seasons.filter(folder => {
+                    const name = (folder.name || folder.path.split(/[\\/]/).pop() || '').toLowerCase();
+                    const match = name.match(/season[ _-]?(\d+)/i) || name.match(/^s(\d+)/i) || name.match(/series[ _-]?(\d+)/i);
+                    if (match) {
+                        const seasonNum = match[1].padStart(2, '0');
+                        if (seen.has(seasonNum)) return false;
+                        seen.add(seasonNum);
+                        return true;
+                    }
+                    return false;
+                });
+            }
+
+            const allSeasons = findSeasons(show.folders, show.path, show.path);
+            console.log('[SEASON DETECTION DEBUG] All detected season folders:', allSeasons.map(f => f.name || f.path));
+            return dedupeSeasons(allSeasons).sort((a, b) => {
+                const getNum = s => {
+                    const m = (s.name || s.path).match(/season[ _-]?(\d+)/i) || (s.name || s.path).match(/^s(\d+)/i);
+                    return m ? parseInt(m[1], 10) : 0;
+                };
+                return getNum(a) - getNum(b);
+            });
+        }
+
+        return [];
+    }
+
+    getEpisodesForSeason(showPath, seasonPath) {
+        if (!showPath || !seasonPath) return [];
+        
+        let show = null;
+        console.log('[EPISODE DEBUG] getEpisodesForSeason called with showPath:', showPath, 'seasonPath:', seasonPath);
+        
+        if (typeof showPath === 'object' && showPath && showPath.data) {
+            show = showPath.data;
+        } else if (typeof showPath === 'object' && showPath) {
+            show = showPath;
+        } else {
+            show = this.findShowByPath(showPath);
+        }
+        
+        console.log('[EPISODE DEBUG] show object:', show);
+        
+        if (!show) {
+            console.log('[EPISODE DEBUG] show is null or undefined');
+            return [];
+        }
+
+        // Handle flat array structure where episodes are directly in seasons
+        if (show.seasons && Array.isArray(show.seasons)) {
+            console.log('[EPISODE DEBUG] Found seasons array with', show.seasons.length, 'seasons');
+            
+            // Extract season number from seasonPath (e.g., "Season 01" -> 1)
+            const seasonMatch = seasonPath.match(/season[ _-]?(\d+)/i) || seasonPath.match(/^s(\d+)/i);
+            if (!seasonMatch) {
+                console.log('[EPISODE DEBUG] Could not extract season number from:', seasonPath);
+                return [];
+            }
+            
+            const seasonNumber = parseInt(seasonMatch[1], 10);
+            console.log('[EPISODE DEBUG] Looking for season number:', seasonNumber);
+            
+            const season = show.seasons.find(s => s.seasonNumber === seasonNumber);
+            if (!season) {
+                console.log('[EPISODE DEBUG] Season not found:', seasonNumber);
+                return [];
+            }
+            
+            console.log('[EPISODE DEBUG] Found season with', season.episodes?.length || 0, 'episodes');
+            return season.episodes || [];
+        }
+
+        // Fallback to folder-based detection for legacy support
+        if (show.folders && Array.isArray(show.folders)) {
+            console.log('[EPISODE DEBUG] Using folder-based episode detection');
+            
+            const normalizedSeasonPath = (seasonPath || '').replace(/\\/g, '/').toLowerCase().trim();
+            console.log('[EPISODE DEBUG] Normalized seasonPath:', normalizedSeasonPath);
+
+            function findSeasonFolder(folders, parentPath = '') {
+                for (const folder of folders) {
+                    let folderPath = (folder.path || '').replace(/\\/g, '/').toLowerCase().trim();
+                    console.log('[EPISODE DEBUG] Checking folderPath:', folderPath);
+                    if (folderPath === normalizedSeasonPath) {
+                        console.log('[EPISODE DEBUG] Found matching season folder:', folderPath);
+                        console.log('[EPISODE DEBUG] season.files:', folder.files);
+                        return folder;
+                    }
+                    if (folder.folders && folder.folders.length) {
+                        const found = findSeasonFolder(folder.folders, folderPath);
+                        if (found) return found;
+                    }
+                }
+                return null;
+            }
+
+            const seasonFolder = findSeasonFolder(show.folders);
+            if (!seasonFolder) {
+                console.log('[EPISODE DEBUG] No matching season folder found for:', normalizedSeasonPath);
+                return [];
+            }
+            if (!Array.isArray(seasonFolder.files)) {
+                console.log('[EPISODE DEBUG] seasonFolder.files is not an array:', seasonFolder.files);
+                return [];
+            }
+            
+            // Filter for video files (basic check)
+            let episodes = seasonFolder.files.filter(f => /\.(mp4|mkv|avi|mov|wmv|flv|webm)$/i.test(f.name));
+            
+            // Sort episodes by episode number (S01E01, S01E02, etc.)
+            episodes.sort((a, b) => {
+                const aMatch = (a.name || '').match(/E(\d{1,2})/i);
+                const bMatch = (b.name || '').match(/E(\d{1,2})/i);
+                
+                if (!aMatch && !bMatch) return 0;
+                if (!aMatch) return 1;  // Put episodes without numbers at the end
+                if (!bMatch) return -1;
+                
+                const aNum = parseInt(aMatch[1], 10);
+                const bNum = parseInt(bMatch[1], 10);
+                return aNum - bNum;
+            });
+            
+            console.log('[EPISODE DEBUG] Sorted episodes:', episodes.map(e => e.name));
+            
+            // Debug: Check if S01E01 and S04E01 are present
+            const hasS01E01 = episodes.some(e => e.name && e.name.includes('S01E01'));
+            const hasS04E01 = episodes.some(e => e.name && e.name.includes('S04E01'));
+            console.log('[EPISODE DEBUG] Has S01E01:', hasS01E01, 'Has S04E01:', hasS04E01);
+            
+            return episodes;
+        }
+
+        return [];
+    }
+
+    findShowByPath(showPath) {
+        if (!showPath) return null;
+        const target = (showPath || '').replace(/\\/g, '/').toLowerCase();
+        console.log('[FIND SHOW DEBUG] Searching for showPath:', showPath, 'normalized:', target);
+        // 1. Search top-level TV show objects
+        const tvShows = this.getTVShows();
+        for (const show of tvShows) {
+            const showObjPath = (show.path || '').replace(/\\/g, '/').toLowerCase();
+            if (showObjPath === target) {
+                console.log('[FIND SHOW DEBUG] Found top-level show:', show);
+                return show;
+            }
+        }
+        // 2. Optionally, search recursively in folders (legacy/edge cases)
+        function recursiveSearch(folders) {
+            if (!Array.isArray(folders)) return null;
+            for (const folder of folders) {
+                const folderPath = (folder.path || '').replace(/\\/g, '/').toLowerCase();
+                if (folderPath === target) {
+                    console.log('[FIND SHOW DEBUG] Found nested folder:', folder);
+                    return folder;
+                }
+                const found = recursiveSearch(folder.folders);
+            if (found) return found;
+            }
+            return null;
+        }
+        for (const show of tvShows) {
+            const found = recursiveSearch(show.folders);
+            if (found) return found;
+        }
+        console.log('[FIND SHOW DEBUG] No show found for path:', showPath);
+        return null;
+    }
+
+    cleanEpisodeName(filename) {
+        // Clean episode name from filename
+        // Remove file extension and common patterns
+        let name = filename.replace(/\.[^/.]+$/, ''); // Remove extension
+        name = name.replace(/\.(mkv|mp4|avi|mov|wmv)$/i, ''); // Remove video extensions
+        name = name.replace(/\.(720p|1080p|480p)/i, ''); // Remove quality indicators
+        name = name.replace(/\.(BluRay|WEBRip|HDTV|AMZN|Netflix)/i, ''); // Remove source indicators
+        name = name.replace(/\.(x264|x265|HEVC)/i, ''); // Remove codec indicators
+        name = name.replace(/\.(DDP5\.1|AAC|AC3)/i, ''); // Remove audio indicators
+        name = name.replace(/\.(GalaxyTV|ProLover|d3g|FENiX)/i, ''); // Remove release group names
+        name = name.replace(/\[.*?\]/g, ''); // Remove anything in brackets
+        name = name.replace(/\(.*?\)/g, ''); // Remove anything in parentheses
+        name = name.replace(/\.+/g, ' '); // Replace multiple dots with spaces
+        name = name.replace(/\s+/g, ' ').trim(); // Clean up multiple spaces
+        return name;
+    }
+
+    getSeasonImage(showName, seasonPath) {
+        try {
+            // Use the loaded season episode images data
+            if (!this.seasonEpisodeImages) {
+                return '/assets/img/season-default.jpg';
+            }
+            // Extract season number from path
+            const seasonMatch = seasonPath.match(/season[ _-]?(\d+)/i);
+            if (!seasonMatch) return '/assets/img/season-default.jpg';
+            // Normalize season number (remove leading zeros)
+            const seasonNumber = String(parseInt(seasonMatch[1], 10));
+            const showData = this.seasonEpisodeImages[showName];
+            if (showData && showData.seasons && showData.seasons[seasonNumber] && showData.seasons[seasonNumber].poster) {
+                return showData.seasons[seasonNumber].poster;
+            }
+            return '/assets/img/season-default.jpg';
+        } catch (error) {
+            console.error('Error getting season image:', error);
+            return '/assets/img/season-default.jpg';
+        }
+    }
+
+    getEpisodeImage(showName, seasonName, episode) {
+        try {
+            if (!this.seasonEpisodeImages) {
+                console.warn('[EPISODE IMAGE] seasonEpisodeImages not loaded');
+                return '/assets/img/placeholder-poster.jpg';
+            }
+            // Normalize show name
+            const showKey = showName && typeof showName === 'string' ? showName.trim() : '';
+            // Normalize season number (handle both 'Season 01' and 1)
+            let seasonNum = null;
+            if (typeof seasonName === 'string') {
+                const match = seasonName.match(/season[ _-]?(\d+)/i);
+                if (match) seasonNum = String(parseInt(match[1], 10));
+            } else if (typeof seasonName === 'number') {
+                seasonNum = String(seasonName);
+            }
+            // Try to get episode number from episode object
+            let episodeNum = null;
+            if (episode) {
+                if (typeof episode.episodeNumber !== 'undefined') {
+                    episodeNum = String(parseInt(episode.episodeNumber, 10));
+                } else if (episode.name || episode.filename || episode.path) {
+                    const epStr = episode.name || episode.filename || episode.path;
+                    const match = epStr.match(/E(\d{1,2})/i);
+                    if (match) episodeNum = String(parseInt(match[1], 10));
+                }
+            }
+            // Debug log the lookup keys
+            console.log('[EPISODE IMAGE LOOKUP]', { showKey, seasonNum, episodeNum, episodeName: episode?.name });
+            // Lookup
+            const showData = this.seasonEpisodeImages[showKey];
+            if (!showData) {
+                console.warn('[EPISODE IMAGE] No showData for', showKey);
+                return '/assets/img/placeholder-poster.jpg';
+            }
+            const seasonData = showData.seasons && showData.seasons[seasonNum];
+            if (!seasonData) {
+                console.warn('[EPISODE IMAGE] No seasonData for', showKey, seasonNum);
+                return '/assets/img/placeholder-poster.jpg';
+            }
+            if (!seasonData.episodes) {
+                console.warn('[EPISODE IMAGE] No episodes for', showKey, seasonNum);
+                return '/assets/img/placeholder-poster.jpg';
+            }
+            const epData = seasonData.episodes[episodeNum];
+            if (!epData || !epData.still) {
+                console.warn('[EPISODE IMAGE] No still for', showKey, seasonNum, episodeNum);
+                return '/assets/img/placeholder-poster.jpg';
+            }
+            // If the still path starts with /media/, convert to /assets/ if needed
+            let stillPath = epData.still;
+            if (stillPath.startsWith('/media/TV-SHOWS/')) {
+                // Try to map to /assets/img/ if the file exists there
+                const localPath = stillPath.replace('/media/TV-SHOWS/', '/assets/img/');
+                // Optionally, check if the file exists (requires async or pre-scan)
+                // For now, just use the mapped path
+                stillPath = localPath;
+            }
+            console.log('[EPISODE IMAGE] Found still:', stillPath);
+            return stillPath;
+        } catch (error) {
+            console.error('[EPISODE IMAGE ERROR]', error);
+            return '/assets/img/placeholder-poster.jpg';
+        }
+    }
+
+    // --- TV SHOW UI METHODS ---
+    async loadTVShowDetails(showName) {
+        if (!this.tvShowDescriptions) {
+            try {
+                const descResp = await fetch('/components/MediaLibrary/data/tv-shows/tv-show_descriptions.json');
+                this.tvShowDescriptions = descResp.ok ? await descResp.json() : {};
+            } catch (e) { this.tvShowDescriptions = {}; }
+        }
+        if (!this.tvShowCast) {
+            try {
+                const castResp = await fetch('/components/MediaLibrary/data/tv-shows/tv-show_cast.json');
+                this.tvShowCast = castResp.ok ? await castResp.json() : {};
+            } catch (e) { this.tvShowCast = {}; }
+        }
+        return {
+            description: this.tvShowDescriptions[showName] || '',
+            cast: this.tvShowCast[showName] || []
+        };
+    }
+
+    async renderSeasonsView(showPath) {
+        const show = this.findShowByPath(showPath);
+        console.log('[DEBUG - RenderSeasonsView] renderSeasonsView for showPath:', showPath);
+        console.log('[DEBUG - RenderSeasonsView] renderSeasonsView show:', show);
+        console.log('[DEBUG - RenderSeasonsView] typeof show:', typeof show);
+        if (show) {
+            console.log('[DEBUG - RenderSeasonsView] Object.keys(show):', Object.keys(show));
+            if (show.data) {
+                console.log('[DEBUG - RenderSeasonsView] show.data:', show.data);
+                if (show.data.name) {
+                    console.log('[DEBUG - RenderSeasonsView] show.data.name:', show.data.name);
+                }
+            }
+        }
+        const seasons = this.getSeasonsForShow(show && show.data ? show.data : show);
+        console.log('[DEBUG - RenderSeasonsView] renderSeasonsView seasons:', seasons);
+        // Robust show name extraction
+        let showName = 'Unknown Show';
+        if (show && show.name) {
+            showName = show.name;
+        } else if (show && show.data && show.data.name) {
+            showName = show.data.name;
+        } else if (showPath) {
+            showName = this.extractShowName(showPath);
+        }
+        // Load description and cast
+        let { description, cast } = await this.loadTVShowDetails(showName);
+        // --- DUMMY PLACEHOLDER CONTENT IF MISSING ---
+        if (!description || description.trim() === '' || description.includes('No description')) {
+            description = "A quirky group of friends navigate life's ups and downs in this hilarious and heartwarming TV show. Will they find love, solve mysteries, or just order more pizza? Tune in to find out!";
+        }
+        if (!Array.isArray(cast) || cast.length === 0) {
+            cast = [
+                { name: 'Jane Doe', image: '/assets/img/placeholder-poster.jpg' },
+                { name: 'John Smith', image: '/assets/img/placeholder-poster.jpg' },
+                { name: 'Alex Lee', image: '/assets/img/placeholder-poster.jpg' },
+                { name: 'Sam Taylor', image: '/assets/img/placeholder-poster.jpg' },
+                { name: 'Chris Jordan', image: '/assets/img/placeholder-poster.jpg' }
+            ];
+        }
+        // --- NEW FLEX LAYOUT ---
+        // Description to the right of title/season count
+        // Cast as a horizontal row under the season images
+        let castRow = '';
+        if (Array.isArray(cast) && cast.length > 0) {
+            castRow = `<div class=\"media-library-cast-horizontal-row\">${cast.map(actor => `
+                <div class=\"media-library-cast-card\">
+                    <div class=\"media-library-cast-avatar\" style=\"background-image:url('${actor.image || '/assets/img/placeholder-poster.jpg'}');\"></div>
+                    <div class=\"media-library-cast-name\">${actor.name || actor}</div>
+                </div>
+            `).join('')}</div>`;
+        } else if (typeof cast === 'string' && cast) {
+            castRow = `<div class=\"media-library-cast-horizontal-row\"><div class=\"media-library-cast-card\">${cast}</div></div>`;
+        }
+        // --- ARROW NAVIGATION ---
+        // Unique class for grid and wrapper
+        const gridClass = 'media-library-seasons-grid';
+        const wrapperClass = 'media-library-seasons-arrows-wrapper';
+        // Only show arrows if more than 5 seasons (adjust as needed)
+        const showArrows = seasons.length > 5;
+        // --- RENDER HTML ---
+        const html = `
+            <div class="media-library-breadcrumbs">
+                <span class="breadcrumb-link" onclick="mediaLibraryManager.backToTVShows()">TV Shows</span>
+                <span class="breadcrumb-separator"> > </span>
+                <span>${showName}</span>
+            </div>
+            <div class="media-library-seasons-main-col">
+                <div class="media-library-seasons-header-row">
+                    <div class="media-library-seasons-title">
+                        <h2>${showName}</h2>
+                        <p>${seasons.length} ${seasons.length === 1 ? 'Season' : 'Seasons'}</p>
+                    </div>
+                    <div class="media-library-details-description">${description}</div>
+                </div>
+                <div class="${wrapperClass}" style="position:relative;display:flex;align-items:center;width: 100%;">
+                    ${showArrows ? `<button class="media-library-arrow-btn left" type="button">&#8592;</button>` : ''}
+                    <div class="${gridClass}" style="width: 1080px; overflow-x: auto;">
+                        ${seasons.map(season => {
+                            const seasonImage = this.getSeasonImage(showName, season.path);
+                            const episodeCount = this.getEpisodesForSeason(show, season.path).length;
+                            return `
+                                <div class=\"media-library-card season\" onclick=\"mediaLibraryManager.openTVSeason('${season.path.replace(/\\/g, '/')}')\">
+                                    <div class=\"media-library-card-poster\">
+                                        <img class=\"media-library-poster season\" src=\"${seasonImage}\" alt=\"${season.path.split(/[\\/]/).pop()}\" onerror=\"this.src='/assets/img/placeholder-poster.jpg'\">
+                                    </div>
+                                    <div class=\"media-library-card-info\">
+                                        <h3>${season.path.split(/[\\/]/).pop()}</h3>
+                                        <p>${episodeCount} Episode${episodeCount === 1 ? '' : 's'}</p>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                    ${showArrows ? `<button class=\"media-library-arrow-btn right\" type=\"button\">&#8594;</button>` : ''}
+                </div>
+                ${castRow}
+            </div>
+        `;
+        // After rendering, attach arrow handlers
+        setTimeout(() => { this.attachSeasonArrowHandlers(); }, 0);
+        return html;
+    }
+
+    openTVShowFromData(element) {
+        const showPath = element.getAttribute('data-path');
+        console.log('[DEBUG - OpenTVShowFromData] openTVShowFromData called with path from data attribute:', showPath);
+        this.openTVShow(showPath);
+    }
+
+    openTVShow(showPath) {
+        console.log('[DEBUG - OpenTVShow] openTVShow called with:', showPath);
+        this.currentTVShow = showPath;
+        this.currentTVSeason = null;
+        this.renderModal(); // Re-render modal to update tab highlight
+    }
+
+    openTVSeason(seasonPath) {
+        this.currentTVSeason = seasonPath;
+        this.renderModal(); // Re-render modal to update tab highlight
+    }
+
+    renderEpisodesView() {
+        try {
+            const show = this.findShowByPath(this.currentTVShow);
+            const showName = this.extractShowName(this.currentTVShow);
+            const seasonName = this.currentTVSeason.split(/[\/]/).pop();
+            const episodes = this.getEpisodesForSeason(show, this.currentTVSeason) || [];
+
+            console.log('[DEBUG] episode:', episodes);
+
+            return `
+                <div class="media-library-breadcrumbs">
+                    <span class="breadcrumb-link" onclick="mediaLibraryManager.backToTVShows()">TV Shows</span>
+                    <span class="breadcrumb-separator"> > </span>
+                    <span class="breadcrumb-link" onclick="mediaLibraryManager.backToSeasons()">${showName}</span>
+                    <span class="breadcrumb-separator"> > </span>
+                    <span>${seasonName}</span>
+                </div>
+                <div class="media-library-season-info">
+                    <h2>${seasonName}</h2>
+                    <p>${episodes.length} Episodes</p>
+                </div>
+                <div class="media-library-episodes-scroll">
+                <div class="media-library-grid" style="width: 396px; overflow-x: auto;">
+                    ${episodes.map(episode => {
+                        const episodeImage = this.getEpisodeImage(showName, seasonName, episode);
+                        // Robust relPath for playback
+                        const relPath = ((episode.relPath) ? episode.relPath : (this.currentTVSeason.replace(/\\/g, '/') + '/' + (episode.name || episode.filename || '').replace(/\\/g, '/'))).replace(/\\/g, '/');
+                        return `
+                        <div class="media-library-card episode" onclick="mediaLibraryManager.playEpisode('${relPath}')">
+                            <div class="media-library-card-poster">
+                                <img src="${episodeImage}" alt="${episode.name || episode.filename}" onerror="this.src='/assets/img/placeholder-poster.jpg'">
+                                <div class="media-library-play-overlay">▶</div>
+                            </div>
+                            <div class="media-library-card-info">
+                                <h3 class="tv-show-season-episode-name" style="font-size:1em;line-height:1.2;margin-bottom:2px;">
+                                    ${showName} - ${seasonName} - ${(() => {
+                                        const match = ((episode.name || episode.filename || episode.path) || '').match(/E(\d{1,2})/i);
+                                        return match ? `E${match[1].padStart(2, '0')}` : '';
+                                    })()}
+                                </h3>
+                                <div class="tv-show-episode-name" style="font-size:0.98em;line-height:1.2;white-space:normal;">
+                                    ${this.extractEpisodeTitle((episode.name || episode.filename || episode.path || '').split(/[\\/]/).pop())}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    }).join('')}
+                    </div>
+                </div>
+            `;
+        } catch (error) {
+            console.error('[EPISODE VIEW ERROR]', error);
+            this.showError('Failed to load episodes for this season. Please check the data or try again.');
+            // Fallback: keep modal open and show error message
+            return `<div class="media-library-error">An error occurred loading episodes. Please check the console for details.</div>`;
+        }
+    }
+
+    backToTVShows() {
+        this.currentTVShow = null;
+        this.currentTVSeason = null;
+        this.renderModal(); // Re-render modal to update tab highlight
+    }
+
+    backToSeasons() {
+        this.currentTVSeason = null;
+        this.renderModal(); // Re-render modal to update tab highlight
+    }
+
+    playEpisode(episodePath, startTime = 0) {
+        // Remove both modal and overlay
+        this.closeMediaBrowser();
+        // Always normalize to forward slashes for URL
+        let normalizedPath = (episodePath || '').replace(/\\/g, '/');
+        // Remove any leading '/media/'
+        if (normalizedPath.startsWith('/media/')) {
+            normalizedPath = normalizedPath.replace(/^\/media\//, '');
+        }
+        // Always encode only once
+        try {
+            normalizedPath = decodeURIComponent(normalizedPath);
+        } catch (e) {}
+        const encodedPath = normalizedPath.split('/').map(encodeURIComponent).join('/');
+        const url = `/media/${encodedPath}`;
+        console.log('[WATCH LATER DEBUG] Raw path for playEpisode:', normalizedPath);
+        console.log('[WATCH LATER DEBUG] Final video URL for playEpisode:', url, 'startTime:', startTime);
+        // Set up a callback to restore the MediaLibrary modal when the Video Player is closed
+        if (window.videoPlayer) {
+            window.videoPlayer.onClose = () => {
+                // Restore the MediaLibrary modal in the same state (showing episodes for the current show/season)
+                this.renderModal();
+            };
+            window.videoPlayer.playUrl(url, undefined, startTime);
+        }
+    }
+
+    // --- TAB RENDERING ---
+    renderTabContent() {
+        console.log('[DEBUG - RenderTabContent] currentTab:', this.currentTab);
+        console.log('[DEBUG - RenderTabContent] currentTVShow:', this.currentTVShow);
+        console.log('[DEBUG - RenderTabContent] currentTVSeason:', this.currentTVSeason);
+        
+        switch (this.currentTab) {
+            case 'movies':
+                console.log('[DEBUG - RenderTabContent] Rendering movies tab');
+                return this.renderMoviesContent();
+            case 'tvshows':
+                if (this.currentTVShow) {
+                    if (this.currentTVSeason) {
+                        console.log('[DEBUG - RenderTabContent] Rendering episodes view');
+                        return this.renderEpisodesView();
+                    } else {
+                        console.log('[DEBUG - RenderTabContent] Rendering seasons view');
+                        return this.renderSeasonsView(this.currentTVShow);
+                    }
+                } else {
+                    console.log('[DEBUG - RenderTabContent] Rendering TV shows tab');
+                    return this.renderTVShowsTab();
+                }
+            case 'favorites':
+                return this.renderFavoritesContent();
+            case 'collections':
+                return this.renderCollectionsTab();
+            case 'suggestions':
+                return this.renderSuggestionsContent();
+            case 'watchlater':
+                return this.renderWatchLaterContent();
+            default:
+                return this.renderMoviesContent();
+        }
+    }
+
+    // --- TAB CONTENT RENDERING METHODS ---
+    renderMoviesContent() {
+        const items = this.getFilteredAndSortedItems();
+        // Track which letters we've already added anchors for
+        const addedAnchors = new Set();
+        return items.map(item => {
+            const cleanTitle = this.cleanMovieTitle(item.title);
+            const firstLetter = cleanTitle.charAt(0).toUpperCase();
+            let anchorHTML = '';
+            if (!addedAnchors.has(firstLetter)) {
+                anchorHTML = `<a name="${firstLetter}" id="anchor-${firstLetter}"></a>`;
+                addedAnchors.add(firstLetter);
+            }
+            return `
+                <div class="media-library-movie-card" data-path="${item.path}" style="position: relative;">
+                    ${anchorHTML}
+                    <div class="media-card-actions" style="display:flex;justify-content:flex-end;align-items:center;gap:10px;padding:6px 10px 0 10px;">
+                        <button class="poster-selector-btn" title="Change Poster" style="background:none;border:none;cursor:pointer;font-size:1.4em;line-height:1;">🖼️</button>
+                        <button class="favorite-btn" title="Toggle Favorite" style="background:none;border:none;cursor:pointer;font-size:1.5em;line-height:1;">${this.isFavorite(item.path) ? '❤️' : '🤍'}</button>
+                        <button class="collection-btn" title="Add to Collection" style="background:none;border:none;cursor:pointer;font-size:1.4em;line-height:1;">➕</button>
+                    </div>
+                    <img src="${this.getPosterPath(item)}" alt="${item.title}" style="margin-top:6px;">
+                    <div class="media-info">
+                        <h3>${cleanTitle}</h3>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    renderFavoritesContent() {
+        const favorites = this.getFavoritesList();
+        // Track which letters we've already added anchors for
+        const addedAnchors = new Set();
+        return favorites.map(item => {
+            const cleanTitle = this.cleanMovieTitle(item.title);
+            const firstLetter = cleanTitle.charAt(0).toUpperCase();
+            let anchorHTML = '';
+            if (!addedAnchors.has(firstLetter)) {
+                anchorHTML = `<a name="${firstLetter}" id="anchor-${firstLetter}"></a>`;
+                addedAnchors.add(firstLetter);
+            }
+            return `
+                <div class="media-library-movie-card" data-path="${item.path}" style="position: relative;">
+                    ${anchorHTML}
+                    <div class="media-card-actions" style="display:flex;justify-content:flex-end;align-items:center;gap:10px;padding:6px 10px 0 10px;">
+                        <button class="poster-selector-btn" title="Change Poster" style="background:none;border:none;cursor:pointer;font-size:1.4em;line-height:1;">🖼️</button>
+                        <button class="favorite-btn" title="Toggle Favorite" style="background:none;border:none;cursor:pointer;font-size:1.5em;line-height:1;">❤️</button>
+                        <button class="collection-btn" title="Add to Collection" style="background:none;border:none;cursor:pointer;font-size:1.4em;line-height:1;">➕</button>
+                    </div>
+                    <img src="${this.getPosterPath(item)}" alt="${item.title}" style="margin-top:6px;">
+                    <div class="media-info">
+                        <h3>${cleanTitle}</h3>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    renderSuggestionsContent() {
+        return '<div class="media-library-suggestions-placeholder"><h3>Suggestions coming soon...</h3></div>';
+    }
+
+    // --- UTILITY METHODS ---
+    filterItems(items, searchTerm) {
+        if (!searchTerm) return items;
+        const term = searchTerm.toLowerCase();
+        return items.filter(item => 
+            (item.name && item.name.toLowerCase().includes(term)) ||
+            (item.title && item.title.toLowerCase().includes(term))
+        );
+    }
+
+    sortItems(items, sortBy, field = 'name') {
+        if (!items || items.length === 0) return items;
+        
+        return items.slice().sort((a, b) => {
+            const aValue = (a[field] || '').toString().toLowerCase();
+            const bValue = (b[field] || '').toString().toLowerCase();
+            
+            if (sortBy === 'asc') {
+                return aValue.localeCompare(bValue);
+            } else {
+                return bValue.localeCompare(aValue);
+            }
+        });
+    }
+
+    renderTVShowsTab() {
+        const tvShows = this.getTVShows();
+        console.log('[TV DEBUG] renderTVShowsTab: tvShows.length =', tvShows.length);
+        const filteredShows = this.filterItems(tvShows, this.searchTerm);
+        let sortedShows = this.sortItems(filteredShows, this.sortBy, 'name');
+
+        // Apply shuffle if requested
+        if (this.shuffle) {
+            for (let i = sortedShows.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [sortedShows[i], sortedShows[j]] = [sortedShows[j], sortedShows[i]];
+            }
+        }
+
+        // Track which letters we've already added anchors for
+        const addedAnchors = new Set();
+        const html = `
+            <div class="media-library-movie-grid">
+                ${sortedShows.map(show => {
+                    // Use the same cleanTitle logic as MOVIES
+                    const cleanTitle = this.cleanMovieTitle(show.name || show.title || show.filename || show.path || '').toLowerCase();
+                    const firstLetter = cleanTitle.charAt(0).toUpperCase();
+                    let anchorHTML = '';
+                    if (!addedAnchors.has(firstLetter)) {
+                        anchorHTML = `<a name="${firstLetter}" id="anchor-${firstLetter}"></a>`;
+                        addedAnchors.add(firstLetter);
+                    }
+                    return `
+                    <div class="media-library-card poster" data-path="${show.path}" data-show-name="${show.name || show.title || ''}">
+                      ${anchorHTML}
+                      <div class="media-card-actions" style="display:flex;justify-content:flex-end;align-items:center;gap:10px;padding:6px 10px 0 10px;">
+                        <button class="poster-selector-btn" title="Change Poster" style="background:none;border:none;cursor:pointer;font-size:1.4em;line-height:1;">🖼️</button>
+                        <button class="favorite-btn" title="Toggle Favorite" style="background:none;border:none;cursor:pointer;font-size:1.5em;line-height:1;">${this.isFavorite(show.path) ? '❤️' : '🤍'}</button>
+                        <button class="collection-btn" title="Add to Collection" style="background:none;border:none;cursor:pointer;font-size:1.4em;line-height:1;">➕</button>
+                      </div>
+                      <img class="media-library-poster poster" src="${this.getPosterPath(show)}" alt="${show.name}" onerror="this.src='/assets/img/placeholder-poster.jpg'">
+                      <div class="media-info"><h3>${cleanTitle}</h3></div>
+                    </div>
+                    `;
+                }).join('')}
+            </div>
+        `;
+        console.log('[TV DEBUG] renderTVShowsTab: html =', html);
+        return html;
+    }
+
+    closeModal() {
+        // Remove the modal from the DOM
+        const modal = document.querySelector('.media-library-modal');
+        if (modal) modal.remove();
+    }
+
+    // --- WATCH LATER / RESUME LOGIC ---
+    saveResumeProgress(mediaItem, currentTime, duration, isManualSave = false) {
+        console.log('[MEDIA-LIBRARY] saveResumeProgress called:', {mediaItem, currentTime, duration, isManualSave});
+        let resumeList = JSON.parse(localStorage.getItem('mediaLibraryResumeList') || '[]');
+        // Remove any existing entry for this path
+        resumeList = resumeList.filter(item => item.path !== mediaItem.path && item.path !== mediaItem.relPath);
+
+        // Always use absolute path for saving
+        let savePath = mediaItem.path || mediaItem.absPath || mediaItem.relPath;
+        // If path is missing, try to look up from main media library by filename or title
+        if (!mediaItem.path && this.mediaLibrary && (mediaItem.title || mediaItem.name)) {
+            const filename = (mediaItem.title || mediaItem.name).split(/[\\/]/).pop();
+            const found = this.mediaLibrary.find(item => {
+                return (
+                    (item.path && item.path.split(/[\\/]/).pop() === filename) ||
+                    (item.title && item.title === mediaItem.title) ||
+                    (item.name && item.name === mediaItem.name)
+                );
+            });
+            if (found && found.path) {
+                savePath = found.path;
+            }
+        }
+        if (savePath && savePath.startsWith('/media/')) {
+            savePath = savePath.replace(/^\/media\//, '');
+        }
+        // Always decode before saving to avoid double-encoding
+        try {
+            savePath = decodeURIComponent(savePath);
+        } catch (e) {}
+        // For manual saves (Save for Later button), always save regardless of position
+        // For automatic saves (pause events), only save if not near the end
+        if (isManualSave || (duration - currentTime > 60)) {
+            resumeList.push({
+                path: savePath,
+                title: mediaItem.title,
+                poster: this.getPosterPath(mediaItem),
+                currentTime,
+                duration,
+                lastWatched: Date.now()
+            });
+        }
+        localStorage.setItem('mediaLibraryResumeList', JSON.stringify(resumeList));
+        console.log('[MEDIA-LIBRARY] Updated resumeList:', resumeList);
+        // Always re-render Watch Later UI if modal is open
+        const mediaGrid = document.getElementById('mediaGrid');
+        if (mediaGrid) {
+            mediaGrid.innerHTML = this.renderWatchLaterContent();
+        }
+        if (isManualSave) {
+            this.showToast('Saved to Watch Later!');
+        }
+    }
+
+    removeResumeProgress(path) {
+        let resumeList = JSON.parse(localStorage.getItem('mediaLibraryResumeList') || '[]');
+        // Remove any entry where path matches either item.path or item.relPath
+        resumeList = resumeList.filter(item => item.path !== path && item.relPath !== path);
+        localStorage.setItem('mediaLibraryResumeList', JSON.stringify(resumeList));
+        console.log('[MEDIA-LIBRARY] Removed from resume list:', path);
+        // Refresh the Watch Later content if we're currently on that tab
+        if (this.currentTab === 'watchlater') {
+            this.renderWatchLaterContent();
+        }
+    }
+
+    getResumeList() {
+        let resumeList = JSON.parse(localStorage.getItem('mediaLibraryResumeList') || '[]');
+        console.log('[MEDIA-LIBRARY] getResumeList returns:', resumeList);
+        // Sort by lastWatched desc (most recent first)
+        return resumeList.sort((a, b) => (b.lastWatched || 0) - (a.lastWatched || 0));
+    }
+
+    showToast(msg) {
+        let toast = document.getElementById('mediaLibraryToast');
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.id = 'mediaLibraryToast';
+            toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1976d2;color:#fff;padding:12px 28px;border-radius:8px;font-size:1.1em;z-index:30000;box-shadow:0 2px 8px rgba(0,0,0,0.18);opacity:0.95;transition:opacity 0.3s;';
+        }
+        toast.textContent = msg;
+        toast.style.display = 'block';
+        // Try to append to the topmost open modal
+        let modal = document.querySelector('.media-manager-overlay[style*="display: flex"], .media-library-modal');
+        if (modal) {
+            modal.appendChild(toast);
+            toast.style.position = 'absolute';
+            toast.style.left = '50%';
+            toast.style.bottom = '40px';
+            toast.style.transform = 'translateX(-50%)';
+        } else {
+            document.body.appendChild(toast);
+            toast.style.position = 'fixed';
+            toast.style.left = '50%';
+            toast.style.bottom = '80px';
+            toast.style.transform = 'translateX(-50%)';
+        }
+        setTimeout(() => { toast.style.display = 'none'; }, 1800);
+    }
+
+    attachResumeEvents(mediaItem) {
+        // This method is called when a video starts playing
+        // It sets up automatic saving of progress when the video is paused
+        console.log('[MEDIA-LIBRARY] attachResumeEvents called for:', mediaItem);
+        
+        // The actual pause event handling is now done in the VideoPlayer component
+        // This method is kept for compatibility and future enhancements
+    }
+
+    extractEpisodeTitle(filename) {
+        // Remove show name, season/episode codes, and return only the episode title
+        let name = filename;
+        // Remove extension
+        name = name.replace(/\.[^/.]+$/, '');
+        // Remove show name (if present)
+        const showNamePattern = new RegExp('^' + this.escapeRegExp(this.extractShowName(this.currentTVShow)) + '[ ._-]*', 'i');
+        name = name.replace(showNamePattern, '');
+        // Remove season/episode codes
+        name = name.replace(/S\d{1,2}E\d{1,2}/i, '');
+        name = name.replace(/Season[ _-]?\d{1,2}/i, '');
+        name = name.replace(/Episode[ _-]?\d{1,2}/i, '');
+        name = name.replace(/^[ ._-]+/, '');
+        name = name.replace(/[ ._-]+$/, '');
+        return name.trim();
+    }
+
+    escapeRegExp(string) {
+        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    async reloadMoviePostersAndRefreshGrid() {
+        try {
+            const response = await fetch('/components/MediaLibrary/data/movies/movie_posters.json?_=' + Date.now());
+            if (response.ok) {
+                this.moviePosters = await response.json();
+            }
+        } catch (e) {
+            console.warn('[MediaLibrary] Failed to reload movie_posters.json:', e);
+        }
+        this.renderMediaGrid();
+        this.attachPosterSelectorHandlers();
+    }
+
+    attachPosterSelectorHandlers() {
+        setTimeout(() => {
+            document.querySelectorAll('.poster-selector-btn').forEach(btn => {
+                btn.onclick = (e) => { // ensure arrow function
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const card = btn.closest('.media-library-movie-card');
+                    let itemPath = card ? card.getAttribute('data-path') : '';
+                    let item = null;
+                    let errorDetails = '';
+                    if (this.currentTab === 'tvshows') {
+                        const tvShows = this.getTVShows();
+                        item = tvShows.find(show =>
+                            (show.path || '').replace(/\\/g, '/').toLowerCase().trim() === (itemPath || '').replace(/\\/g, '/').toLowerCase().trim()
+                        );
+                        if (!item && card) {
+                            // Fallback: try by title
+                            const title = card.querySelector('h3')?.textContent?.trim().toLowerCase();
+                            item = tvShows.find(show => (show.name || show.title || '').trim().toLowerCase() === title);
+                            errorDetails += `\nTried fallback by title: ${title}`;
+                        }
+                    } else {
+                        const items = this.getFilteredAndSortedItems();
+                        item = items.find(i =>
+                            (i.path || '').replace(/\\/g, '/').toLowerCase().trim() === (itemPath || '').replace(/\\/g, '/').toLowerCase().trim()
+                        );
+                        if (!item && card) {
+                            // Fallback: try by title
+                            const title = card.querySelector('h3')?.textContent?.trim().toLowerCase();
+                            item = items.find(i => (i.title || i.name || '').trim().toLowerCase() === title);
+                            errorDetails += `\nTried fallback by title: ${title}`;
+                        }
+                    }
+                    if (window.PosterSelector) {
+                        const mode = this.currentTab === 'tvshows' ? 'tv' : 'movie';
+                        const selector = new window.PosterSelector(mode);
+                        selector.getMediaContext = () => {
+                            if (item) {
+                                return {
+                            mediaId: item.path,
+                            name: item.name || item.title,
+                            path: item.path,
+                            type: mode
+                                };
+                            } else {
+                                // Minimal fallback context
+                                // --- DEBUG LOGGING FOR PATH MISMATCH ---
+                                console.warn('[PosterSelector DEBUG] Fallback context used!');
+                                console.warn('[PosterSelector DEBUG] itemPath:', itemPath);
+                                if (this.currentTab === 'tvshows') {
+                                    const tvShows = this.getTVShows();
+                                    console.warn('[PosterSelector DEBUG] Available TV show paths:', tvShows.map(s => s.path));
+                                } else {
+                                    const items = this.getFilteredAndSortedItems();
+                                    console.warn('[PosterSelector DEBUG] Available movie paths:', items.map(i => i.path));
+                                }
+                                console.warn('[PosterSelector DEBUG] Card HTML:', card ? card.outerHTML : '[none]');
+                                // --- END DEBUG LOGGING ---
+                                return {
+                                    mediaId: itemPath || '[unknown]',
+                                    name: card?.querySelector('h3')?.textContent || '[unknown]',
+                                    path: itemPath || '[unknown]',
+                                    type: mode
+                                };
+                            }
+                        };
+                        selector.onPosterSelected = ({filePath, posterType, poster}) => {
+                            if ((mode === 'movie' || mode === 'tv') && this.moviePosters && item) {
+                                // Always use item.path as the key for both movies and TV shows
+                                this.moviePosters[item.path] = filePath;
+                                this.cacheBusters[item.path] = Date.now();
+                                this.renderMediaGrid();
+                                this.showToast('Poster updated!');
+                            }
+                        };
+                        selector.init();
+                        if (!item) {
+                            // Show a warning toast if fallback was used
+                            const warnMsg = 'Warning: Movie/Show not found by path. Fallback context used.';
+                            this.showToast(warnMsg);
+                            // --- ALWAYS LOG ALERTS TO CONSOLE ---
+                            console.warn('[PosterSelector ALERT]', warnMsg);
+                            console.warn('[PosterSelector DEBUG] itemPath:', itemPath);
+                            if (this.currentTab === 'tvshows') {
+                                const tvShows = this.getTVShows();
+                                console.warn('[PosterSelector DEBUG] Available TV show paths:', tvShows.map(s => s.path));
+                    } else {
+                                const items = this.getFilteredAndSortedItems();
+                                console.warn('[PosterSelector DEBUG] Available movie paths:', items.map(i => i.path));
+                            }
+                            console.warn('[PosterSelector DEBUG] Card HTML:', card ? card.outerHTML : '[none]');
+                        }
+                    } else {
+                        // Show detailed error info in the alert/toast
+                        let details = `PosterSelector is not available or item not found.\n`;
+                        details += `itemPath: ${itemPath}\n`;
+                        details += `card: ${card ? card.outerHTML : '[none]'}\n`;
+                        details += `errorDetails: ${errorDetails}`;
+                        this.showToast(details);
+                    }
+                    return false;
+                };
+            });
+        }, 0);
+    }
+
+    async loadMovieCast() {
+        if (this.movieCast) return this.movieCast;
+        try {
+            const response = await fetch('/components/MediaLibrary/data/movies/movie_cast.json');
+            if (response.ok) {
+                this.movieCast = await response.json();
+                return this.movieCast;
+            }
+        } catch (error) {
+            console.warn('Could not load movie cast:', error);
+        }
+        this.movieCast = {};
+        return this.movieCast;
+    }
+
+    openMediaManager() {
+        this.closeMediaLibrary();
+        if (window.MediaManager) {
+            const mm = new window.MediaManager();
+            mm.init();
+        } else {
+            if (window.showToast) {
+                window.showToast('MediaManager component not loaded.', 'error', 4000);
+            } else {
+                console.error('MediaManager component not loaded.');
+            }
+        }
+    }
+
+    attachSeasonArrowHandlers() {
+        const wrapper = document.querySelector('.media-library-seasons-arrows-wrapper');
+        if (!wrapper) return;
+        const grid = wrapper.querySelector('.media-library-seasons-grid');
+        if (!grid) return;
+        const left = wrapper.querySelector('.media-library-arrow-btn.left');
+        const right = wrapper.querySelector('.media-library-arrow-btn.right');
+        const scrollAmount = 1080;
+        if (left) left.onclick = function(e) {
+            e.preventDefault();
+            grid.scrollBy({left: -scrollAmount, behavior: 'smooth'});
+        };
+        if (right) right.onclick = function(e) {
+            e.preventDefault();
+            grid.scrollBy({left: scrollAmount, behavior: 'smooth'});
+        };
+    }
+}
+
+// Initialize the media library manager
+window.mediaLibraryManager = new MediaLibraryManager(); 
+
+// After rendering the TV shows grid in renderTVShowsTab or after renderModal, attach click handlers to .media-library-card.poster img
+setTimeout(() => {
+  document.querySelectorAll('.media-library-card.poster img').forEach(img => {
+    img.onclick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const card = img.closest('.media-library-card.poster');
+      if (card) {
+        window.mediaLibraryManager.openTVShowFromData(card);
+      } else {
+        console.error('[DEBUG] No card found for clicked poster');
+      }
+    };
+  });
+}, 0);
+
+// Find the code that attaches the close (red X) button and ESC key handler for the MediaLibrary modal
+// Replace calls to this.removeModal() with this.closeMediaLibrary()
+
+// Example for red X button:
+// document.getElementById('mediaLibraryCloseBtn').onclick = () => this.closeMediaLibrary();
+
+// Example for ESC key:
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        const modal = document.getElementById('mediaLibraryModal');
+        if (modal) {
+            this.closeMediaLibrary();
+        }
+    }
+});
+
+function formatDateTime(ts) {
+    if (!ts) return '';
+    const d = new Date(ts);
+    return d.toLocaleString();
+}
+
+export default MediaLibraryManager;

@@ -1,0 +1,120 @@
+{
+  "timestamp": "2025-07-10T15:13:09.754Z",
+  "totalFiles": 3877,
+  "converted": 0,
+  "failed": 16,
+  "results": [
+    {
+      "path": "S:\\MEDIA\\TV-SHOWS\\Based on a True Story (Kaley Quoco)\\Based.on.a.True.Story.S01.COMPLETE.1080p.PCOK.WEB.h264-EDITH[TGx]\\Based.on.a.True.Story.S01E02.1080p.WEB.h264-EDITH.mkv",
+      "title": "Based.on.a.True.Story.S01E02.1080p.WEB.h264-EDITH.mkv",
+      "success": false,
+      "error": "Command failed: ffprobe -v quiet -print_format json -show_streams \"S:\\MEDIA\\TV-SHOWS\\Based on a True Story (Kaley Quoco)\\Based.on.a.True.Story.S01.COMPLETE.1080p.PCOK.WEB.h264-EDITH[TGx]\\Based.on.a.True.Story.S01E02.1080p.WEB.h264-EDITH.mkv\"\n",
+      "skipped": true
+    },
+    {
+      "path": "S:\\MEDIA\\TV-SHOWS\\Based on a True Story (Kaley Quoco)\\Based.on.a.True.Story.S01.COMPLETE.1080p.PCOK.WEB.h264-EDITH[TGx]\\Based.on.a.True.Story.S01E03.1080p.WEB.h264-EDITH.mkv",
+      "title": "Based.on.a.True.Story.S01E03.1080p.WEB.h264-EDITH.mkv",
+      "success": false,
+      "error": "Command failed: ffprobe -v quiet -print_format json -show_streams \"S:\\MEDIA\\TV-SHOWS\\Based on a True Story (Kaley Quoco)\\Based.on.a.True.Story.S01.COMPLETE.1080p.PCOK.WEB.h264-EDITH[TGx]\\Based.on.a.True.Story.S01E03.1080p.WEB.h264-EDITH.mkv\"\n",
+      "skipped": true
+    },
+    {
+      "path": "S:\\MEDIA\\TV-SHOWS\\Based on a True Story (Kaley Quoco)\\Based.on.a.True.Story.S01.COMPLETE.1080p.PCOK.WEB.h264-EDITH[TGx]\\Based.on.a.True.Story.S01E04.1080p.WEB.h264-EDITH.mkv",
+      "title": "Based.on.a.True.Story.S01E04.1080p.WEB.h264-EDITH.mkv",
+      "success": false,
+      "error": "Command failed: ffprobe -v quiet -print_format json -show_streams \"S:\\MEDIA\\TV-SHOWS\\Based on a True Story (Kaley Quoco)\\Based.on.a.True.Story.S01.COMPLETE.1080p.PCOK.WEB.h264-EDITH[TGx]\\Based.on.a.True.Story.S01E04.1080p.WEB.h264-EDITH.mkv\"\n",
+      "skipped": true
+    },
+    {
+      "path": "S:\\MEDIA\\TV-SHOWS\\Based on a True Story (Kaley Quoco)\\Based.on.a.True.Story.S01.COMPLETE.1080p.PCOK.WEB.h264-EDITH[TGx]\\Based.on.a.True.Story.S01E05.1080p.WEB.h264-EDITH.mkv",
+      "title": "Based.on.a.True.Story.S01E05.1080p.WEB.h264-EDITH.mkv",
+      "success": false,
+      "error": "Command failed: ffprobe -v quiet -print_format json -show_streams \"S:\\MEDIA\\TV-SHOWS\\Based on a True Story (Kaley Quoco)\\Based.on.a.True.Story.S01.COMPLETE.1080p.PCOK.WEB.h264-EDITH[TGx]\\Based.on.a.True.Story.S01E05.1080p.WEB.h264-EDITH.mkv\"\n",
+      "skipped": true
+    },
+    {
+      "path": "S:\\MEDIA\\TV-SHOWS\\Based on a True Story (Kaley Quoco)\\Based.on.a.True.Story.S01.COMPLETE.1080p.PCOK.WEB.h264-EDITH[TGx]\\Based.on.a.True.Story.S01E06.1080p.WEB.h264-EDITH.mkv",
+      "title": "Based.on.a.True.Story.S01E06.1080p.WEB.h264-EDITH.mkv",
+      "success": false,
+      "error": "Command failed: ffprobe -v quiet -print_format json -show_streams \"S:\\MEDIA\\TV-SHOWS\\Based on a True Story (Kaley Quoco)\\Based.on.a.True.Story.S01.COMPLETE.1080p.PCOK.WEB.h264-EDITH[TGx]\\Based.on.a.True.Story.S01E06.1080p.WEB.h264-EDITH.mkv\"\n",
+      "skipped": true
+    },
+    {
+      "path": "S:\\MEDIA\\TV-SHOWS\\Based on a True Story (Kaley Quoco)\\Based.on.a.True.Story.S01.COMPLETE.1080p.PCOK.WEB.h264-EDITH[TGx]\\Based.on.a.True.Story.S01E07.1080p.WEB.h264-EDITH.mkv",
+      "title": "Based.on.a.True.Story.S01E07.1080p.WEB.h264-EDITH.mkv",
+      "success": false,
+      "error": "Command failed: ffprobe -v quiet -print_format json -show_streams \"S:\\MEDIA\\TV-SHOWS\\Based on a True Story (Kaley Quoco)\\Based.on.a.True.Story.S01.COMPLETE.1080p.PCOK.WEB.h264-EDITH[TGx]\\Based.on.a.True.Story.S01E07.1080p.WEB.h264-EDITH.mkv\"\n",
+      "skipped": true
+    },
+    {
+      "path": "S:\\MEDIA\\TV-SHOWS\\Based on a True Story (Kaley Quoco)\\Based.on.a.True.Story.S01.COMPLETE.1080p.PCOK.WEB.h264-EDITH[TGx]\\Based.on.a.True.Story.S01E08.1080p.WEB.h264-EDITH.mkv",
+      "title": "Based.on.a.True.Story.S01E08.1080p.WEB.h264-EDITH.mkv",
+      "success": false,
+      "error": "Command failed: ffprobe -v quiet -print_format json -show_streams \"S:\\MEDIA\\TV-SHOWS\\Based on a True Story (Kaley Quoco)\\Based.on.a.True.Story.S01.COMPLETE.1080p.PCOK.WEB.h264-EDITH[TGx]\\Based.on.a.True.Story.S01E08.1080p.WEB.h264-EDITH.mkv\"\n",
+      "skipped": true
+    },
+    {
+      "path": "S:\\MEDIA\\TV-SHOWS\\Based on a True Story (Kaley Quoco)\\Based.on.a.True.Story.S01.COMPLETE.1080p.PCOK.WEB.h264-EDITH[TGx]\\Based.on.a.True.Story.S01E01.1080p.WEB.h264-EDITH.mkv",
+      "title": "Based.on.a.True.Story.S01E01.1080p.WEB.h264-EDITH.mkv",
+      "success": false,
+      "error": "Command failed: ffprobe -v quiet -print_format json -show_streams \"S:\\MEDIA\\TV-SHOWS\\Based on a True Story (Kaley Quoco)\\Based.on.a.True.Story.S01.COMPLETE.1080p.PCOK.WEB.h264-EDITH[TGx]\\Based.on.a.True.Story.S01E01.1080p.WEB.h264-EDITH.mkv\"\n",
+      "skipped": true
+    },
+    {
+      "path": "S:\\MEDIA\\TV-SHOWS\\Based on a True Story (Kaley Quoco)\\Based.on.a.True.Story.S02.COMPLETE.1080p.WEB.h264-ETHEL[TGx]\\Based.on.a.True.Story.S02E02.1080p.WEB.h264-ETHEL.mkv",
+      "title": "Based.on.a.True.Story.S02E02.1080p.WEB.h264-ETHEL.mkv",
+      "success": false,
+      "error": "Command failed: ffprobe -v quiet -print_format json -show_streams \"S:\\MEDIA\\TV-SHOWS\\Based on a True Story (Kaley Quoco)\\Based.on.a.True.Story.S02.COMPLETE.1080p.WEB.h264-ETHEL[TGx]\\Based.on.a.True.Story.S02E02.1080p.WEB.h264-ETHEL.mkv\"\n",
+      "skipped": true
+    },
+    {
+      "path": "S:\\MEDIA\\TV-SHOWS\\Based on a True Story (Kaley Quoco)\\Based.on.a.True.Story.S02.COMPLETE.1080p.WEB.h264-ETHEL[TGx]\\Based.on.a.True.Story.S02E03.1080p.WEB.h264-ETHEL.mkv",
+      "title": "Based.on.a.True.Story.S02E03.1080p.WEB.h264-ETHEL.mkv",
+      "success": false,
+      "error": "Command failed: ffprobe -v quiet -print_format json -show_streams \"S:\\MEDIA\\TV-SHOWS\\Based on a True Story (Kaley Quoco)\\Based.on.a.True.Story.S02.COMPLETE.1080p.WEB.h264-ETHEL[TGx]\\Based.on.a.True.Story.S02E03.1080p.WEB.h264-ETHEL.mkv\"\n",
+      "skipped": true
+    },
+    {
+      "path": "S:\\MEDIA\\TV-SHOWS\\Based on a True Story (Kaley Quoco)\\Based.on.a.True.Story.S02.COMPLETE.1080p.WEB.h264-ETHEL[TGx]\\Based.on.a.True.Story.S02E04.1080p.WEB.h264-ETHEL.mkv",
+      "title": "Based.on.a.True.Story.S02E04.1080p.WEB.h264-ETHEL.mkv",
+      "success": false,
+      "error": "Command failed: ffprobe -v quiet -print_format json -show_streams \"S:\\MEDIA\\TV-SHOWS\\Based on a True Story (Kaley Quoco)\\Based.on.a.True.Story.S02.COMPLETE.1080p.WEB.h264-ETHEL[TGx]\\Based.on.a.True.Story.S02E04.1080p.WEB.h264-ETHEL.mkv\"\n",
+      "skipped": true
+    },
+    {
+      "path": "S:\\MEDIA\\TV-SHOWS\\Based on a True Story (Kaley Quoco)\\Based.on.a.True.Story.S02.COMPLETE.1080p.WEB.h264-ETHEL[TGx]\\Based.on.a.True.Story.S02E05.1080p.WEB.h264-ETHEL.mkv",
+      "title": "Based.on.a.True.Story.S02E05.1080p.WEB.h264-ETHEL.mkv",
+      "success": false,
+      "error": "Command failed: ffprobe -v quiet -print_format json -show_streams \"S:\\MEDIA\\TV-SHOWS\\Based on a True Story (Kaley Quoco)\\Based.on.a.True.Story.S02.COMPLETE.1080p.WEB.h264-ETHEL[TGx]\\Based.on.a.True.Story.S02E05.1080p.WEB.h264-ETHEL.mkv\"\n",
+      "skipped": true
+    },
+    {
+      "path": "S:\\MEDIA\\TV-SHOWS\\Based on a True Story (Kaley Quoco)\\Based.on.a.True.Story.S02.COMPLETE.1080p.WEB.h264-ETHEL[TGx]\\Based.on.a.True.Story.S02E06.1080p.WEB.h264-ETHEL.mkv",
+      "title": "Based.on.a.True.Story.S02E06.1080p.WEB.h264-ETHEL.mkv",
+      "success": false,
+      "error": "Command failed: ffprobe -v quiet -print_format json -show_streams \"S:\\MEDIA\\TV-SHOWS\\Based on a True Story (Kaley Quoco)\\Based.on.a.True.Story.S02.COMPLETE.1080p.WEB.h264-ETHEL[TGx]\\Based.on.a.True.Story.S02E06.1080p.WEB.h264-ETHEL.mkv\"\n",
+      "skipped": true
+    },
+    {
+      "path": "S:\\MEDIA\\TV-SHOWS\\Based on a True Story (Kaley Quoco)\\Based.on.a.True.Story.S02.COMPLETE.1080p.WEB.h264-ETHEL[TGx]\\Based.on.a.True.Story.S02E07.1080p.WEB.h264-ETHEL.mkv",
+      "title": "Based.on.a.True.Story.S02E07.1080p.WEB.h264-ETHEL.mkv",
+      "success": false,
+      "error": "Command failed: ffprobe -v quiet -print_format json -show_streams \"S:\\MEDIA\\TV-SHOWS\\Based on a True Story (Kaley Quoco)\\Based.on.a.True.Story.S02.COMPLETE.1080p.WEB.h264-ETHEL[TGx]\\Based.on.a.True.Story.S02E07.1080p.WEB.h264-ETHEL.mkv\"\n",
+      "skipped": true
+    },
+    {
+      "path": "S:\\MEDIA\\TV-SHOWS\\Based on a True Story (Kaley Quoco)\\Based.on.a.True.Story.S02.COMPLETE.1080p.WEB.h264-ETHEL[TGx]\\Based.on.a.True.Story.S02E08.1080p.WEB.h264-ETHEL.mkv",
+      "title": "Based.on.a.True.Story.S02E08.1080p.WEB.h264-ETHEL.mkv",
+      "success": false,
+      "error": "Command failed: ffprobe -v quiet -print_format json -show_streams \"S:\\MEDIA\\TV-SHOWS\\Based on a True Story (Kaley Quoco)\\Based.on.a.True.Story.S02.COMPLETE.1080p.WEB.h264-ETHEL[TGx]\\Based.on.a.True.Story.S02E08.1080p.WEB.h264-ETHEL.mkv\"\n",
+      "skipped": true
+    },
+    {
+      "path": "S:\\MEDIA\\TV-SHOWS\\Based on a True Story (Kaley Quoco)\\Based.on.a.True.Story.S02.COMPLETE.1080p.WEB.h264-ETHEL[TGx]\\Based.on.a.True.Story.S02E01.1080p.WEB.h264-ETHEL.mkv",
+      "title": "Based.on.a.True.Story.S02E01.1080p.WEB.h264-ETHEL.mkv",
+      "success": false,
+      "error": "Command failed: ffprobe -v quiet -print_format json -show_streams \"S:\\MEDIA\\TV-SHOWS\\Based on a True Story (Kaley Quoco)\\Based.on.a.True.Story.S02.COMPLETE.1080p.WEB.h264-ETHEL[TGx]\\Based.on.a.True.Story.S02E01.1080p.WEB.h264-ETHEL.mkv\"\n",
+      "skipped": true
+    }
+  ]
+}
